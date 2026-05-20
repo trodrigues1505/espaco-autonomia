@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Espaço Autonomia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+<style>
+  :root{
+    --verde:#1F381F;--verde-med:#2d5a2d;--verde-cl:#4a8a4a;
+    --dourado:#E8BC4F;--bege:#F2ECCE;--bege2:#e8e0b8;
+    --fundo:#F9F6EC;--txt:#1F381F;--txt2:#5a7a5a;--borda:#d4c89e;
+    --r:10px;--rs:6px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',sans-serif;background:var(--fundo);color:var(--txt);min-height:100vh}
+
+  /* LOGIN */
+  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--verde)}
+  .login-card{background:#fff;border-radius:16px;padding:40px 36px;width:380px;max-width:95vw}
+  .login-logo{text-align:center;margin-bottom:28px}
+  .login-bird{font-size:36px;margin-bottom:8px;opacity:.85;color:var(--verde)}
+  .login-name{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde);line-height:1.2}
+  .login-sub{font-size:11px;letter-spacing:2px;color:var(--dourado);margin-top:4px;text-transform:uppercase}
+  .fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+  .fl{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500}
+  .fi{border:1px solid var(--borda);border-radius:var(--rs);padding:10px 12px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--txt);outline:none;transition:border .15s;width:100%}
+  .fi:focus{border-color:var(--verde-cl)}
+  .btn-login{width:100%;padding:12px;background:var(--verde);color:var(--bege);border:none;border-radius:var(--rs);font-size:14px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;margin-top:6px;transition:background .15s}
+  .btn-login:hover{background:var(--verde-med)}
+  .login-err{background:#fceaea;border:1px solid #f5c1c1;border-radius:var(--rs);padding:9px 12px;font-size:12px;color:#8a1a1a;margin-bottom:12px;display:none}
+  .login-loading{opacity:.6;pointer-events:none}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:20px;right:20px;background:var(--verde);color:var(--bege);padding:10px 16px;border-radius:8px;font-size:12px;z-index:9999;font-family:'DM Sans',sans-serif;opacity:1;transition:opacity .3s}
+
+  /* APP SHELL */
+  #app-shell{display:none}
+  .app{display:flex;height:100vh;overflow:hidden}
+  .sb{width:210px;background:var(--verde);color:var(--bege);flex-shrink:0;display:flex;flex-direction:column}
+  .sb-logo{padding:20px 18px 16px;border-bottom:1px solid rgba(242,236,206,0.12)}
+  .sb-logo-bird{font-size:22px;margin-bottom:6px;opacity:.85}
+  .sb-logo-name{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--bege);line-height:1.2}
+  .sb-logo-sub{font-size:9px;letter-spacing:2px;color:var(--dourado);margin-top:3px;text-transform:uppercase}
+  .sb-user{padding:12px 18px;border-bottom:1px solid rgba(242,236,206,0.08)}
+  .sb-role{display:inline-block;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;background:rgba(232,188,79,0.18);color:var(--dourado);border:1px solid rgba(232,188,79,0.25);border-radius:20px;padding:2px 9px;margin-bottom:5px}
+  .sb-name{font-size:13px;color:var(--bege);font-weight:500}
+  .sb-plan-txt{font-size:11px;color:rgba(242,236,206,.5);margin-top:1px}
+  .nav{padding:10px 0;flex:1;overflow-y:auto}
+  .nav-sec{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(242,236,206,0.3);padding:14px 18px 5px}
+  .ni{display:flex;align-items:center;gap:9px;padding:9px 18px;font-size:12px;color:rgba(242,236,206,.65);cursor:pointer;border-left:3px solid transparent;transition:all .18s}
+  .ni:hover{background:rgba(242,236,206,.05);color:var(--bege)}
+  .ni.on{background:rgba(242,236,206,.09);color:var(--bege);border-left-color:var(--dourado)}
+  .ni i{font-size:15px;width:15px;flex-shrink:0}
+  .sb-bottom{padding:12px 18px;border-top:1px solid rgba(242,236,206,.08)}
+  .btn-logout{display:flex;align-items:center;gap:7px;font-size:11px;color:rgba(242,236,206,.5);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;padding:0}
+  .btn-logout:hover{color:var(--bege)}
+
+  .main{flex:1;overflow:auto;background:var(--fundo)}
+  .topbar{background:#fff;border-bottom:1px solid var(--borda);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+  .topbar-t{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--verde)}
+  .content{padding:20px 24px}
+
+  /* LOADING SPINNER */
+  .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(242,236,206,.3);border-top-color:var(--bege);border-radius:50%;animation:spin .6s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* PÁGINA DE CARREGAMENTO */
+  .loading-page{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;background:var(--verde)}
+  .loading-page .spin-big{width:36px;height:36px;border:3px solid rgba(242,236,206,.2);border-top-color:var(--bege);border-radius:50%;animation:spin .8s linear infinite}
+  .loading-page p{color:rgba(242,236,206,.6);font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- TELA DE LOGIN -->
+<div id="login-screen">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="login-bird">𝕊</div>
+        <div class="login-name">Espaço<br>Autonomia</div>
+        <div class="login-sub">Desenvolvimento Humano</div>
+      </div>
+      <div class="login-err" id="login-err"></div>
+      <div class="fg">
+        <label class="fl" for="login-email">E-mail</label>
+        <input type="email" id="login-email" class="fi" placeholder="seu@email.com" autocomplete="email">
+      </div>
+      <div class="fg">
+        <label class="fl" for="login-senha">Senha</label>
+        <input type="password" id="login-senha" class="fi" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn-login" id="btn-login" onclick="fazerLogin()">
+        <span id="btn-login-txt">Entrar</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- APP SHELL (carregado após login) -->
+<div id="app-shell">
+  <div class="app">
+    <div class="sb">
+      <div class="sb-logo">
+        <div class="sb-logo-bird">𝕊</div>
+        <div class="sb-logo-name">Espaço<br>Autonomia</div>
+        <div class="sb-logo-sub">Desenvolvimento Humano</div>
+      </div>
+      <div class="sb-user">
+        <div class="sb-role" id="sb-role-label">Carregando...</div>
+        <div class="sb-name" id="sb-nome">—</div>
+        <div class="sb-plan-txt" id="sb-plano"></div>
+      </div>
+      <nav class="nav" id="nav-menu">
+        <!-- preenchido por JS conforme perfil -->
+        <div style="padding:18px;font-size:11px;color:rgba(242,236,206,.3)">Carregando menu...</div>
+      </nav>
+      <div class="sb-bottom">
+        <button class="btn-logout" onclick="fazerLogout()">
+          <i class="ti ti-logout" style="font-size:14px"></i> Sair
+        </button>
+      </div>
+    </div>
+    <div class="main" id="main-area">
+      <!-- conteúdo das páginas injetado aqui -->
+      <div class="loading-page">
+        <div class="spin-big"></div>
+        <p>Carregando...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SUPABASE SDK + APP JS
+     ============================================================ -->
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+// ── CONFIGURAÇÃO ──────────────────────────────────────────────
+const SUPABASE_URL  = 'https://SEU_PROJETO.supabase.co'   // ← substitua
+const SUPABASE_ANON = 'SUA_ANON_KEY'                       // ← substitua
+// ─────────────────────────────────────────────────────────────
+
+const sb = createClient(https://kctgcjvfsuinwlbgljdw.supabase.co/rest/v1/, eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjdGdjanZmc3VpbndsYmdsamR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDA5MDUsImV4cCI6MjA5NDg3NjkwNX0.HatTsAaRpvg0Icpxm3MsVbYQgmnKikb6A0ataAEZ_68)
+window._sb = sb  // expõe globalmente para debug
+
+// ── UTILITÁRIOS ───────────────────────────────────────────────
+function toast(msg, dur=2400) {
+  const t = document.createElement('div')
+  t.className = 'toast'
+  t.textContent = msg
+  document.body.appendChild(t)
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300) }, dur)
+}
+window.toast = toast
+
+function prazoLabel(min) {
+  if (min < 60) return `${min} minutos`
+  if (min == 60) return '1 hora'
+  if (min < 1440) return `${min/60} horas`
+  return '24 horas'
+}
+
+// ── NAVEGAÇÃO ─────────────────────────────────────────────────
+const MENUS = {
+  admin: [
+    { sec: 'Visão Geral' },
+    { id: 'dashboard',   label: 'Dashboard',       icon: 'ti-layout-dashboard' },
+    { id: 'grade',       label: 'Grade de Aulas',  icon: 'ti-calendar' },
+    { sec: 'Gestão' },
+    { id: 'criar-aulas', label: 'Criar Aulas',     icon: 'ti-plus-circle' },
+    { id: 'alunos',      label: 'Alunos',          icon: 'ti-users' },
+    { id: 'presencas',   label: 'Presenças',       icon: 'ti-checkbox' },
+    { id: 'planos',      label: 'Planos',          icon: 'ti-award' },
+    { sec: 'Sistema' },
+    { id: 'config',      label: 'Configurações',   icon: 'ti-settings' },
+  ],
+  professor: [
+    { sec: 'Minhas Aulas' },
+    { id: 'prof-home',    label: 'Dashboard',   icon: 'ti-layout-dashboard' },
+    { id: 'prof-aulas',   label: 'Minhas Aulas', icon: 'ti-calendar' },
+    { id: 'prof-chamada', label: 'Chamada',     icon: 'ti-checkbox' },
+  ],
+  aluno: [
+    { sec: 'Meu Espaço' },
+    { id: 'aluno-home',   label: 'Início',         icon: 'ti-home' },
+    { id: 'aluno-grade',  label: 'Grade de Aulas', icon: 'ti-calendar' },
+    { id: 'aluno-minhas', label: 'Minhas Aulas',   icon: 'ti-bookmark' },
+    { id: 'aluno-plano',  label: 'Meu Plano',      icon: 'ti-award' },
+  ],
+}
+
+function buildMenu(tipo) {
+  const nav = document.getElementById('nav-menu')
+  nav.innerHTML = ''
+  for (const item of (MENUS[tipo] || [])) {
+    if (item.sec) {
+      const d = document.createElement('div'); d.className = 'nav-sec'; d.textContent = item.sec
+      nav.appendChild(d)
+    } else {
+      const d = document.createElement('div')
+      d.className = 'ni'
+      d.id = `ni-${item.id}`
+      d.innerHTML = `<i class="ti ${item.icon}"></i>${item.label}`
+      d.onclick = () => navigate(item.id)
+      nav.appendChild(d)
+    }
+  }
+}
+
+function setActiveNav(id) {
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('on'))
+  const el = document.getElementById(`ni-${id}`)
+  if (el) el.classList.add('on')
+}
+
+// ── LOGIN / LOGOUT ────────────────────────────────────────────
+window.fazerLogin = async function() {
+  const email = document.getElementById('login-email').value.trim()
+  const senha = document.getElementById('login-senha').value
+  const btn = document.getElementById('btn-login')
+  const err = document.getElementById('login-err')
+  err.style.display = 'none'
+  btn.classList.add('login-loading')
+  document.getElementById('btn-login-txt').innerHTML = '<span class="spinner"></span>'
+
+  try {
+    const { error } = await sb.auth.signInWithPassword({ email, password: senha })
+    if (error) throw error
+    await iniciarApp()
+  } catch(e) {
+    err.textContent = e.message === 'Invalid login credentials'
+      ? 'E-mail ou senha incorretos.' : e.message
+    err.style.display = 'block'
+    btn.classList.remove('login-loading')
+    document.getElementById('btn-login-txt').textContent = 'Entrar'
+  }
+}
+
+window.fazerLogout = async function() {
+  await sb.auth.signOut()
+  document.getElementById('app-shell').style.display = 'none'
+  document.getElementById('login-screen').style.display = 'block'
+  document.getElementById('login-senha').value = ''
+}
+
+// Permite Enter no login
+document.getElementById('login-senha').addEventListener('keydown', e => {
+  if (e.key === 'Enter') window.fazerLogin()
+})
+
+// ── INICIAR APP ───────────────────────────────────────────────
+async function iniciarApp() {
+  const { data: { user } } = await sb.auth.getUser()
+  if (!user) return
+
+  const { data: perfil } = await sb.from('perfis').select('*').eq('id', user.id).single()
+  if (!perfil) { toast('Perfil não encontrado'); return }
+
+  window._perfil = perfil
+  window._sb = sb
+
+  // UI
+  document.getElementById('login-screen').style.display = 'none'
+  document.getElementById('app-shell').style.display = 'block'
+  document.getElementById('sb-nome').textContent = perfil.nome
+  document.getElementById('sb-role-label').textContent =
+    { admin: 'Admin', professor: 'Professor', aluno: 'Aluno' }[perfil.tipo] || perfil.tipo
+
+  // Plano do aluno
+  if (perfil.tipo === 'aluno') {
+    const { data: mat } = await sb.from('matriculas').select('plano_tipo').eq('aluno_id', perfil.id).eq('ativa', true).single()
+    if (mat) {
+      const nomes = { brahma: 'Plano Brahma', shiva: 'Plano Shiva', vishnu: 'Plano Vishnu' }
+      document.getElementById('sb-plano').textContent = nomes[mat.plano_tipo] || ''
+      window._plano = mat.plano_tipo
+    }
+  }
+
+  buildMenu(perfil.tipo)
+  const primeiros = { admin: 'dashboard', professor: 'prof-home', aluno: 'aluno-home' }
+  navigate(primeiros[perfil.tipo] || 'dashboard')
+}
+
+// ── NAVEGAÇÃO + RENDERIZAÇÃO DE PÁGINAS ───────────────────────
+async function navigate(page) {
+  setActiveNav(page)
+  const main = document.getElementById('main-area')
+  main.innerHTML = '<div class="loading-page"><div class="spin-big"></div><p>Carregando...</p></div>'
+  try {
+    await renderPage(page, main)
+  } catch(e) {
+    main.innerHTML = `<div class="content"><div style="color:#c0392b;font-size:13px;padding:20px">Erro: ${e.message}</div></div>`
+    console.error(e)
+  }
+}
+window.navigate = navigate
+
+async function renderPage(page, container) {
+  const tipo = window._perfil?.tipo
+
+  // ── DASHBOARD ADMIN ──────────────────────────────────────
+  if (page === 'dashboard' && tipo === 'admin') {
+    const hoje = new Date()
+    const inicioHoje = new Date(hoje); inicioHoje.setHours(0,0,0,0)
+    const fimHoje = new Date(hoje); fimHoje.setHours(23,59,59,999)
+
+    const [ocorrencias, alunos, feriados, config] = await Promise.all([
+      sb.from('ocorrencias_vagas').select('*').gte('data_hora', inicioHoje.toISOString()).lte('data_hora', fimHoje.toISOString()).eq('cancelada', false).order('data_hora'),
+      sb.from('alunos_plano_ativo').select('plano_tipo').then(r => r.data || []),
+      (() => { const ate = new Date(); ate.setDate(ate.getDate()+30); return sb.from('feriados').select('*').gte('data', hoje.toISOString().slice(0,10)).lte('data', ate.toISOString().slice(0,10)).order('data') })().then(r => r.data || []),
+      sb.from('configuracoes').select('*').then(r => Object.fromEntries((r.data||[]).map(c=>[c.chave,c.valor]))),
+    ])
+
+    const aulasHoje = ocorrencias.data || []
+    const totalConf = aulasHoje.reduce((s,a)=>s+(a.confirmados||0),0)
+    const totalLivres = aulasHoje.reduce((s,a)=>s+(a.vagas_livres||0),0)
+    const por = { brahma:0, shiva:0, vishnu:0 }
+    alunos.forEach(a => { if(por[a.plano_tipo]!==undefined) por[a.plano_tipo]++ })
+
+    container.innerHTML = `
+      <div class="topbar"><div class="topbar-t">Dashboard</div><div style="font-size:11px;color:var(--txt2)">${hoje.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})}</div></div>
+      <div class="content">
+        ${feriados.length ? `<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:9px 13px;display:flex;align-items:center;gap:8px;font-size:12px;color:#7a5a10;margin-bottom:14px"><i class="ti ti-alert-triangle" style="color:var(--dourado)"></i><span><strong>Atenção:</strong> Há feriados nos próximos 30 dias: ${feriados.slice(0,3).map(f=>`${f.nome} (${new Date(f.data+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})})`).join(' · ')}</span></div>` : ''}
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px">
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Aulas hoje</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${aulasHoje.length}</div></div>
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Alunos ativos</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${alunos.length}</div></div>
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Confirmações</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${totalConf}</div></div>
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Vagas livres</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${totalLivres}</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px">
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden">
+            <div style="padding:13px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between"><span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">Aulas de hoje</span></div>
+            ${aulasHoje.length === 0 ? '<div style="padding:20px 18px;font-size:12px;color:var(--txt2)">Nenhuma aula hoje.</div>' :
+              aulasHoje.map(a => {
+                const cor = {hatha:'#2d7a2d',acro:'var(--dourado)',raja:'#5a2d8a'}[a.modalidade]||'#888'
+                const nomes = {hatha:'Hatha Yoga',acro:'Acro Yoga',raja:'Raja Yoga'}
+                const hora = new Date(a.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
+                const pct = a.vagas_total ? Math.round(a.confirmados/a.vagas_total*100) : 0
+                const corBadge = pct>80?'#e8f4e8':'rgba(232,188,79,.15)'
+                const corTxtBadge = pct>80?'#1a5a1a':'#7a5a10'
+                return `<div style="display:grid;grid-template-columns:60px 1fr 90px 70px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.35);font-size:12px">
+                  <span style="color:var(--txt2);font-size:11px">${hora}</span>
+                  <span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${cor};flex-shrink:0"></span><strong>${nomes[a.modalidade]}</strong>${a.eh_feriado?`<span style="background:rgba(232,188,79,.2);color:#7a5a10;font-size:10px;padding:1px 6px;border-radius:10px">⚠ ${a.nome_feriado}</span>`:''}</span>
+                  <span style="font-size:11px;color:var(--txt2)">${a.confirmados||0}/${a.vagas_total} conf.</span>
+                  <button onclick="navigate('presencas')" style="padding:4px 8px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:11px;cursor:pointer;color:var(--txt2)">Ver</button>
+                </div>`
+              }).join('')
+            }
+          </div>
+          <div>
+            <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-bottom:14px">
+              <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500;color:var(--verde);margin-bottom:12px">Alunos por plano</div>
+              ${['brahma','shiva','vishnu'].map(p=>{const pct2=alunos.length?Math.round(por[p]/alunos.length*100):0;const cores={brahma:'var(--bege2)',shiva:'var(--verde-cl)',vishnu:'var(--dourado)'};return `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span style="font-weight:500;text-transform:capitalize">${p}</span><span style="color:var(--txt2)">${por[p]} alunos</span></div><div style="height:7px;background:#f0ede4;border-radius:4px"><div style="height:7px;background:${cores[p]};border-radius:4px;width:${pct2}%"></div></div></div>`}).join('')}
+            </div>
+            <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
+              <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500;color:var(--verde);margin-bottom:10px">Próximos feriados</div>
+              ${feriados.length===0?'<div style="font-size:12px;color:var(--txt2)">Nenhum nos próximos 30 dias</div>':
+                feriados.slice(0,4).map(f=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(212,200,158,.25);font-size:12px"><span>${f.nome}</span><span style="font-size:11px;color:var(--txt2)">${new Date(f.data+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</span></div>`).join('')
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+    return
+  }
+
+  // ── CONFIG ADMIN ─────────────────────────────────────────
+  if (page === 'config' && tipo === 'admin') {
+    const { data: cfgs } = await sb.from('configuracoes').select('*')
+    const cfg = Object.fromEntries((cfgs||[]).map(c=>[c.chave,c.valor]))
+    container.innerHTML = `
+      <div class="topbar"><div class="topbar-t">Configurações</div></div>
+      <div class="content">
+        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--borda)">Confirmação de Presença</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(212,200,158,.25)">
+            <div><div style="font-size:12px;font-weight:500">Prazo mínimo de confirmação</div><div style="font-size:10px;color:var(--txt2)">Minutos antes da aula para confirmar</div></div>
+            <select id="cfg-prazo" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--txt)">
+              <option value="30" ${cfg.prazo_confirmacao_min=='30'?'selected':''}>30 minutos</option>
+              <option value="60" ${cfg.prazo_confirmacao_min=='60'?'selected':''}>1 hora</option>
+              <option value="120" ${cfg.prazo_confirmacao_min=='120'?'selected':''}>2 horas</option>
+              <option value="180" ${cfg.prazo_confirmacao_min=='180'?'selected':''}>3 horas</option>
+              <option value="1440" ${cfg.prazo_confirmacao_min=='1440'?'selected':''}>24 horas</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(212,200,158,.25)">
+            <div><div style="font-size:12px;font-weight:500">Prazo para cancelar confirmação</div></div>
+            <select id="cfg-cancel" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--txt)">
+              <option value="120" ${cfg.prazo_cancelamento_min=='120'?'selected':''}>2 horas</option>
+              <option value="180" ${cfg.prazo_cancelamento_min=='180'?'selected':''}>3 horas</option>
+              <option value="360" ${cfg.prazo_cancelamento_min=='360'?'selected':''}>6 horas</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0">
+            <div><div style="font-size:12px;font-weight:500">Vagas padrão por aula</div></div>
+            <input type="number" id="cfg-vagas" value="${cfg.vagas_padrao||15}" min="1" max="100" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;width:80px;font-family:'DM Sans',sans-serif;color:var(--txt)">
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--borda)">Alertas de Feriado</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(212,200,158,.25)">
+            <div style="font-size:12px;font-weight:500">Feriados nacionais</div>
+            <input type="checkbox" id="cfg-fnac" ${cfg.feriados_nacionais==='true'?'checked':''} style="width:15px;height:15px;accent-color:var(--verde)">
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(212,200,158,.25)">
+            <div style="font-size:12px;font-weight:500">Feriados estaduais (SP)</div>
+            <input type="checkbox" id="cfg-fesp" ${cfg.feriados_estaduais_sp==='true'?'checked':''} style="width:15px;height:15px;accent-color:var(--verde)">
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(212,200,158,.25)">
+            <div style="font-size:12px;font-weight:500">Feriados municipais</div>
+            <input type="checkbox" id="cfg-fmun" ${cfg.feriados_municipais==='true'?'checked':''} style="width:15px;height:15px;accent-color:var(--verde)">
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0">
+            <div style="font-size:12px;font-weight:500">Antecedência do alerta</div>
+            <select id="cfg-alertdias" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--txt)">
+              <option value="3" ${cfg.alerta_feriado_dias=='3'?'selected':''}>3 dias</option>
+              <option value="7" ${cfg.alerta_feriado_dias=='7'?'selected':''}>7 dias</option>
+              <option value="14" ${cfg.alerta_feriado_dias=='14'?'selected':''}>14 dias</option>
+            </select>
+          </div>
+        </div>
+        <button onclick="salvarConfig()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500"><i class="ti ti-device-floppy"></i>Salvar configurações</button>
+      </div>
+    `
+    window.salvarConfig = async function() {
+      try {
+        const updates = [
+          { chave:'prazo_confirmacao_min', valor: document.getElementById('cfg-prazo').value },
+          { chave:'prazo_cancelamento_min', valor: document.getElementById('cfg-cancel').value },
+          { chave:'vagas_padrao', valor: document.getElementById('cfg-vagas').value },
+          { chave:'feriados_nacionais', valor: String(document.getElementById('cfg-fnac').checked) },
+          { chave:'feriados_estaduais_sp', valor: String(document.getElementById('cfg-fesp').checked) },
+          { chave:'feriados_municipais', valor: String(document.getElementById('cfg-fmun').checked) },
+          { chave:'alerta_feriado_dias', valor: document.getElementById('cfg-alertdias').value },
+        ]
+        for (const u of updates) {
+          await sb.from('configuracoes').update({ valor: u.valor, atualizado_em: new Date().toISOString() }).eq('chave', u.chave)
+        }
+        toast('Configurações salvas!')
+      } catch(e) { toast('Erro: ' + e.message) }
+    }
+    return
+  }
+
+  // ── HOME ALUNO ────────────────────────────────────────────
+  if (page === 'aluno-home') {
+    const { data: { user } } = await sb.auth.getUser()
+    const em7d = new Date(); em7d.setDate(em7d.getDate()+7)
+    const [confs, mat, cfg] = await Promise.all([
+      sb.from('confirmacoes').select('*, ocorrencia:ocorrencias(*, aula:aulas(modalidade))').eq('aluno_id', user.id).in('status',['confirmado']).gte('ocorrencias.data_hora', new Date().toISOString()).order('criado_em',{ascending:false}).limit(5),
+      sb.from('matriculas').select('*, plano:planos(*)').eq('aluno_id', user.id).eq('ativa', true).single(),
+      sb.from('configuracoes').select('*').then(r=>Object.fromEntries((r.data||[]).map(c=>[c.chave,c.valor]))),
+    ])
+    const matricula = mat.data
+    const confirmacoes = (confs.data||[]).filter(c=>c.ocorrencia)
+    const nomes = {hatha:'Hatha Yoga',acro:'Acro Yoga',raja:'Raja Yoga'}
+
+    container.innerHTML = `
+      <div class="topbar"><div class="topbar-t">Olá, ${window._perfil.nome.split(' ')[0]}</div><div><span style="background:#e8f4e8;color:#1a5a1a;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:500">${matricula ? 'Plano '+(matricula.plano?.nome||matricula.plano_tipo) : 'Sem plano'}</span></div></div>
+      <div class="content">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Plano</div><div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--verde)">${matricula?.plano?.nome||'—'}</div><div style="font-size:11px;color:var(--txt2)">R$${matricula?.valor_mensal||0}/mês</div></div>
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Confirmadas</div><div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--verde)">${confirmacoes.length}</div><div style="font-size:11px;color:var(--txt2)">próximas aulas</div></div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden">
+          <div style="padding:13px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between"><span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">Próximas confirmações</span><button onclick="navigate('aluno-grade')" style="font-size:11px;color:var(--verde);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif">Ver grade →</button></div>
+          ${confirmacoes.length === 0 ? '<div style="padding:18px;font-size:12px;color:var(--txt2)">Nenhuma aula confirmada. <a href="#" onclick="navigate(\'aluno-grade\');return false" style="color:var(--verde)">Confirmar aulas →</a></div>' :
+            confirmacoes.map(c => {
+              const dt = new Date(c.ocorrencia.data_hora)
+              const prazo = Number(cfg.prazo_cancelamento_min||180)
+              const limiteCancel = new Date(dt.getTime() - prazo*60000)
+              const podeCancelar = new Date() < limiteCancel
+              const cor = {hatha:'#2d7a2d',acro:'var(--dourado)',raja:'#5a2d8a'}[c.ocorrencia.aula.modalidade]
+              return `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid rgba(212,200,158,.3);gap:12px">
+                <div>
+                  <div style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${cor}"></span><strong style="font-size:13px">${nomes[c.ocorrencia.aula.modalidade]}</strong></div>
+                  <div style="font-size:11px;color:var(--txt2);margin-top:2px">${dt.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'})} · ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+                  <div style="font-size:10px;color:${podeCancelar?'var(--verde-cl)':'#c0392b'};margin-top:3px"><i class="ti ti-clock" style="font-size:11px"></i> ${podeCancelar?'Cancelamento disponível':'Prazo de cancelamento encerrado'}</div>
+                </div>
+                ${podeCancelar ? `<button onclick="cancelarConf('${c.id}','${c.ocorrencia_id}')" style="padding:4px 10px;background:#fceaea;color:#8a1a1a;border:1px solid #f5c1c1;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">Cancelar</button>` : ''}
+              </div>`
+            }).join('')
+          }
+        </div>
+      </div>
+    `
+    window.cancelarConf = async function(confId, ocId) {
+      const { data, error } = await sb.rpc('cancelar_confirmacao', { p_aluno_id: window._perfil.id, p_ocorrencia_id: ocId })
+      if (error || !data?.ok) { toast('Erro: '+(data?.motivo||error?.message)); return }
+      toast(data.mensagem)
+      navigate('aluno-home')
+    }
+    return
+  }
+
+  // Páginas não implementadas neste arquivo — mensagem orientativa
+  const titulos = {
+    grade:'Grade de Aulas', 'criar-aulas':'Criar Aulas', alunos:'Alunos',
+    presencas:'Presenças', planos:'Planos', 'prof-home':'Dashboard Professor',
+    'prof-aulas':'Minhas Aulas', 'prof-chamada':'Chamada',
+    'aluno-grade':'Grade de Aulas', 'aluno-minhas':'Minhas Aulas', 'aluno-plano':'Meu Plano',
+  }
+  container.innerHTML = `
+    <div class="topbar"><div class="topbar-t">${titulos[page]||page}</div></div>
+    <div class="content" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;gap:12px;text-align:center">
+      <i class="ti ti-code" style="font-size:36px;color:var(--bege2)"></i>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--verde)">${titulos[page]||page}</div>
+      <div style="font-size:13px;color:var(--txt2);max-width:360px">Página pronta para implementar. A estrutura do banco, as funções e o RLS já estão configurados no Supabase.<br><br>Ver <code style="background:#f0ede4;padding:2px 6px;border-radius:4px">src/lib/supabase.js</code> para as funções disponíveis.</div>
+    </div>
+  `
+}
+
+// ── VERIFICAR SESSÃO AO CARREGAR ──────────────────────────────
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && session) {
+    await iniciarApp()
+  } else if (event === 'SIGNED_OUT') {
+    document.getElementById('app-shell').style.display = 'none'
+    document.getElementById('login-screen').style.display = 'block'
+  }
+})
+
+// Verifica sessão existente
+const { data: { session } } = await sb.auth.getSession()
+if (!session) {
+  document.getElementById('login-screen').style.display = 'block'
+} else {
+  document.getElementById('login-screen').style.display = 'none'
+  await iniciarApp()
+}
+</script>
+</body>
+</html>
