@@ -96,6 +96,9 @@
       <button class="btn-login" id="btn-login" onclick="fazerLogin()">
         <span id="btn-login-txt">Entrar</span>
       </button>
+      <button onclick="loginGoogle()" style="width:100%;padding:11px;background:#fff;color:#444;border:1px solid #ddd;border-radius:6px;font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px">
+  <img src="https://www.google.com/favicon.ico" width="16"> Entrar com Google
+</button>
     </div>
   </div>
 </div>
@@ -219,7 +222,16 @@ function setActiveNav(id) {
 }
 
 // ── LOGIN / LOGOUT ────────────────────────────────────────────
-window.fazerLogin = async function() {
+window.loginGoogle = async function() {
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: window.location.origin
+    }
+  })
+  if (error) alert('Erro: ' + error.message)
+}
+  window.fazerLogin = async function() {
   const email = document.getElementById('login-email').value.trim()
   const senha = document.getElementById('login-senha').value
   const btn = document.getElementById('btn-login')
