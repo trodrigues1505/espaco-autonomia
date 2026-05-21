@@ -282,8 +282,23 @@ async function iniciarApp() {
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return
 
-  const { data: perfil } = await sb.from('perfis').select('*').eq('id', user.id).single()
-  if (!perfil) { toast('Perfil não encontrado'); return }
+  let { data: perfil } = await sb.from('perfis').select('*').eq('id', user.id).single()
+
+  // Cria perfil automaticamente para login Google (primeiro acesso)
+  if (!perfil) {
+    const nome = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Usuário'
+    const { data: novoPerfil, error: errPerfil } = await sb.from('perfis')
+      .insert({ id: user.id, nome, email: user.email, tipo: 'aluno' })
+      .select().single()
+    if (errPerfil) {
+      // Pode já existir por race condition, tenta buscar de novo
+      const { data: perfilExistente } = await sb.from('perfis').select('*').eq('id', user.id).single()
+      perfil = perfilExistente
+    } else {
+      perfil = novoPerfil
+    }
+    if (!perfil) { toast('Erro ao criar perfil. Contate o administrador.'); return }
+  }
 
   window._perfil = perfil
   window._sb = sb
@@ -1372,22 +1387,39 @@ async function renderPage(page, container) {
 }
 
 // ── VERIFICAR SESSÃO AO CARREGAR ──────────────────────────────
+let _appIniciado = false
+
 sb.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_IN' && session) {
-    await iniciarApp()
+  console.log('auth event:', event, !!session)
+  if (['SIGNED_IN','TOKEN_REFRESHED','INITIAL_SESSION'].includes(event) && session) {
+    document.getElementById('login-screen').style.display = 'none'
+    if (!_appIniciado) {
+      _appIniciado = true
+      await iniciarApp()
+    }
   } else if (event === 'SIGNED_OUT') {
+    _appIniciado = false
     document.getElementById('app-shell').style.display = 'none'
     document.getElementById('login-screen').style.display = 'block'
   }
 })
 
-// Verifica sessão existente
-const { data: { session } } = await sb.auth.getSession()
-if (!session) {
-  document.getElementById('login-screen').style.display = 'block'
-} else {
+// Verifica sessão existente ao carregar
+const { data: { session: sessaoInicial } } = await sb.auth.getSession()
+if (sessaoInicial) {
   document.getElementById('login-screen').style.display = 'none'
+  _appIniciado = true
   await iniciarApp()
+} else {
+  // Tenta recuperar sessão do hash da URL (retorno OAuth Google)
+  const hash = window.location.hash
+  if (hash && hash.includes('access_token')) {
+    document.getElementById('login-screen').style.display = 'none'
+    document.getElementById('app-shell').style.display = 'none'
+    // onAuthStateChange vai capturar e iniciar
+  } else {
+    document.getElementById('login-screen').style.display = 'block'
+  }
 }
 </script>
 </body>
