@@ -523,21 +523,852 @@ async function renderPage(page, container) {
     return
   }
 
-  // Páginas não implementadas neste arquivo — mensagem orientativa
-  const titulos = {
-    grade:'Grade de Aulas', 'criar-aulas':'Criar Aulas', alunos:'Alunos',
-    presencas:'Presenças', planos:'Planos', 'prof-home':'Dashboard Professor',
-    'prof-aulas':'Minhas Aulas', 'prof-chamada':'Chamada',
-    'aluno-grade':'Grade de Aulas', 'aluno-minhas':'Minhas Aulas', 'aluno-plano':'Meu Plano',
+
+  // ── HELPERS COMPARTILHADOS ───────────────────────────────
+  const NOMES = {hatha:'Hatha Yoga', acro:'Acro Yoga', raja:'Raja Yoga'}
+  const CORES = {hatha:'#2d7a2d', acro:'#E8BC4F', raja:'#5a2d8a'}
+  const DIAS_LABEL = {seg:'Segunda',ter:'Terça',qua:'Quarta',qui:'Quinta',sex:'Sexta',sab:'Sábado',dom:'Domingo'}
+  const HORARIOS = ['06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00']
+
+  function fmtDt(iso, opts){
+    return new Date(iso).toLocaleString('pt-BR', opts||{weekday:'short',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
   }
-  container.innerHTML = `
-    <div class="topbar"><div class="topbar-t">${titulos[page]||page}</div></div>
-    <div class="content" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;gap:12px;text-align:center">
-      <i class="ti ti-code" style="font-size:36px;color:var(--bege2)"></i>
-      <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--verde)">${titulos[page]||page}</div>
-      <div style="font-size:13px;color:var(--txt2);max-width:360px">Página pronta para implementar. A estrutura do banco, as funções e o RLS já estão configurados no Supabase.<br><br>Ver <code style="background:#f0ede4;padding:2px 6px;border-radius:4px">src/lib/supabase.js</code> para as funções disponíveis.</div>
-    </div>
-  `
+  function dot(mod){ return `<span style="width:8px;height:8px;border-radius:50%;background:${CORES[mod]||'#888'};flex-shrink:0;display:inline-block"></span>` }
+  function badge(txt, bg, color){
+    return `<span style="background:${bg};color:${color};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500">${txt}</span>`
+  }
+  function btn(label, onclick, style=''){
+    return `<button onclick="${onclick}" style="padding:5px 11px;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;${style}">${label}</button>`
+  }
+  function card(title, rightHtml, bodyHtml){
+    return `<div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden;margin-bottom:16px">
+      <div style="padding:13px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
+        <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">${title}</span>
+        <div>${rightHtml||''}</div>
+      </div>
+      ${bodyHtml}
+    </div>`
+  }
+  function modal(id, title, bodyHtml, footHtml){
+    return `<div id="${id}" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.45);z-index:100;align-items:center;justify-content:center">
+      <div style="background:#fff;border-radius:10px;width:480px;max-width:95vw;max-height:90vh;overflow:auto">
+        <div style="padding:18px 22px 14px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
+          <span style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--verde)">${title}</span>
+          <button onclick="document.getElementById('${id}').style.display='none'" style="background:none;border:1px solid var(--borda);border-radius:5px;padding:3px 8px;cursor:pointer;font-size:12px">✕</button>
+        </div>
+        <div style="padding:18px 22px">${bodyHtml}</div>
+        <div style="padding:12px 22px;border-top:1px solid var(--borda);display:flex;gap:8px;justify-content:flex-end">${footHtml}</div>
+      </div>
+    </div>`
+  }
+  function fi(id, label, inputHtml){
+    return `<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
+      <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">${label}</label>
+      ${inputHtml}
+    </div>`
+  }
+  const inputStyle = `style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--txt);width:100%;outline:none"`
+
+  // ── GRADE DE AULAS (admin + aluno) ───────────────────────
+  if (page === 'grade' || page === 'aluno-grade') {
+    const isAluno = page === 'aluno-grade'
+    const hoje = new Date()
+    // Semana atual: segunda a domingo
+    const diaSemana = hoje.getDay() === 0 ? 6 : hoje.getDay() - 1
+    const seg = new Date(hoje); seg.setDate(hoje.getDate() - diaSemana); seg.setHours(0,0,0,0)
+    const dom = new Date(seg); dom.setDate(seg.getDate() + 6); dom.setHours(23,59,59,999)
+
+    const [ocRes, cfgRes, matRes] = await Promise.all([
+      sb.from('ocorrencias_vagas').select('*').gte('data_hora', seg.toISOString()).lte('data_hora', dom.toISOString()).order('data_hora'),
+      sb.from('configuracoes').select('*'),
+      isAluno ? sb.from('matriculas').select('plano_tipo,opcao_aulas').eq('aluno_id', window._perfil.id).eq('ativa',true).single() : Promise.resolve({data:null}),
+    ])
+    const ocorrencias = ocRes.data || []
+    const cfg = Object.fromEntries((cfgRes.data||[]).map(c=>[c.chave,c.valor]))
+    const planoAluno = matRes.data?.plano_tipo
+
+    // Modalidades permitidas por plano
+    let modPermitidas = ['hatha','acro','raja']
+    if (isAluno && planoAluno) {
+      const mp = {brahma:['hatha'], shiva:['hatha','raja'], vishnu:['hatha','raja','acro']}
+      modPermitidas = mp[planoAluno] || ['hatha']
+    }
+
+    // Buscar confirmações do aluno
+    let minhasConfs = new Set()
+    if (isAluno) {
+      const ids = ocorrencias.map(o=>o.id)
+      if (ids.length) {
+        const { data: confs } = await sb.from('confirmacoes').select('ocorrencia_id').eq('aluno_id', window._perfil.id).in('ocorrencia_id', ids).eq('status','confirmado')
+        ;(confs||[]).forEach(c => minhasConfs.add(c.ocorrencia_id))
+      }
+    }
+
+    // Verificar feriados na semana
+    const { data: feriados } = await sb.from('feriados').select('*').gte('data', seg.toISOString().slice(0,10)).lte('data', dom.toISOString().slice(0,10))
+    const feriadosDatas = new Set((feriados||[]).map(f=>f.data))
+
+    // Agrupar ocorrências por dia e hora
+    const grade = {} // grade[dia_iso][hora] = ocorrencia
+    ocorrencias.forEach(o => {
+      const dt = new Date(o.data_hora)
+      const diaKey = dt.toISOString().slice(0,10)
+      const horaKey = dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
+      if (!grade[diaKey]) grade[diaKey] = {}
+      grade[diaKey][horaKey] = o
+    })
+
+    // Todas as horas com aulas
+    const horasSet = new Set()
+    ocorrencias.forEach(o => {
+      const dt = new Date(o.data_hora)
+      horasSet.add(dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}))
+    })
+    const horas = [...horasSet].sort()
+
+    // Dias da semana
+    const diasDaSemana = []
+    for (let i=0; i<7; i++) {
+      const d = new Date(seg); d.setDate(seg.getDate()+i)
+      diasDaSemana.push(d)
+    }
+
+    const prazoMin = Number(cfg.prazo_confirmacao_min||60)
+
+    // Construir grade HTML
+    let gradeHTML = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:600px">`
+    // Cabeçalho
+    gradeHTML += `<tr><th style="background:var(--verde);color:var(--bege);padding:8px;font-size:11px;font-weight:500;width:60px">Hora</th>`
+    diasDaSemana.forEach(d => {
+      const dStr = d.toISOString().slice(0,10)
+      const isHoje = d.toDateString() === hoje.toDateString()
+      const isFeriado = feriadosDatas.has(dStr)
+      gradeHTML += `<th style="background:${isHoje?'#2d5a2d':'var(--verde)'};color:var(--bege);padding:8px;font-size:10px;font-weight:500;text-align:center;${isFeriado?'opacity:.6':''}">
+        ${d.toLocaleDateString('pt-BR',{weekday:'short'})}<br>
+        <span style="font-size:11px;font-weight:400">${d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</span>
+        ${isFeriado?'<br><span style="font-size:9px;color:var(--dourado)">feriado</span>':''}
+      </th>`
+    })
+    gradeHTML += '</tr>'
+
+    // Linhas de hora
+    if (horas.length === 0) {
+      gradeHTML += `<tr><td colspan="8" style="text-align:center;padding:30px;font-size:13px;color:var(--txt2)">Nenhuma aula agendada esta semana.</td></tr>`
+    }
+    horas.forEach(hora => {
+      gradeHTML += `<tr><td style="background:rgba(242,236,206,.5);padding:6px 8px;font-size:11px;font-weight:500;color:var(--txt2);text-align:center;border:1px solid var(--borda)">${hora}</td>`
+      diasDaSemana.forEach(d => {
+        const dStr = d.toISOString().slice(0,10)
+        const oc = grade[dStr]?.[hora]
+        const isFeriado = feriadosDatas.has(dStr)
+        if (!oc) {
+          gradeHTML += `<td style="border:1px solid rgba(212,200,158,.3);background:#fafaf7;min-height:48px"></td>`
+        } else {
+          const confirmado = minhasConfs.has(oc.id)
+          const lotada = oc.vagas_livres <= 0
+          const agora = new Date()
+          const dtAula = new Date(oc.data_hora)
+          const prazoLimite = new Date(dtAula.getTime() - prazoMin*60000)
+          const foraPrazo = agora > prazoLimite
+          const permitida = modPermitidas.includes(oc.modalidade)
+          const passada = dtAula < agora
+
+          let bgCell = '#fff'
+          let borderCell = `border-left:3px solid ${CORES[oc.modalidade]||'#888'}`
+          if (confirmado) bgCell = 'rgba(232,188,79,.08)'
+          if (!permitida) bgCell = '#f8f8f8'
+
+          let actionHtml = ''
+          if (isAluno && !passada) {
+            if (!permitida) {
+              actionHtml = `<div style="font-size:9px;color:#ccc;margin-top:3px">🔒 ${planoAluno}</div>`
+            } else if (confirmado) {
+              actionHtml = `<div style="font-size:9px;color:var(--dourado);font-weight:500;margin-top:3px">✓ Confirmado</div>`
+            } else if (foraPrazo) {
+              actionHtml = `<div style="font-size:9px;color:#c0392b;margin-top:3px">Prazo enc.</div>`
+            } else if (lotada) {
+              actionHtml = `<div style="font-size:9px;color:#c0392b;margin-top:3px">Lotada</div>`
+            } else {
+              actionHtml = `<button onclick="confirmarOcorrencia('${oc.id}')" style="margin-top:3px;padding:2px 7px;background:var(--dourado);color:var(--verde);border:none;border-radius:4px;font-size:9px;cursor:pointer;font-weight:500;font-family:'DM Sans',sans-serif">Confirmar</button>`
+            }
+          }
+
+          gradeHTML += `<td style="border:1px solid rgba(212,200,158,.3);background:${bgCell};padding:5px 7px;vertical-align:top;cursor:${isAluno?'default':'pointer'}" ${!isAluno?`onclick="verDetalhesOcorrencia('${oc.id}')"`:''}">
+            <div style="font-size:10px;font-weight:500;${borderCell};padding-left:4px;line-height:1.3;color:${!permitida?'#ccc':'var(--txt)'}">${NOMES[oc.modalidade]}</div>
+            <div style="font-size:9px;color:var(--txt2);margin-top:2px">${oc.confirmados||0}/${oc.vagas_total}</div>
+            ${isFeriado&&!isAluno?`<div style="font-size:9px;color:#8a6b1a;margin-top:1px">⚠ feriado</div>`:''}
+            ${actionHtml}
+          </td>`
+        }
+      })
+      gradeHTML += '</tr>'
+    })
+    gradeHTML += '</table></div>'
+
+    // Legenda
+    const legendaHtml = `<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px">
+      ${['hatha','acro','raja'].map(m=>`<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--txt2)">${dot(m)}${NOMES[m]}</span>`).join('')}
+      ${isAluno?`<span style="font-size:11px;color:var(--txt2)">· Prazo: <strong>${prazoMin>=60?prazoMin/60+'h':prazoMin+'min'}</strong> antes</span>`:''}
+    </div>`
+
+    // Navegação de semana
+    const navHtml = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <button onclick="navigate('${page}')" style="padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">Semana atual</button>
+      <span style="font-size:12px;color:var(--txt2)">${seg.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})} – ${dom.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})}</span>
+      ${!isAluno?`<button onclick="navigate('criar-aulas')" style="margin-left:auto;padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">+ Nova Aula</button>`:''}
+    </div>`
+
+    // Modal detalhes ocorrência (admin)
+    const modalDetalhes = !isAluno ? modal('modal-det-oc', 'Detalhes da Aula',
+      `<div id="det-oc-body">Carregando...</div>`,
+      `<button onclick="document.getElementById('modal-det-oc').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Fechar</button>
+       <button onclick="navigate('presencas')" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Ver Presenças</button>`
+    ) : ''
+
+    container.innerHTML = `
+      <div class="topbar">
+        <div class="topbar-t">Grade de Aulas</div>
+        ${isAluno?`<div>${badge('Plano '+planoAluno,'#e8f4e8','#1a5a1a')}</div>`:''}
+      </div>
+      <div class="content">
+        ${feriados?.length?`<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:9px 13px;display:flex;align-items:center;gap:8px;font-size:12px;color:#7a5a10;margin-bottom:12px"><i class="ti ti-alert-triangle" style="color:var(--dourado)"></i><span>Há feriados esta semana: ${(feriados||[]).map(f=>f.nome).join(', ')}</span></div>`:''}
+        ${navHtml}
+        ${legendaHtml}
+        ${gradeHTML}
+      </div>
+      ${modalDetalhes}
+    `
+
+    window.confirmarOcorrencia = async function(ocId) {
+      const { data, error } = await sb.rpc('confirmar_presenca', { p_aluno_id: window._perfil.id, p_ocorrencia_id: ocId })
+      if (error || !data?.ok) { toast('❌ '+(data?.motivo||error?.message)); return }
+      toast('✓ Presença confirmada!')
+      navigate(page)
+    }
+
+    window.verDetalhesOcorrencia = async function(ocId) {
+      const modal = document.getElementById('modal-det-oc')
+      modal.style.display = 'flex'
+      const body = document.getElementById('det-oc-body')
+      body.innerHTML = 'Carregando...'
+      const [ocRes, confsRes] = await Promise.all([
+        sb.from('ocorrencias_vagas').select('*').eq('id', ocId).single(),
+        sb.from('confirmacoes').select('*, aluno:perfis!aluno_id(nome)').eq('ocorrencia_id', ocId).in('status',['confirmado','presente','ausente']).order('confirmado_em'),
+      ])
+      const oc = ocRes.data
+      const confs = confsRes.data || []
+      const dt = new Date(oc.data_hora)
+      body.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Aula</div><div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${NOMES[oc.modalidade]}</div></div>
+          <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Data/Hora</div><div style="font-size:13px;font-weight:500;color:var(--verde);margin-top:3px">${dt.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'})} ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Confirmados</div><div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">${oc.confirmados||0}/${oc.vagas_total}</div></div>
+          <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Professor</div><div style="font-size:13px;font-weight:500;color:var(--verde);margin-top:3px">${oc.professor_nome||'—'}</div></div>
+        </div>
+        ${oc.eh_feriado?`<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:8px 12px;font-size:12px;color:#7a5a10;margin-bottom:12px">⚠ Esta aula cai em feriado: ${oc.nome_feriado}</div>`:''}
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);margin-bottom:8px">Alunos confirmados (${confs.length})</div>
+        ${confs.length===0?'<div style="font-size:12px;color:var(--txt2);padding:10px 0">Nenhuma confirmação ainda.</div>':
+          confs.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--fundo);border-radius:6px;margin-bottom:4px">
+            <span style="font-size:12px;font-weight:500">${c.aluno?.nome||'—'}</span>
+            ${badge(c.status==='confirmado'?'Confirmado':c.status==='presente'?'Presente':'Ausente',
+              c.status==='confirmado'?'#e8f4e8':c.status==='presente'?'#e8f4e8':'#fceaea',
+              c.status==='ausente'?'#8a1a1a':'#1a5a1a')}
+          </div>`).join('')
+        }
+      `
+      window._ocAtual = ocId
+    }
+    return
+  }
+
+  // ── CRIAR AULAS ──────────────────────────────────────────
+  if (page === 'criar-aulas') {
+    const [aulasRes, profsRes, cfgRes] = await Promise.all([
+      sb.from('aulas').select('*, professor:perfis!professor_id(nome), horarios:aulas_horarios(*)').order('criado_em', {ascending:false}),
+      sb.from('perfis').select('id,nome').in('tipo',['admin','professor']).order('nome'),
+      sb.from('configuracoes').select('*'),
+    ])
+    const aulas = aulasRes.data || []
+    const profs = profsRes.data || []
+    const cfg = Object.fromEntries((cfgRes.data||[]).map(c=>[c.chave,c.valor]))
+    const fixas = aulas.filter(a=>a.tipo==='fixa')
+    const avulsas = aulas.filter(a=>a.tipo==='avulsa')
+
+    function renderAulaRow(a) {
+      const diasStr = (a.horarios||[]).map(h=>`${DIAS_LABEL[h.dia_semana]||h.dia_semana} ${h.hora_inicio.slice(0,5)}`).join(', ')
+      const statusBadge = a.ativa
+        ? badge('Ativa','#e8f4e8','#1a5a1a')
+        : badge('Inativa','#fceaea','#8a1a1a')
+      return `<div style="display:grid;grid-template-columns:1fr 110px 90px 60px 80px 70px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
+        <span style="display:flex;align-items:center;gap:6px">${dot(a.modalidade)}<strong>${NOMES[a.modalidade]}</strong><span style="font-size:10px;color:var(--txt2)">${diasStr}</span></span>
+        <span style="font-size:11px;color:var(--txt2)">${a.professor?.nome||'—'}</span>
+        <span style="font-size:11px">${a.vagas} vagas</span>
+        <span>${statusBadge}</span>
+        <button onclick="gerarOcorrenciasAula('${a.id}')" style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--verde);border:1px solid rgba(31,56,31,.2);border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif">Gerar</button>
+        <button onclick="toggleAulaStatus('${a.id}',${a.ativa})" style="padding:3px 8px;background:${a.ativa?'#fceaea':'#e8f4e8'};color:${a.ativa?'#8a1a1a':'#1a5a1a'};border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif">${a.ativa?'Pausar':'Ativar'}</button>
+      </div>`
+    }
+
+    const diasCheckboxes = ['seg','ter','qua','qui','sex','sab','dom'].map(d=>
+      `<label style="display:flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--borda);border-radius:20px;font-size:11px;cursor:pointer">
+        <input type="checkbox" name="dia" value="${d}" style="accent-color:var(--verde)"> ${DIAS_LABEL[d].slice(0,3)}
+      </label>`
+    ).join('')
+
+    const profsOptions = profs.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('')
+
+    const modalCriar = modal('modal-criar-aula', 'Nova Aula',
+      `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        ${fi('','Modalidade',`<select id="na-mod" ${inputStyle}><option value="hatha">Hatha Yoga</option><option value="acro">Acro Yoga</option><option value="raja">Raja Yoga</option></select>`)}
+        ${fi('','Tipo',`<select id="na-tipo" ${inputStyle} onchange="toggleTipoAula()"><option value="fixa">Fixa (recorrente)</option><option value="avulsa">Avulsa (única)</option></select>`)}
+      </div>
+      <div id="na-dias-wrap">
+        ${fi('','Dias da semana',`<div style="display:flex;flex-wrap:wrap;gap:6px">${diasCheckboxes}</div>`)}
+      </div>
+      <div id="na-data-wrap" style="display:none">
+        ${fi('','Data',`<input type="date" id="na-data" ${inputStyle}>`)}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        ${fi('','Horário',`<select id="na-hora" ${inputStyle}>${HORARIOS.map(h=>`<option value="${h}">${h}</option>`).join('')}</select>`)}
+        ${fi('','Duração',`<select id="na-dur" ${inputStyle}><option value="60">60 minutos</option><option value="75">75 minutos</option><option value="90">90 minutos</option></select>`)}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        ${fi('','Vagas',`<input type="number" id="na-vagas" value="${cfg.vagas_padrao||15}" min="1" max="100" ${inputStyle}>`)}
+        ${fi('','Professor',`<select id="na-prof" ${inputStyle}>${profsOptions}</select>`)}
+      </div>
+      <div id="na-feriado-warn" style="display:none;background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:8px 12px;font-size:12px;color:#7a5a10">⚠ Data coincide com feriado. Verifique antes de confirmar.</div>`,
+      `<button onclick="document.getElementById('modal-criar-aula').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+       <button onclick="salvarNovaAula()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Criar Aula</button>`
+    )
+
+    const modalGerar = modal('modal-gerar', 'Gerar Ocorrências',
+      `<p style="font-size:13px;color:var(--txt2);margin-bottom:14px">Gera as datas reais da aula no período selecionado, verificando feriados automaticamente.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        ${fi('','De',`<input type="date" id="ger-de" ${inputStyle}>`)}
+        ${fi('','Até',`<input type="date" id="ger-ate" ${inputStyle}>`)}
+      </div>`,
+      `<button onclick="document.getElementById('modal-gerar').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+       <button onclick="executarGerarOcorrencias()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Gerar</button>`
+    )
+
+    container.innerHTML = `
+      <div class="topbar">
+        <div class="topbar-t">Criar Aulas</div>
+        <button onclick="document.getElementById('modal-criar-aula').style.display='flex'" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-plus"></i> Nova Aula</button>
+      </div>
+      <div class="content">
+        <div style="background:rgba(31,56,31,.04);border:1px solid rgba(31,56,31,.12);border-radius:6px;padding:9px 13px;font-size:12px;color:var(--verde);margin-bottom:16px;display:flex;align-items:center;gap:8px">
+          <i class="ti ti-info-circle"></i>
+          <span>Após criar uma aula fixa, clique em <strong>Gerar</strong> para criar as datas do semestre no banco.</span>
+        </div>
+        ${card('Aulas Fixas ('+fixas.length+')', '',
+          `<div style="display:grid;grid-template-columns:1fr 110px 90px 60px 80px 70px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
+            <span>Modalidade / Dias</span><span>Professor</span><span>Vagas</span><span>Status</span><span>Ocorrências</span><span>Ação</span>
+          </div>
+          ${fixas.length===0?'<div style="padding:18px;font-size:12px;color:var(--txt2)">Nenhuma aula fixa criada.</div>':fixas.map(renderAulaRow).join('')}`
+        )}
+        ${card('Aulas Avulsas ('+avulsas.length+')', '',
+          `<div style="display:grid;grid-template-columns:1fr 110px 90px 60px 80px 70px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
+            <span>Modalidade / Data</span><span>Professor</span><span>Vagas</span><span>Status</span><span></span><span>Ação</span>
+          </div>
+          ${avulsas.length===0?'<div style="padding:18px;font-size:12px;color:var(--txt2)">Nenhuma aula avulsa criada.</div>':avulsas.map(renderAulaRow).join('')}`
+        )}
+      </div>
+      ${modalCriar}
+      ${modalGerar}
+    `
+
+    window.toggleTipoAula = function() {
+      const t = document.getElementById('na-tipo').value
+      document.getElementById('na-dias-wrap').style.display = t==='fixa'?'block':'none'
+      document.getElementById('na-data-wrap').style.display = t==='avulsa'?'block':'none'
+      // Verifica feriado para avulsa
+      if (t==='avulsa') {
+        document.getElementById('na-data').addEventListener('change', async function() {
+          const { data: fer } = await sb.from('feriados').select('*').eq('data', this.value)
+          document.getElementById('na-feriado-warn').style.display = (fer&&fer.length)?'block':'none'
+        })
+      }
+    }
+
+    window.salvarNovaAula = async function() {
+      const mod = document.getElementById('na-mod').value
+      const tipo = document.getElementById('na-tipo').value
+      const hora = document.getElementById('na-hora').value
+      const dur = document.getElementById('na-dur').value
+      const vagas = document.getElementById('na-vagas').value
+      const prof = document.getElementById('na-prof').value
+
+      const { data: novaAula, error: errAula } = await sb.from('aulas').insert({
+        modalidade: mod, tipo, vagas: Number(vagas), duracao_min: Number(dur),
+        professor_id: prof||null, criado_por: window._perfil.id
+      }).select().single()
+      if (errAula) { toast('Erro: '+errAula.message); return }
+
+      if (tipo === 'fixa') {
+        const dias = [...document.querySelectorAll('input[name="dia"]:checked')].map(el=>el.value)
+        if (!dias.length) { toast('Selecione ao menos um dia'); return }
+        const horarios = dias.map(d => ({ aula_id: novaAula.id, dia_semana: d, hora_inicio: hora+':00' }))
+        const { error: errH } = await sb.from('aulas_horarios').insert(horarios)
+        if (errH) { toast('Erro horários: '+errH.message); return }
+      } else {
+        // Avulsa: gera 1 ocorrência
+        const data = document.getElementById('na-data').value
+        if (!data) { toast('Informe a data'); return }
+        const dtOc = new Date(data+'T'+hora+':00')
+        const { data: fer } = await sb.from('feriados').select('nome').eq('data', data).single()
+        await sb.from('ocorrencias').insert({
+          aula_id: novaAula.id, data_hora: dtOc.toISOString(),
+          eh_feriado: !!fer, nome_feriado: fer?.nome||null
+        })
+      }
+
+      document.getElementById('modal-criar-aula').style.display = 'none'
+      toast('✓ Aula criada!')
+      navigate('criar-aulas')
+    }
+
+    window._aulaParaGerar = null
+    window.gerarOcorrenciasAula = function(aulaId) {
+      window._aulaParaGerar = aulaId
+      const hoje = new Date().toISOString().slice(0,10)
+      const em90 = new Date(); em90.setDate(em90.getDate()+90)
+      document.getElementById('ger-de').value = hoje
+      document.getElementById('ger-ate').value = em90.toISOString().slice(0,10)
+      document.getElementById('modal-gerar').style.display = 'flex'
+    }
+
+    window.executarGerarOcorrencias = async function() {
+      const de = document.getElementById('ger-de').value
+      const ate = document.getElementById('ger-ate').value
+      if (!de||!ate) { toast('Preencha as datas'); return }
+
+      const { data: aula } = await sb.from('aulas').select('*, horarios:aulas_horarios(*)').eq('id', window._aulaParaGerar).single()
+      const { data: feriados } = await sb.from('feriados').select('*').gte('data',de).lte('data',ate)
+      const feriadosDatas = new Set((feriados||[]).map(f=>f.data))
+      const diasMap = {seg:1,ter:2,qua:3,qui:4,sex:5,sab:6,dom:0}
+
+      const ocorrencias = []
+      const cursor = new Date(de+'T12:00:00')
+      const fimDate = new Date(ate+'T12:00:00')
+
+      while (cursor <= fimDate) {
+        const diaSemana = cursor.getDay()
+        for (const h of (aula.horarios||[])) {
+          if (diasMap[h.dia_semana] === diaSemana) {
+            const [hora,min] = h.hora_inicio.split(':')
+            const dt = new Date(cursor)
+            dt.setHours(Number(hora),Number(min),0,0)
+            const dStr = dt.toISOString().slice(0,10)
+            const feriadoNome = feriadosDatas.has(dStr) ? (feriados||[]).find(f=>f.data===dStr)?.nome : null
+            ocorrencias.push({ aula_id: aula.id, data_hora: dt.toISOString(), eh_feriado:!!feriadoNome, nome_feriado:feriadoNome||null })
+          }
+        }
+        cursor.setDate(cursor.getDate()+1)
+      }
+
+      if (ocorrencias.length) {
+        const { error } = await sb.from('ocorrencias').upsert(ocorrencias, {onConflict:'aula_id,data_hora'})
+        if (error) { toast('Erro: '+error.message); return }
+      }
+      document.getElementById('modal-gerar').style.display = 'none'
+      toast(`✓ ${ocorrencias.length} ocorrências geradas!`)
+    }
+
+    window.toggleAulaStatus = async function(id, ativa) {
+      await sb.from('aulas').update({ativa: !ativa}).eq('id', id)
+      toast(ativa ? 'Aula pausada' : 'Aula ativada')
+      navigate('criar-aulas')
+    }
+    return
+  }
+
+  // ── ALUNOS ───────────────────────────────────────────────
+  if (page === 'alunos') {
+    const busca = window._buscaAlunos || ''
+    let q = sb.from('perfis').select('*, matriculas(plano_tipo,opcao_aulas,valor_mensal,ativa,fim)').eq('tipo','aluno').order('nome')
+    const { data: todos } = await q
+    const alunos = (todos||[]).filter(a => !busca || a.nome.toLowerCase().includes(busca.toLowerCase()) || a.email.toLowerCase().includes(busca.toLowerCase()))
+
+    const planoBadge = {
+      brahma: badge('Brahma','#f0ede4','#5a5a4a'),
+      shiva:  badge('Shiva','#e8f4e8','#1a5a1a'),
+      vishnu: badge('Vishnu','rgba(232,188,79,.15)','#7a5a10'),
+    }
+
+    const modalCadastro = modal('modal-cad-aluno', 'Cadastrar Aluno',
+      `${fi('','Nome completo',`<input type="text" id="ca-nome" ${inputStyle} placeholder="Nome do aluno">`)}
+      ${fi('','E-mail',`<input type="email" id="ca-email" ${inputStyle} placeholder="email@exemplo.com">`)}
+      ${fi('','Telefone',`<input type="tel" id="ca-tel" ${inputStyle} placeholder="(11) 99999-9999">`)}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        ${fi('','Plano',`<select id="ca-plano" ${inputStyle} onchange="updateValorPlano()">
+          <option value="brahma">Brahma</option>
+          <option value="shiva">Shiva</option>
+          <option value="vishnu">Vishnu</option>
+        </select>`)}
+        ${fi('','Aulas/semana',`<select id="ca-opcao" ${inputStyle} onchange="updateValorPlano()">
+          <option value="1">1× por semana</option>
+          <option value="2">2× por semana</option>
+          <option value="99">Uso livre</option>
+        </select>`)}
+      </div>
+      ${fi('','Valor mensal (R$)',`<input type="number" id="ca-valor" ${inputStyle} value="100">`)}
+      <div style="background:rgba(232,188,79,.08);border:1px solid rgba(232,188,79,.2);border-radius:6px;padding:10px;font-size:11px;color:var(--txt2)">
+        Uma senha temporária será enviada por e-mail. O aluno poderá alterá-la no primeiro acesso.
+      </div>`,
+      `<button onclick="document.getElementById('modal-cad-aluno').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+       <button onclick="salvarNovoAluno()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Cadastrar</button>`
+    )
+
+    const modalEditar = modal('modal-edit-aluno', 'Editar Plano',
+      `<div id="edit-aluno-body">Carregando...</div>`,
+      `<button onclick="document.getElementById('modal-edit-aluno').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+       <button onclick="salvarEdicaoAluno()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Salvar</button>`
+    )
+
+    container.innerHTML = `
+      <div class="topbar">
+        <div class="topbar-t">Alunos</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="input-busca-aluno" placeholder="Buscar..." value="${busca}" oninput="window._buscaAlunos=this.value;navigate('alunos')" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;width:180px;font-family:'DM Sans',sans-serif;outline:none">
+          <button onclick="document.getElementById('modal-cad-aluno').style.display='flex'" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-user-plus"></i> Cadastrar</button>
+        </div>
+      </div>
+      <div class="content">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Total</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${todos?.length||0}</div></div>
+          ${['brahma','shiva','vishnu'].map(p=>{
+            const n = (todos||[]).filter(a=>a.matriculas?.some(m=>m.ativa&&m.plano_tipo===p)).length
+            return `<div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">${p.charAt(0).toUpperCase()+p.slice(1)}</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${n}</div></div>`
+          }).join('')}
+        </div>
+        ${card('Lista de Alunos ('+alunos.length+')', '',
+          `<div style="display:grid;grid-template-columns:1fr 80px 80px 80px 70px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
+            <span>Aluno</span><span>Plano</span><span>Aulas</span><span>Validade</span><span></span>
+          </div>
+          ${alunos.length===0?'<div style="padding:18px;font-size:12px;color:var(--txt2)">Nenhum aluno encontrado.</div>':
+            alunos.map(a => {
+              const mat = (a.matriculas||[]).find(m=>m.ativa)
+              const initials = a.nome.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()
+              const opcaoLabel = mat?.opcao_aulas===99?'Livre':mat?.opcao_aulas===2?'2×/sem':mat?.opcao_aulas===1?'1×/sem':'—'
+              const vencida = mat?.fim && new Date(mat.fim) < new Date()
+              return `<div style="display:grid;grid-template-columns:1fr 80px 80px 80px 70px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div style="width:28px;height:28px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:var(--verde);flex-shrink:0">${initials}</div>
+                  <div><div style="font-weight:500">${a.nome}</div><div style="font-size:10px;color:var(--txt2)">${a.email}</div></div>
+                </div>
+                <span>${mat?planoBadge[mat.plano_tipo]||mat.plano_tipo:badge('Sem plano','#fceaea','#8a1a1a')}</span>
+                <span style="font-size:11px;color:var(--txt2)">${opcaoLabel}</span>
+                <span style="font-size:11px;color:${vencida?'#c0392b':'var(--txt2)'}">${mat?.fim?new Date(mat.fim+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):vencida?'Vencida':'—'}</span>
+                <button onclick="editarAluno('${a.id}')" style="padding:3px 10px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:11px;cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif">Editar</button>
+              </div>`
+            }).join('')
+          }`
+        )}
+      </div>
+      ${modalCadastro}
+      ${modalEditar}
+    `
+
+    const valoresPlano = {brahma:{1:100},shiva:{1:150,2:200},vishnu:{2:250,99:300}}
+    window.updateValorPlano = function() {
+      const p = document.getElementById('ca-plano')?.value
+      const o = document.getElementById('ca-opcao')?.value
+      const v = valoresPlano[p]?.[Number(o)]
+      if (v && document.getElementById('ca-valor')) document.getElementById('ca-valor').value = v
+    }
+
+    window.salvarNovoAluno = async function() {
+      const nome = document.getElementById('ca-nome').value.trim()
+      const email = document.getElementById('ca-email').value.trim()
+      const tel = document.getElementById('ca-tel').value.trim()
+      const plano = document.getElementById('ca-plano').value
+      const opcao = Number(document.getElementById('ca-opcao').value)
+      const valor = Number(document.getElementById('ca-valor').value)
+      if (!nome||!email) { toast('Preencha nome e e-mail'); return }
+
+      // Cria usuário no Auth (admin API não disponível no client — orienta fluxo de convite)
+      const { data: invited, error: errInv } = await sb.auth.admin?.inviteUserByEmail(email).catch(()=>({error:{message:'use service role'}})) || {}
+
+      // Fallback: cria perfil direto e orienta senha manual
+      const { data: existente } = await sb.from('perfis').select('id').eq('email', email).single()
+      let alunoId = existente?.id
+
+      if (!alunoId) {
+        // Cria via signUp com senha temporária
+        const senhaTemp = 'Temp@'+Math.random().toString(36).slice(2,8)
+        const { data: signUpData, error: errSU } = await sb.auth.signUp({ email, password: senhaTemp, options:{ data:{nome} } })
+        if (errSU) { toast('Erro: '+errSU.message); return }
+        alunoId = signUpData.user?.id
+        if (alunoId) {
+          await sb.from('perfis').upsert({ id: alunoId, nome, email, telefone: tel||null, tipo: 'aluno' })
+        }
+      }
+
+      if (alunoId) {
+        await sb.from('matriculas').update({ativa:false}).eq('aluno_id', alunoId).eq('ativa', true)
+        await sb.from('matriculas').insert({ aluno_id: alunoId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor })
+        document.getElementById('modal-cad-aluno').style.display = 'none'
+        toast('✓ Aluno cadastrado!')
+        navigate('alunos')
+      }
+    }
+
+    window.editarAluno = async function(alunoId) {
+      const { data: a } = await sb.from('perfis').select('*, matriculas(*)').eq('id', alunoId).single()
+      const mat = (a.matriculas||[]).find(m=>m.ativa)
+      window._editAlunoId = alunoId
+      document.getElementById('edit-aluno-body').innerHTML = `
+        <div style="margin-bottom:10px"><div style="font-weight:500;font-size:14px">${a.nome}</div><div style="font-size:11px;color:var(--txt2)">${a.email}</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          ${fi('','Plano',`<select id="ea-plano" ${inputStyle} onchange="updateValorEdicao()">
+            <option value="brahma" ${mat?.plano_tipo==='brahma'?'selected':''}>Brahma</option>
+            <option value="shiva" ${mat?.plano_tipo==='shiva'?'selected':''}>Shiva</option>
+            <option value="vishnu" ${mat?.plano_tipo==='vishnu'?'selected':''}>Vishnu</option>
+          </select>`)}
+          ${fi('','Aulas/semana',`<select id="ea-opcao" ${inputStyle} onchange="updateValorEdicao()">
+            <option value="1" ${mat?.opcao_aulas===1?'selected':''}>1× por semana</option>
+            <option value="2" ${mat?.opcao_aulas===2?'selected':''}>2× por semana</option>
+            <option value="99" ${mat?.opcao_aulas===99?'selected':''}>Uso livre</option>
+          </select>`)}
+        </div>
+        ${fi('','Valor mensal (R$)',`<input type="number" id="ea-valor" ${inputStyle} value="${mat?.valor_mensal||0}">`)}
+        ${fi('','Vencimento',`<input type="date" id="ea-fim" ${inputStyle} value="${mat?.fim||''}">`)}
+        ${fi('','Status',`<select id="ea-ativo" ${inputStyle}><option value="true" ${a.ativo?'selected':''}>Ativo</option><option value="false" ${!a.ativo?'selected':''}>Inativo</option></select>`)}
+      `
+      document.getElementById('modal-edit-aluno').style.display = 'flex'
+    }
+
+    window.updateValorEdicao = function() {
+      const p = document.getElementById('ea-plano')?.value
+      const o = document.getElementById('ea-opcao')?.value
+      const v = valoresPlano[p]?.[Number(o)]
+      if (v && document.getElementById('ea-valor')) document.getElementById('ea-valor').value = v
+    }
+
+    window.salvarEdicaoAluno = async function() {
+      const plano = document.getElementById('ea-plano').value
+      const opcao = Number(document.getElementById('ea-opcao').value)
+      const valor = Number(document.getElementById('ea-valor').value)
+      const fim = document.getElementById('ea-fim').value || null
+      const ativo = document.getElementById('ea-ativo').value === 'true'
+      await sb.from('matriculas').update({ativa:false}).eq('aluno_id', window._editAlunoId).eq('ativa', true)
+      await sb.from('matriculas').insert({ aluno_id: window._editAlunoId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor, fim })
+      await sb.from('perfis').update({ativo}).eq('id', window._editAlunoId)
+      document.getElementById('modal-edit-aluno').style.display = 'none'
+      toast('✓ Aluno atualizado!')
+      navigate('alunos')
+    }
+    return
+  }
+
+  // ── PRESENÇAS ADMIN ──────────────────────────────────────
+  if (page === 'presencas') {
+    const hoje = new Date()
+    const inicioHoje = new Date(hoje); inicioHoje.setHours(0,0,0,0)
+    const fimHoje = new Date(hoje); fimHoje.setHours(23,59,59,999)
+
+    const { data: ocHoje } = await sb.from('ocorrencias_vagas').select('*')
+      .gte('data_hora', inicioHoje.toISOString()).lte('data_hora', fimHoje.toISOString())
+      .eq('cancelada', false).order('data_hora')
+
+    const ocSelecionadaId = window._ocPresencaId || ocHoje?.[0]?.id
+
+    let confs = [], ocAtual = null
+    if (ocSelecionadaId) {
+      const [confRes, ocRes] = await Promise.all([
+        sb.from('confirmacoes').select('*, aluno:perfis!aluno_id(id,nome,email)').eq('ocorrencia_id', ocSelecionadaId).order('confirmado_em'),
+        sb.from('ocorrencias_vagas').select('*').eq('id', ocSelecionadaId).single(),
+      ])
+      confs = confRes.data || []
+      ocAtual = ocRes.data
+    }
+
+    const seletorAulas = (ocHoje||[]).map(oc => {
+      const dt = new Date(oc.data_hora)
+      const hora = dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
+      const sel = oc.id === ocSelecionadaId
+      return `<button onclick="window._ocPresencaId='${oc.id}';navigate('presencas')" style="padding:7px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${sel?'var(--verde)':'var(--borda)'};background:${sel?'var(--verde)':'#fff'};color:${sel?'var(--bege)':'var(--txt2)'};display:flex;align-items:center;gap:6px">
+        ${dot(oc.modalidade)} ${NOMES[oc.modalidade]} ${hora}
+        <span style="background:${sel?'rgba(242,236,206,.2)':'rgba(31,56,31,.08)'};padding:1px 6px;border-radius:10px;font-size:10px">${oc.confirmados||0}/${oc.vagas_total}</span>
+      </button>`
+    }).join('')
+
+    const statusMap = { confirmado:'Confirmado', presente:'Presente', ausente:'Ausente', pendente:'Pendente', cancelado:'Cancelado' }
+    const statusBg = { confirmado:'#e8f4e8', presente:'#e8f4e8', ausente:'#fceaea', pendente:'rgba(232,188,79,.15)', cancelado:'#f0ede4' }
+    const statusColor = { confirmado:'#1a5a1a', presente:'#1a5a1a', ausente:'#8a1a1a', pendente:'#7a5a10', cancelado:'#5a5a4a' }
+
+    container.innerHTML = `
+      <div class="topbar">
+        <div class="topbar-t">Presenças</div>
+        <div style="font-size:11px;color:var(--txt2)">${hoje.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'})}</div>
+      </div>
+      <div class="content">
+        ${ocHoje?.length===0?'<div style="text-align:center;padding:40px;font-size:13px;color:var(--txt2)">Nenhuma aula hoje.</div>':''}
+        ${ocHoje?.length>0?`
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">${seletorAulas}</div>
+          ${ocAtual?card(
+            `${NOMES[ocAtual.modalidade]} — ${new Date(ocAtual.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`,
+            `<div style="display:flex;gap:6px">
+              ${badge(ocAtual.confirmados+'/'+(ocAtual.vagas_total)+' conf.','#e8f4e8','#1a5a1a')}
+              <button onclick="marcarTodosPresentes()" style="padding:3px 10px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">✓ Todos presentes</button>
+            </div>`,
+            `<div style="display:grid;grid-template-columns:1fr 90px 100px 90px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
+              <span>Aluno</span><span>Confirmou</span><span>Status</span><span>Ação</span>
+            </div>
+            ${confs.length===0?'<div style="padding:16px 18px;font-size:12px;color:var(--txt2)">Nenhuma confirmação para esta aula.</div>':
+              confs.map(c=>`<div style="display:grid;grid-template-columns:1fr 90px 100px 90px;align-items:center;gap:10px;padding:9px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px" id="conf-row-${c.id}">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div style="width:26px;height:26px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:var(--verde)">${(c.aluno?.nome||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()}</div>
+                  <span style="font-weight:500">${c.aluno?.nome||'—'}</span>
+                </div>
+                <span style="font-size:10px;color:var(--txt2)">${c.confirmado_em?new Date(c.confirmado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'-'}</span>
+                <span>${badge(statusMap[c.status]||c.status, statusBg[c.status]||'#f0ede4', statusColor[c.status]||'#5a5a4a')}</span>
+                <div style="display:flex;gap:4px">
+                  <button onclick="setPresenca('${c.id}',true)" style="padding:3px 7px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Presente">✓</button>
+                  <button onclick="setPresenca('${c.id}',false)" style="padding:3px 7px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Ausente">✕</button>
+                </div>
+              </div>`).join('')
+            }`
+          ):''}
+        `:''}
+      </div>
+    `
+
+    window.setPresenca = async function(confId, presente) {
+      const { error } = await sb.from('confirmacoes').update({
+        status: presente ? 'presente' : 'ausente',
+        presenca_em: new Date().toISOString()
+      }).eq('id', confId)
+      if (error) { toast('Erro: '+error.message); return }
+      toast(presente ? '✓ Marcado presente' : '✕ Marcado ausente')
+      navigate('presencas')
+    }
+
+    window.marcarTodosPresentes = async function() {
+      const ids = confs.filter(c=>c.status==='confirmado').map(c=>c.id)
+      if (!ids.length) { toast('Nenhum confirmado para marcar'); return }
+      for (const id of ids) {
+        await sb.from('confirmacoes').update({ status:'presente', presenca_em: new Date().toISOString() }).eq('id', id)
+      }
+      toast('✓ Todos marcados como presentes!')
+      navigate('presencas')
+    }
+    return
+  }
+
+  // ── CHAMADA PROFESSOR ────────────────────────────────────
+  if (page === 'prof-chamada' || page === 'prof-home') {
+    const hoje = new Date()
+    const inicioHoje = new Date(hoje); inicioHoje.setHours(0,0,0,0)
+    const fimHoje = new Date(hoje); fimHoje.setHours(23,59,59,999)
+
+    const { data: ocHoje } = await sb.from('ocorrencias_vagas').select('*')
+      .gte('data_hora', inicioHoje.toISOString()).lte('data_hora', fimHoje.toISOString())
+      .eq('cancelada', false).eq('professor_id', window._perfil.id).order('data_hora')
+
+    if (page === 'prof-home') {
+      const proxima = (ocHoje||[]).find(o => new Date(o.data_hora) >= hoje) || ocHoje?.[0]
+      container.innerHTML = `
+        <div class="topbar"><div class="topbar-t">Olá, ${window._perfil.nome.split(' ')[0]}</div></div>
+        <div class="content">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+            <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Aulas hoje</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${ocHoje?.length||0}</div></div>
+            <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Confirmados hoje</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${(ocHoje||[]).reduce((s,o)=>s+(o.confirmados||0),0)}</div></div>
+            <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Próxima aula</div><div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${proxima?new Date(proxima.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · '+NOMES[proxima.modalidade]:'—'}</div></div>
+          </div>
+          ${card('Aulas de hoje', '',
+            (ocHoje||[]).length===0?'<div style="padding:18px;font-size:12px;color:var(--txt2)">Nenhuma aula hoje.</div>':
+            (ocHoje||[]).map(oc=>{
+              const dt = new Date(oc.data_hora)
+              const hora = dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
+              const isProxima = oc.id === proxima?.id
+              return `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid rgba(212,200,158,.3);${isProxima?'background:rgba(232,188,79,.04);border-left:3px solid var(--dourado)':''}">
+                <div>
+                  <div style="display:flex;align-items:center;gap:6px">${dot(oc.modalidade)}<strong style="font-size:13px">${NOMES[oc.modalidade]}</strong>${isProxima?badge('Próxima','rgba(232,188,79,.15)','#7a5a10'):''}</div>
+                  <div style="font-size:11px;color:var(--txt2);margin-top:2px">${hora} · ${oc.confirmados||0}/${oc.vagas_total} confirmados</div>
+                </div>
+                <button onclick="window._ocPresencaId='${oc.id}';navigate('prof-chamada')" style="padding:5px 12px;background:${isProxima?'var(--dourado)':'var(--verde)'};color:${isProxima?'var(--verde)':'var(--bege)'};border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500">Fazer Chamada</button>
+              </div>`
+            }).join('')
+          )}
+        </div>
+      `
+      return
+    }
+
+    // CHAMADA
+    const ocSelecionadaId = window._ocPresencaId || ocHoje?.[0]?.id
+    let confs = [], ocAtual = null
+    if (ocSelecionadaId) {
+      const [confRes, ocRes] = await Promise.all([
+        sb.from('confirmacoes').select('*, aluno:perfis!aluno_id(id,nome)').eq('ocorrencia_id', ocSelecionadaId).order('confirmado_em'),
+        sb.from('ocorrencias_vagas').select('*').eq('id', ocSelecionadaId).single(),
+      ])
+      confs = confRes.data || []
+      ocAtual = ocRes.data
+    }
+
+    const seletor = (ocHoje||[]).map(oc=>{
+      const dt = new Date(oc.data_hora)
+      const sel = oc.id === ocSelecionadaId
+      return `<button onclick="window._ocPresencaId='${oc.id}';navigate('prof-chamada')" style="padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${sel?'var(--verde)':'var(--borda)'};background:${sel?'var(--verde)':'#fff'};color:${sel?'var(--bege)':'var(--txt2)'}">${NOMES[oc.modalidade]} ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</button>`
+    }).join('')
+
+    container.innerHTML = `
+      <div class="topbar">
+        <div class="topbar-t">Chamada</div>
+        ${ocAtual?badge(`${confs.filter(c=>c.status==='presente').length} presentes`,'#e8f4e8','#1a5a1a'):''}
+      </div>
+      <div class="content">
+        ${(ocHoje||[]).length>1?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">${seletor}</div>`:''}
+        ${ocAtual?card(
+          `${NOMES[ocAtual.modalidade]} — ${new Date(ocAtual.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`,
+          `<button onclick="marcarTodosProfPresentes()" style="padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">✓ Todos presentes</button>`,
+          `<div style="padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Clique no nome para alternar presença/ausência</div>
+          ${confs.length===0?'<div style="padding:16px 18px;font-size:12px;color:var(--txt2)">Nenhuma confirmação para esta aula.</div>':
+            confs.map(c=>{
+              const presente = c.status==='presente'
+              const ausente = c.status==='ausente'
+              return `<div onclick="togglePresencaProf('${c.id}','${c.status}')" style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid rgba(212,200,158,.3);cursor:pointer;background:${presente?'rgba(232,188,79,.06)':ausente?'rgba(255,0,0,.03)':'#fff'};transition:background .15s" id="prow-${c.id}">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div style="width:32px;height:32px;border-radius:50%;background:${presente?'var(--dourado)':ausente?'#fceaea':'rgba(31,56,31,.1)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:${presente?'var(--verde)':ausente?'#8a1a1a':'var(--verde)'}">
+                    ${(c.aluno?.nome||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()}
+                  </div>
+                  <span style="font-size:13px;font-weight:500">${c.aluno?.nome||'—'}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  ${presente?badge('Presente','#e8f4e8','#1a5a1a'):ausente?badge('Ausente','#fceaea','#8a1a1a'):badge('Pendente','rgba(232,188,79,.15)','#7a5a10')}
+                  <span style="font-size:16px;color:${presente?'#2d7a2d':ausente?'#c0392b':'#ccc'}">${presente?'✓':ausente?'✕':'○'}</span>
+                </div>
+              </div>`
+            }).join('')
+          }`
+        ):`<div style="text-align:center;padding:40px;font-size:13px;color:var(--txt2)">Nenhuma aula hoje.</div>`}
+      </div>
+    `
+
+    window.togglePresencaProf = async function(confId, statusAtual) {
+      const novoStatus = statusAtual === 'presente' ? 'ausente' : 'presente'
+      await sb.from('confirmacoes').update({ status: novoStatus, presenca_em: new Date().toISOString() }).eq('id', confId)
+      navigate('prof-chamada')
+    }
+
+    window.marcarTodosProfPresentes = async function() {
+      for (const c of confs) {
+        if (c.status !== 'presente') {
+          await sb.from('confirmacoes').update({ status: 'presente', presenca_em: new Date().toISOString() }).eq('id', c.id)
+        }
+      }
+      toast('✓ Todos presentes!')
+      navigate('prof-chamada')
+    }
+    return
+  }
+
+
 }
 
 // ── VERIFICAR SESSÃO AO CARREGAR ──────────────────────────────
