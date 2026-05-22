@@ -127,6 +127,14 @@
         <!-- preenchido por JS conforme perfil -->
         <div style="padding:18px;font-size:11px;color:rgba(242,236,206,.3)">Carregando menu...</div>
       </nav>
+      <div id="impersonate-bar" style="padding:10px 18px;border-top:1px solid rgba(242,236,206,.08);display:none">
+        <div style="font-size:9px;color:rgba(242,236,206,.35);margin-bottom:5px;text-transform:uppercase;letter-spacing:1px">Ver como</div>
+        <div style="display:flex;gap:4px">
+          <button id="imp-admin" onclick="impersonar('admin')" style="flex:1;padding:4px;background:rgba(242,236,206,.15);color:rgba(242,236,206,.7);border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif">Admin</button>
+          <button id="imp-prof" onclick="impersonar('professor')" style="flex:1;padding:4px;background:rgba(242,236,206,.15);color:rgba(242,236,206,.7);border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif">Prof</button>
+          <button id="imp-aluno" onclick="impersonar('aluno')" style="flex:1;padding:4px;background:rgba(242,236,206,.15);color:rgba(242,236,206,.7);border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif">Aluno</button>
+        </div>
+      </div>
       <div class="sb-bottom">
         <button class="btn-logout" onclick="fazerLogout()">
           <i class="ti ti-logout" style="font-size:14px"></i> Sair
@@ -235,6 +243,9 @@ function buildMenu(tipo) {
       nav.appendChild(d)
     }
   }
+  // Mostra barra de impersonar só para admin real
+  const bar = document.getElementById('impersonate-bar')
+  if (bar) bar.style.display = window._perfil?.tipo === 'admin' ? 'block' : 'none'
 }
 
 function setActiveNav(id) {
@@ -382,6 +393,33 @@ window.fazerLogout = async function() {
   document.getElementById('login-senha').value = ''
 }
 
+// ── IMPERSONAR (admin vê como outro perfil) ───────────────────
+window.impersonar = function(tipo) {
+  const perfil = window._perfil
+  if (!perfil || perfil.tipo !== 'admin') return
+  window._viewAs = tipo
+  // Atualiza visual da sidebar
+  document.getElementById('sb-role-label').textContent =
+    {admin:'Admin',professor:'Modo Professor',aluno:'Modo Aluno'}[tipo]
+  ;['admin','prof','aluno'].forEach(t => {
+    const btn = document.getElementById('imp-'+t)
+    if (!btn) return
+    const key = t==='prof'?'professor':t
+    btn.style.background = key===tipo ? 'var(--dourado)' : 'rgba(242,236,206,.15)'
+    btn.style.color = key===tipo ? 'var(--verde)' : 'rgba(242,236,206,.7)'
+    btn.style.fontWeight = key===tipo ? '500' : '400'
+  })
+  // Atualiza menu
+  buildMenu(tipo)
+  // Navega para home do perfil
+  const homes = {admin:'dashboard', professor:'prof-home', aluno:'aluno-home'}
+  navigate(homes[tipo] || 'dashboard')
+}
+
+// ── GRADE — semana atual controlada globalmente ───────────────
+window._gradeOffset = 0  // semanas em relação à atual
+
+
 // Permite Enter no login
 document.getElementById('login-senha').addEventListener('keydown', e => {
   if (e.key === 'Enter') window.fazerLogin()
@@ -516,7 +554,7 @@ async function renderPage(page, container) {
     const aulasHoje = ocorrencias.data || []
     const totalConf = aulasHoje.reduce((s,a)=>s+(a.confirmados||0),0)
     const totalLivres = aulasHoje.reduce((s,a)=>s+(a.vagas_livres||0),0)
-    const por = { brahma:0, shiva:0, vishnu:0 }
+    const por = { brahma:0, shiva_1x:0, shiva_2x:0, vishnu_2x:0, vishnu_livre:0 }
     alunos.forEach(a => { if(por[a.plano_tipo]!==undefined) por[a.plano_tipo]++ })
 
     container.innerHTML = `
@@ -552,7 +590,13 @@ async function renderPage(page, container) {
           <div>
             <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-bottom:14px">
               <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500;color:var(--verde);margin-bottom:12px">Alunos por plano</div>
-              ${['brahma','shiva','vishnu'].map(p=>{const pct2=alunos.length?Math.round(por[p]/alunos.length*100):0;const cores={brahma:'var(--bege2)',shiva:'var(--verde-cl)',vishnu:'var(--dourado)'};return `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span style="font-weight:500;text-transform:capitalize">${p}</span><span style="color:var(--txt2)">${por[p]} alunos</span></div><div style="height:7px;background:#f0ede4;border-radius:4px"><div style="height:7px;background:${cores[p]};border-radius:4px;width:${pct2}%"></div></div></div>`}).join('')}
+              ${[
+                {k:'brahma',l:'Brahma',c:'var(--bege2)'},
+                {k:'shiva_1x',l:'Shiva 1x',c:'#7ab87a'},
+                {k:'shiva_2x',l:'Shiva 2x',c:'var(--verde-cl)'},
+                {k:'vishnu_2x',l:'Vishnu 2x',c:'var(--dourado)'},
+                {k:'vishnu_livre',l:'Vishnu Livre',c:'#d4a838'},
+              ].map(({k,l,c})=>{const n=por[k]||0;const pct2=alunos.length?Math.round(n/alunos.length*100):0;return `<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span style="font-weight:500">${l}</span><span style="color:var(--txt2)">${n} alunos</span></div><div style="height:6px;background:#f0ede4;border-radius:4px"><div style="height:6px;background:${c};border-radius:4px;width:${pct2}%"></div></div></div>`}).join('')}
             </div>
             <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
               <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500;color:var(--verde);margin-bottom:10px">Próximos feriados</div>
@@ -746,9 +790,10 @@ async function renderPage(page, container) {
   if (page === 'grade' || page === 'aluno-grade') {
     const isAluno = page === 'aluno-grade'
     const hoje = new Date()
-    // Semana atual: segunda a domingo
+    // Semana com offset navegável
+    const offset = window._gradeOffset || 0
     const diaSemana = hoje.getDay() === 0 ? 6 : hoje.getDay() - 1
-    const seg = new Date(hoje); seg.setDate(hoje.getDate() - diaSemana); seg.setHours(0,0,0,0)
+    const seg = new Date(hoje); seg.setDate(hoje.getDate() - diaSemana + offset*7); seg.setHours(0,0,0,0)
     const dom = new Date(seg); dom.setDate(seg.getDate() + 6); dom.setHours(23,59,59,999)
 
     const [ocRes, cfgRes, matRes] = await Promise.all([
@@ -866,11 +911,17 @@ async function renderPage(page, container) {
             }
           }
 
+          const adminActions = !isAluno ? `<div style="display:flex;gap:2px;margin-top:3px">
+            <button onclick="event.stopPropagation();editarOcorrencia('${oc.id}')" style="padding:1px 5px;background:rgba(31,56,31,.1);color:var(--verde);border:none;border-radius:3px;font-size:9px;cursor:pointer" title="Editar">✎</button>
+            <button onclick="event.stopPropagation();excluirOcorrencia('${oc.id}')" style="padding:1px 5px;background:rgba(255,0,0,.08);color:#c0392b;border:none;border-radius:3px;font-size:9px;cursor:pointer" title="Excluir">✕</button>
+            <button onclick="event.stopPropagation();verPresencasOcorrencia('${oc.id}')" style="padding:1px 5px;background:rgba(31,56,31,.1);color:var(--verde);border:none;border-radius:3px;font-size:9px;cursor:pointer" title="Presenças">👥</button>
+          </div>` : ''
           gradeHTML += `<td style="border:1px solid rgba(212,200,158,.3);background:${bgCell};padding:5px 7px;vertical-align:top;cursor:${isAluno?'default':'pointer'}" ${!isAluno?`onclick="verDetalhesOcorrencia('${oc.id}')"`:''}">
             <div style="font-size:10px;font-weight:500;${borderCell};padding-left:4px;line-height:1.3;color:${!permitida?'#ccc':'var(--txt)'}">${NOMES[oc.modalidade]}</div>
             <div style="font-size:9px;color:var(--txt2);margin-top:2px">${oc.confirmados||0}/${oc.vagas_total}</div>
             ${isFeriado&&!isAluno?`<div style="font-size:9px;color:#8a6b1a;margin-top:1px">⚠ feriado</div>`:''}
             ${actionHtml}
+            ${adminActions}
           </td>`
         }
       })
@@ -885,10 +936,14 @@ async function renderPage(page, container) {
     </div>`
 
     // Navegação de semana
-    const navHtml = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-      <button onclick="navigate('${page}')" style="padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">Semana atual</button>
-      <span style="font-size:12px;color:var(--txt2)">${seg.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})} – ${dom.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})}</span>
-      ${!isAluno?`<button onclick="navigate('criar-aulas')" style="margin-left:auto;padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">+ Nova Aula</button>`:''}
+    const navHtml = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      <button onclick="window._gradeOffset=(window._gradeOffset||0)-1;navigate('${page}')" style="padding:5px 10px;background:#fff;color:var(--txt);border:1px solid var(--borda);border-radius:5px;font-size:13px;cursor:pointer">‹</button>
+      <button onclick="window._gradeOffset=0;navigate('${page}')" style="padding:5px 12px;background:${(window._gradeOffset||0)===0?'var(--verde)':'#fff'};color:${(window._gradeOffset||0)===0?'var(--bege)':'var(--txt)'};border:1px solid ${(window._gradeOffset||0)===0?'var(--verde)':'var(--borda)'};border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">Hoje</button>
+      <button onclick="window._gradeOffset=(window._gradeOffset||0)+1;navigate('${page}')" style="padding:5px 10px;background:#fff;color:var(--txt);border:1px solid var(--borda);border-radius:5px;font-size:13px;cursor:pointer">›</button>
+      <span style="font-size:12px;color:var(--txt2);font-weight:500">${seg.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})} – ${dom.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})}</span>
+      ${!isAluno?`<div style="margin-left:auto;display:flex;gap:6px">
+        <button onclick="navigate('criar-aulas')" style="padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">+ Nova Aula</button>
+      </div>`:''}
     </div>`
 
     // Modal detalhes ocorrência (admin)
@@ -911,6 +966,39 @@ async function renderPage(page, container) {
       </div>
       ${modalDetalhes}
     `
+
+    window.editarOcorrencia = async function(ocId) {
+      const { data: oc } = await sb.from('ocorrencias').select('*, aula:aulas(vagas,modalidade)').eq('id', ocId).single()
+      const dt = new Date(oc.data_hora)
+      const novaData = prompt('Data da aula (AAAA-MM-DD):', dt.toISOString().slice(0,10))
+      if (!novaData) return
+      const novaHora = prompt('Hora (HH:MM):', dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}))
+      if (!novaHora) return
+      const novasVagas = prompt('Vagas:', oc.vagas_override||oc.aula?.vagas||15)
+      const dtNova = novaData + 'T' + novaHora + ':00-03:00'
+      const { data: fer } = await sb.from('feriados').select('nome').eq('data', novaData)
+      await sb.from('ocorrencias').update({
+        data_hora: dtNova,
+        vagas_override: novasVagas ? Number(novasVagas) : null,
+        eh_feriado: !!(fer&&fer.length),
+        nome_feriado: fer?.[0]?.nome||null
+      }).eq('id', ocId)
+      toast('✓ Aula atualizada')
+      navigate(page)
+    }
+
+    window.excluirOcorrencia = async function(ocId) {
+      if (!confirm('Excluir esta aula? As confirmações também serão removidas.')) return
+      await sb.from('confirmacoes').delete().eq('ocorrencia_id', ocId)
+      await sb.from('ocorrencias').delete().eq('id', ocId)
+      toast('Aula excluída')
+      navigate(page)
+    }
+
+    window.verPresencasOcorrencia = async function(ocId) {
+      window._ocPresencaId = ocId
+      navigate('presencas')
+    }
 
     window.confirmarOcorrencia = async function(ocId) {
       const { data, error } = await sb.rpc('confirmar_presenca', { p_aluno_id: window._perfil.id, p_ocorrencia_id: ocId })
@@ -980,7 +1068,10 @@ async function renderPage(page, container) {
         <span style="font-size:11px">${a.vagas} vagas</span>
         <span>${statusBadge}</span>
         <button onclick="gerarOcorrenciasAula('${a.id}')" style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--verde);border:1px solid rgba(31,56,31,.2);border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif">Gerar</button>
-        <button onclick="toggleAulaStatus('${a.id}',${a.ativa})" style="padding:3px 8px;background:${a.ativa?'#fceaea':'#e8f4e8'};color:${a.ativa?'#8a1a1a':'#1a5a1a'};border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif">${a.ativa?'Pausar':'Ativar'}</button>
+        <div style="display:flex;gap:3px">
+          <button onclick="editarAula('${a.id}')" style="padding:3px 7px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Editar">✎</button>
+          <button onclick="excluirAula('${a.id}')" style="padding:3px 7px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Excluir">✕</button>
+        </div>
       </div>`
     }
 
@@ -1194,6 +1285,30 @@ async function renderPage(page, container) {
       }
     }
 
+    window.editarAula = async function(id) {
+      const { data: a } = await sb.from('aulas').select('*, horarios:aulas_horarios(*)').eq('id', id).single()
+      const novasVagas = prompt('Vagas por aula:', a.vagas)
+      if (novasVagas === null) return
+      await sb.from('aulas').update({ vagas: Number(novasVagas) }).eq('id', id)
+      toast('✓ Aula atualizada')
+      navigate('criar-aulas')
+    }
+
+    window.excluirAula = async function(id) {
+      if (!confirm('Excluir esta aula e todas as suas ocorrências futuras?')) return
+      const hoje = new Date().toISOString()
+      // Remove ocorrências futuras e suas confirmações
+      const { data: ocs } = await sb.from('ocorrencias').select('id').eq('aula_id', id).gte('data_hora', hoje)
+      if (ocs?.length) {
+        for (const oc of ocs) await sb.from('confirmacoes').delete().eq('ocorrencia_id', oc.id)
+        await sb.from('ocorrencias').delete().eq('aula_id', id).gte('data_hora', hoje)
+      }
+      await sb.from('aulas_horarios').delete().eq('aula_id', id)
+      await sb.from('aulas').delete().eq('id', id)
+      toast('Aula excluída')
+      navigate('criar-aulas')
+    }
+
     window.toggleAulaStatus = async function(id, ativa) {
       await sb.from('aulas').update({ativa: !ativa}).eq('id', id)
       toast(ativa ? 'Aula pausada' : 'Aula ativada')
@@ -1210,9 +1325,11 @@ async function renderPage(page, container) {
     const alunos = (todos||[]).filter(a => !busca || a.nome.toLowerCase().includes(busca.toLowerCase()) || a.email.toLowerCase().includes(busca.toLowerCase()))
 
     const planoBadge = {
-      brahma: badge('Brahma','#f0ede4','#5a5a4a'),
-      shiva:  badge('Shiva','#e8f4e8','#1a5a1a'),
-      vishnu: badge('Vishnu','rgba(232,188,79,.15)','#7a5a10'),
+      brahma:       badge('Brahma','#f0ede4','#5a5a4a'),
+      shiva_1x:     badge('Shiva 1x','#e8f4e8','#1a5a1a'),
+      shiva_2x:     badge('Shiva 2x','#d4edda','#155724'),
+      vishnu_2x:    badge('Vishnu 2x','rgba(232,188,79,.15)','#7a5a10'),
+      vishnu_livre: badge('Vishnu Livre','rgba(232,188,79,.25)','#5a3a00'),
     }
 
     const modalCadastro = modal('modal-cad-aluno', 'Cadastrar Aluno',
@@ -1221,9 +1338,11 @@ async function renderPage(page, container) {
       ${fi('','Telefone',`<input type="tel" id="ca-tel" ${inputStyle} placeholder="(11) 99999-9999">`)}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         ${fi('','Plano',`<select id="ca-plano" ${inputStyle} onchange="updateValorPlano()">
-          <option value="brahma">Brahma</option>
-          <option value="shiva">Shiva</option>
-          <option value="vishnu">Vishnu</option>
+          <option value="brahma">Brahma — 1× por semana — R$100/mês</option>
+          <option value="shiva_1x">Shiva 1x — 1× por semana — R$150/mês</option>
+          <option value="shiva_2x">Shiva 2x — 2× por semana — R$200/mês</option>
+          <option value="vishnu_2x">Vishnu 2x — 2× por semana — R$250/mês</option>
+          <option value="vishnu_livre">Vishnu Livre — uso livre — R$300/mês</option>
         </select>`)}
         ${fi('','Aulas/semana',`<select id="ca-opcao" ${inputStyle} onchange="updateValorPlano()">
           <option value="1">1× por semana</option>
@@ -1256,9 +1375,10 @@ async function renderPage(page, container) {
       <div class="content">
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
           <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Total</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${todos?.length||0}</div></div>
-          ${['brahma','shiva','vishnu'].map(p=>{
+          ${['brahma','shiva_1x','shiva_2x','vishnu_2x','vishnu_livre'].map(p=>{
+            const labels = {brahma:'Brahma',shiva_1x:'Shiva 1x',shiva_2x:'Shiva 2x',vishnu_2x:'Vishnu 2x',vishnu_livre:'Vishnu Livre'}
             const n = (todos||[]).filter(a=>a.matriculas?.some(m=>m.ativa&&m.plano_tipo===p)).length
-            return `<div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">${p.charAt(0).toUpperCase()+p.slice(1)}</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${n}</div></div>`
+            return `<div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">${labels[p]}</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${n}</div></div>`
           }).join('')}
         </div>
         ${card('Lista de Alunos ('+alunos.length+')', '',
@@ -1289,12 +1409,11 @@ async function renderPage(page, container) {
       ${modalEditar}
     `
 
-    const valoresPlano = {brahma:{1:100},shiva:{1:150,2:200},vishnu:{2:250,99:300}}
+    const valoresPlano = {brahma:100,shiva_1x:150,shiva_2x:200,vishnu_2x:250,vishnu_livre:300}
+    const opcaoPlano = {brahma:1,shiva_1x:1,shiva_2x:2,vishnu_2x:2,vishnu_livre:99}
     window.updateValorPlano = function() {
       const p = document.getElementById('ca-plano')?.value
-      const o = document.getElementById('ca-opcao')?.value
-      const v = valoresPlano[p]?.[Number(o)]
-      if (v && document.getElementById('ca-valor')) document.getElementById('ca-valor').value = v
+      if (p && document.getElementById('ca-valor')) document.getElementById('ca-valor').value = valoresPlano[p]||0
     }
 
     window.salvarNovoAluno = async function() {
@@ -1302,8 +1421,8 @@ async function renderPage(page, container) {
       const email = document.getElementById('ca-email').value.trim()
       const tel = document.getElementById('ca-tel').value.trim()
       const plano = document.getElementById('ca-plano').value
-      const opcao = Number(document.getElementById('ca-opcao').value)
-      const valor = Number(document.getElementById('ca-valor').value)
+      const opcao = opcaoPlano[plano]||1
+      const valor = Number(document.getElementById('ca-valor').value)||valoresPlano[plano]||0
       if (!nome||!email) { toast('Preencha nome e e-mail'); return }
 
       // Cria usuário no Auth (admin API não disponível no client — orienta fluxo de convite)
@@ -1341,14 +1460,11 @@ async function renderPage(page, container) {
         <div style="margin-bottom:10px"><div style="font-weight:500;font-size:14px">${a.nome}</div><div style="font-size:11px;color:var(--txt2)">${a.email}</div></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           ${fi('','Plano',`<select id="ea-plano" ${inputStyle} onchange="updateValorEdicao()">
-            <option value="brahma" ${mat?.plano_tipo==='brahma'?'selected':''}>Brahma</option>
-            <option value="shiva" ${mat?.plano_tipo==='shiva'?'selected':''}>Shiva</option>
-            <option value="vishnu" ${mat?.plano_tipo==='vishnu'?'selected':''}>Vishnu</option>
-          </select>`)}
-          ${fi('','Aulas/semana',`<select id="ea-opcao" ${inputStyle} onchange="updateValorEdicao()">
-            <option value="1" ${mat?.opcao_aulas===1?'selected':''}>1× por semana</option>
-            <option value="2" ${mat?.opcao_aulas===2?'selected':''}>2× por semana</option>
-            <option value="99" ${mat?.opcao_aulas===99?'selected':''}>Uso livre</option>
+            <option value="brahma" ${mat?.plano_tipo==='brahma'?'selected':''}>Brahma — 1× por semana — R$100/mês</option>
+            <option value="shiva_1x" ${mat?.plano_tipo==='shiva_1x'?'selected':''}>Shiva 1x — 1× por semana — R$150/mês</option>
+            <option value="shiva_2x" ${mat?.plano_tipo==='shiva_2x'?'selected':''}>Shiva 2x — 2× por semana — R$200/mês</option>
+            <option value="vishnu_2x" ${mat?.plano_tipo==='vishnu_2x'?'selected':''}>Vishnu 2x — 2× por semana — R$250/mês</option>
+            <option value="vishnu_livre" ${mat?.plano_tipo==='vishnu_livre'?'selected':''}>Vishnu Livre — uso livre — R$300/mês</option>
           </select>`)}
         </div>
         ${fi('','Valor mensal (R$)',`<input type="number" id="ea-valor" ${inputStyle} value="${mat?.valor_mensal||0}">`)}
@@ -1360,15 +1476,13 @@ async function renderPage(page, container) {
 
     window.updateValorEdicao = function() {
       const p = document.getElementById('ea-plano')?.value
-      const o = document.getElementById('ea-opcao')?.value
-      const v = valoresPlano[p]?.[Number(o)]
-      if (v && document.getElementById('ea-valor')) document.getElementById('ea-valor').value = v
+      if (p && document.getElementById('ea-valor')) document.getElementById('ea-valor').value = valoresPlano[p]||0
     }
 
     window.salvarEdicaoAluno = async function() {
       const plano = document.getElementById('ea-plano').value
-      const opcao = Number(document.getElementById('ea-opcao').value)
-      const valor = Number(document.getElementById('ea-valor').value)
+      const opcao = opcaoPlano[plano]||1
+      const valor = Number(document.getElementById('ea-valor').value)||valoresPlano[plano]||0
       const fim = document.getElementById('ea-fim').value || null
       const ativo = document.getElementById('ea-ativo').value === 'true'
       await sb.from('matriculas').update({ativa:false}).eq('aluno_id', window._editAlunoId).eq('ativa', true)
