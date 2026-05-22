@@ -279,10 +279,14 @@ document.getElementById('login-senha').addEventListener('keydown', e => {
 
 // ── INICIAR APP ───────────────────────────────────────────────
 async function iniciarApp() {
-  const { data: { user } } = await sb.auth.getUser()
-  if (!user) return
+  try {
+    console.log('iniciarApp: buscando user...')
+    const { data: { user } } = await sb.auth.getUser()
+    console.log('iniciarApp: user =', user?.id, user?.email)
+    if (!user) { console.log('iniciarApp: sem user, abortando'); return }
 
   let { data: perfil } = await sb.from('perfis').select('*').eq('id', user.id).single()
+  console.log('iniciarApp: perfil =', JSON.stringify(perfil))
 
   // Cria perfil automaticamente para login Google (primeiro acesso)
   if (!perfil) {
@@ -320,9 +324,15 @@ async function iniciarApp() {
     }
   }
 
+  console.log('iniciarApp: buildMenu tipo=', perfil.tipo)
   buildMenu(perfil.tipo)
   const primeiros = { admin: 'dashboard', professor: 'prof-home', aluno: 'aluno-home' }
+  console.log('iniciarApp: navigate para', primeiros[perfil.tipo] || 'dashboard')
   navigate(primeiros[perfil.tipo] || 'dashboard')
+  } catch(e) {
+    console.error('iniciarApp ERRO:', e.message, e.stack)
+    document.getElementById('main-area').innerHTML = '<div style="padding:30px;color:#c0392b;font-family:monospace;font-size:12px">Erro: ' + e.message + '<br><br>' + e.stack + '</div>'
+  }
 }
 
 // ── NAVEGAÇÃO + RENDERIZAÇÃO DE PÁGINAS ───────────────────────
