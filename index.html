@@ -6,20 +6,7 @@
 <title>Espaço Autonomia</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
-  @font-face {
-    font-family: 'Megante';
-    src: url('./assets/Meganté-Personal-Use.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: 'Nobel';
-    src: url('./assets/nobel-regular.otf') format('opentype');
-    font-weight: normal;
-    font-style: normal;
-  }
-</style>
+
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
 <style>
   :root{
@@ -29,14 +16,14 @@
     --r:10px;--rs:6px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Nobel','DM Sans',sans-serif;background:var(--fundo);color:var(--txt);min-height:100vh}
+  body{font-family:'DM Sans',sans-serif;background:var(--fundo);color:var(--txt);min-height:100vh}
 
   /* LOGIN */
   .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--verde);background-image:radial-gradient(circle at 20% 80%,rgba(232,188,79,.08) 0%,transparent 50%),radial-gradient(circle at 80% 20%,rgba(242,236,206,.05) 0%,transparent 50%)}
   .login-card{background:#fff;border-radius:16px;padding:32px 36px;width:400px;max-width:95vw;box-shadow:0 24px 80px rgba(0,0,0,.25)}
   .login-logo{text-align:center;margin-bottom:24px;display:flex;flex-direction:column;align-items:center}
   .login-bird{font-size:36px;margin-bottom:8px;opacity:.85;color:var(--verde)}
-  .login-name{font-family:'Megante','Cormorant Garamond',serif;font-size:24px;font-weight:500;color:var(--verde);line-height:1.2}
+  .login-name{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:var(--verde);line-height:1.2}
   .login-sub{font-size:11px;letter-spacing:2px;color:var(--dourado);margin-top:4px;text-transform:uppercase}
   .fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
   .fl{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500}
@@ -56,11 +43,11 @@
   .sb{width:210px;background:var(--verde);color:var(--bege);flex-shrink:0;display:flex;flex-direction:column}
   .sb-logo{padding:20px 18px 16px;border-bottom:1px solid rgba(242,236,206,0.12)}
   .sb-logo-bird{font-size:22px;margin-bottom:6px;opacity:.85}
-  .sb-logo-name{font-family:'Megante','Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--bege);line-height:1.2}
+  .sb-logo-name{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--bege);line-height:1.2}
   .sb-logo-sub{font-size:9px;letter-spacing:2px;color:var(--dourado);margin-top:3px;text-transform:uppercase}
   .sb-user{padding:12px 18px;border-bottom:1px solid rgba(242,236,206,0.08)}
   .sb-role{display:inline-block;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;background:rgba(232,188,79,0.18);color:var(--dourado);border:1px solid rgba(232,188,79,0.25);border-radius:20px;padding:2px 9px;margin-bottom:5px}
-  .sb-name{font-size:13px;color:var(--bege);font-weight:500;font-family:'Nobel','DM Sans',sans-serif}
+  .sb-name{font-size:13px;color:var(--bege);font-weight:500;font-family:'DM Sans',sans-serif}
   .sb-plan-txt{font-size:11px;color:rgba(242,236,206,.5);margin-top:1px}
   .nav{padding:10px 0;flex:1;overflow-y:auto}
   .nav-sec{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(242,236,206,0.3);padding:14px 18px 5px}
@@ -74,12 +61,47 @@
 
   .main{flex:1;overflow:auto;background:var(--fundo)}
   .topbar{background:#fff;border-bottom:1px solid var(--borda);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
-  .topbar-t{font-family:'Megante','Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--verde);letter-spacing:.3px}
+  .topbar-t{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--verde);letter-spacing:.3px}
   .content{padding:20px 24px}
 
   /* LOADING SPINNER */
   .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(242,236,206,.3);border-top-color:var(--bege);border-radius:50%;animation:spin .6s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ── MOBILE ── */
+  @media (max-width: 768px) {
+    .app{flex-direction:column;height:auto;min-height:100vh}
+    .sb{width:100%;flex-direction:row;flex-wrap:wrap;height:auto;position:sticky;top:0;z-index:50}
+    .sb-logo{padding:10px 14px;border-bottom:none;border-right:1px solid rgba(242,236,206,.12)}
+    .sb-logo img{max-width:100px!important}
+    .sb-user{padding:10px 14px;border-bottom:none;border-right:1px solid rgba(242,236,206,.08);flex:1}
+    .sb-role{font-size:8px;padding:1px 7px}
+    .sb-name{font-size:12px}
+    .nav{display:none}
+    .sb-bottom{padding:8px 14px;border-top:none;margin-left:auto}
+    #impersonate-bar{display:none!important}
+    .main{overflow:auto;min-height:0;flex:1}
+    .topbar{padding:0 14px;height:48px}
+    .topbar-t{font-size:16px}
+    .content{padding:14px}
+    /* Hamburger menu */
+    .sb::after{content:'☰';position:absolute;right:14px;top:50%;transform:translateY(-50%);color:rgba(242,236,206,.7);font-size:20px;cursor:pointer}
+
+    /* Mobile nav overlay */
+    .nav.mobile-open{display:flex;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--verde);z-index:200;padding-top:60px;overflow-y:auto}
+    .nav.mobile-open .nav-sec{padding:14px 20px 5px}
+    .nav.mobile-open .ni{padding:12px 20px;font-size:14px}
+
+    /* Grids responsivos */
+    .stat-grid, [style*="grid-template-columns:repeat(4"]{grid-template-columns:repeat(2,1fr)!important}
+    [style*="grid-template-columns:3fr 2fr"]{grid-template-columns:1fr!important}
+    [style*="grid-template-columns:repeat(3,1fr)"]{grid-template-columns:1fr!important}
+    [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
+
+    /* Login */
+    .login-card{padding:24px 20px;width:95vw}
+    .login-logo img{width:130px!important}
+  }
 
   /* PÁGINA DE CARREGAMENTO */
   .loading-page{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;background:var(--verde)}
@@ -94,7 +116,7 @@
   <div class="login-wrap">
     <div class="login-card">
       <div class="login-logo">
-        <img src="./assets/Logo Vertical (1).png" alt="Espaço Autonomia" style="width:170px;height:auto;margin-bottom:4px;border-radius:12px">
+        <img src="./assets/Logo Vertical (3).png" alt="Espaço Autonomia" style="width:160px;height:auto;margin-bottom:8px">
       </div>
       <div class="login-err" id="login-err"></div>
       <div class="fg">
@@ -286,12 +308,12 @@ async function mostrarOnboarding(user, nomeGoogle) {
   onbDiv.innerHTML = `
     <div style="background:#fff;border-radius:16px;width:500px;max-width:95vw;overflow:hidden">
       <div style="background:var(--verde);padding:28px 24px;text-align:center">
-        <img src="./assets/Logo Vertical (1).png" alt="Espaço Autonomia" style="width:120px;height:auto;margin-bottom:12px;filter:brightness(0) saturate(100%) invert(93%) sepia(10%) saturate(300%) hue-rotate(5deg) brightness(105%)">
+        <img src="./assets/Logo Vertical (2).png" alt="Espaço Autonomia" style="width:120px;height:auto;margin-bottom:12px">
         <div style="font-size:12px;color:rgba(242,236,206,.7);margin-top:4px">Complete seus dados para começar</div>
       </div>
       <div style="padding:24px">
         <div id="onb-step1">
-          <div style="font-family:'Megante','Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde);margin-bottom:16px">Seus dados</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde);margin-bottom:16px">Seus dados</div>
           <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
             <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Nome completo</label>
             <input id="onb-nome" value="${nomeGoogle}" placeholder="Seu nome completo" style="border:1px solid var(--borda);border-radius:6px;padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">
@@ -300,7 +322,7 @@ async function mostrarOnboarding(user, nomeGoogle) {
             <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Telefone / WhatsApp</label>
             <input id="onb-tel" placeholder="(11) 99999-9999" style="border:1px solid var(--borda);border-radius:6px;padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">
           </div>
-          <div style="font-family:'Megante','Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde);margin:16px 0 12px">Escolha seu plano</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde);margin:16px 0 12px">Escolha seu plano</div>
           <div style="display:flex;flex-direction:column;gap:8px" id="onb-planos">
             ${opcoes.map(o=>`
               <label style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border:2px solid var(--borda);border-radius:8px;cursor:pointer;transition:all .15s" id="label-${o.key}">
@@ -313,7 +335,7 @@ async function mostrarOnboarding(user, nomeGoogle) {
                     </div>
                   </div>
                 </div>
-                <div style="font-family:'Megante','Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--verde)">
+                <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--verde)">
                   R$${o.preco}<span style="font-size:11px;font-weight:400;color:var(--txt2)">/mês</span>
                 </div>
               </label>
@@ -396,6 +418,29 @@ window.fazerLogin = async function() {
     document.getElementById('btn-login-txt').textContent = 'Entrar'
   }
 }
+
+// Mobile hamburger
+document.addEventListener('DOMContentLoaded', function() {
+  const sb_el = document.querySelector('.sb')
+  if (sb_el) {
+    sb_el.addEventListener('click', function(e) {
+      if (window.innerWidth > 768) return
+      const nav = document.getElementById('nav-menu')
+      if (!nav) return
+      // Clique no after pseudo-element aproximado (direita do sb)
+      const rect = sb_el.getBoundingClientRect()
+      if (e.clientX > rect.right - 50) {
+        nav.classList.toggle('mobile-open')
+      }
+    })
+    // Fechar ao clicar em item do menu
+    document.addEventListener('click', function(e) {
+      if (e.target.classList.contains('ni')) {
+        document.getElementById('nav-menu')?.classList.remove('mobile-open')
+      }
+    })
+  }
+})
 
 window.fazerLogout = async function() {
   await sb.auth.signOut()
@@ -573,14 +618,14 @@ async function renderPage(page, container) {
       <div class="content">
         ${feriados.length ? `<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:9px 13px;display:flex;align-items:center;gap:8px;font-size:12px;color:#7a5a10;margin-bottom:14px"><i class="ti ti-alert-triangle" style="color:var(--dourado)"></i><span><strong>Atenção:</strong> Há feriados nos próximos 30 dias: ${feriados.slice(0,3).map(f=>`${f.nome} (${new Date(f.data+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})})`).join(' · ')}</span></div>` : ''}
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px">
-          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Aulas hoje</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${aulasHoje.length}</div></div>
-          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Alunos ativos</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${alunos.length}</div></div>
-          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Confirmações</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${totalConf}</div></div>
-          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Vagas livres</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${totalLivres}</div></div>
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Aulas hoje</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${aulasHoje.length}</div></div>
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Alunos ativos</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${alunos.length}</div></div>
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Confirmações</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${totalConf}</div></div>
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Vagas livres</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${totalLivres}</div></div>
         </div>
         <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px">
           <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden">
-            <div style="padding:13px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between"><span style="font-family:'Megante','Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">Aulas de hoje</span></div>
+            <div style="padding:13px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between"><span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">Aulas de hoje</span></div>
             ${aulasHoje.length === 0 ? '<div style="padding:20px 18px;font-size:12px;color:var(--txt2)">Nenhuma aula hoje.</div>' :
               aulasHoje.map(a => {
                 const cor = {hatha:'#2d7a2d',acro:'var(--dourado)',raja:'#5a2d8a'}[a.modalidade]||'#888'
@@ -630,7 +675,7 @@ async function renderPage(page, container) {
       <div class="topbar"><div class="topbar-t">Configurações</div></div>
       <div class="content">
         <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
-          <div style="font-family:'Megante','Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--borda)">Confirmação de Presença</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--borda)">Confirmação de Presença</div>
           <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(212,200,158,.25)">
             <div><div style="font-size:12px;font-weight:500">Prazo mínimo de confirmação</div><div style="font-size:10px;color:var(--txt2)">Minutos antes da aula para confirmar</div></div>
             <select id="cfg-prazo" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--txt)">
@@ -655,7 +700,7 @@ async function renderPage(page, container) {
           </div>
         </div>
         <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
-          <div style="font-family:'Megante','Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--borda)">Alertas de Feriado</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--borda)">Alertas de Feriado</div>
           <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(212,200,158,.25)">
             <div style="font-size:12px;font-weight:500">Feriados nacionais</div>
             <input type="checkbox" id="cfg-fnac" ${cfg.feriados_nacionais==='true'?'checked':''} style="width:15px;height:15px;accent-color:var(--verde)">
@@ -717,11 +762,11 @@ async function renderPage(page, container) {
       <div class="topbar"><div class="topbar-t">Olá, ${window._perfil.nome.split(' ')[0]}</div><div><span style="background:#e8f4e8;color:#1a5a1a;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:500">${matricula ? 'Plano '+(matricula.plano?.nome||matricula.plano_tipo) : 'Sem plano'}</span></div></div>
       <div class="content">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Plano</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--verde)">${matricula?.plano?.nome||'—'}</div><div style="font-size:11px;color:var(--txt2)">R$${matricula?.valor_mensal||0}/mês</div></div>
-          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Confirmadas</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--verde)">${confirmacoes.length}</div><div style="font-size:11px;color:var(--txt2)">próximas aulas</div></div>
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Plano</div><div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--verde)">${matricula?.plano?.nome||'—'}</div><div style="font-size:11px;color:var(--txt2)">R$${matricula?.valor_mensal||0}/mês</div></div>
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Confirmadas</div><div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--verde)">${confirmacoes.length}</div><div style="font-size:11px;color:var(--txt2)">próximas aulas</div></div>
         </div>
         <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden">
-          <div style="padding:13px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between"><span style="font-family:'Megante','Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">Próximas confirmações</span><button onclick="navigate('aluno-grade')" style="font-size:11px;color:var(--verde);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif">Ver grade →</button></div>
+          <div style="padding:13px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between"><span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">Próximas confirmações</span><button onclick="navigate('aluno-grade')" style="font-size:11px;color:var(--verde);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif">Ver grade →</button></div>
           ${confirmacoes.length === 0 ? '<div style="padding:18px;font-size:12px;color:var(--txt2)">Nenhuma aula confirmada. <a href="#" onclick="navigate(\'aluno-grade\');return false" style="color:var(--verde)">Confirmar aulas →</a></div>' :
             confirmacoes.map(c => {
               const dt = new Date(c.ocorrencia.data_hora)
@@ -771,7 +816,7 @@ async function renderPage(page, container) {
   function card(title, rightHtml, bodyHtml){
     return `<div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden;margin-bottom:16px">
       <div style="padding:13px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
-        <span style="font-family:'Megante','Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">${title}</span>
+        <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">${title}</span>
         <div>${rightHtml||''}</div>
       </div>
       ${bodyHtml}
@@ -1032,11 +1077,11 @@ async function renderPage(page, container) {
       const dt = new Date(oc.data_hora)
       body.innerHTML = `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-          <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Aula</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${NOMES[oc.modalidade]}</div></div>
+          <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Aula</div><div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${NOMES[oc.modalidade]}</div></div>
           <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Data/Hora</div><div style="font-size:13px;font-weight:500;color:var(--verde);margin-top:3px">${dt.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'})} ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-          <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Confirmados</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">${oc.confirmados||0}/${oc.vagas_total}</div></div>
+          <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Confirmados</div><div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">${oc.confirmados||0}/${oc.vagas_total}</div></div>
           <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Professor</div><div style="font-size:13px;font-weight:500;color:var(--verde);margin-top:3px">${oc.professor_nome||'—'}</div></div>
         </div>
         ${oc.eh_feriado?`<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:8px 12px;font-size:12px;color:#7a5a10;margin-bottom:12px">⚠ Esta aula cai em feriado: ${oc.nome_feriado}</div>`:''}
@@ -1385,11 +1430,11 @@ async function renderPage(page, container) {
       </div>
       <div class="content">
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
-          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Total</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${todos?.length||0}</div></div>
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Total</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${todos?.length||0}</div></div>
           ${['brahma','shiva_1x','shiva_2x','vishnu_2x','vishnu_livre'].map(p=>{
             const labels = {brahma:'Brahma',shiva_1x:'Shiva 1x',shiva_2x:'Shiva 2x',vishnu_2x:'Vishnu 2x',vishnu_livre:'Vishnu Livre'}
             const n = (todos||[]).filter(a=>a.matriculas?.some(m=>m.ativa&&m.plano_tipo===p)).length
-            return `<div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">${labels[p]}</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${n}</div></div>`
+            return `<div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">${labels[p]}</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${n}</div></div>`
           }).join('')}
         </div>
         ${card('Lista de Alunos ('+alunos.length+')', '',
@@ -1617,9 +1662,9 @@ async function renderPage(page, container) {
         <div class="topbar"><div class="topbar-t">Olá, ${window._perfil.nome.split(' ')[0]}</div></div>
         <div class="content">
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
-            <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Aulas hoje</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${ocHoje?.length||0}</div></div>
-            <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Confirmados hoje</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${(ocHoje||[]).reduce((s,o)=>s+(o.confirmados||0),0)}</div></div>
-            <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Próxima aula</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${proxima?new Date(proxima.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · '+NOMES[proxima.modalidade]:'—'}</div></div>
+            <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Aulas hoje</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${ocHoje?.length||0}</div></div>
+            <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Confirmados hoje</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${(ocHoje||[]).reduce((s,o)=>s+(o.confirmados||0),0)}</div></div>
+            <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Próxima aula</div><div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${proxima?new Date(proxima.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · '+NOMES[proxima.modalidade]:'—'}</div></div>
           </div>
           ${card('Aulas de hoje', '',
             (ocHoje||[]).length===0?'<div style="padding:18px;font-size:12px;color:var(--txt2)">Nenhuma aula hoje.</div>':
@@ -1909,7 +1954,7 @@ async function renderPage(page, container) {
             const modsDoPLano = (p.modalidades||[]).map(m=>m.modalidade)
             return `<div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden">
               <div style="padding:14px 18px;background:var(--fundo);border-bottom:1px solid var(--borda)">
-                <div style="font-family:'Megante','Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${p.nome}</div>
+                <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${p.nome}</div>
                 <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
                   ${modsDoPLano.map(m=>`<span style="background:${CORES[m]||'#888'}22;color:${CORES[m]||'#888'};padding:2px 8px;border-radius:10px;font-size:10px;font-weight:500">${NOMES[m]||m}</span>`).join('')}
                 </div>
@@ -2052,7 +2097,7 @@ async function renderPage(page, container) {
         ${!mat?`<div style="text-align:center;padding:40px;font-size:13px;color:var(--txt2)">Nenhuma matrícula ativa. Entre em contato com o Espaço Autonomia.</div>`:`
           <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden;margin-bottom:16px">
             <div style="padding:18px;background:var(--verde)">
-              <div style="font-family:'Megante','Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--bege)">Plano ${plano?.nome||mat.plano_tipo}</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--bege)">Plano ${plano?.nome||mat.plano_tipo}</div>
               <div style="font-size:24px;font-family:'Cormorant Garamond',serif;font-weight:600;color:var(--dourado);margin-top:6px">R$${mat.valor_mensal}<span style="font-size:13px;font-weight:400;opacity:.8">/mês</span></div>
               ${vencimento?`<div style="font-size:12px;color:rgba(242,236,206,.7);margin-top:6px">Vencimento: ${vencimento.toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})} ${diasRestantes!==null?'· '+diasRestantes+' dias restantes':''}</div>`:''}
             </div>
@@ -2071,7 +2116,7 @@ async function renderPage(page, container) {
           </div>
           ${mat.plano_tipo !== 'vishnu'?`
             <div style="background:rgba(232,188,79,.08);border:1px solid rgba(232,188,79,.3);border-radius:var(--r);padding:16px 18px;margin-bottom:16px">
-              <div style="font-family:'Megante','Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:6px">Quer mais?</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:6px">Quer mais?</div>
               <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">Faça upgrade e acesse mais modalidades e benefícios.</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
                 ${todos.filter(p=>p.tipo!==mat.plano_tipo&&p.preco_1x>(plano?.preco_1x||0)).map(p=>`
@@ -2163,7 +2208,7 @@ try {
 </script>
 </body>
 </html>    <div class="sb-logo" style="padding:16px 18px;border-bottom:1px solid rgba(242,236,206,0.12)">
-      <img src="./assets/Logo horizontal (1).png" alt="Espaço Autonomia" style="width:100%;max-width:158px;height:auto;filter:brightness(0) saturate(100%) invert(93%) sepia(15%) saturate(400%) hue-rotate(5deg) brightness(105%)">
+      <img src="./assets/Logo horizontal (2).png" alt="Espaço Autonomia" style="width:100%;max-width:158px;height:auto">
     </div>
       <div class="fg">
         <label class="fl" for="login-email">E-mail</label>
@@ -2354,12 +2399,12 @@ async function mostrarOnboarding(user, nomeGoogle) {
   onbDiv.innerHTML = `
     <div style="background:#fff;border-radius:16px;width:500px;max-width:95vw;overflow:hidden">
       <div style="background:var(--verde);padding:28px 24px;text-align:center">
-        <img src="./assets/Logo Vertical (1).png" alt="Espaço Autonomia" style="width:120px;height:auto;margin-bottom:12px;filter:brightness(0) saturate(100%) invert(93%) sepia(10%) saturate(300%) hue-rotate(5deg) brightness(105%)">
+        <img src="./assets/Logo Vertical (2).png" alt="Espaço Autonomia" style="width:120px;height:auto;margin-bottom:12px">
         <div style="font-size:12px;color:rgba(242,236,206,.7);margin-top:4px">Complete seus dados para começar</div>
       </div>
       <div style="padding:24px">
         <div id="onb-step1">
-          <div style="font-family:'Megante','Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde);margin-bottom:16px">Seus dados</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde);margin-bottom:16px">Seus dados</div>
           <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
             <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Nome completo</label>
             <input id="onb-nome" value="${nomeGoogle}" placeholder="Seu nome completo" style="border:1px solid var(--borda);border-radius:6px;padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">
@@ -2368,7 +2413,7 @@ async function mostrarOnboarding(user, nomeGoogle) {
             <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Telefone / WhatsApp</label>
             <input id="onb-tel" placeholder="(11) 99999-9999" style="border:1px solid var(--borda);border-radius:6px;padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">
           </div>
-          <div style="font-family:'Megante','Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde);margin:16px 0 12px">Escolha seu plano</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde);margin:16px 0 12px">Escolha seu plano</div>
           <div style="display:flex;flex-direction:column;gap:8px" id="onb-planos">
             ${opcoes.map(o=>`
               <label style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border:2px solid var(--borda);border-radius:8px;cursor:pointer;transition:all .15s" id="label-${o.key}">
@@ -2381,7 +2426,7 @@ async function mostrarOnboarding(user, nomeGoogle) {
                     </div>
                   </div>
                 </div>
-                <div style="font-family:'Megante','Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--verde)">
+                <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--verde)">
                   R$${o.preco}<span style="font-size:11px;font-weight:400;color:var(--txt2)">/mês</span>
                 </div>
               </label>
@@ -2464,6 +2509,29 @@ window.fazerLogin = async function() {
     document.getElementById('btn-login-txt').textContent = 'Entrar'
   }
 }
+
+// Mobile hamburger
+document.addEventListener('DOMContentLoaded', function() {
+  const sb_el = document.querySelector('.sb')
+  if (sb_el) {
+    sb_el.addEventListener('click', function(e) {
+      if (window.innerWidth > 768) return
+      const nav = document.getElementById('nav-menu')
+      if (!nav) return
+      // Clique no after pseudo-element aproximado (direita do sb)
+      const rect = sb_el.getBoundingClientRect()
+      if (e.clientX > rect.right - 50) {
+        nav.classList.toggle('mobile-open')
+      }
+    })
+    // Fechar ao clicar em item do menu
+    document.addEventListener('click', function(e) {
+      if (e.target.classList.contains('ni')) {
+        document.getElementById('nav-menu')?.classList.remove('mobile-open')
+      }
+    })
+  }
+})
 
 window.fazerLogout = async function() {
   await sb.auth.signOut()
@@ -2641,14 +2709,14 @@ async function renderPage(page, container) {
       <div class="content">
         ${feriados.length ? `<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:9px 13px;display:flex;align-items:center;gap:8px;font-size:12px;color:#7a5a10;margin-bottom:14px"><i class="ti ti-alert-triangle" style="color:var(--dourado)"></i><span><strong>Atenção:</strong> Há feriados nos próximos 30 dias: ${feriados.slice(0,3).map(f=>`${f.nome} (${new Date(f.data+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})})`).join(' · ')}</span></div>` : ''}
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px">
-          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Aulas hoje</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${aulasHoje.length}</div></div>
-          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Alunos ativos</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${alunos.length}</div></div>
-          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Confirmações</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${totalConf}</div></div>
-          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Vagas livres</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${totalLivres}</div></div>
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Aulas hoje</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${aulasHoje.length}</div></div>
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Alunos ativos</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${alunos.length}</div></div>
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Confirmações</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${totalConf}</div></div>
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Vagas livres</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${totalLivres}</div></div>
         </div>
         <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px">
           <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden">
-            <div style="padding:13px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between"><span style="font-family:'Megante','Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">Aulas de hoje</span></div>
+            <div style="padding:13px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between"><span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">Aulas de hoje</span></div>
             ${aulasHoje.length === 0 ? '<div style="padding:20px 18px;font-size:12px;color:var(--txt2)">Nenhuma aula hoje.</div>' :
               aulasHoje.map(a => {
                 const cor = {hatha:'#2d7a2d',acro:'var(--dourado)',raja:'#5a2d8a'}[a.modalidade]||'#888'
@@ -2698,7 +2766,7 @@ async function renderPage(page, container) {
       <div class="topbar"><div class="topbar-t">Configurações</div></div>
       <div class="content">
         <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
-          <div style="font-family:'Megante','Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--borda)">Confirmação de Presença</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--borda)">Confirmação de Presença</div>
           <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(212,200,158,.25)">
             <div><div style="font-size:12px;font-weight:500">Prazo mínimo de confirmação</div><div style="font-size:10px;color:var(--txt2)">Minutos antes da aula para confirmar</div></div>
             <select id="cfg-prazo" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--txt)">
@@ -2723,7 +2791,7 @@ async function renderPage(page, container) {
           </div>
         </div>
         <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
-          <div style="font-family:'Megante','Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--borda)">Alertas de Feriado</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--borda)">Alertas de Feriado</div>
           <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(212,200,158,.25)">
             <div style="font-size:12px;font-weight:500">Feriados nacionais</div>
             <input type="checkbox" id="cfg-fnac" ${cfg.feriados_nacionais==='true'?'checked':''} style="width:15px;height:15px;accent-color:var(--verde)">
@@ -2785,11 +2853,11 @@ async function renderPage(page, container) {
       <div class="topbar"><div class="topbar-t">Olá, ${window._perfil.nome.split(' ')[0]}</div><div><span style="background:#e8f4e8;color:#1a5a1a;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:500">${matricula ? 'Plano '+(matricula.plano?.nome||matricula.plano_tipo) : 'Sem plano'}</span></div></div>
       <div class="content">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Plano</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--verde)">${matricula?.plano?.nome||'—'}</div><div style="font-size:11px;color:var(--txt2)">R$${matricula?.valor_mensal||0}/mês</div></div>
-          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Confirmadas</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--verde)">${confirmacoes.length}</div><div style="font-size:11px;color:var(--txt2)">próximas aulas</div></div>
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Plano</div><div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--verde)">${matricula?.plano?.nome||'—'}</div><div style="font-size:11px;color:var(--txt2)">R$${matricula?.valor_mensal||0}/mês</div></div>
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Confirmadas</div><div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--verde)">${confirmacoes.length}</div><div style="font-size:11px;color:var(--txt2)">próximas aulas</div></div>
         </div>
         <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden">
-          <div style="padding:13px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between"><span style="font-family:'Megante','Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">Próximas confirmações</span><button onclick="navigate('aluno-grade')" style="font-size:11px;color:var(--verde);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif">Ver grade →</button></div>
+          <div style="padding:13px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between"><span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">Próximas confirmações</span><button onclick="navigate('aluno-grade')" style="font-size:11px;color:var(--verde);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif">Ver grade →</button></div>
           ${confirmacoes.length === 0 ? '<div style="padding:18px;font-size:12px;color:var(--txt2)">Nenhuma aula confirmada. <a href="#" onclick="navigate(\'aluno-grade\');return false" style="color:var(--verde)">Confirmar aulas →</a></div>' :
             confirmacoes.map(c => {
               const dt = new Date(c.ocorrencia.data_hora)
@@ -2839,7 +2907,7 @@ async function renderPage(page, container) {
   function card(title, rightHtml, bodyHtml){
     return `<div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden;margin-bottom:16px">
       <div style="padding:13px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
-        <span style="font-family:'Megante','Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">${title}</span>
+        <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">${title}</span>
         <div>${rightHtml||''}</div>
       </div>
       ${bodyHtml}
@@ -3100,11 +3168,11 @@ async function renderPage(page, container) {
       const dt = new Date(oc.data_hora)
       body.innerHTML = `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-          <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Aula</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${NOMES[oc.modalidade]}</div></div>
+          <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Aula</div><div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${NOMES[oc.modalidade]}</div></div>
           <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Data/Hora</div><div style="font-size:13px;font-weight:500;color:var(--verde);margin-top:3px">${dt.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'})} ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-          <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Confirmados</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">${oc.confirmados||0}/${oc.vagas_total}</div></div>
+          <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Confirmados</div><div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">${oc.confirmados||0}/${oc.vagas_total}</div></div>
           <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Professor</div><div style="font-size:13px;font-weight:500;color:var(--verde);margin-top:3px">${oc.professor_nome||'—'}</div></div>
         </div>
         ${oc.eh_feriado?`<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:8px 12px;font-size:12px;color:#7a5a10;margin-bottom:12px">⚠ Esta aula cai em feriado: ${oc.nome_feriado}</div>`:''}
@@ -3453,11 +3521,11 @@ async function renderPage(page, container) {
       </div>
       <div class="content">
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
-          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Total</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${todos?.length||0}</div></div>
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Total</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${todos?.length||0}</div></div>
           ${['brahma','shiva_1x','shiva_2x','vishnu_2x','vishnu_livre'].map(p=>{
             const labels = {brahma:'Brahma',shiva_1x:'Shiva 1x',shiva_2x:'Shiva 2x',vishnu_2x:'Vishnu 2x',vishnu_livre:'Vishnu Livre'}
             const n = (todos||[]).filter(a=>a.matriculas?.some(m=>m.ativa&&m.plano_tipo===p)).length
-            return `<div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">${labels[p]}</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${n}</div></div>`
+            return `<div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">${labels[p]}</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${n}</div></div>`
           }).join('')}
         </div>
         ${card('Lista de Alunos ('+alunos.length+')', '',
@@ -3685,9 +3753,9 @@ async function renderPage(page, container) {
         <div class="topbar"><div class="topbar-t">Olá, ${window._perfil.nome.split(' ')[0]}</div></div>
         <div class="content">
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
-            <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Aulas hoje</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${ocHoje?.length||0}</div></div>
-            <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Confirmados hoje</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${(ocHoje||[]).reduce((s,o)=>s+(o.confirmados||0),0)}</div></div>
-            <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Próxima aula</div><div style="font-family:'Megante','Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${proxima?new Date(proxima.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · '+NOMES[proxima.modalidade]:'—'}</div></div>
+            <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Aulas hoje</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${ocHoje?.length||0}</div></div>
+            <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Confirmados hoje</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${(ocHoje||[]).reduce((s,o)=>s+(o.confirmados||0),0)}</div></div>
+            <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Próxima aula</div><div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${proxima?new Date(proxima.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · '+NOMES[proxima.modalidade]:'—'}</div></div>
           </div>
           ${card('Aulas de hoje', '',
             (ocHoje||[]).length===0?'<div style="padding:18px;font-size:12px;color:var(--txt2)">Nenhuma aula hoje.</div>':
@@ -3977,7 +4045,7 @@ async function renderPage(page, container) {
             const modsDoPLano = (p.modalidades||[]).map(m=>m.modalidade)
             return `<div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden">
               <div style="padding:14px 18px;background:var(--fundo);border-bottom:1px solid var(--borda)">
-                <div style="font-family:'Megante','Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${p.nome}</div>
+                <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${p.nome}</div>
                 <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
                   ${modsDoPLano.map(m=>`<span style="background:${CORES[m]||'#888'}22;color:${CORES[m]||'#888'};padding:2px 8px;border-radius:10px;font-size:10px;font-weight:500">${NOMES[m]||m}</span>`).join('')}
                 </div>
@@ -4120,7 +4188,7 @@ async function renderPage(page, container) {
         ${!mat?`<div style="text-align:center;padding:40px;font-size:13px;color:var(--txt2)">Nenhuma matrícula ativa. Entre em contato com o Espaço Autonomia.</div>`:`
           <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden;margin-bottom:16px">
             <div style="padding:18px;background:var(--verde)">
-              <div style="font-family:'Megante','Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--bege)">Plano ${plano?.nome||mat.plano_tipo}</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--bege)">Plano ${plano?.nome||mat.plano_tipo}</div>
               <div style="font-size:24px;font-family:'Cormorant Garamond',serif;font-weight:600;color:var(--dourado);margin-top:6px">R$${mat.valor_mensal}<span style="font-size:13px;font-weight:400;opacity:.8">/mês</span></div>
               ${vencimento?`<div style="font-size:12px;color:rgba(242,236,206,.7);margin-top:6px">Vencimento: ${vencimento.toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})} ${diasRestantes!==null?'· '+diasRestantes+' dias restantes':''}</div>`:''}
             </div>
@@ -4139,7 +4207,7 @@ async function renderPage(page, container) {
           </div>
           ${mat.plano_tipo !== 'vishnu'?`
             <div style="background:rgba(232,188,79,.08);border:1px solid rgba(232,188,79,.3);border-radius:var(--r);padding:16px 18px;margin-bottom:16px">
-              <div style="font-family:'Megante','Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:6px">Quer mais?</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:6px">Quer mais?</div>
               <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">Faça upgrade e acesse mais modalidades e benefícios.</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
                 ${todos.filter(p=>p.tipo!==mat.plano_tipo&&p.preco_1x>(plano?.preco_1x||0)).map(p=>`
