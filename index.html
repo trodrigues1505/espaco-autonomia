@@ -291,16 +291,15 @@ function fmtDt(iso, opts) {
 
 // Plano helpers
 const PLANO_BADGES = {
-  brahma:       '<span style="background:#f0ede4;color:#5a5a4a;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500">Brahma</span>',
-  shiva_1x:     '<span style="background:#e8f4e8;color:#1a5a1a;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500">Shiva 1x</span>',
-  shiva_2x:     '<span style="background:#d4edda;color:#155724;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500">Shiva 2x</span>',
-  vishnu_2x:    '<span style="background:rgba(232,188,79,.15);color:#7a5a10;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;border:1px solid rgba(232,188,79,.3)">Vishnu 2x</span>',
-  vishnu_livre: '<span style="background:rgba(232,188,79,.25);color:#5a3a00;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;border:1px solid rgba(232,188,79,.4)">Vishnu Livre</span>',
+  brahma:       `<span style="background:#f0ede4;color:#5a5a4a;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500">Brahma</span>`,
+  shiva_1x:     `<span style="background:#e8f4e8;color:#1a5a1a;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500">Shiva 1x</span>`,
+  shiva_2x:     `<span style="background:#d4edda;color:#155724;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500">Shiva 2x</span>`,
+  vishnu_2x:    `<span style="background:rgba(232,188,79,.15);color:#7a5a10;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;border:1px solid rgba(232,188,79,.3)">Vishnu 2x</span>`,
+  vishnu_livre: `<span style="background:rgba(232,188,79,.25);color:#5a3a00;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;border:1px solid rgba(232,188,79,.4)">Vishnu Livre</span>`,
 }
 const PLANO_NOMES = {brahma:'Brahma',shiva_1x:'Shiva 1x',shiva_2x:'Shiva 2x',vishnu_2x:'Vishnu 2x',vishnu_livre:'Vishnu Livre'}
 const PLANO_VALORES = {brahma:100,shiva_1x:150,shiva_2x:200,vishnu_2x:250,vishnu_livre:300}
 const PLANO_OPCOES = {brahma:1,shiva_1x:1,shiva_2x:2,vishnu_2x:2,vishnu_livre:99}
-────
 function toast(msg, dur=2400) {
   const t = document.createElement('div')
   t.className = 'toast'
