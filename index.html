@@ -15,6 +15,18 @@
 <meta name="apple-mobile-web-app-title" content="Espaço Autonomia">
 <link rel="apple-touch-icon" href="./assets/Logo Vertical (3).png">
 <style>
+  /* Banner de instalação PWA */
+  #pwa-banner{position:fixed;bottom:0;left:0;right:0;background:var(--verde);color:var(--bege);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:9999;box-shadow:0 -4px 20px rgba(0,0,0,.3);transform:translateY(100%);transition:transform .3s ease}
+  #pwa-banner.show{transform:translateY(0)}
+  #pwa-banner img{width:36px;height:36px;border-radius:8px;flex-shrink:0}
+  #pwa-banner-txt{flex:1;font-size:13px;line-height:1.4}
+  #pwa-banner-txt strong{display:block;font-size:14px;color:var(--bege)}
+  #pwa-banner-txt span{font-size:11px;color:rgba(242,236,206,.7)}
+  #pwa-banner-btns{display:flex;gap:8px;flex-shrink:0}
+  .pwa-btn-inst{padding:8px 16px;background:var(--dourado);color:var(--verde);border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif}
+  .pwa-btn-skip{padding:8px 12px;background:transparent;color:rgba(242,236,206,.6);border:none;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif}
+</style>
+<style>
   :root{
     --verde:#1F381F;--verde-med:#2d5a2d;--verde-cl:#4a8a4a;
     --dourado:#E8BC4F;--bege:#F2ECCE;--bege2:#e8e0b8;
@@ -2216,6 +2228,64 @@ try {
   document.getElementById('login-screen').style.display = 'block'
 }
 </script>
+<!-- PWA Install Banner -->
+<div id="pwa-banner">
+  <img src="./assets/Logo Vertical (3).png" alt="logo" onerror="this.style.display='none'">
+  <div id="pwa-banner-txt">
+    <strong>Espaço Autonomia</strong>
+    <span>Instale o app na sua tela inicial</span>
+  </div>
+  <div id="pwa-banner-btns">
+    <button class="pwa-btn-skip" onclick="dispensarPWA()">Agora não</button>
+    <button class="pwa-btn-inst" onclick="instalarPWA()">Instalar</button>
+  </div>
+</div>
+
+<script>
+// ── Service Worker + PWA ────────────────────────────────────
+let _deferredPrompt = null
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW registrado:', reg.scope))
+      .catch(err => console.log('SW erro:', err))
+  })
+}
+
+// Captura o evento de instalação
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault()
+  _deferredPrompt = e
+  // Mostra banner só se não foi dispensado antes
+  if (!localStorage.getItem('pwa-dispensado')) {
+    setTimeout(() => {
+      document.getElementById('pwa-banner')?.classList.add('show')
+    }, 3000)
+  }
+})
+
+window.instalarPWA = async function() {
+  if (!_deferredPrompt) return
+  document.getElementById('pwa-banner')?.classList.remove('show')
+  _deferredPrompt.prompt()
+  const { outcome } = await _deferredPrompt.userChoice
+  console.log('PWA install:', outcome)
+  _deferredPrompt = null
+}
+
+window.dispensarPWA = function() {
+  document.getElementById('pwa-banner')?.classList.remove('show')
+  localStorage.setItem('pwa-dispensado', '1')
+}
+
+// Se já instalado, esconde banner
+window.addEventListener('appinstalled', () => {
+  document.getElementById('pwa-banner')?.classList.remove('show')
+  _deferredPrompt = null
+  console.log('PWA instalado!')
+})
+</script>
 </body>
 </html>    <div class="sb-logo" style="padding:16px 18px;border-bottom:1px solid rgba(242,236,206,0.12)">
       <img src="./assets/Logo horizontal (2).png" alt="Espaço Autonomia" style="width:100%;max-width:158px;height:auto" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
@@ -2309,5 +2379,63 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<!-- PWA Install Banner -->
+<div id="pwa-banner">
+  <img src="./assets/Logo Vertical (3).png" alt="logo" onerror="this.style.display='none'">
+  <div id="pwa-banner-txt">
+    <strong>Espaço Autonomia</strong>
+    <span>Instale o app na sua tela inicial</span>
+  </div>
+  <div id="pwa-banner-btns">
+    <button class="pwa-btn-skip" onclick="dispensarPWA()">Agora não</button>
+    <button class="pwa-btn-inst" onclick="instalarPWA()">Instalar</button>
+  </div>
+</div>
+
+<script>
+// ── Service Worker + PWA ────────────────────────────────────
+let _deferredPrompt = null
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW registrado:', reg.scope))
+      .catch(err => console.log('SW erro:', err))
+  })
+}
+
+// Captura o evento de instalação
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault()
+  _deferredPrompt = e
+  // Mostra banner só se não foi dispensado antes
+  if (!localStorage.getItem('pwa-dispensado')) {
+    setTimeout(() => {
+      document.getElementById('pwa-banner')?.classList.add('show')
+    }, 3000)
+  }
+})
+
+window.instalarPWA = async function() {
+  if (!_deferredPrompt) return
+  document.getElementById('pwa-banner')?.classList.remove('show')
+  _deferredPrompt.prompt()
+  const { outcome } = await _deferredPrompt.userChoice
+  console.log('PWA install:', outcome)
+  _deferredPrompt = null
+}
+
+window.dispensarPWA = function() {
+  document.getElementById('pwa-banner')?.classList.remove('show')
+  localStorage.setItem('pwa-dispensado', '1')
+}
+
+// Se já instalado, esconde banner
+window.addEventListener('appinstalled', () => {
+  document.getElementById('pwa-banner')?.classList.remove('show')
+  _deferredPrompt = null
+  console.log('PWA instalado!')
+})
+</script>
 </body>
 </html>
