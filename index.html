@@ -198,6 +198,7 @@ const MENUS = {
     { sec: 'Gestão' },
     { id: 'criar-aulas', label: 'Criar Aulas',     icon: 'ti-plus-circle' },
     { id: 'alunos',      label: 'Alunos',          icon: 'ti-users' },
+      { id: 'professores', label: 'Professores',     icon: 'ti-user-star' },
     { id: 'presencas',   label: 'Presenças',       icon: 'ti-checkbox' },
     { id: 'planos',      label: 'Planos',          icon: 'ti-award' },
     { sec: 'Sistema' },
@@ -243,6 +244,115 @@ function setActiveNav(id) {
 }
 
 // ── LOGIN / LOGOUT ────────────────────────────────────────────
+// ── ONBOARDING NOVO ALUNO ────────────────────────────────────
+async function mostrarOnboarding(user, nomeGoogle) {
+  // Busca planos para mostrar opções
+  const { data: planos } = await sb.from('planos').select('*, modalidades:plano_modalidades(modalidade)').order('preco_1x')
+
+  // Gera opções de plano (uma linha por preço)
+  const opcoes = []
+  for (const p of (planos||[])) {
+    if (p.preco_1x) opcoes.push({plano:p, opcao:1, opcaoLabel:'1× por semana', preco:p.preco_1x, key:p.tipo+'_1x'})
+    if (p.preco_2x) opcoes.push({plano:p, opcao:2, opcaoLabel:'2× por semana', preco:p.preco_2x, key:p.tipo+'_2x'})
+    if (p.preco_livre) opcoes.push({plano:p, opcao:99, opcaoLabel:'Uso livre', preco:p.preco_livre, key:p.tipo+'_livre'})
+  }
+
+  const onbDiv = document.createElement('div')
+  onbDiv.id = 'onboarding'
+  onbDiv.style.cssText = 'position:fixed;inset:0;background:var(--verde);display:flex;align-items:center;justify-content:center;z-index:200;overflow-y:auto;padding:20px'
+  onbDiv.innerHTML = `
+    <div style="background:#fff;border-radius:16px;width:500px;max-width:95vw;overflow:hidden">
+      <div style="background:var(--verde);padding:24px;text-align:center">
+        <div style="font-size:28px;margin-bottom:8px">𝕊</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--bege)">Bem-vindo ao Espaço Autonomia!</div>
+        <div style="font-size:12px;color:rgba(242,236,206,.7);margin-top:6px">Complete seus dados para começar</div>
+      </div>
+      <div style="padding:24px">
+        <div id="onb-step1">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde);margin-bottom:16px">Seus dados</div>
+          <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
+            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Nome completo</label>
+            <input id="onb-nome" value="${nomeGoogle}" placeholder="Seu nome completo" style="border:1px solid var(--borda);border-radius:6px;padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
+            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Telefone / WhatsApp</label>
+            <input id="onb-tel" placeholder="(11) 99999-9999" style="border:1px solid var(--borda);border-radius:6px;padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">
+          </div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde);margin:16px 0 12px">Escolha seu plano</div>
+          <div style="display:flex;flex-direction:column;gap:8px" id="onb-planos">
+            ${opcoes.map(o=>`
+              <label style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border:2px solid var(--borda);border-radius:8px;cursor:pointer;transition:all .15s" id="label-${o.key}">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <input type="radio" name="onb-plano" value="${o.key}" data-plano="${o.plano.tipo}" data-opcao="${o.opcao}" data-preco="${o.preco}" style="accent-color:var(--verde);width:16px;height:16px" onchange="highlightPlano('${o.key}')">
+                  <div>
+                    <div style="font-weight:500;font-size:13px">${o.plano.nome} · ${o.opcaoLabel}</div>
+                    <div style="font-size:11px;color:var(--txt2);margin-top:2px">
+                      ${(o.plano.modalidades||[]).map(m=>NOMES[m.modalidade]||m.modalidade).join(' · ')}
+                    </div>
+                  </div>
+                </div>
+                <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--verde)">
+                  R$${o.preco}<span style="font-size:11px;font-weight:400;color:var(--txt2)">/mês</span>
+                </div>
+              </label>
+            `).join('')}
+          </div>
+          <button onclick="finalizarOnboarding('${user.id}','${user.email}')" style="width:100%;padding:12px;background:var(--verde);color:var(--bege);border:none;border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:20px;font-weight:500">
+            Começar →
+          </button>
+        </div>
+      </div>
+    </div>
+  `
+  document.body.appendChild(onbDiv)
+}
+
+window.highlightPlano = function(key) {
+  document.querySelectorAll('[id^="label-"]').forEach(el => {
+    el.style.borderColor = 'var(--borda)'
+    el.style.background = '#fff'
+  })
+  const lbl = document.getElementById('label-'+key)
+  if (lbl) { lbl.style.borderColor = 'var(--verde)'; lbl.style.background = 'rgba(31,56,31,.04)' }
+}
+
+window.finalizarOnboarding = async function(userId, email) {
+  const nome = document.getElementById('onb-nome').value.trim()
+  const tel = document.getElementById('onb-tel').value.trim()
+  const planoSel = document.querySelector('input[name="onb-plano"]:checked')
+  if (!nome) { toast('Informe seu nome'); return }
+  if (!planoSel) { toast('Selecione um plano'); return }
+
+  const planoTipo = planoSel.dataset.plano
+  const opcaoAulas = Number(planoSel.dataset.opcao)
+  const valorMensal = Number(planoSel.dataset.preco)
+
+  const btn = document.querySelector('#onboarding button[onclick*="finalizarOnboarding"]')
+  if (btn) { btn.textContent = 'Salvando...'; btn.disabled = true }
+
+  try {
+    // Cria perfil
+    const { error: errP } = await sb.from('perfis').upsert({
+      id: userId, nome, email, telefone: tel||null, tipo: 'aluno', ativo: true
+    })
+    if (errP) throw new Error('Erro no perfil: '+errP.message)
+
+    // Cria matrícula
+    const { error: errM } = await sb.from('matriculas').insert({
+      aluno_id: userId, plano_tipo: planoTipo, opcao_aulas: opcaoAulas, valor_mensal: valorMensal
+    })
+    if (errM) throw new Error('Erro na matrícula: '+errM.message)
+
+    // Remove onboarding e inicia app
+    document.getElementById('onboarding')?.remove()
+    _appIniciado = false
+    await iniciarApp()
+  } catch(e) {
+    toast(e.message)
+    if (btn) { btn.textContent = 'Começar →'; btn.disabled = false }
+  }
+}
+
 window.fazerLogin = async function() {
   const email = document.getElementById('login-email').value.trim()
   const senha = document.getElementById('login-senha').value
@@ -333,20 +443,13 @@ async function iniciarApp() {
   }
   console.log('iniciarApp: perfil final =', perfil?.tipo, perfil?.nome)
 
-  // Cria perfil automaticamente para login Google (primeiro acesso)
+  // Novo aluno: mostra onboarding obrigatório
   if (!perfil) {
-    const nome = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Usuário'
-    const { data: novoPerfil, error: errPerfil } = await sb.from('perfis')
-      .insert({ id: user.id, nome, email: user.email, tipo: 'aluno' })
-      .select().single()
-    if (errPerfil) {
-      // Pode já existir por race condition, tenta buscar de novo
-      const { data: perfilExistente } = await sb.from('perfis').select('*').eq('id', user.id).single()
-      perfil = perfilExistente
-    } else {
-      perfil = novoPerfil
-    }
-    if (!perfil) { toast('Erro ao criar perfil. Contate o administrador.'); return }
+    const nomeGoogle = user.user_metadata?.full_name || user.user_metadata?.name || ''
+    document.getElementById('login-screen').style.display = 'none'
+    document.getElementById('app-shell').style.display = 'none'
+    await mostrarOnboarding(user, nomeGoogle)
+    return
   }
 
   window._perfil = perfil
@@ -1034,36 +1137,61 @@ async function renderPage(page, container) {
       const ate = document.getElementById('ger-ate').value
       if (!de||!ate) { toast('Preencha as datas'); return }
 
-      const { data: aula } = await sb.from('aulas').select('*, horarios:aulas_horarios(*)').eq('id', window._aulaParaGerar).single()
-      const { data: feriados } = await sb.from('feriados').select('*').gte('data',de).lte('data',ate)
-      const feriadosDatas = new Set((feriados||[]).map(f=>f.data))
-      const diasMap = {seg:1,ter:2,qua:3,qui:4,sex:5,sab:6,dom:0}
+      const btnGerar = document.querySelector('#modal-gerar button[onclick="executarGerarOcorrencias()"]')
+      if (btnGerar) { btnGerar.textContent = 'Gerando...'; btnGerar.disabled = true }
 
-      const ocorrencias = []
-      const cursor = new Date(de+'T12:00:00')
-      const fimDate = new Date(ate+'T12:00:00')
+      try {
+        const { data: aula, error: errAula } = await sb.from('aulas').select('*, horarios:aulas_horarios(*)').eq('id', window._aulaParaGerar).single()
+        if (errAula || !aula) { toast('Erro ao buscar aula: '+(errAula?.message||'não encontrada')); return }
+        if (!aula.horarios?.length) { toast('Esta aula não tem horários cadastrados'); return }
 
-      while (cursor <= fimDate) {
-        const diaSemana = cursor.getDay()
-        for (const h of (aula.horarios||[])) {
-          if (diasMap[h.dia_semana] === diaSemana) {
-            const [hora,min] = h.hora_inicio.split(':')
-            const dt = new Date(cursor)
-            dt.setHours(Number(hora),Number(min),0,0)
-            const dStr = dt.toISOString().slice(0,10)
-            const feriadoNome = feriadosDatas.has(dStr) ? (feriados||[]).find(f=>f.data===dStr)?.nome : null
-            ocorrencias.push({ aula_id: aula.id, data_hora: dt.toISOString(), eh_feriado:!!feriadoNome, nome_feriado:feriadoNome||null })
+        const { data: feriados } = await sb.from('feriados').select('*').gte('data',de).lte('data',ate)
+        const feriadosDatas = new Set((feriados||[]).map(f=>f.data))
+        const diasMap = {seg:1,ter:2,qua:3,qui:4,sex:5,sab:6,dom:0}
+
+        const ocorrencias = []
+        const cursor = new Date(de+'T12:00:00')
+        const fimDate = new Date(ate+'T12:00:00')
+        let iteracoes = 0
+
+        while (cursor <= fimDate && iteracoes < 400) {
+          iteracoes++
+          const diaSemana = cursor.getDay()
+          for (const h of (aula.horarios||[])) {
+            if (diasMap[h.dia_semana] === diaSemana) {
+              const partes = h.hora_inicio.split(':')
+              const hora = Number(partes[0])
+              const min = Number(partes[1]||0)
+              // Usa horário local BR (UTC-3)
+              const dStr = cursor.toISOString().slice(0,10)
+              const dtISO = dStr + 'T' + String(hora).padStart(2,'0') + ':' + String(min).padStart(2,'0') + ':00-03:00'
+              const feriadoNome = feriadosDatas.has(dStr) ? (feriados||[]).find(f=>f.data===dStr)?.nome : null
+              ocorrencias.push({ aula_id: aula.id, data_hora: dtISO, eh_feriado:!!feriadoNome, nome_feriado:feriadoNome||null })
+            }
           }
+          cursor.setDate(cursor.getDate()+1)
         }
-        cursor.setDate(cursor.getDate()+1)
-      }
 
-      if (ocorrencias.length) {
-        const { error } = await sb.from('ocorrencias').upsert(ocorrencias, {onConflict:'aula_id,data_hora'})
-        if (error) { toast('Erro: '+error.message); return }
+        if (!ocorrencias.length) {
+          toast('Nenhuma data gerada. Verifique os dias da semana configurados na aula.')
+          return
+        }
+
+        // Insere em lotes de 50
+        let inseridos = 0
+        for (let i=0; i<ocorrencias.length; i+=50) {
+          const lote = ocorrencias.slice(i, i+50)
+          const { error } = await sb.from('ocorrencias').upsert(lote, {onConflict:'aula_id,data_hora', ignoreDuplicates:true})
+          if (error) { toast('Erro ao inserir: '+error.message); return }
+          inseridos += lote.length
+        }
+
+        document.getElementById('modal-gerar').style.display = 'none'
+        toast('✓ '+inseridos+' aulas geradas com sucesso!')
+        navigate('criar-aulas')
+      } finally {
+        if (btnGerar) { btnGerar.textContent = 'Gerar'; btnGerar.disabled = false }
       }
-      document.getElementById('modal-gerar').style.display = 'none'
-      toast(`✓ ${ocorrencias.length} ocorrências geradas!`)
     }
 
     window.toggleAulaStatus = async function(id, ativa) {
@@ -1457,10 +1585,106 @@ async function renderPage(page, container) {
     return
   }
 
+
+  // ── PROFESSORES ─────────────────────────────────────────
+  if (page === 'professores') {
+    const { data: profs } = await sb.from('perfis').select('*').eq('tipo','professor').order('nome')
+    const { data: todos_alunos } = await sb.from('perfis').select('id,nome,email').eq('tipo','aluno').order('nome')
+
+    container.innerHTML = `
+      <div class="topbar">
+        <div class="topbar-t">Professores</div>
+        <button onclick="document.getElementById('modal-cad-prof').style.display='flex'" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-user-plus"></i> Cadastrar Professor</button>
+      </div>
+      <div class="content">
+        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden;margin-bottom:16px">
+          <div style="display:grid;grid-template-columns:1fr 140px 80px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
+            <span>Professor</span><span>Especialidades</span><span>Status</span>
+          </div>
+          ${(profs||[]).length===0?'<div style="padding:18px;font-size:12px;color:var(--txt2)">Nenhum professor cadastrado.</div>':
+            (profs||[]).map(p=>`<div style="display:grid;grid-template-columns:1fr 140px 80px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="width:28px;height:28px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:var(--verde)">${p.nome.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()}</div>
+                <div><div style="font-weight:500">${p.nome}</div><div style="font-size:10px;color:var(--txt2)">${p.email}</div></div>
+              </div>
+              <span style="font-size:11px;color:var(--txt2)">Todas modalidades</span>
+              <span style="background:${p.ativo?'#e8f4e8':'#fceaea'};color:${p.ativo?'#1a5a1a':'#8a1a1a'};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500">${p.ativo?'Ativo':'Inativo'}</span>
+            </div>`).join('')
+          }
+        </div>
+        <div style="background:rgba(31,56,31,.04);border:1px solid rgba(31,56,31,.12);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--verde)">
+          <strong>Dica:</strong> Para promover um aluno existente a professor, edite o aluno e mude o tipo para "Professor" no banco de dados, ou cadastre um novo professor abaixo.
+        </div>
+      </div>
+      <div id="modal-cad-prof" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.45);z-index:100;align-items:center;justify-content:center">
+        <div style="background:#fff;border-radius:10px;width:440px;max-width:95vw">
+          <div style="padding:18px 22px 14px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
+            <span style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--verde)">Cadastrar Professor</span>
+            <button onclick="document.getElementById('modal-cad-prof').style.display='none'" style="background:none;border:1px solid var(--borda);border-radius:5px;padding:3px 8px;cursor:pointer">✕</button>
+          </div>
+          <div style="padding:18px 22px">
+            <div style="margin-bottom:10px">
+              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:5px">Nome completo</label>
+              <input id="cp-nome" placeholder="Nome do professor" style="border:1px solid var(--borda);border-radius:6px;padding:8px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
+            </div>
+            <div style="margin-bottom:10px">
+              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:5px">E-mail</label>
+              <input id="cp-email" type="email" placeholder="professor@email.com" style="border:1px solid var(--borda);border-radius:6px;padding:8px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
+            </div>
+            <div style="margin-bottom:4px">
+              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:5px">Telefone</label>
+              <input id="cp-tel" placeholder="(11) 99999-9999" style="border:1px solid var(--borda);border-radius:6px;padding:8px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
+            </div>
+            <div style="margin-top:12px;background:rgba(232,188,79,.08);border:1px solid rgba(232,188,79,.2);border-radius:6px;padding:10px;font-size:11px;color:var(--txt2)">
+              O professor receberá um e-mail para definir sua senha e poderá acessar o painel de professor.
+            </div>
+          </div>
+          <div style="padding:12px 22px;border-top:1px solid var(--borda);display:flex;gap:8px;justify-content:flex-end">
+            <button onclick="document.getElementById('modal-cad-prof').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+            <button onclick="salvarProfessor()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Cadastrar</button>
+          </div>
+        </div>
+      </div>
+    `
+
+    window.salvarProfessor = async function() {
+      const nome = document.getElementById('cp-nome').value.trim()
+      const email = document.getElementById('cp-email').value.trim()
+      const tel = document.getElementById('cp-tel').value.trim()
+      if (!nome||!email) { toast('Preencha nome e e-mail'); return }
+
+      // Verifica se já existe
+      const { data: existe } = await sb.from('perfis').select('id,tipo').eq('email', email).single()
+      if (existe) {
+        if (existe.tipo !== 'professor') {
+          // Promove para professor
+          await sb.from('perfis').update({ tipo: 'professor', nome, telefone: tel||null }).eq('id', existe.id)
+          toast('✓ Usuário promovido a professor!')
+        } else {
+          toast('Este e-mail já é professor')
+        }
+        document.getElementById('modal-cad-prof').style.display = 'none'
+        navigate('professores')
+        return
+      }
+
+      // Cria novo via signUp
+      const senhaTemp = 'Prof@'+Math.random().toString(36).slice(2,8)
+      const { data: su, error: errSU } = await sb.auth.signUp({ email, password: senhaTemp, options:{ data:{nome} } })
+      if (errSU) { toast('Erro: '+errSU.message); return }
+      if (su.user) {
+        await sb.from('perfis').upsert({ id: su.user.id, nome, email, telefone: tel||null, tipo: 'professor', ativo: true })
+      }
+      document.getElementById('modal-cad-prof').style.display = 'none'
+      toast('✓ Professor cadastrado! Senha temporária: '+senhaTemp)
+      navigate('professores')
+    }
+    return
+  }
+
   // ── PLANOS ───────────────────────────────────────────────
   if (page === 'planos') {
-    const { data: planos } = await sb.from('planos').select('*').order('preco_1x')
-    const { data: mods } = await sb.from('plano_modalidades').select('*')
+    const { data: planos } = await sb.from('planos').select('*, modalidades:plano_modalidades(modalidade)').order('preco_1x')
 
     const featLabels = {
       sangha:'Sangha — grupo WhatsApp', kala_sadhya:'Kala Sadhya — agenda flex',
@@ -1471,40 +1695,142 @@ async function renderPage(page, container) {
     }
     const feats = Object.keys(featLabels)
 
-    const planoBgs = { brahma: 'var(--fundo)', shiva: 'var(--verde)', vishnu: 'var(--dourado)' }
-    const planoTextColors = { brahma: 'var(--verde)', shiva: 'var(--bege)', vishnu: 'var(--verde)' }
+    // Gerar lista de opções de plano (uma linha por preço/frequência)
+    const opcoes = []
+    for (const p of (planos||[])) {
+      if (p.preco_1x) opcoes.push({plano:p, opcao:'1x', label:'1× por semana', preco:p.preco_1x})
+      if (p.preco_2x) opcoes.push({plano:p, opcao:'2x', label:'2× por semana', preco:p.preco_2x})
+      if (p.preco_livre) opcoes.push({plano:p, opcao:'livre', label:'Uso livre', preco:p.preco_livre})
+    }
+
+    // Modal criar plano
+    const modalCriarPlano = `<div id="modal-criar-plano" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.45);z-index:100;align-items:center;justify-content:center">
+      <div style="background:#fff;border-radius:10px;width:520px;max-width:95vw;max-height:90vh;overflow:auto">
+        <div style="padding:18px 22px 14px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
+          <span style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--verde)">Novo Plano</span>
+          <button onclick="document.getElementById('modal-criar-plano').style.display='none'" style="background:none;border:1px solid var(--borda);border-radius:5px;padding:3px 8px;cursor:pointer">✕</button>
+        </div>
+        <div style="padding:18px 22px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
+              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Tipo (identificador)</label>
+              <input id="np-tipo" placeholder="ex: gold" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--txt);width:100%;outline:none">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
+              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Nome exibido</label>
+              <input id="np-nome" placeholder="ex: Gold" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--txt);width:100%;outline:none">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Preço 1×/sem (R$)</label>
+              <input id="np-p1" type="number" placeholder="100" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Preço 2×/sem (R$)</label>
+              <input id="np-p2" type="number" placeholder="150" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Preço livre (R$)</label>
+              <input id="np-pl" type="number" placeholder="200" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
+            </div>
+          </div>
+          <div style="margin-bottom:12px">
+            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:6px">Modalidades incluídas</label>
+            <div style="display:flex;gap:8px">
+              ${['hatha','acro','raja'].map(m=>`<label style="display:flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--borda);border-radius:20px;font-size:12px;cursor:pointer"><input type="checkbox" name="np-mod" value="${m}" style="accent-color:var(--verde)"> ${NOMES[m]}</label>`).join('')}
+            </div>
+          </div>
+          <div style="margin-bottom:4px">
+            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:8px">Benefícios incluídos</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+              ${feats.map(f=>`<label style="display:flex;align-items:center;gap:6px;font-size:11px;padding:4px 0;cursor:pointer"><input type="checkbox" name="np-feat" value="${f}" style="accent-color:var(--verde)"> ${featLabels[f].split('—')[0].trim()}</label>`).join('')}
+            </div>
+          </div>
+        </div>
+        <div style="padding:12px 22px;border-top:1px solid var(--borda);display:flex;gap:8px;justify-content:flex-end">
+          <button onclick="document.getElementById('modal-criar-plano').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+          <button onclick="salvarNovoPLano()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Criar Plano</button>
+        </div>
+      </div>
+    </div>`
 
     container.innerHTML = `
-      <div class="topbar"><div class="topbar-t">Planos</div></div>
+      <div class="topbar">
+        <div class="topbar-t">Planos</div>
+        <button onclick="document.getElementById('modal-criar-plano').style.display='flex'" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px">+ Novo Plano</button>
+      </div>
       <div class="content">
+        <div style="margin-bottom:16px;font-size:13px;color:var(--txt2)">
+          Cada linha abaixo é uma opção de assinatura que o aluno pode escolher no cadastro.
+        </div>
+
+        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden;margin-bottom:24px">
+          <div style="display:grid;grid-template-columns:180px 120px 1fr 120px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
+            <span>Plano</span><span>Frequência</span><span>Modalidades</span><span>Valor</span>
+          </div>
+          ${opcoes.map(o=>`<div style="display:grid;grid-template-columns:180px 120px 1fr 120px;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
+            <span style="font-weight:500">${o.plano.nome}</span>
+            <span style="color:var(--txt2)">${o.label}</span>
+            <div style="display:flex;gap:4px;flex-wrap:wrap">
+              ${(o.plano.modalidades||[]).map(m=>`<span style="background:${CORES[m.modalidade]||'#888'}22;color:${CORES[m.modalidade]||'#888'};padding:1px 7px;border-radius:10px;font-size:10px;font-weight:500">${NOMES[m.modalidade]||m.modalidade}</span>`).join('')}
+            </div>
+            <span style="font-weight:500;color:var(--verde)">R$ ${o.preco}<span style="font-weight:400;color:var(--txt2);font-size:11px">/mês</span></span>
+          </div>`).join('')}
+        </div>
+
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
           ${(planos||[]).map(p => {
-            const modsDoPLano = (mods||[]).filter(m=>m.plano_tipo===p.tipo).map(m=>m.modalidade)
-            const bgH = planoBgs[p.tipo]||'var(--fundo)'
-            const tcH = planoTextColors[p.tipo]||'var(--verde)'
-            return `<div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden${p.tipo==='shiva'?';border:2px solid var(--verde)':''}">
-              <div style="padding:18px;background:${bgH}">
-                <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:${tcH};margin-bottom:8px">${p.nome}</div>
-                ${p.preco_1x?`<div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:${tcH}">R$${p.preco_1x}<span style="font-size:12px;font-weight:400;opacity:.7">/mês · 1×/sem</span></div>`:''}
-                ${p.preco_2x?`<div style="font-size:14px;color:${tcH};opacity:.8;margin-top:4px">ou R$${p.preco_2x} · 2×/sem</div>`:''}
-                ${p.preco_livre?`<div style="font-size:14px;color:${tcH};opacity:.8;margin-top:4px">ou R$${p.preco_livre} · uso livre</div>`:''}
-              </div>
-              <div style="padding:16px 18px">
-                ${feats.map(f=>`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(212,200,158,.2);font-size:12px;color:${p[f]?'var(--txt)':'#ccc'}${p[f]?'':';text-decoration:line-through'}">
-                  <span style="font-size:14px">${p[f]?'✓':'✕'}</span>${featLabels[f]}
-                </div>`).join('')}
-                <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--borda)">
-                  <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);margin-bottom:6px">Modalidades</div>
-                  <div style="display:flex;gap:5px;flex-wrap:wrap">
-                    ${modsDoPLano.map(m=>`<span style="background:${CORES[m]||'#888'}22;color:${CORES[m]||'#888'};padding:2px 9px;border-radius:20px;font-size:11px;font-weight:500">${NOMES[m]||m}</span>`).join('')}
-                  </div>
+            const modsDoPLano = (p.modalidades||[]).map(m=>m.modalidade)
+            return `<div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden">
+              <div style="padding:14px 18px;background:var(--fundo);border-bottom:1px solid var(--borda)">
+                <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${p.nome}</div>
+                <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
+                  ${modsDoPLano.map(m=>`<span style="background:${CORES[m]||'#888'}22;color:${CORES[m]||'#888'};padding:2px 8px;border-radius:10px;font-size:10px;font-weight:500">${NOMES[m]||m}</span>`).join('')}
                 </div>
+              </div>
+              <div style="padding:12px 18px">
+                ${feats.map(f=>`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:11px;color:${p[f]?'var(--txt)':'#ccc'}${p[f]?'':';text-decoration:line-through'}">
+                  <span>${p[f]?'✓':'—'}</span>${featLabels[f]}
+                </div>`).join('')}
               </div>
             </div>`
           }).join('')}
         </div>
       </div>
+      ${modalCriarPlano}
     `
+
+    window.salvarNovoPLano = async function() {
+      const tipo = document.getElementById('np-tipo').value.trim().toLowerCase().replace(/\s+/g,'_')
+      const nome = document.getElementById('np-nome').value.trim()
+      const p1 = document.getElementById('np-p1').value
+      const p2 = document.getElementById('np-p2').value
+      const pl = document.getElementById('np-pl').value
+      if (!tipo||!nome) { toast('Preencha tipo e nome'); return }
+      const mods = [...document.querySelectorAll('input[name="np-mod"]:checked')].map(e=>e.value)
+      const featsObj = {}
+      Object.keys(featLabels).forEach(f => { featsObj[f] = false })
+      ;[...document.querySelectorAll('input[name="np-feat"]:checked')].forEach(e=>{ featsObj[e.value]=true })
+
+      const { error } = await sb.from('planos').insert({
+        tipo, nome,
+        preco_1x: p1?Number(p1):null,
+        preco_2x: p2?Number(p2):null,
+        preco_livre: pl?Number(pl):null,
+        aulas_semana_max: p1&&!p2?1:p2?2:null,
+        ...featsObj
+      })
+      if (error) { toast('Erro: '+error.message); return }
+
+      // Inserir modalidades
+      if (mods.length) {
+        await sb.from('plano_modalidades').insert(mods.map(m=>({plano_tipo:tipo,modalidade:m})))
+      }
+      document.getElementById('modal-criar-plano').style.display = 'none'
+      toast('✓ Plano criado!')
+      navigate('planos')
+    }
     return
   }
 
@@ -1575,16 +1901,14 @@ async function renderPage(page, container) {
 
   // ── ALUNO MEU PLANO ──────────────────────────────────────
   if (page === 'aluno-plano') {
-    const [matRes, planosRes, modsRes] = await Promise.all([
-      sb.from('matriculas').select('*, plano:planos(*)').eq('aluno_id', window._perfil.id).eq('ativa',true).single(),
-      sb.from('planos').select('*').order('preco_1x'),
-      sb.from('plano_modalidades').select('*'),
+    const [matRes, planosRes] = await Promise.all([
+      sb.from('matriculas').select('*, plano:planos(*, modalidades:plano_modalidades(modalidade))').eq('aluno_id', window._perfil.id).eq('ativa',true).single(),
+      sb.from('planos').select('*, modalidades:plano_modalidades(modalidade)').order('preco_1x'),
     ])
     const mat = matRes.data
     const plano = mat?.plano
     const todos = planosRes.data || []
-    const mods = modsRes.data || []
-    const modsDoPLano = mat ? (mods||[]).filter(m=>m.plano_tipo===mat.plano_tipo).map(m=>m.modalidade) : []
+    const modsDoPLano = mat ? (plano?.modalidades||[]).map(m=>m.modalidade) : []
 
     const featLabels = {
       sangha:'Sangha — grupo WhatsApp', kala_sadhya:'Kala Sadhya — agenda flex',
