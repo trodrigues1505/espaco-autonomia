@@ -280,31 +280,17 @@ document.getElementById('login-senha').addEventListener('keydown', e => {
 // ── INICIAR APP ───────────────────────────────────────────────
 async function iniciarApp() {
   try {
-    console.log('iniciarApp: buscando user...')
-    let user = null
-    try {
-      const resp = await sb.auth.getUser()
-      console.log('getUser resp:', JSON.stringify({id: resp.data?.user?.id, email: resp.data?.user?.email, err: resp.error?.message}))
-      user = resp.data?.user
-    } catch(eu) {
-      console.error('getUser exception:', eu.message)
-    }
-    if (!user) {
-      // Tenta via getSession como fallback
-      console.log('tentando getSession como fallback...')
-      try {
-        const { data: { session } } = await sb.auth.getSession()
-        user = session?.user
-        console.log('getSession user:', user?.id)
-      } catch(es) { console.error('getSession exception:', es.message) }
-    }
-    console.log('iniciarApp: user final =', user?.id, user?.email)
+    console.log('iniciarApp: buscando sessão...')
+    // Usa getSession (local, sem rede) em vez de getUser (valida no servidor)
+    const { data: { session: sessao } } = await sb.auth.getSession()
+    const user = sessao?.user
+    console.log('iniciarApp: user =', user?.id, user?.email)
     if (!user) { console.log('iniciarApp: sem user, abortando'); return }
 
   let perfil = null
   try {
     const pr = await sb.from('perfis').select('*').eq('id', user.id).single()
-    console.log('perfil result:', JSON.stringify({data: pr.data, error: pr.error?.message, code: pr.error?.code}))
+    console.log('perfil result:', JSON.stringify({data: pr.data?.tipo, error: pr.error?.message}))
     perfil = pr.data
   } catch(ep) {
     console.error('perfil exception:', ep.message)
