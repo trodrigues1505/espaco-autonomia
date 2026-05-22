@@ -1,0 +1,26 @@
+{
+  "name": "Espaço Autonomia",
+  "short_name": "Autonomia",
+  "description": "App de gestão de aulas e alunos do Espaço Autonomia",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#1F381F",
+  "theme_color": "#1F381F",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./assets/Logo Vertical (3).png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/Logo Vertical (3).png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "education"],
+  "lang": "pt-BR"
+}
