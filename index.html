@@ -590,6 +590,16 @@ async function iniciarApp() {
 
   console.log('iniciarApp: buildMenu tipo=', perfil.tipo)
   buildMenu(perfil.tipo)
+  document.getElementById('app-shell').style.display = 'block'
+
+  // Contrato obrigatório para alunos
+  if (perfil.tipo === 'aluno') {
+    await verificarContrato(perfil.id, perfil.nome)
+    // Creditar saldo do mês atual se não existir
+    const mesAtual = new Date().toISOString().slice(0,7) + '-01'
+    await sb.rpc('creditar_aulas_mes', { p_aluno_id: perfil.id, p_mes_ref: mesAtual }).catch(()=>{})
+  }
+
   const primeiros = { admin: 'dashboard', professor: 'prof-home', aluno: 'aluno-home' }
   console.log('iniciarApp: navigate para', primeiros[perfil.tipo] || 'dashboard')
   navigate(primeiros[perfil.tipo] || 'dashboard')
@@ -769,102 +779,143 @@ async function renderPage(page, container) {
 
   // ── HOME ALUNO ────────────────────────────────────────────
   if (page === 'aluno-home') {
-    const { data: { user } } = await sb.auth.getUser()
-    const em7d = new Date(); em7d.setDate(em7d.getDate()+7)
-    const [confs, mat, cfg] = await Promise.all([
-      sb.from('confirmacoes').select('*, ocorrencia:ocorrencias(*, aula:aulas(modalidade))').eq('aluno_id', user.id).in('status',['confirmado']).gte('ocorrencias.data_hora', new Date().toISOString()).order('criado_em',{ascending:false}).limit(5),
-      sb.from('matriculas').select('*, plano:planos(*)').eq('aluno_id', user.id).eq('ativa', true).single(),
-      sb.from('configuracoes').select('*').then(r=>Object.fromEntries((r.data||[]).map(c=>[c.chave,c.valor]))),
+    const userId = window._perfil.id
+    const agora = new Date()
+
+    const [confsRes, matRes, cfgRes, saldoRes, gamRes, pgRes] = await Promise.all([
+      sb.from('confirmacoes').select('*, ocorrencia:ocorrencias(id,data_hora,aula:aulas(modalidade))').eq('aluno_id', userId).eq('status','confirmado').order('criado_em',{ascending:false}).limit(5),
+      sb.from('matriculas').select('*, plano:planos(*)').eq('aluno_id', userId).eq('ativa',true).single(),
+      sb.from('configuracoes').select('*'),
+      sb.from('saldo_disponivel').select('*').eq('aluno_id', userId).single(),
+      getGamificacao(userId),
+      getPagamentosAluno(userId),
     ])
-    const matricula = mat.data
-    const confirmacoes = (confs.data||[]).filter(c=>c.ocorrencia)
-    const nomes = {hatha:'Hatha Yoga',acro:'Acro Yoga',raja:'Raja Yoga'}
+
+    const mat = matRes.data
+    const cfg = Object.fromEntries((cfgRes.data||[]).map(c=>[c.chave,c.valor]))
+    const saldo = saldoRes.data
+    const gam = gamRes
+    const pagamentos = pgRes
+    const confs = (confsRes.data||[]).filter(c=>c.ocorrencia && new Date(c.ocorrencia.data_hora) >= agora)
+    const saldoTotal = mat?.plano_tipo === 'vishnu_livre' ? '∞' : (saldo?.saldo_total ?? 0)
+    const nivel = calcularNivel(gam?.prana_points||0)
+    const nivelLabel = NIVEL_LABELS[nivel]
+
+    const pgMes = pagamentos.find(p => p.mes_ref?.slice(0,7) === agora.toISOString().slice(0,7))
+    const pgOk = !pagamentos.length || pgMes?.status === 'RECEIVED' || pgMes?.status === 'CONFIRMED'
+
+    const historico = gam?.historico_presencas || {}
+    const diasCalor = []
+    for (let i=29; i>=0; i--) {
+      const d = new Date(agora); d.setDate(agora.getDate()-i)
+      const k = d.toISOString().slice(0,10)
+      diasCalor.push({ data: k, presente: !!historico[k] })
+    }
 
     container.innerHTML = `
-      <div class="topbar"><div class="topbar-t">Olá, ${window._perfil.nome.split(' ')[0]}</div><div><span style="background:#e8f4e8;color:#1a5a1a;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:500">${matricula ? 'Plano '+(matricula.plano?.nome||matricula.plano_tipo) : 'Sem plano'}</span></div></div>
-      <div class="content">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Plano</div><div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--verde)">${matricula?.plano?.nome||'—'}</div><div style="font-size:11px;color:var(--txt2)">R$${matricula?.valor_mensal||0}/mês</div></div>
-          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Confirmadas</div><div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--verde)">${confirmacoes.length}</div><div style="font-size:11px;color:var(--txt2)">próximas aulas</div></div>
+      <div class="topbar">
+        <div class="topbar-t">Olá, ${window._perfil.nome.split(' ')[0]}!</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">${nivelLabel?.split(' ')[0]||'🌱'}</span>
+          <span style="font-size:12px;color:var(--txt2)">${gam?.prana_points||0} pts</span>
         </div>
-        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden">
-          <div style="padding:13px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between"><span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">Próximas confirmações</span><button onclick="navigate('aluno-grade')" style="font-size:11px;color:var(--verde);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif">Ver grade →</button></div>
-          ${confirmacoes.length === 0 ? '<div style="padding:18px;font-size:12px;color:var(--txt2)">Nenhuma aula confirmada. <a href="#" onclick="navigate(\'aluno-grade\');return false" style="color:var(--verde)">Confirmar aulas →</a></div>' :
-            confirmacoes.map(c => {
+      </div>
+      <div class="content">
+        ${!pgOk?`<div style="background:#fceaea;border:1px solid #f5c1c1;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px"><span style="font-size:20px">⚠️</span><div><div style="font-weight:500;font-size:13px;color:#8a1a1a">Mensalidade em aberto</div><div style="font-size:11px;color:#c0392b;margin-top:2px">Regularize o pagamento para continuar confirmando aulas.</div></div></div>`:''}
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:12px 14px">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Saldo</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--verde)">${saldoTotal}</div>
+            <div style="font-size:10px;color:var(--txt2)">aulas acumuladas</div>
+          </div>
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:12px 14px">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Sequência</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:${(gam?.streak_atual||0)>0?'#e67e22':'var(--txt2)'}">${gam?.streak_atual||0}🔥</div>
+            <div style="font-size:10px;color:var(--txt2)">semanas seguidas</div>
+          </div>
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:12px 14px">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Nível</div>
+            <div style="font-size:20px;margin-bottom:2px">${nivelLabel}</div>
+            <div style="font-size:10px;color:var(--txt2)">${gam?.prana_points||0} pts</div>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-bottom:14px">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:8px">Últimos 30 dias</div>
+          <div style="display:flex;gap:3px;flex-wrap:wrap">
+            ${diasCalor.map(d=>`<div title="${d.data}" style="width:18px;height:18px;border-radius:3px;background:${d.presente?'var(--verde)':'#f0ede4'}"></div>`).join('')}
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden;margin-bottom:12px">
+          <div style="padding:12px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
+            <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">Próximas aulas</span>
+            <button onclick="navigate('aluno-grade')" style="font-size:11px;color:var(--verde);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif">Ver grade →</button>
+          </div>
+          ${confs.length===0?'<div style="padding:16px 18px;font-size:12px;color:var(--txt2)">Nenhuma aula confirmada. <a href="#" onclick="navigate('aluno-grade');return false" style="color:var(--verde)">Ver grade →</a></div>':
+            confs.map(c=>{
               const dt = new Date(c.ocorrencia.data_hora)
               const prazo = Number(cfg.prazo_cancelamento_min||180)
-              const limiteCancel = new Date(dt.getTime() - prazo*60000)
-              const podeCancelar = new Date() < limiteCancel
-              const cor = {hatha:'#2d7a2d',acro:'var(--dourado)',raja:'#5a2d8a'}[c.ocorrencia.aula.modalidade]
-              return `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid rgba(212,200,158,.3);gap:12px">
+              const limiteCancel = new Date(dt.getTime()-prazo*60000)
+              const podeCancelar = new Date()<limiteCancel
+              return `<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid rgba(212,200,158,.3);gap:12px">
                 <div>
-                  <div style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${cor}"></span><strong style="font-size:13px">${nomes[c.ocorrencia.aula.modalidade]}</strong></div>
+                  <div style="display:flex;align-items:center;gap:6px">${dot(c.ocorrencia.aula?.modalidade)}<strong style="font-size:13px">${NOMES[c.ocorrencia.aula?.modalidade]||'Aula'}</strong></div>
                   <div style="font-size:11px;color:var(--txt2);margin-top:2px">${dt.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'})} · ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
-                  <div style="font-size:10px;color:${podeCancelar?'var(--verde-cl)':'#c0392b'};margin-top:3px"><i class="ti ti-clock" style="font-size:11px"></i> ${podeCancelar?'Cancelamento disponível':'Prazo de cancelamento encerrado'}</div>
+                  <div style="font-size:10px;color:${podeCancelar?'var(--verde-cl)':'#c0392b'};margin-top:2px">${podeCancelar?'✓ Cancelamento disponível':'⚠ Prazo encerrado — falta perde aula do saldo'}</div>
                 </div>
-                ${podeCancelar ? `<button onclick="cancelarConf('${c.id}','${c.ocorrencia_id}')" style="padding:4px 10px;background:#fceaea;color:#8a1a1a;border:1px solid #f5c1c1;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">Cancelar</button>` : ''}
+                ${podeCancelar?`<button onclick="cancelarConfHome('${c.id}','${c.ocorrencia_id}')" style="padding:4px 10px;background:#fceaea;color:#8a1a1a;border:1px solid #f5c1c1;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Cancelar</button>`:''}
               </div>`
             }).join('')
           }
         </div>
+        <button onclick="navigate('aluno-conquistas')" style="width:100%;padding:12px 16px;background:#fff;border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--verde);cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between">
+          <span>🏆 Minhas Conquistas · ${gam?.prana_points||0} pts</span>
+          <span style="font-size:11px;color:var(--txt2)">Ver todas →</span>
+        </button>
       </div>
     `
-    window.cancelarConf = async function(confId, ocId) {
-      const { data, error } = await sb.rpc('cancelar_confirmacao', { p_aluno_id: window._perfil.id, p_ocorrencia_id: ocId })
-      if (error || !data?.ok) { toast('Erro: '+(data?.motivo||error?.message)); return }
-      toast(data.mensagem)
-      navigate('aluno-home')
+    window.cancelarConfHome = async function(confId, ocId) {
+      const {data,error} = await sb.rpc('cancelar_confirmacao',{p_aluno_id:userId,p_ocorrencia_id:ocId})
+      if (error||!data?.ok){toast('❌ '+(data?.motivo||error?.message));return}
+      toast(data.mensagem); navigate('aluno-home')
     }
     return
   }
 
+  // ── CONQUISTAS ───────────────────────────────────────────
+  if (page === 'aluno-conquistas') {
+    const userId = window._perfil.id
+    const [conquistas, gam] = await Promise.all([getConquistas(userId), getGamificacao(userId)])
+    const nivel = calcularNivel(gam?.prana_points||0)
+    const proxNivel = nivel < 5 ? NIVEL_PONTOS[nivel+1] : null
+    const progresso = proxNivel ? Math.round((gam?.prana_points||0)/proxNivel*100) : 100
 
-  // ── HELPERS COMPARTILHADOS ───────────────────────────────
-  const NOMES = {hatha:'Hatha Yoga', acro:'Acro Yoga', raja:'Raja Yoga'}
-  const CORES = {hatha:'#2d7a2d', acro:'#E8BC4F', raja:'#5a2d8a'}
-  const DIAS_LABEL = {seg:'Segunda',ter:'Terça',qua:'Quarta',qui:'Quinta',sex:'Sexta',sab:'Sábado',dom:'Domingo'}
-  const HORARIOS = ['06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00']
-
-  function fmtDt(iso, opts){
-    return new Date(iso).toLocaleString('pt-BR', opts||{weekday:'short',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
-  }
-  function dot(mod){ return `<span style="width:8px;height:8px;border-radius:50%;background:${CORES[mod]||'#888'};flex-shrink:0;display:inline-block"></span>` }
-  function badge(txt, bg, color){
-    return `<span style="background:${bg};color:${color};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500">${txt}</span>`
-  }
-  function btn(label, onclick, style=''){
-    return `<button onclick="${onclick}" style="padding:5px 11px;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;${style}">${label}</button>`
-  }
-  function card(title, rightHtml, bodyHtml){
-    return `<div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden;margin-bottom:16px">
-      <div style="padding:13px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
-        <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">${title}</span>
-        <div>${rightHtml||''}</div>
-      </div>
-      ${bodyHtml}
-    </div>`
-  }
-  function modal(id, title, bodyHtml, footHtml){
-    return `<div id="${id}" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.45);z-index:100;align-items:center;justify-content:center">
-      <div style="background:#fff;border-radius:10px;width:480px;max-width:95vw;max-height:90vh;overflow:auto">
-        <div style="padding:18px 22px 14px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
-          <span style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--verde)">${title}</span>
-          <button onclick="document.getElementById('${id}').style.display='none'" style="background:none;border:1px solid var(--borda);border-radius:5px;padding:3px 8px;cursor:pointer;font-size:12px">✕</button>
+    container.innerHTML = `
+      <div class="topbar"><div class="topbar-t">Conquistas</div></div>
+      <div class="content">
+        <div style="background:var(--verde);border-radius:var(--r);padding:20px;margin-bottom:16px;color:var(--bege);text-align:center">
+          <div style="font-size:40px;margin-bottom:6px">${NIVEL_LABELS[nivel]}</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500">${gam?.prana_points||0} Prana Points</div>
+          ${proxNivel?`<div style="font-size:11px;color:rgba(242,236,206,.7);margin-top:6px">Próximo: ${NIVEL_LABELS[nivel+1]} · faltam ${proxNivel-(gam?.prana_points||0)} pts</div><div style="background:rgba(242,236,206,.2);border-radius:20px;height:6px;margin:8px auto 0;width:80%;overflow:hidden"><div style="background:var(--dourado);height:6px;border-radius:20px;width:${progresso}%"></div></div>`:'<div style="color:var(--dourado);margin-top:6px">🎉 Nível máximo!</div>'}
+          <div style="display:flex;justify-content:center;gap:24px;margin-top:14px;font-size:12px">
+            <div><div style="font-size:10px;opacity:.7">Sequência atual</div><div style="font-size:20px">${gam?.streak_atual||0}🔥</div></div>
+            <div><div style="font-size:10px;opacity:.7">Recorde</div><div style="font-size:20px">${gam?.streak_max||0}</div></div>
+          </div>
         </div>
-        <div style="padding:18px 22px">${bodyHtml}</div>
-        <div style="padding:12px 22px;border-top:1px solid var(--borda);display:flex;gap:8px;justify-content:flex-end">${footHtml}</div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
+          ${conquistas.map(c=>`<div style="background:#fff;border:${c.desbloqueada?'2px solid var(--dourado)':'1px solid var(--borda)'};border-radius:var(--r);padding:13px;display:flex;align-items:center;gap:10px;${!c.desbloqueada?'opacity:.45':''}">
+            <div style="font-size:26px;flex-shrink:0">${c.icone}</div>
+            <div>
+              <div style="font-weight:500;font-size:12px;color:var(--verde)">${c.nome}</div>
+              <div style="font-size:10px;color:var(--txt2);margin-top:1px">${c.descricao}</div>
+              <div style="font-size:10px;color:var(--dourado);margin-top:2px;font-weight:500">+${c.pontos} pts${c.desbloqueada&&c.quando?' · '+new Date(c.quando).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):''}</div>
+            </div>
+          </div>`).join('')}
+        </div>
       </div>
-    </div>`
+    `
+    return
   }
-  function fi(id, label, inputHtml){
-    return `<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
-      <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">${label}</label>
-      ${inputHtml}
-    </div>`
-  }
-  const inputStyle = `style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--txt);width:100%;outline:none"`
 
-  // ── GRADE DE AULAS (admin + aluno) ───────────────────────
   if (page === 'grade' || page === 'aluno-grade') {
     const isAluno = page === 'aluno-grade'
     const hoje = new Date()
@@ -2188,6 +2239,184 @@ async function renderPage(page, container) {
 
 
 }
+
+
+// ── CONTRATO ─────────────────────────────────────────────────
+const CONTRATO_VERSAO = 'v1'
+const CONTRATO_TEXTO = `
+<div style="font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.8;color:#1F381F">
+  <div style="text-align:center;margin-bottom:20px">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500">Espaço Autonomia</div>
+    <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#5a7a5a">Termo de Adesão e Ciência</div>
+  </div>
+  <p style="margin-bottom:12px">Eu, <strong>[NOME]</strong>, declaro que li e concordo com os termos abaixo para utilização dos serviços do <strong>Espaço Autonomia</strong>, CNPJ 31.038.952/0001-28, representado por <strong>Regiane da Silva Rocha</strong>.</p>
+  <div style="margin-bottom:10px"><strong>1. APTIDÃO FÍSICA:</strong> Declaro estar apto(a) a praticar Yoga e assumo total responsabilidade pela realização de avaliações médicas que julgar necessárias.</div>
+  <div style="margin-bottom:10px"><strong>2. PLANO ATIVO E PAGAMENTO:</strong> O acesso às aulas está condicionado à manutenção do plano ativo e <strong>pagamento em dia</strong>. As cobranças são realizadas automaticamente na data de vencimento. Em caso de inadimplência, o acesso às aulas é suspenso automaticamente até regularização do pagamento.</div>
+  <div style="margin-bottom:10px"><strong>3. SALDO DE AULAS:</strong> Cada plano concede um número mensal de aulas conforme contratado. Aulas não utilizadas acumulam para os meses seguintes enquanto o plano estiver ativo e em dia. <strong>Aulas confirmadas e não canceladas dentro do prazo são descontadas do saldo mesmo em caso de ausência, sem reposição.</strong></div>
+  <div style="margin-bottom:10px"><strong>4. CANCELAMENTO DE PRESENÇA:</strong> O cancelamento de uma aula confirmada deve ser realizado com antecedência mínima pelo app, conforme prazo definido pelo Espaço Autonomia. Após esse prazo, a aula é descontada do saldo independentemente da presença do aluno.</div>
+  <div style="margin-bottom:10px"><strong>5. CANCELAMENTO DO PLANO:</strong> O cancelamento do plano deve ser comunicado <strong>pessoalmente ou por mensagem diretamente ao Espaço Autonomia</strong>. Em caso de cancelamento antecipado, o reembolso será proporcional ao saldo restante, descontada a diferença entre o valor do plano escolhido e o valor mensalista até a data do cancelamento.</div>
+  <div style="margin-bottom:10px"><strong>6. FALTAS:</strong> A presença é responsabilidade do aluno. O Espaço Autonomia poderá oferecer reposição conforme disponibilidade da grade, sem obrigatoriedade.</div>
+  <div style="margin-bottom:10px"><strong>7. ATRASO:</strong> Atraso do instrutor garante compensação equivalente ao tempo perdido. Atraso do aluno não obriga compensação por parte do instrutor.</div>
+  <div style="margin-bottom:10px"><strong>8. MENORES DE IDADE:</strong> Alunos menores de 18 anos devem ter autorização do responsável legal, que responde solidariamente por seus atos e obrigações.</div>
+  <div style="margin-bottom:16px"><strong>9. FORO:</strong> As partes elegem o foro de Franco da Rocha — SP para dirimir quaisquer dúvidas decorrentes deste instrumento.</div>
+  <div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.4);border-radius:8px;padding:12px;font-size:12px;color:#7a5a10">
+    ⚠️ <strong>Atenção:</strong> Ao confirmar uma aula e não comparecer sem cancelar com antecedência, a aula será descontada do seu saldo sem direito a reposição ou reembolso.
+  </div>
+</div>
+`
+
+async function verificarContrato(userId, nomeAluno) {
+  const { data } = await sb.from('contratos').select('id').eq('aluno_id', userId).eq('versao', CONTRATO_VERSAO).single()
+  if (data) return true // já aceitou
+
+  return new Promise(resolve => {
+    const div = document.createElement('div')
+    div.style.cssText = 'position:fixed;inset:0;background:rgba(31,56,31,.7);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px'
+    div.innerHTML = `
+      <div style="background:#fff;border-radius:12px;width:580px;max-width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden">
+        <div style="background:var(--verde);padding:18px 22px;flex-shrink:0">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--bege)">Termo de Adesão</div>
+          <div style="font-size:11px;color:rgba(242,236,206,.7);margin-top:2px">Leia com atenção antes de continuar</div>
+        </div>
+        <div style="overflow-y:auto;flex:1;padding:20px 22px">
+          ${CONTRATO_TEXTO.replace('[NOME]', nomeAluno)}
+        </div>
+        <div style="padding:16px 22px;border-top:1px solid var(--borda);background:#fafaf7;flex-shrink:0">
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-bottom:14px">
+            <input type="checkbox" id="check-contrato" style="margin-top:2px;width:16px;height:16px;accent-color:var(--verde);flex-shrink:0">
+            <span style="font-size:13px;color:var(--txt)">Li, entendi e concordo com todos os termos acima, incluindo as regras de saldo de aulas e a política de cancelamento.</span>
+          </label>
+          <button id="btn-aceitar-contrato" disabled onclick="aceitarContrato('${userId}')" style="width:100%;padding:12px;background:#ccc;color:#fff;border:none;border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;cursor:not-allowed;font-weight:500;transition:all .2s">
+            Concordar e Continuar
+          </button>
+        </div>
+      </div>
+    `
+    document.body.appendChild(div)
+    window._resolveContrato = resolve
+    window._divContrato = div
+
+    document.getElementById('check-contrato').addEventListener('change', function() {
+      const btn = document.getElementById('btn-aceitar-contrato')
+      btn.disabled = !this.checked
+      btn.style.background = this.checked ? 'var(--verde)' : '#ccc'
+      btn.style.cursor = this.checked ? 'pointer' : 'not-allowed'
+    })
+  })
+}
+
+window.aceitarContrato = async function(userId) {
+  const btn = document.getElementById('btn-aceitar-contrato')
+  btn.textContent = 'Salvando...'
+  btn.disabled = true
+
+  const { error } = await sb.from('contratos').insert({
+    aluno_id: userId,
+    versao: CONTRATO_VERSAO,
+    user_agent: navigator.userAgent
+  })
+
+  if (error && !error.message.includes('unique')) {
+    toast('Erro ao salvar contrato: ' + error.message)
+    btn.textContent = 'Concordar e Continuar'
+    btn.disabled = false
+    return
+  }
+
+  window._divContrato?.remove()
+  window._resolveContrato?.(true)
+}
+
+// ── SALDO E GAMIFICAÇÃO ─────────────────────────────────────
+async function getSaldoAluno(alunoId) {
+  const { data } = await sb.from('saldo_disponivel').select('*').eq('aluno_id', alunoId).single()
+  return data
+}
+
+async function getGamificacao(alunoId) {
+  let { data } = await sb.from('gamificacao').select('*').eq('aluno_id', alunoId).single()
+  if (!data) {
+    const { data: novo } = await sb.from('gamificacao').insert({ aluno_id: alunoId }).select().single()
+    data = novo
+  }
+  return data
+}
+
+async function getConquistas(alunoId) {
+  const { data: todas } = await sb.from('conquistas').select('*').order('pontos')
+  const { data: minhas } = await sb.from('aluno_conquistas').select('conquista_cod, desbloqueado_em').eq('aluno_id', alunoId)
+  const set = new Set((minhas||[]).map(c => c.conquista_cod))
+  return (todas||[]).map(c => ({ ...c, desbloqueada: set.has(c.codigo), quando: minhas?.find(m=>m.conquista_cod===c.codigo)?.desbloqueado_em }))
+}
+
+async function verificarConquistas(alunoId) {
+  // Busca stats do aluno
+  const { data: saldo } = await sb.from('saldo_disponivel').select('total_usadas').eq('aluno_id', alunoId).single()
+  const totalAulas = saldo?.total_usadas || 0
+  const { data: gam } = await sb.from('gamificacao').select('*').eq('aluno_id', alunoId).single()
+
+  const conquistas = []
+  if (totalAulas >= 1)  conquistas.push('primeira_aula')
+  if (totalAulas >= 5)  conquistas.push('aulas_5')
+  if (totalAulas >= 10) conquistas.push('aulas_10')
+  if (totalAulas >= 25) conquistas.push('aulas_25')
+  if (totalAulas >= 50) conquistas.push('aulas_50')
+  if (gam?.streak_atual >= 4)  conquistas.push('streak_4')
+  if (gam?.streak_atual >= 12) conquistas.push('streak_12')
+  if (gam?.streak_atual >= 24) conquistas.push('streak_24')
+
+  for (const cod of conquistas) {
+    const { error } = await sb.from('aluno_conquistas')
+      .insert({ aluno_id: alunoId, conquista_cod: cod })
+      .select()
+    if (!error) {
+      // Nova conquista desbloqueada!
+      const { data: c } = await sb.from('conquistas').select('*').eq('codigo', cod).single()
+      if (c) mostrarToastConquista(c)
+    }
+  }
+}
+
+function mostrarToastConquista(conquista) {
+  const t = document.createElement('div')
+  t.style.cssText = 'position:fixed;top:20px;right:20px;background:#fff;border:2px solid var(--dourado);border-radius:12px;padding:14px 18px;z-index:9999;box-shadow:0 8px 30px rgba(0,0,0,.15);max-width:280px;animation:slideIn .3s ease'
+  t.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="font-size:28px">${conquista.icone}</div>
+      <div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--dourado);font-weight:500">Conquista desbloqueada!</div>
+        <div style="font-weight:500;font-size:13px;color:var(--verde);margin-top:2px">${conquista.nome}</div>
+        <div style="font-size:11px;color:var(--txt2)">${conquista.descricao} · +${conquista.pontos} pts</div>
+      </div>
+    </div>
+  `
+  document.body.appendChild(t)
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300) }, 4000)
+}
+
+const NIVEL_LABELS = ['','🌱 Semente','🌿 Broto','🌸 Flor','🌳 Árvore','🌲 Floresta']
+const NIVEL_PONTOS = [0, 0, 50, 150, 350, 700]
+
+function calcularNivel(pontos) {
+  let nivel = 1
+  for (let i = NIVEL_PONTOS.length - 1; i >= 1; i--) {
+    if (pontos >= NIVEL_PONTOS[i]) { nivel = i; break }
+  }
+  return nivel
+}
+
+// ── ALUNO HOME (reescrita com saldo + gamificação) ───────────
+// Override da renderPage para aluno-home
+
+// ── PAGAMENTOS ───────────────────────────────────────────────
+async function getPagamentosAluno(alunoId) {
+  const { data } = await sb.from('pagamentos').select('*').eq('aluno_id', alunoId).order('vencimento', {ascending:false}).limit(6)
+  return data || []
+}
+
+// ── ASAAS CUSTOMER ID no perfil ──────────────────────────────
+// Campo extra no perfil para vincular ao Asaas
+// Admin precisa cadastrar o asaas_customer_id do aluno
 
 // ── VERIFICAR SESSÃO AO CARREGAR ──────────────────────────────
 let _appIniciado = false
