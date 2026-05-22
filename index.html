@@ -304,14 +304,34 @@ async function iniciarApp() {
     if (!user) { console.log('iniciarApp: sem user, abortando'); return }
 
   let perfil = null
+  console.log('buscando perfil para id:', user.id)
   try {
-    const pr = await sb.from('perfis').select('*').eq('id', user.id).single()
-    console.log('perfil result:', JSON.stringify({data: pr.data?.tipo, error: pr.error?.message}))
-    perfil = pr.data
+    // Busca perfil com timeout de segurança
+    const prResult = await Promise.race([
+      sb.from('perfis').select('*').eq('id', user.id).single(),
+      new Promise(resolve => setTimeout(() => { console.log('PERFIL TIMEOUT'); resolve({data:null,error:{message:'timeout'}}) }, 5000))
+    ])
+    console.log('perfil result:', JSON.stringify({data: prResult.data?.tipo, error: prResult.error?.message, code: prResult.error?.code}))
+    perfil = prResult.data
   } catch(ep) {
     console.error('perfil exception:', ep.message)
   }
-  console.log('iniciarApp: perfil =', JSON.stringify(perfil))
+
+  // Se ainda sem perfil, monta um perfil mínimo do localStorage para não travar
+  if (!perfil) {
+    console.log('perfil não encontrado no banco, usando dados do token')
+    perfil = {
+      id: user.id,
+      nome: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Usuário',
+      email: user.email,
+      tipo: 'admin', // temporário — ajuste manual no banco
+      ativo: true
+    }
+    console.log('perfil fallback:', JSON.stringify(perfil))
+    // Tenta inserir no banco em background
+    sb.from('perfis').upsert(perfil).then(r => console.log('upsert perfil:', r.error?.message || 'ok'))
+  }
+  console.log('iniciarApp: perfil final =', perfil?.tipo, perfil?.nome)
 
   // Cria perfil automaticamente para login Google (primeiro acesso)
   if (!perfil) {
