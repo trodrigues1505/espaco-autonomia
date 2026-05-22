@@ -280,10 +280,26 @@ document.getElementById('login-senha').addEventListener('keydown', e => {
 // ── INICIAR APP ───────────────────────────────────────────────
 async function iniciarApp() {
   try {
-    console.log('iniciarApp: buscando sessão...')
-    // Usa getSession (local, sem rede) em vez de getUser (valida no servidor)
-    const { data: { session: sessao } } = await sb.auth.getSession()
-    const user = sessao?.user
+    console.log('iniciarApp: buscando sessão... sb existe?', !!sb, !!sb?.auth)
+    // Pega user direto do token no localStorage — zero rede
+    let user = null
+    try {
+      const tokenKey = Object.keys(localStorage).find(k => k.includes('auth-token'))
+      console.log('tokenKey:', tokenKey)
+      if (tokenKey) {
+        const tokenData = JSON.parse(localStorage.getItem(tokenKey) || '{}')
+        user = tokenData?.user || tokenData
+        console.log('user do localStorage:', user?.id, user?.email, user?.role)
+      }
+    } catch(e) { console.error('localStorage err:', e.message) }
+    if (!user?.id) {
+      console.log('sem user no localStorage, tentando getSession sem await problemático...')
+      // Timeout de segurança
+      user = await Promise.race([
+        sb.auth.getSession().then(r => { console.log('getSession ok:', r.data?.session?.user?.id); return r.data?.session?.user }),
+        new Promise(resolve => setTimeout(() => { console.log('getSession TIMEOUT'); resolve(null) }, 3000))
+      ])
+    }
     console.log('iniciarApp: user =', user?.id, user?.email)
     if (!user) { console.log('iniciarApp: sem user, abortando'); return }
 
