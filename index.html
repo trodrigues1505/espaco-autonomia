@@ -281,11 +281,34 @@ document.getElementById('login-senha').addEventListener('keydown', e => {
 async function iniciarApp() {
   try {
     console.log('iniciarApp: buscando user...')
-    const { data: { user } } = await sb.auth.getUser()
-    console.log('iniciarApp: user =', user?.id, user?.email)
+    let user = null
+    try {
+      const resp = await sb.auth.getUser()
+      console.log('getUser resp:', JSON.stringify({id: resp.data?.user?.id, email: resp.data?.user?.email, err: resp.error?.message}))
+      user = resp.data?.user
+    } catch(eu) {
+      console.error('getUser exception:', eu.message)
+    }
+    if (!user) {
+      // Tenta via getSession como fallback
+      console.log('tentando getSession como fallback...')
+      try {
+        const { data: { session } } = await sb.auth.getSession()
+        user = session?.user
+        console.log('getSession user:', user?.id)
+      } catch(es) { console.error('getSession exception:', es.message) }
+    }
+    console.log('iniciarApp: user final =', user?.id, user?.email)
     if (!user) { console.log('iniciarApp: sem user, abortando'); return }
 
-  let { data: perfil } = await sb.from('perfis').select('*').eq('id', user.id).single()
+  let perfil = null
+  try {
+    const pr = await sb.from('perfis').select('*').eq('id', user.id).single()
+    console.log('perfil result:', JSON.stringify({data: pr.data, error: pr.error?.message, code: pr.error?.code}))
+    perfil = pr.data
+  } catch(ep) {
+    console.error('perfil exception:', ep.message)
+  }
   console.log('iniciarApp: perfil =', JSON.stringify(perfil))
 
   // Cria perfil automaticamente para login Google (primeiro acesso)
@@ -1399,37 +1422,40 @@ async function renderPage(page, container) {
 // ── VERIFICAR SESSÃO AO CARREGAR ──────────────────────────────
 let _appIniciado = false
 
+async function tentarIniciar(origem) {
+  console.log('tentarIniciar chamado de:', origem, '| _appIniciado:', _appIniciado)
+  if (_appIniciado) { console.log('já iniciado, ignorando'); return }
+  _appIniciado = true
+  document.getElementById('login-screen').style.display = 'none'
+  await iniciarApp()
+}
+
 sb.auth.onAuthStateChange(async (event, session) => {
-  console.log('auth event:', event, !!session)
-  if (['SIGNED_IN','TOKEN_REFRESHED','INITIAL_SESSION'].includes(event) && session) {
-    document.getElementById('login-screen').style.display = 'none'
-    if (!_appIniciado) {
-      _appIniciado = true
-      await iniciarApp()
-    }
-  } else if (event === 'SIGNED_OUT') {
+  console.log('auth event:', event, '| session:', !!session, '| _appIniciado:', _appIniciado)
+  if (event === 'SIGNED_OUT') {
     _appIniciado = false
     document.getElementById('app-shell').style.display = 'none'
     document.getElementById('login-screen').style.display = 'block'
+    return
+  }
+  if (session && ['SIGNED_IN','TOKEN_REFRESHED','INITIAL_SESSION'].includes(event)) {
+    await tentarIniciar('onAuthStateChange:' + event)
   }
 })
 
 // Verifica sessão existente ao carregar
-const { data: { session: sessaoInicial } } = await sb.auth.getSession()
-if (sessaoInicial) {
-  document.getElementById('login-screen').style.display = 'none'
-  _appIniciado = true
-  await iniciarApp()
-} else {
-  // Tenta recuperar sessão do hash da URL (retorno OAuth Google)
-  const hash = window.location.hash
-  if (hash && hash.includes('access_token')) {
-    document.getElementById('login-screen').style.display = 'none'
-    document.getElementById('app-shell').style.display = 'none'
-    // onAuthStateChange vai capturar e iniciar
+console.log('verificando sessão inicial...')
+try {
+  const { data: { session: sessaoInicial }, error: errSessao } = await sb.auth.getSession()
+  console.log('sessão inicial:', !!sessaoInicial, errSessao?.message)
+  if (sessaoInicial) {
+    await tentarIniciar('getSession')
   } else {
     document.getElementById('login-screen').style.display = 'block'
   }
+} catch(e) {
+  console.error('erro ao verificar sessão:', e.message)
+  document.getElementById('login-screen').style.display = 'block'
 }
 </script>
 </body>
