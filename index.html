@@ -2004,7 +2004,9 @@ async function renderPage(page, container) {
 
   // ── PLANOS ───────────────────────────────────────────────
   if (page === 'planos') {
-    const { data: planos } = await sb.from('planos').select('*, modalidades:plano_modalidades(modalidade)').order('preco_1x')
+    const { data: planos, error: errPlanos } = await sb.from('planos').select('*, modalidades:plano_modalidades(modalidade)').order('preco_1x')
+    if (errPlanos) console.error('Erro planos:', errPlanos)
+    console.log('Planos carregados:', planos?.length, planos)
 
     const featLabels = {
       sangha:'Sangha — grupo WhatsApp', kala_sadhya:'Kala Sadhya — agenda flex',
@@ -2516,6 +2518,28 @@ sb.auth.onAuthStateChange(async (event, session) => {
 
 // Verifica sessão existente ao carregar
 console.log('verificando sessão inicial...')
+
+// Trata erros de email link no hash da URL (OTP expirado etc)
+const hashParams = new URLSearchParams(window.location.hash.slice(1))
+const hashError = hashParams.get('error')
+const hashErrorDesc = hashParams.get('error_description')
+if (hashError) {
+  console.log('Hash error:', hashError, hashErrorDesc)
+  // Limpa o hash e redireciona para o app
+  window.history.replaceState(null, '', window.location.pathname)
+  if (hashError === 'access_denied' && hashErrorDesc?.includes('expired')) {
+    document.getElementById('login-screen').style.display = 'block'
+    // Mostra mensagem amigável
+    setTimeout(() => {
+      const errEl = document.getElementById('login-err')
+      if (errEl) {
+        errEl.textContent = 'Link de confirmação expirado. Por favor, faça login novamente.'
+        errEl.style.display = 'block'
+      }
+    }, 500)
+  }
+}
+
 try {
   const { data: { session: sessaoInicial }, error: errSessao } = await sb.auth.getSession()
   console.log('sessão inicial:', !!sessaoInicial, errSessao?.message)
