@@ -1522,6 +1522,7 @@ async function renderPage(page, container) {
   if (page === 'alunos') {
     const busca = window._buscaAlunos || ''
     let q = sb.from('perfis').select('*, matriculas(plano_tipo,opcao_aulas,valor_mensal,ativa,fim)').eq('tipo','aluno').order('nome')
+    // Busca asaas_customer_id separado (campo extra na tabela)
     const { data: todos } = await q
     const alunos = (todos||[]).filter(a => !busca || a.nome.toLowerCase().includes(busca.toLowerCase()) || a.email.toLowerCase().includes(busca.toLowerCase()))
 
@@ -1552,8 +1553,9 @@ async function renderPage(page, container) {
         </select>`)}
       </div>
       ${fi('','Valor mensal (R$)',`<input type="number" id="ca-valor" ${inputStyle} value="100">`)}
+      ${fi('','ID no Asaas (opcional)',`<input type="text" id="ca-asaas" ${inputStyle} placeholder="cus_...">`)}
       <div style="background:rgba(232,188,79,.08);border:1px solid rgba(232,188,79,.2);border-radius:6px;padding:10px;font-size:11px;color:var(--txt2)">
-        Uma senha temporária será enviada por e-mail. O aluno poderá alterá-la no primeiro acesso.
+        O aluno acessa com Google usando o e-mail cadastrado.
       </div>`,
       `<button onclick="document.getElementById('modal-cad-aluno').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
        <button onclick="salvarNovoAluno()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Cadastrar</button>`
@@ -1643,10 +1645,12 @@ async function renderPage(page, container) {
       }
 
       if (alunoId) {
+        const asaasNovo = document.getElementById('ca-asaas')?.value.trim() || null
         await sb.from('matriculas').update({ativa:false}).eq('aluno_id', alunoId).eq('ativa', true)
         await sb.from('matriculas').insert({ aluno_id: alunoId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor })
+        if (asaasNovo) await sb.from('perfis').update({ asaas_customer_id: asaasNovo }).eq('id', alunoId)
         document.getElementById('modal-cad-aluno').style.display = 'none'
-        toast('✓ Aluno pré-cadastrado! Peça para fazer login com o Google usando: '+email)
+        toast('✓ Aluno cadastrado! Peça para entrar com Google usando: '+email)
         navigate('alunos')
       } else {
         toast('Erro ao cadastrar. Verifique se o e-mail já existe.')
@@ -1688,9 +1692,10 @@ async function renderPage(page, container) {
       const ativo = document.getElementById('ea-ativo').value === 'true'
       await sb.from('matriculas').update({ativa:false}).eq('aluno_id', window._editAlunoId).eq('ativa', true)
       await sb.from('matriculas').insert({ aluno_id: window._editAlunoId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor, fim })
-      await sb.from('perfis').update({ativo}).eq('id', window._editAlunoId)
+      const asaasId = document.getElementById('ea-asaas')?.value?.trim() || null
+      await sb.from('perfis').update({ ativo, asaas_customer_id: asaasId }).eq('id', window._editAlunoId)
       document.getElementById('modal-edit-aluno').style.display = 'none'
-      toast('✓ Aluno atualizado!')
+      toast(asaasId ? '✓ Aluno atualizado! Asaas vinculado.' : '✓ Aluno atualizado!')
       navigate('alunos')
     }
     return
