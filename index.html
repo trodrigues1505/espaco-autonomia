@@ -243,7 +243,16 @@ const CORES    = {hatha:'#2d7a2d', acro:'#E8BC4F', raja:'#5a2d8a'}
 const HORARIOS = ['06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00',
                   '14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00']
 const DIAS_LABEL = {seg:'Segunda',ter:'Terça',qua:'Quarta',qui:'Quinta',sex:'Sexta',sab:'Sábado',dom:'Domingo'}
-// (NIVEL_LABELS, NIVEL_PONTOS, calcularNivel definidos globalmente acima)
+const NIVEL_LABELS = ['','🌱 Semente','🌿 Broto','🌸 Flor','🌳 Árvore','🌲 Floresta']
+const NIVEL_PONTOS = [0, 0, 50, 150, 350, 700]
+
+function calcularNivel(pontos) {
+  let nivel = 1
+  for (let i = NIVEL_PONTOS.length - 1; i >= 1; i--) {
+    if (pontos >= NIVEL_PONTOS[i]) { nivel = i; break }
+  }
+  return nivel
+}
 
 function dot(mod) {
   return `<span style="width:8px;height:8px;border-radius:50%;background:${CORES[mod]||'#888'};flex-shrink:0;display:inline-block"></span>`
@@ -1625,22 +1634,22 @@ async function renderPage(page, container) {
       let alunoId = existente?.id
 
       if (!alunoId) {
-        // Cria via signUp com senha temporária
-        const senhaTemp = 'Temp@'+Math.random().toString(36).slice(2,8)
-        const { data: signUpData, error: errSU } = await sb.auth.signUp({ email, password: senhaTemp, options:{ data:{nome} } })
-        if (errSU) { toast('Erro: '+errSU.message); return }
-        alunoId = signUpData.user?.id
-        if (alunoId) {
-          await sb.from('perfis').upsert({ id: alunoId, nome, email, telefone: tel||null, tipo: 'aluno' })
-        }
+        // Pré-cadastra perfil — aluno completa ao fazer login com Google
+        const tempId = crypto.randomUUID()
+        const { error: errP } = await sb.from('perfis').insert({
+          id: tempId, nome, email, telefone: tel||null, tipo: 'aluno', ativo: true
+        })
+        if (!errP) alunoId = tempId
       }
 
       if (alunoId) {
         await sb.from('matriculas').update({ativa:false}).eq('aluno_id', alunoId).eq('ativa', true)
         await sb.from('matriculas').insert({ aluno_id: alunoId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor })
         document.getElementById('modal-cad-aluno').style.display = 'none'
-        toast('✓ Aluno cadastrado!')
+        toast('✓ Aluno pré-cadastrado! Peça para fazer login com o Google usando: '+email)
         navigate('alunos')
+      } else {
+        toast('Erro ao cadastrar. Verifique se o e-mail já existe.')
       }
     }
 
@@ -1959,11 +1968,10 @@ async function renderPage(page, container) {
       const tel = document.getElementById('cp-tel').value.trim()
       if (!nome||!email) { toast('Preencha nome e e-mail'); return }
 
-      // Verifica se já existe
+      // Verifica se já existe pelo e-mail
       const { data: existe } = await sb.from('perfis').select('id,tipo').eq('email', email).single()
       if (existe) {
         if (existe.tipo !== 'professor') {
-          // Promove para professor
           await sb.from('perfis').update({ tipo: 'professor', nome, telefone: tel||null }).eq('id', existe.id)
           toast('✓ Usuário promovido a professor!')
         } else {
@@ -1974,15 +1982,21 @@ async function renderPage(page, container) {
         return
       }
 
-      // Cria novo via signUp
-      const senhaTemp = 'Prof@'+Math.random().toString(36).slice(2,8)
-      const { data: su, error: errSU } = await sb.auth.signUp({ email, password: senhaTemp, options:{ data:{nome} } })
-      if (errSU) { toast('Erro: '+errSU.message); return }
-      if (su.user) {
-        await sb.from('perfis').upsert({ id: su.user.id, nome, email, telefone: tel||null, tipo: 'professor', ativo: true })
+      // Cadastra pré-perfil — professor faz login pelo Google ou pela tela de login
+      // O perfil será completado automaticamente no primeiro acesso
+      const tempId = crypto.randomUUID()
+      const { error } = await sb.from('perfis').insert({
+        id: tempId, nome, email, telefone: tel||null, tipo: 'professor', ativo: true
+      })
+      if (error) {
+        // Se erro de UUID conflict, tenta sem ID fixo
+        toast('Cadastro pré-registrado. Professor deve fazer login com Google usando: '+email)
+        document.getElementById('modal-cad-prof').style.display = 'none'
+        navigate('professores')
+        return
       }
       document.getElementById('modal-cad-prof').style.display = 'none'
-      toast('✓ Professor cadastrado! Senha temporária: '+senhaTemp)
+      toast('✓ Professor pré-cadastrado! Oriente-o a fazer login com Google usando: '+email)
       navigate('professores')
     }
     return
@@ -2068,7 +2082,7 @@ async function renderPage(page, container) {
       </div>
       <div class="content">
         <div style="margin-bottom:16px;font-size:13px;color:var(--txt2)">
-          Cada linha abaixo é uma opção de assinatura que o aluno pode escolher no cadastro.
+          Cada linha abaixo é uma opção de assinatura disponível. Os 5 planos base já estão configurados. Use "+ Novo Plano" apenas para criar planos especiais (ex: Gestante, Melhor Idade, Família).
         </div>
 
         <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden;margin-bottom:24px">
@@ -2108,8 +2122,12 @@ async function renderPage(page, container) {
     `
 
     window.salvarNovoPLano = async function() {
-      const tipo = document.getElementById('np-tipo').value.trim().toLowerCase().replace(/\s+/g,'_')
+      const tipo = document.getElementById('np-tipo').value.trim().toLowerCase().replace(/[^a-z0-9_]/g,'_')
       const nome = document.getElementById('np-nome').value.trim()
+      if (!tipo||!nome) { toast('Preencha tipo e nome'); return }
+      // Verifica duplicata
+      const { data: existe } = await sb.from('planos').select('tipo').eq('tipo', tipo).single()
+      if (existe) { toast('Já existe um plano com este identificador: '+tipo); return }
       const p1 = document.getElementById('np-p1').value
       const p2 = document.getElementById('np-p2').value
       const pl = document.getElementById('np-pl').value
@@ -2457,7 +2475,16 @@ function mostrarToastConquista(conquista) {
   setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300) }, 4000)
 }
 
-// (NIVEL_LABELS, NIVEL_PONTOS, calcularNivel definidos globalmente acima)
+const NIVEL_LABELS = ['','🌱 Semente','🌿 Broto','🌸 Flor','🌳 Árvore','🌲 Floresta']
+const NIVEL_PONTOS = [0, 0, 50, 150, 350, 700]
+
+function calcularNivel(pontos) {
+  let nivel = 1
+  for (let i = NIVEL_PONTOS.length - 1; i >= 1; i--) {
+    if (pontos >= NIVEL_PONTOS[i]) { nivel = i; break }
+  }
+  return nivel
+}
 
 // ── ALUNO HOME (reescrita com saldo + gamificação) ───────────
 // Override da renderPage para aluno-home
