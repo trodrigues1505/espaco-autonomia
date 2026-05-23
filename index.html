@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -2519,17 +2519,22 @@ sb.auth.onAuthStateChange(async (event, session) => {
 // Verifica sessão existente ao carregar
 console.log('verificando sessão inicial...')
 
-// Trata erros de email link no hash da URL (OTP expirado etc)
-const hashParams = new URLSearchParams(window.location.hash.slice(1))
+// Trata hash da URL (tokens OAuth e erros)
+const rawHash = window.location.hash
+// Remove ## duplo que o Supabase às vezes gera
+const cleanHash = rawHash.replace(/^#+/, '#')
+const hashParams = new URLSearchParams(cleanHash.slice(1))
 const hashError = hashParams.get('error')
 const hashErrorDesc = hashParams.get('error_description')
+const hashToken = hashParams.get('access_token')
+
+console.log('URL hash:', rawHash.slice(0,50), '| token:', !!hashToken, '| error:', hashError)
+
 if (hashError) {
   console.log('Hash error:', hashError, hashErrorDesc)
-  // Limpa o hash e redireciona para o app
   window.history.replaceState(null, '', window.location.pathname)
   if (hashError === 'access_denied' && hashErrorDesc?.includes('expired')) {
     document.getElementById('login-screen').style.display = 'block'
-    // Mostra mensagem amigável
     setTimeout(() => {
       const errEl = document.getElementById('login-err')
       if (errEl) {
@@ -2538,6 +2543,13 @@ if (hashError) {
       }
     }, 500)
   }
+} else if (hashToken && rawHash.includes('##')) {
+  // Double hash bug - rewrite URL with single hash so Supabase can parse it
+  console.log('Corrigindo ## duplo na URL...')
+  const newUrl = window.location.pathname + '#' + cleanHash.slice(1)
+  window.history.replaceState(null, '', newUrl)
+  // Força o Supabase a reprocessar o hash
+  window.location.reload()
 }
 
 try {
