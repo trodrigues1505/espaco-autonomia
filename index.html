@@ -2475,16 +2475,7 @@ function mostrarToastConquista(conquista) {
   setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300) }, 4000)
 }
 
-const NIVEL_LABELS = ['','🌱 Semente','🌿 Broto','🌸 Flor','🌳 Árvore','🌲 Floresta']
-const NIVEL_PONTOS = [0, 0, 50, 150, 350, 700]
 
-function calcularNivel(pontos) {
-  let nivel = 1
-  for (let i = NIVEL_PONTOS.length - 1; i >= 1; i--) {
-    if (pontos >= NIVEL_PONTOS[i]) { nivel = i; break }
-  }
-  return nivel
-}
 
 // ── ALUNO HOME (reescrita com saldo + gamificação) ───────────
 // Override da renderPage para aluno-home
