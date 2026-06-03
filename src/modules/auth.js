@@ -116,8 +116,7 @@ window.finalizarOnboarding = async function (userId, email) {
     if (errM) throw new Error('Erro na matrícula: ' + errM.message)
 
     document.getElementById('onboarding')?.remove()
-    _appIniciado = false
-    await iniciarApp()
+      await iniciarApp()
   } catch (e) {
     toast(e.message)
     if (btn) { btn.textContent = 'Começar →'; btn.disabled = false }
@@ -165,72 +164,50 @@ function loginGoogle() {
 window.loginGoogle = loginGoogle
 
 // ── Inicializar app ──────────────────────────────────────────
-export let _appIniciado = false
-
 export async function iniciarApp() {
   try {
-    let user = null
-
-    // Tenta ler do token local antes de ir à rede
-    try {
-      const tokenKey = Object.keys(localStorage).find(k => k.includes('auth-token'))
-      if (tokenKey) {
-        const tokenData = JSON.parse(localStorage.getItem(tokenKey) || '{}')
-        user = tokenData?.user || tokenData
-      }
-    } catch (e) { /* silencia erros de localStorage */ }
-
-    if (!user?.id) {
-      user = await Promise.race([
-        sb.auth.getSession().then(r => r.data?.session?.user),
-        new Promise(resolve => setTimeout(() => resolve(null), 3000)),
-      ])
+    // 1. Pega sessão atual
+    const { data: { session } } = await sb.auth.getSession()
+    if (!session?.user) {
+      document.getElementById('login-screen').style.display = 'block'
+      return
     }
+    const user = session.user
 
-    if (!user) return
+    // 2. Busca perfil no banco
+    const { data: perfil, error: errPerfil } = await sb
+      .from('perfis')
+      .select('*')
+      .eq('id', user.id)
+      .single()
 
-    // Busca perfil no banco
-    let perfil = null
-    try {
-      const prResult = await Promise.race([
-        sb.from('perfis').select('*').eq('id', user.id).single(),
-        new Promise(resolve => setTimeout(() => resolve({ data: null, error: { message: 'timeout' } }), 5000)),
-      ])
-      perfil = prResult.data
-    } catch (e) { /* silencia */ }
-
-    // Fallback para não bloquear o app se o perfil ainda não existe
-    if (!perfil) {
-      perfil = {
-        id:    user.id,
-        nome:  user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Usuário',
-        email: user.email,
-        tipo:  'admin',
-        ativo: true,
-      }
-      sb.from('perfis').upsert(perfil)  // fire-and-forget, error ignored
-    }
-
-    // Onboarding para aluno novo (sem perfil no banco)
-    if (!perfil && perfil.tipo !== 'aluno') {
-      const nomeGoogle = user.user_metadata?.full_name || ''
-      document.getElementById('login-screen').style.display  = 'none'
-      document.getElementById('app-shell').style.display     = 'none'
-      await mostrarOnboarding(user, nomeGoogle)
+    // 3. Perfil não existe → onboarding (novo aluno via Google)
+    if (!perfil || errPerfil?.code === 'PGRST116') {
+      document.getElementById('login-screen').style.display = 'none'
+      document.getElementById('app-shell').style.display    = 'none'
+      await mostrarOnboarding(user, user.user_metadata?.full_name || '')
       return
     }
 
+    if (errPerfil) throw new Error('Erro ao buscar perfil: ' + errPerfil.message)
+
     window._perfil = perfil
 
-    // Atualiza sidebar
+    // 4. Monta shell
     document.getElementById('login-screen').style.display  = 'none'
     document.getElementById('app-shell').style.display     = 'block'
     document.getElementById('sb-nome').textContent         = perfil.nome
-    document.getElementById('sb-role-label').textContent   = { admin: 'Admin', professor: 'Professor', aluno: 'Aluno' }[perfil.tipo] || perfil.tipo
+    document.getElementById('sb-role-label').textContent   =
+      { admin: 'Admin', professor: 'Professor', aluno: 'Aluno' }[perfil.tipo] || perfil.tipo
 
-    // Plano do aluno na sidebar
+    // 5. Plano do aluno na sidebar
     if (perfil.tipo === 'aluno') {
-      const { data: mat } = await sb.from('matriculas').select('plano_tipo').eq('aluno_id', perfil.id).eq('ativa', true).single()
+      const { data: mat } = await sb
+        .from('matriculas')
+        .select('plano_tipo')
+        .eq('aluno_id', perfil.id)
+        .eq('ativa', true)
+        .single()
       if (mat) {
         document.getElementById('sb-plano').textContent = PLANO_NOMES[mat.plano_tipo] || ''
         window._plano = mat.plano_tipo
@@ -241,81 +218,63 @@ export async function iniciarApp() {
     initMobileMenu()
     initProfessorCancel()
 
-    // LGPD — sincroniza consentimento com banco após login
+    // 6. LGPD + contrato
     await sincronizarConsentimentoAposLogin(perfil.id)
 
-    // Contrato obrigatório para alunos
     if (perfil.tipo === 'aluno') {
       await verificarContrato(perfil.id, perfil.nome)
       const mesAtual = new Date().toISOString().slice(0, 7) + '-01'
-      await sb.rpc('creditar_aulas_mes', { p_aluno_id: perfil.id, p_mes_ref: mesAtual })  // error in .error, not thrown
+      await sb.rpc('creditar_aulas_mes', { p_aluno_id: perfil.id, p_mes_ref: mesAtual })
     }
 
+    // 7. Navega para home do perfil
     window.navigate(homePorPerfil(perfil.tipo))
 
   } catch (e) {
     console.error('iniciarApp ERRO:', e.message, e.stack)
-    document.getElementById('main-area').innerHTML =
-      `<div style="padding:30px;color:#c0392b;font-family:monospace;font-size:12px">Erro: ${e.message}<br><br>${e.stack}</div>`
+    document.getElementById('login-screen').style.display = 'block'
+    const err = document.getElementById('login-err')
+    if (err) { err.textContent = 'Erro ao iniciar: ' + e.message; err.style.display = 'block' }
   }
 }
 
+
 // ── Sessão ao carregar ───────────────────────────────────────
 export async function initSession() {
-  // Trata hash da URL (tokens OAuth + bug ## duplo do Supabase)
-  const rawHash   = window.location.hash
-  const cleanHash = rawHash.replace(/^#+/, '#')
-  const params    = new URLSearchParams(cleanHash.slice(1))
-  const hashError = params.get('error')
-  const hashToken = params.get('access_token')
-
-  if (hashError) {
-    window.history.replaceState(null, '', window.location.pathname)
-    if (hashError === 'access_denied' && params.get('error_description')?.includes('expired')) {
-      document.getElementById('login-screen').style.display = 'block'
-      setTimeout(() => {
-        const el = document.getElementById('login-err')
-        if (el) { el.textContent = 'Link expirado. Faça login novamente.'; el.style.display = 'block' }
-      }, 500)
-    }
-    return
-  }
-
-  if (hashToken && rawHash.includes('##')) {
-    window.history.replaceState(null, '', window.location.pathname + '#' + cleanHash.slice(1))
+  // Fix ## duplo na URL do Supabase OAuth
+  if (window.location.hash.includes('##')) {
+    const clean = window.location.hash.replace(/^#+/, '#')
+    window.history.replaceState(null, '', window.location.pathname + clean)
     window.location.reload()
     return
   }
 
+  // Erro no hash (link expirado etc.)
+  const params = new URLSearchParams(window.location.hash.slice(1))
+  if (params.get('error')) {
+    window.history.replaceState(null, '', window.location.pathname)
+    document.getElementById('login-screen').style.display = 'block'
+    const el = document.getElementById('login-err')
+    if (el) { el.textContent = 'Link expirado ou inválido. Faça login novamente.'; el.style.display = 'block' }
+    return
+  }
+
+  // Escuta mudanças de sessão (login/logout em tempo real)
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_OUT') {
-      _appIniciado = false
       document.getElementById('app-shell').style.display    = 'none'
       document.getElementById('login-screen').style.display = 'block'
       return
     }
-    if (session && ['SIGNED_IN', 'TOKEN_REFRESHED', 'INITIAL_SESSION'].includes(event)) {
-      if (_appIniciado) return
-      _appIniciado = true
-      document.getElementById('login-screen').style.display = 'none'
+    if (event === 'SIGNED_IN') {
       await iniciarApp()
     }
   })
 
-  try {
-    const { data: { session } } = await sb.auth.getSession()
-    if (session) {
-      if (_appIniciado) return
-      _appIniciado = true
-      document.getElementById('login-screen').style.display = 'none'
-      await iniciarApp()
-    } else {
-      document.getElementById('login-screen').style.display = 'block'
-    }
-  } catch (e) {
-    console.error('initSession:', e.message)
-    document.getElementById('login-screen').style.display = 'block'
-  }
+  // Verifica sessão já existente ao carregar a página
+  document.getElementById('login-screen').style.display = 'none'
+  document.getElementById('app-shell').style.display    = 'none'
+  await iniciarApp()
 }
 
 // ── Enter no campo de senha ──────────────────────────────────
