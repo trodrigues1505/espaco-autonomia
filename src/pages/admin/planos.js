@@ -10,10 +10,7 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
 export async function renderPlanos(container) {
-  const tipo = window._perfil?.tipo
-  const sb = window._sb
 
-    if (page === 'planos') {
     const { data: planos, error: errPlanos } = await sb.from('planos').select('*, modalidades:plano_modalidades(modalidade)').order('preco_1x')
     if (errPlanos) console.error('Erro planos:', errPlanos)
     console.log('Planos carregados:', planos?.length, planos)
@@ -169,5 +166,3 @@ export async function renderPlanos(container) {
     }
     return
   }
-
-}

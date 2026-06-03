@@ -10,10 +10,7 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
 export async function renderProfessores(container) {
-  const tipo = window._perfil?.tipo
-  const sb = window._sb
 
-    if (page === 'professores') {
     const { data: profs } = await sb.from('perfis').select('*').eq('tipo','professor').order('nome')
     const { data: todos_alunos } = await sb.from('perfis').select('id,nome,email').eq('tipo','aluno').order('nome')
 
@@ -112,5 +109,3 @@ export async function renderProfessores(container) {
     }
     return
   }
-
-}

@@ -10,10 +10,7 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
 export async function renderPresencas(container) {
-  const tipo = window._perfil?.tipo
-  const sb = window._sb
 
-    if (page === 'presencas') {
     const hoje = new Date()
     const inicioHoje = new Date(hoje); inicioHoje.setHours(0,0,0,0)
     const fimHoje = new Date(hoje); fimHoje.setHours(23,59,59,999)
@@ -106,5 +103,3 @@ export async function renderPresencas(container) {
     }
     return
   }
-
-}

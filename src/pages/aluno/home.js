@@ -10,10 +10,7 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
 export async function renderHome(container) {
-  const tipo = window._perfil?.tipo
-  const sb = window._sb
 
-    if (page === 'aluno-home') {
     const userId = window._perfil.id
     const agora = new Date()
 
@@ -115,5 +112,3 @@ export async function renderHome(container) {
     }
     return
   }
-
-}

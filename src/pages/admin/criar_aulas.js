@@ -10,10 +10,7 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
 export async function renderCriaraulas(container) {
-  const tipo = window._perfil?.tipo
-  const sb = window._sb
 
-    if (page === 'criar-aulas') {
     const [aulasRes, profsRes, cfgRes] = await Promise.all([
       sb.from('aulas').select('*, professor:perfis!professor_id(nome), horarios:aulas_horarios(*)').order('criado_em', {ascending:false}),
       sb.from('perfis').select('id,nome').in('tipo',['admin','professor']).order('nome'),
@@ -284,5 +281,3 @@ export async function renderCriaraulas(container) {
     }
     return
   }
-
-}

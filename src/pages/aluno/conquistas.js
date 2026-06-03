@@ -10,10 +10,7 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
 export async function renderConquistas(container) {
-  const tipo = window._perfil?.tipo
-  const sb = window._sb
 
-    if (page === 'aluno-conquistas') {
     const userId = window._perfil.id
     const [conquistas, gam] = await Promise.all([getConquistas(userId), getGamificacao(userId)])
     const nivel = calcularNivel(gam?.prana_points||0)
@@ -46,5 +43,3 @@ export async function renderConquistas(container) {
     `
     return
   }
-
-}
