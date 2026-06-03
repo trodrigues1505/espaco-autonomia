@@ -279,5 +279,4 @@ export async function renderCriaraulas(container) {
       toast(ativa ? 'Aula pausada' : 'Aula ativada')
       navigate('criar-aulas')
     }
-    return
   }

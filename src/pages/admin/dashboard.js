@@ -79,5 +79,4 @@ export async function renderDashboard(container) {
         </div>
       </div>
     `
-    return
   }

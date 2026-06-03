@@ -114,9 +114,4 @@ export async function renderHome(container) {
       toast('✓ Todos presentes!')
       navigate('prof-chamada')
     }
-    return
-  }
-
-
-  // ── PROFESSORES ─────────────────────────────────────────
 }

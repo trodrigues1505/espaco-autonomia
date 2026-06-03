@@ -41,5 +41,4 @@ export async function renderConquistas(container) {
         </div>
       </div>
     `
-    return
   }

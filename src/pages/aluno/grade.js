@@ -264,5 +264,4 @@ export async function renderGrade(container) {
       `
       window._ocAtual = ocId
     }
-    return
   }

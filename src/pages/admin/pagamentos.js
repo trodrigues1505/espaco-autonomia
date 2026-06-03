@@ -68,5 +68,4 @@ export async function renderPagamentos(container) {
         </div>
       </div>
     `
-    return
 }

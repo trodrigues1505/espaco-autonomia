@@ -37,5 +37,4 @@ export async function renderAulas(container) {
         }
       </div>
     `
-    return
   }

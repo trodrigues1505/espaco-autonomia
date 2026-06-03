@@ -235,5 +235,4 @@ export async function renderAlunos(container) {
       toast(asaasId ? '✓ Aluno atualizado! Asaas vinculado.' : '✓ Aluno atualizado!')
       navigate('alunos')
     }
-    return
   }

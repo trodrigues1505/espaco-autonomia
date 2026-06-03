@@ -101,5 +101,4 @@ export async function renderPresencas(container) {
       toast('✓ Todos marcados como presentes!')
       navigate('presencas')
     }
-    return
   }
