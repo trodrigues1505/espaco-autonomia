@@ -1,7 +1,6 @@
 /**
  * src/pages/admin/professores.js
- * Responsabilidade: Gestão de professores — cadastro e vinculação.
- * Depende de: sb, toast, NOMES, dot, badge, card, fmtDt, inputStyle
+ * Gestão de professores
  */
 
 import { sb }         from '../../lib/supabase.js'
@@ -9,7 +8,10 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
-export async function renderProfessores(container) {
+export async function renderProfessores(container, page) {
+  const sb = window._sb
+  const perfil = window._perfil
+  const tipo = perfil?.tipo
 
     const { data: profs } = await sb.from('perfis').select('*').eq('tipo','professor').order('nome')
     const { data: todos_alunos } = await sb.from('perfis').select('id,nome,email').eq('tipo','aluno').order('nome')
@@ -107,4 +109,4 @@ export async function renderProfessores(container) {
       toast('✓ Professor pré-cadastrado! Oriente-o a fazer login com Google usando: '+email)
       navigate('professores')
     }
-  }
+}

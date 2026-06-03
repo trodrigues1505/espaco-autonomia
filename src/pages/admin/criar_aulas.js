@@ -1,7 +1,6 @@
 /**
  * src/pages/admin/criar_aulas.js
- * Responsabilidade: Criar aulas fixas e avulsas, grade semanal.
- * Depende de: sb, toast, NOMES, dot, badge, card, fmtDt, inputStyle
+ * Criar aulas fixas e avulsas
  */
 
 import { sb }         from '../../lib/supabase.js'
@@ -9,7 +8,10 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
-export async function renderCriaraulas(container) {
+export async function renderCriarAulas(container, page) {
+  const sb = window._sb
+  const perfil = window._perfil
+  const tipo = perfil?.tipo
 
     const [aulasRes, profsRes, cfgRes] = await Promise.all([
       sb.from('aulas').select('*, professor:perfis!professor_id(nome), horarios:aulas_horarios(*)').order('criado_em', {ascending:false}),
@@ -279,4 +281,4 @@ export async function renderCriaraulas(container) {
       toast(ativa ? 'Aula pausada' : 'Aula ativada')
       navigate('criar-aulas')
     }
-  }
+}

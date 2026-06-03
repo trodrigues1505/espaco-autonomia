@@ -1,7 +1,6 @@
 /**
  * src/pages/aluno/home.js
- * Responsabilidade: Home do aluno — saldo, próximas aulas, gamificação.
- * Depende de: sb, toast, NOMES, dot, badge, card, fmtDt, inputStyle
+ * Home do aluno — saldo + gamificação
  */
 
 import { sb }         from '../../lib/supabase.js'
@@ -9,7 +8,10 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
-export async function renderHome(container) {
+export async function renderAlunoHome(container, page) {
+  const sb = window._sb
+  const perfil = window._perfil
+  const tipo = perfil?.tipo
 
     const userId = window._perfil.id
     const agora = new Date()
@@ -110,4 +112,4 @@ export async function renderHome(container) {
       if (error||!data?.ok){toast('❌ '+(data?.motivo||error?.message));return}
       toast(data.mensagem); navigate('aluno-home')
     }
-  }
+}

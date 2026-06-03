@@ -1,7 +1,6 @@
 /**
  * src/pages/admin/presencas.js
- * Responsabilidade: Presenças admin — visualização geral de confirmações.
- * Depende de: sb, toast, NOMES, dot, badge, card, fmtDt, inputStyle
+ * Presenças admin
  */
 
 import { sb }         from '../../lib/supabase.js'
@@ -9,7 +8,10 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
-export async function renderPresencas(container) {
+export async function renderPresencas(container, page) {
+  const sb = window._sb
+  const perfil = window._perfil
+  const tipo = perfil?.tipo
 
     const hoje = new Date()
     const inicioHoje = new Date(hoje); inicioHoje.setHours(0,0,0,0)
@@ -101,4 +103,4 @@ export async function renderPresencas(container) {
       toast('✓ Todos marcados como presentes!')
       navigate('presencas')
     }
-  }
+}

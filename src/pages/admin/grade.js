@@ -1,7 +1,6 @@
 /**
  * src/pages/admin/grade.js
- * Responsabilidade: Grade de aulas — visão semanal, confirmações, feriados.
- * Depende de: sb, toast, NOMES, dot, badge, card, fmtDt, inputStyle
+ * Grade semanal — admin e aluno
  */
 
 import { sb }         from '../../lib/supabase.js'
@@ -9,7 +8,10 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
-export async function renderGrade(container) {
+export async function renderGrade(container, page) {
+  const sb = window._sb
+  const perfil = window._perfil
+  const tipo = perfil?.tipo
 
     const isAluno = page === 'aluno-grade'
     const hoje = new Date()
@@ -264,4 +266,4 @@ export async function renderGrade(container) {
       `
       window._ocAtual = ocId
     }
-  }
+}

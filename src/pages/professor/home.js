@@ -1,7 +1,6 @@
 /**
  * src/pages/professor/home.js
- * Responsabilidade: Dashboard do professor — aulas do dia, próxima aula.
- * Depende de: sb, toast, NOMES, dot, badge, card, fmtDt, inputStyle
+ * Dashboard professor — aulas do dia + chamada
  */
 
 import { sb }         from '../../lib/supabase.js'
@@ -9,7 +8,10 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
-export async function renderHome(container) {
+export async function renderProfHome(container, page) {
+  const sb = window._sb
+  const perfil = window._perfil
+  const tipo = perfil?.tipo
 
     const hoje = new Date()
     const inicioHoje = new Date(hoje); inicioHoje.setHours(0,0,0,0)
@@ -19,6 +21,7 @@ export async function renderHome(container) {
       .gte('data_hora', inicioHoje.toISOString()).lte('data_hora', fimHoje.toISOString())
       .eq('cancelada', false).eq('professor_id', window._perfil.id).order('data_hora')
 
+    if (page === 'prof-home') {
       const proxima = (ocHoje||[]).find(o => new Date(o.data_hora) >= hoje) || ocHoje?.[0]
       container.innerHTML = `
         <div class="topbar"><div class="topbar-t">Olá, ${window._perfil.nome.split(' ')[0]}</div></div>
