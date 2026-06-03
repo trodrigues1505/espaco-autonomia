@@ -10,10 +10,7 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
 export async function renderPlano(container) {
-  const tipo = window._perfil?.tipo
-  const sb = window._sb
 
-    if (page === 'aluno-plano') {
     const [matRes, planosRes] = await Promise.all([
       sb.from('matriculas').select('*, plano:planos(*, modalidades:plano_modalidades(modalidade))').eq('aluno_id', window._perfil.id).eq('ativa',true).single(),
       sb.from('planos').select('*, modalidades:plano_modalidades(modalidade)').order('preco_1x'),
@@ -95,5 +92,3 @@ export async function renderPlano(container) {
         </div>`:''}`
     return
   }
-
-}

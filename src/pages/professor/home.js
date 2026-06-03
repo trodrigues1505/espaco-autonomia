@@ -10,10 +10,7 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
 export async function renderHome(container) {
-  const tipo = window._perfil?.tipo
-  const sb = window._sb
 
-    if (page === 'prof-chamada' || page === 'prof-home') {
     const hoje = new Date()
     const inicioHoje = new Date(hoje); inicioHoje.setHours(0,0,0,0)
     const fimHoje = new Date(hoje); fimHoje.setHours(23,59,59,999)
@@ -22,7 +19,6 @@ export async function renderHome(container) {
       .gte('data_hora', inicioHoje.toISOString()).lte('data_hora', fimHoje.toISOString())
       .eq('cancelada', false).eq('professor_id', window._perfil.id).order('data_hora')
 
-    if (page === 'prof-home') {
       const proxima = (ocHoje||[]).find(o => new Date(o.data_hora) >= hoje) || ocHoje?.[0]
       container.innerHTML = `
         <div class="topbar"><div class="topbar-t">Olá, ${window._perfil.nome.split(' ')[0]}</div></div>

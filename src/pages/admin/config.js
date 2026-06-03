@@ -10,10 +10,7 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
 export async function renderConfig(container) {
-  const tipo = window._perfil?.tipo
-  const sb = window._sb
 
-    if (page === 'config' && tipo === 'admin') {
     const { data: cfgs } = await sb.from('configuracoes').select('*')
     const cfg = Object.fromEntries((cfgs||[]).map(c=>[c.chave,c.valor]))
     container.innerHTML = `
@@ -89,5 +86,3 @@ export async function renderConfig(container) {
     }
     return
   }
-
-}

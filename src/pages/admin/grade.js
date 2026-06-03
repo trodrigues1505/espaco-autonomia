@@ -10,10 +10,7 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
 export async function renderGrade(container) {
-  const tipo = window._perfil?.tipo
-  const sb = window._sb
 
-  if (page === 'grade' || page === 'aluno-grade') {
     const isAluno = page === 'aluno-grade'
     const hoje = new Date()
     // Semana com offset navegável
@@ -269,5 +266,3 @@ export async function renderGrade(container) {
     }
     return
   }
-
-}

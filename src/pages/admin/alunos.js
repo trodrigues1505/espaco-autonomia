@@ -10,10 +10,7 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
 export async function renderAlunos(container) {
-  const tipo = window._perfil?.tipo
-  const sb = window._sb
 
-    if (page === 'alunos') {
     const busca = window._buscaAlunos || ''
     let q = sb.from('perfis').select('*, matriculas(plano_tipo,opcao_aulas,valor_mensal,ativa,fim)').eq('tipo','aluno').order('nome')
     // Busca asaas_customer_id separado (campo extra na tabela)
@@ -240,5 +237,3 @@ export async function renderAlunos(container) {
     }
     return
   }
-
-}

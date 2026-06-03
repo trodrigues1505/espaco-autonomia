@@ -10,10 +10,7 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
 export async function renderPagamentos(container) {
-  const tipo = window._perfil?.tipo
-  const sb = window._sb
 
-    if (page === 'pagamentos') {
     const [pgRes] = await Promise.all([
       sb.from('pagamentos').select('*, aluno:perfis!aluno_id(nome,email)').order('vencimento', {ascending:false}).limit(100),
     ])
@@ -72,10 +69,4 @@ export async function renderPagamentos(container) {
       </div>
     `
     return
-  }
-
-
-}
-
-
 }

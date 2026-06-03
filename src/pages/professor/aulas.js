@@ -10,10 +10,7 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
 export async function renderAulas(container) {
-  const tipo = window._perfil?.tipo
-  const sb = window._sb
 
-    if (page === 'prof-aulas') {
     const hoje = new Date()
     const em7d = new Date(); em7d.setDate(hoje.getDate()+7)
     const { data: ocs } = await sb.from('ocorrencias_vagas').select('*')
@@ -42,9 +39,3 @@ export async function renderAulas(container) {
     `
     return
   }
-
-
-
-
-
-}
