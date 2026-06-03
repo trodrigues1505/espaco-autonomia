@@ -1,7 +1,6 @@
 /**
  * src/pages/aluno/plano.js
- * Responsabilidade: Meu plano — detalhes, saldo, vencimento.
- * Depende de: sb, toast, NOMES, dot, badge, card, fmtDt, inputStyle
+ * Meu plano — detalhes e saldo
  */
 
 import { sb }         from '../../lib/supabase.js'
@@ -9,7 +8,10 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
-export async function renderPlano(container) {
+export async function renderAlunoPlano(container, page) {
+  const sb = window._sb
+  const perfil = window._perfil
+  const tipo = perfil?.tipo
 
     const [matRes, planosRes] = await Promise.all([
       sb.from('matriculas').select('*, plano:planos(*, modalidades:plano_modalidades(modalidade))').eq('aluno_id', window._perfil.id).eq('ativa',true).single(),
@@ -90,4 +92,4 @@ export async function renderPlano(container) {
             <div style="font-size:10px;color:${pgStatusColor[p.status]||'#888'};margin-top:1px">${pgStatusLabel[p.status]||p.status}</div></div>
           </div>`).join('')}
         </div>`:''}`
-  }
+}

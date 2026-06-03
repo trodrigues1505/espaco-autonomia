@@ -1,7 +1,6 @@
 /**
  * src/pages/professor/aulas.js
- * Responsabilidade: Minhas aulas (professor) — próximos 7 dias + cancelar.
- * Depende de: sb, toast, NOMES, dot, badge, card, fmtDt, inputStyle
+ * Minhas aulas + cancelar
  */
 
 import { sb }         from '../../lib/supabase.js'
@@ -9,7 +8,10 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
-export async function renderAulas(container) {
+export async function renderProfAulas(container, page) {
+  const sb = window._sb
+  const perfil = window._perfil
+  const tipo = perfil?.tipo
 
     const hoje = new Date()
     const em7d = new Date(); em7d.setDate(hoje.getDate()+7)
@@ -37,4 +39,4 @@ export async function renderAulas(container) {
         }
       </div>
     `
-  }
+}

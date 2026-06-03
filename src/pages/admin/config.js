@@ -1,7 +1,6 @@
 /**
  * src/pages/admin/config.js
- * Responsabilidade: Configurações do sistema — prazos, vagas, feriados.
- * Depende de: sb, toast, NOMES, dot, badge, card, fmtDt, inputStyle
+ * Configurações do sistema
  */
 
 import { sb }         from '../../lib/supabase.js'
@@ -9,7 +8,10 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
-export async function renderConfig(container) {
+export async function renderConfig(container, page) {
+  const sb = window._sb
+  const perfil = window._perfil
+  const tipo = perfil?.tipo
 
     const { data: cfgs } = await sb.from('configuracoes').select('*')
     const cfg = Object.fromEntries((cfgs||[]).map(c=>[c.chave,c.valor]))
@@ -84,4 +86,4 @@ export async function renderConfig(container) {
         toast('Configurações salvas!')
       } catch(e) { toast('Erro: ' + e.message) }
     }
-  }
+}
