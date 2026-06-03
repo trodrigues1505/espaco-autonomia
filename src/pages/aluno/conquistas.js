@@ -7,6 +7,7 @@ import { sb }         from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
+import { getConquistas, getGamificacao } from '../../modules/gamificacao.js'
 
 export async function renderConquistas(container, page) {
   const sb = window._sb
