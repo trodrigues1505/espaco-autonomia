@@ -82,7 +82,7 @@ export async function confirmarCancelamentoAula() {
         p_ocorrencia_id: _cancelAulaId,
         p_motivo:        justificativa,
       })
-      .catch(e => console.warn('estornar_confirmacoes_ocorrencia:', e.message))
+      .then(r => { if (r.error) console.warn('estornar_confirmacoes_ocorrencia:', r.error.message) })
 
     window.toast('✓ Aula cancelada. Alunos serão notificados.')
     fecharModalCancelarAula()

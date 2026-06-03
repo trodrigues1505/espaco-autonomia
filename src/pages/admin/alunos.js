@@ -163,7 +163,11 @@ export async function renderAlunos(container, page) {
       if (!nome||!email) { toast('Preencha nome e e-mail'); return }
 
       // Cria usuário no Auth (admin API não disponível no client — orienta fluxo de convite)
-      const { data: invited, error: errInv } = await sb.auth.admin?.inviteUserByEmail(email).catch(()=>({error:{message:'use service role'}})) || {}
+      let invited = null, errInv = null
+      try {
+        const r = await sb.auth.admin?.inviteUserByEmail(email)
+        invited = r?.data; errInv = r?.error
+      } catch(e) { errInv = { message: 'use service role key' } }
 
       // Fallback: cria perfil direto e orienta senha manual
       const { data: existente } = await sb.from('perfis').select('id').eq('email', email).single()
