@@ -37,15 +37,14 @@ const CONTRATO_TEXTO = `
  * Retorna true após aceite, para continuar o fluxo de iniciarApp.
  */
 export async function verificarContrato(userId, nomeAluno) {
-  const { data } = await sb
+  const { data, error: contratoErr } = await sb
     .from('contratos')
     .select('id')
     .eq('aluno_id', userId)
     .eq('versao', CONTRATO_VERSAO)
     .single()
-    .catch(() => ({ data: null }))
-
-  if (data) return true  // já aceitou
+  if (contratoErr && contratoErr.code !== 'PGRST116') return false
+  if (data) return true  // já assinou
 
   return new Promise(resolve => {
     const div = document.createElement('div')

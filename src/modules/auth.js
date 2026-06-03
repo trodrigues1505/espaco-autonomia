@@ -208,7 +208,7 @@ export async function iniciarApp() {
         tipo:  'admin',
         ativo: true,
       }
-      sb.from('perfis').upsert(perfil).catch(() => {})
+      sb.from('perfis').upsert(perfil)  // fire-and-forget, error ignored
     }
 
     // Onboarding para aluno novo (sem perfil no banco)
@@ -248,7 +248,7 @@ export async function iniciarApp() {
     if (perfil.tipo === 'aluno') {
       await verificarContrato(perfil.id, perfil.nome)
       const mesAtual = new Date().toISOString().slice(0, 7) + '-01'
-      await sb.rpc('creditar_aulas_mes', { p_aluno_id: perfil.id, p_mes_ref: mesAtual }).catch(() => {})
+      await sb.rpc('creditar_aulas_mes', { p_aluno_id: perfil.id, p_mes_ref: mesAtual })  // error in .error, not thrown
     }
 
     window.navigate(homePorPerfil(perfil.tipo))

@@ -55,7 +55,7 @@ export async function sincronizarConsentimentoAposLogin(userId) {
     .eq('aluno_id', userId)
     .eq('versao', VERSAO_POLITICA)
     .single()
-    .catch(() => ({ data: null }))
+    .then(r => r)
 
   if (!data) {
     await _gravarConsentimentoBanco(consentLocal, userId)
@@ -88,7 +88,7 @@ async function _gravarConsentimentoBanco(nivel, userId) {
     aceito_em:  new Date().toISOString(),
     user_agent: navigator.userAgent,
     idioma:     navigator.language || 'pt-BR',
-  }, { onConflict: 'aluno_id,versao' }).catch(() => {})
+  }, { onConflict: 'aluno_id,versao' })
 }
 
 // Expõe para onclick inline no HTML
