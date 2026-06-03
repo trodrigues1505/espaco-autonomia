@@ -90,5 +90,4 @@ export async function renderPlano(container) {
             <div style="font-size:10px;color:${pgStatusColor[p.status]||'#888'};margin-top:1px">${pgStatusLabel[p.status]||p.status}</div></div>
           </div>`).join('')}
         </div>`:''}`
-    return
   }

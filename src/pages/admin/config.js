@@ -84,5 +84,4 @@ export async function renderConfig(container) {
         toast('Configurações salvas!')
       } catch(e) { toast('Erro: ' + e.message) }
     }
-    return
   }

@@ -107,5 +107,4 @@ export async function renderProfessores(container) {
       toast('✓ Professor pré-cadastrado! Oriente-o a fazer login com Google usando: '+email)
       navigate('professores')
     }
-    return
   }

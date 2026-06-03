@@ -71,5 +71,4 @@ export async function renderMinhas(container) {
       toast('✓ Confirmação cancelada')
       navigate('aluno-minhas')
     }
-    return
   }

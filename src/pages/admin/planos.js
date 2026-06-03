@@ -164,5 +164,4 @@ export async function renderPlanos(container) {
       toast('✓ Plano criado!')
       navigate('planos')
     }
-    return
   }

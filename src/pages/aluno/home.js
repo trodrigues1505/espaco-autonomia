@@ -110,5 +110,4 @@ export async function renderHome(container) {
       if (error||!data?.ok){toast('❌ '+(data?.motivo||error?.message));return}
       toast(data.mensagem); navigate('aluno-home')
     }
-    return
   }
