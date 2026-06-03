@@ -4,10 +4,10 @@
  * Depende de: sb, toast, NOMES, dot, badge, card, fmtDt, inputStyle
  */
 
-import { sb }         from '../lib/supabase.js'
+import { sb }         from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
-          calcularNivel, NIVEL_LABELS } from '../modules/utils.js'
+          calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
 export async function renderCriaraulas(container) {
   const tipo = window._perfil?.tipo
