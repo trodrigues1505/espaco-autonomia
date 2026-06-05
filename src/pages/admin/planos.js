@@ -138,8 +138,8 @@ export async function renderPlanos(container, page) {
       const nome = document.getElementById('np-nome').value.trim()
       if (!tipo||!nome) { toast('Preencha tipo e nome'); return }
       // Verifica duplicata
-      const { data: existe } = await sb.from('planos').select('tipo').eq('tipo', tipo).single()
-      if (existe) { toast('Já existe um plano com este identificador: '+tipo); return }
+      const { data: existeArr } = await sb.from('planos').select('tipo').eq('tipo', tipo)
+      if (existeArr && existeArr.length > 0) { toast('Já existe um plano com este identificador: '+tipo); return }
       const p1 = document.getElementById('np-p1').value
       const p2 = document.getElementById('np-p2').value
       const pl = document.getElementById('np-pl').value
@@ -149,6 +149,9 @@ export async function renderPlanos(container, page) {
       Object.keys(featLabels).forEach(f => { featsObj[f] = false })
       ;[...document.querySelectorAll('input[name="np-feat"]:checked')].forEach(e=>{ featsObj[e.value]=true })
 
+      const btnSalvar = document.querySelector('#modal-criar-plano .btn-salvar')
+      if (btnSalvar) { btnSalvar.textContent = 'Salvando...'; btnSalvar.disabled = true }
+
       const { error } = await sb.from('planos').insert({
         tipo, nome,
         preco_1x: p1?Number(p1):null,
@@ -157,7 +160,11 @@ export async function renderPlanos(container, page) {
         aulas_semana_max: p1&&!p2?1:p2?2:null,
         ...featsObj
       })
-      if (error) { toast('Erro: '+error.message); return }
+      if (error) {
+        toast('Erro: '+error.message)
+        if (btnSalvar) { btnSalvar.textContent = 'Criar Plano'; btnSalvar.disabled = false }
+        return
+      }
 
       // Inserir modalidades
       if (mods.length) {
