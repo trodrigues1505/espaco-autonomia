@@ -184,7 +184,6 @@ export async function iniciarApp() {
     // 3. Perfil não existe → onboarding (novo aluno via Google)
     if (!perfil || errPerfil?.code === 'PGRST116') {
       document.getElementById('login-screen').style.display = 'none'
-      document.getElementById('app-shell').style.display    = 'none'
       await mostrarOnboarding(user, user.user_metadata?.full_name || '')
       return
     }
@@ -277,8 +276,7 @@ export async function initSession() {
   })
 
   // Verifica sessão já existente ao carregar a página
-  document.getElementById('login-screen').style.display = 'none'
-  document.getElementById('app-shell').style.display    = 'none'
+  // Não esconde o login-screen aqui — iniciarApp decide o que mostrar
   await iniciarApp()
   appMontado = true
 }
