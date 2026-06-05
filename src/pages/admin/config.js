@@ -66,7 +66,10 @@ export async function renderConfig(container, page) {
             </select>
           </div>
         </div>
-        <button onclick="salvarConfig()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500"><i class="ti ti-device-floppy"></i>Salvar configurações</button>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button onclick="salvarConfig()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500"><i class="ti ti-device-floppy"></i>Salvar configurações</button>
+          <button onclick="sincronizarFeriados()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:#fff;color:var(--verde);border:1px solid var(--borda);border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500"><i class="ti ti-calendar-event"></i>Sincronizar Feriados <span id="sync-feriado-status"></span></button>
+        </div>
       </div>
     `
     window.salvarConfig = async function() {
@@ -85,5 +88,34 @@ export async function renderConfig(container, page) {
         }
         toast('Configurações salvas!')
       } catch(e) { toast('Erro: ' + e.message) }
+    }
+
+    window.sincronizarFeriados = async function() {
+      const status = document.getElementById('sync-feriado-status')
+      if (status) status.textContent = ' ⏳'
+      try {
+        const ano = new Date().getFullYear()
+        let total = 0
+        for (const a of [ano, ano + 1]) {
+          const r = await fetch(`https://brasilapi.com.br/api/feriados/v1/${a}`)
+          if (!r.ok) throw new Error(`BrasilAPI ${r.status}`)
+          const feriados = await r.json()
+          for (const f of feriados) {
+            await sb.from('feriados').upsert({
+              data: f.date,
+              nome: f.name,
+              tipo: f.type === 'national' ? 'nacional' : 'estadual',
+              fonte: 'brasilapi',
+              atualizado_em: new Date().toISOString(),
+            }, { onConflict: 'data' })
+            total++
+          }
+        }
+        if (status) status.textContent = ''
+        toast(`✓ ${total} feriados sincronizados (${ano} e ${ano+1})`)
+      } catch(e) {
+        if (status) status.textContent = ''
+        toast('Erro: ' + e.message)
+      }
     }
 }

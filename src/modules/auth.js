@@ -259,14 +259,19 @@ export async function initSession() {
     return
   }
 
+  let appMontado = false
+
   // Escuta mudanças de sessão (login/logout em tempo real)
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_OUT') {
+      appMontado = false
       document.getElementById('app-shell').style.display    = 'none'
       document.getElementById('login-screen').style.display = 'block'
       return
     }
-    if (event === 'SIGNED_IN') {
+    // Só reinicia no login explícito, não em TOKEN_REFRESHED nem INITIAL_SESSION
+    if (event === 'SIGNED_IN' && !appMontado) {
+      appMontado = true
       await iniciarApp()
     }
   })
@@ -275,6 +280,7 @@ export async function initSession() {
   document.getElementById('login-screen').style.display = 'none'
   document.getElementById('app-shell').style.display    = 'none'
   await iniciarApp()
+  appMontado = true
 }
 
 // ── Enter no campo de senha ──────────────────────────────────
