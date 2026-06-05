@@ -21,23 +21,18 @@ export async function renderGrade(container, page) {
     const seg = new Date(hoje); seg.setDate(hoje.getDate() - diaSemana + offset*7); seg.setHours(0,0,0,0)
     const dom = new Date(seg); dom.setDate(seg.getDate() + 6); dom.setHours(23,59,59,999)
 
-    const [ocRes, cfgRes, matRes, profsRes] = await Promise.all([
+    const [ocRes, cfgRes, matRes] = await Promise.all([
       sb.from('ocorrencias_vagas').select('*').gte('data_hora', seg.toISOString()).lte('data_hora', dom.toISOString()).order('data_hora'),
       sb.from('configuracoes').select('*'),
       isAluno ? sb.from('matriculas').select('plano_tipo,opcao_aulas').eq('aluno_id', window._perfil.id).eq('ativa',true).single() : Promise.resolve({data:null}),
-      !isAluno ? sb.from('perfis').select('id,nome').in('tipo',['professor','admin']).order('nome') : Promise.resolve({data:[]}),
     ])
     let ocorrencias = ocRes.data || []
     const cfg = Object.fromEntries((cfgRes.data||[]).map(c=>[c.chave,c.valor]))
     const planoAluno = matRes.data?.plano_tipo
-    const profsDisponiveis = profsRes.data || []
 
-    // ── Aplicar filtros ───────────────────────────────────────
-    const f = window._gradeFiltros || {}
+    // ── Filtros do aluno ──────────────────────────────────────
+    const f = window._gradeFiltrosAluno || {}
     if (f.modalidade) ocorrencias = ocorrencias.filter(o => o.modalidade === f.modalidade)
-    if (f.professor)  ocorrencias = ocorrencias.filter(o => o.professor_id === f.professor || o.professor_nome === f.professor)
-    if (f.dataInicio) ocorrencias = ocorrencias.filter(o => o.data_hora.slice(0,10) >= f.dataInicio)
-    if (f.dataFim)    ocorrencias = ocorrencias.filter(o => o.data_hora.slice(0,10) <= f.dataFim)
     if (f.horario)    ocorrencias = ocorrencias.filter(o => {
       const h = new Date(o.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
       return h === f.horario
@@ -174,7 +169,7 @@ export async function renderGrade(container, page) {
     </div>`
 
     // Navegação de semana
-    const fAtivo = window._gradeFiltros && Object.values(window._gradeFiltros).some(v=>v)
+    const fAtivo = window._gradeFiltrosAluno && Object.values(window._gradeFiltrosAluno).some(v=>v)
     const horasUnicas = [...new Set((ocRes.data||[]).map(o => {
       const dt = new Date(o.data_hora)
       return dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
@@ -186,52 +181,28 @@ export async function renderGrade(container, page) {
         <button onclick="window._gradeOffset=0;navigate('${page}')" style="padding:5px 12px;background:${(window._gradeOffset||0)===0?'var(--verde)':'#fff'};color:${(window._gradeOffset||0)===0?'var(--bege)':'var(--txt)'};border:1px solid ${(window._gradeOffset||0)===0?'var(--verde)':'var(--borda)'};border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">Hoje</button>
         <button onclick="window._gradeOffset=(window._gradeOffset||0)+1;navigate('${page}')" style="padding:5px 10px;background:#fff;color:var(--txt);border:1px solid var(--borda);border-radius:5px;font-size:13px;cursor:pointer">›</button>
         <span style="font-size:12px;color:var(--txt2);font-weight:500">${seg.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})} – ${dom.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})}</span>
-        ${!isAluno?`<div style="margin-left:auto;display:flex;gap:6px;align-items:center">
-          ${fAtivo?`<button onclick="window._gradeFiltros={};navigate('${page}')" style="padding:4px 10px;background:#fceaea;color:#8a1a1a;border:1px solid #f0c0c0;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">✕ Limpar filtros</button>`:''}
-          <button onclick="navigate('criar-aulas')" style="padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">+ Nova Aula</button>
-        </div>`:''}
+        ${fAtivo?`<button onclick="window._gradeFiltrosAluno={};navigate('${page}')" style="padding:4px 10px;background:#fceaea;color:#8a1a1a;border:1px solid #f0c0c0;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">✕ Limpar filtros</button>`:''}
       </div>
-      ${!isAluno?`
       <div style="display:flex;gap:8px;flex-wrap:wrap;padding:10px 12px;background:rgba(242,236,206,.4);border:1px solid var(--borda);border-radius:7px;align-items:flex-end">
         <div style="display:flex;flex-direction:column;gap:3px">
           <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Modalidade</label>
-          <select onchange="(window._gradeFiltros=window._gradeFiltros||{}).modalidade=this.value||'';navigate('${page}')"
+          <select onchange="(window._gradeFiltrosAluno=window._gradeFiltrosAluno||{}).modalidade=this.value||'';navigate('${page}')"
             style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff;color:var(--txt);cursor:pointer;min-width:130px">
-            <option value="" ${!(window._gradeFiltros?.modalidade)?'selected':''}>Todas</option>
-            <option value="hatha"  ${window._gradeFiltros?.modalidade==='hatha' ?'selected':''}>Hatha Yoga</option>
-            <option value="acro"   ${window._gradeFiltros?.modalidade==='acro'  ?'selected':''}>Acro Yoga</option>
-            <option value="raja"   ${window._gradeFiltros?.modalidade==='raja'  ?'selected':''}>Raja Yoga</option>
-          </select>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:3px">
-          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Professor</label>
-          <select onchange="(window._gradeFiltros=window._gradeFiltros||{}).professor=this.value||'';navigate('${page}')"
-            style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff;color:var(--txt);cursor:pointer;min-width:150px">
-            <option value="" ${!(window._gradeFiltros?.professor)?'selected':''}>Todos</option>
-            ${profsDisponiveis.map(p=>`<option value="${p.nome}" ${window._gradeFiltros?.professor===p.nome?'selected':''}>${p.nome}</option>`).join('')}
+            <option value="" ${!(window._gradeFiltrosAluno?.modalidade)?'selected':''}>Todas</option>
+            <option value="hatha" ${window._gradeFiltrosAluno?.modalidade==='hatha'?'selected':''}>Hatha Yoga</option>
+            <option value="acro"  ${window._gradeFiltrosAluno?.modalidade==='acro' ?'selected':''}>Acro Yoga</option>
+            <option value="raja"  ${window._gradeFiltrosAluno?.modalidade==='raja' ?'selected':''}>Raja Yoga</option>
           </select>
         </div>
         <div style="display:flex;flex-direction:column;gap:3px">
           <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Horário</label>
-          <select onchange="(window._gradeFiltros=window._gradeFiltros||{}).horario=this.value||'';navigate('${page}')"
+          <select onchange="(window._gradeFiltrosAluno=window._gradeFiltrosAluno||{}).horario=this.value||'';navigate('${page}')"
             style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff;color:var(--txt);cursor:pointer;min-width:100px">
-            <option value="" ${!(window._gradeFiltros?.horario)?'selected':''}>Todos</option>
-            ${horasUnicas.map(h=>`<option value="${h}" ${window._gradeFiltros?.horario===h?'selected':''}>${h}</option>`).join('')}
+            <option value="" ${!(window._gradeFiltrosAluno?.horario)?'selected':''}>Todos</option>
+            ${horasUnicas.map(h=>`<option value="${h}" ${window._gradeFiltrosAluno?.horario===h?'selected':''}>${h}</option>`).join('')}
           </select>
         </div>
-        <div style="display:flex;flex-direction:column;gap:3px">
-          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Data início</label>
-          <input type="date" value="${window._gradeFiltros?.dataInicio||''}"
-            onchange="(window._gradeFiltros=window._gradeFiltros||{}).dataInicio=this.value;navigate('${page}')"
-            style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff;color:var(--txt);cursor:pointer">
-        </div>
-        <div style="display:flex;flex-direction:column;gap:3px">
-          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Data fim</label>
-          <input type="date" value="${window._gradeFiltros?.dataFim||''}"
-            onchange="(window._gradeFiltros=window._gradeFiltros||{}).dataFim=this.value;navigate('${page}')"
-            style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff;color:var(--txt);cursor:pointer">
-        </div>
-      </div>`:''}
+      </div>
     </div>`
 
     // Modal detalhes ocorrência (admin)
