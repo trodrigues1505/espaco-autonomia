@@ -168,7 +168,11 @@ export async function renderPlanos(container, page) {
 
       // Inserir modalidades
       if (mods.length) {
-        await sb.from('plano_modalidades').insert(mods.map(m=>({plano_tipo:tipo,modalidade:m})))
+        const { error: errMod } = await sb.from('plano_modalidades').insert(mods.map(m=>({plano_tipo:tipo,modalidade:m})))
+        if (errMod) {
+          // Plano criado mas modalidades falharam (RLS) — ainda mostra sucesso parcial
+          console.warn('plano_modalidades insert:', errMod.message)
+        }
       }
       document.getElementById('modal-criar-plano').style.display = 'none'
       toast('✓ Plano criado!')
@@ -259,8 +263,8 @@ export async function renderPlanos(container, page) {
       if (error) { toast('Erro: ' + error.message); return }
 
       // Atualiza modalidades: apaga e reinsere
-      await sb.from('plano_modalidades').delete().eq('plano_tipo', tipo)
-      if (mods.length) {
+      const { error: errDel } = await sb.from('plano_modalidades').delete().eq('plano_tipo', tipo)
+      if (!errDel && mods.length) {
         await sb.from('plano_modalidades').insert(mods.map(m=>({plano_tipo:tipo, modalidade:m})))
       }
 
