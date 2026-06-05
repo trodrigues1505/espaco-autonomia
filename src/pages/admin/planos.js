@@ -9,7 +9,7 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
 export async function renderPlanos(container, page) {
-  const sb = window._sb
+  const sb = window._sb || (await import('../../lib/supabase.js')).sb
   const perfil = window._perfil
   const tipo = perfil?.tipo
 
@@ -262,10 +262,16 @@ export async function renderPlanos(container, page) {
       }).eq('tipo', tipo)
       if (error) { toast('Erro: ' + error.message); return }
 
-      // Atualiza modalidades: apaga e reinsere
-      const { error: errDel } = await sb.from('plano_modalidades').delete().eq('plano_tipo', tipo)
-      if (!errDel && mods.length) {
-        await sb.from('plano_modalidades').insert(mods.map(m=>({plano_tipo:tipo, modalidade:m})))
+      // Atualiza modalidades: delete explícito + insert com upsert como fallback
+      await sb.from('plano_modalidades').delete().eq('plano_tipo', tipo)
+      if (mods.length) {
+        const { error: errMod } = await sb
+          .from('plano_modalidades')
+          .upsert(
+            mods.map(m => ({ plano_tipo: tipo, modalidade: m })),
+            { onConflict: 'plano_tipo,modalidade', ignoreDuplicates: true }
+          )
+        if (errMod) console.warn('plano_modalidades upsert:', errMod.message)
       }
 
       document.getElementById('modal-editar-plano').style.display = 'none'
