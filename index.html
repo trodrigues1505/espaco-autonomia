@@ -165,15 +165,14 @@
 
 <!-- ══ ENTRYPOINT — importa todos os módulos ═══════════════ -->
 <script type="module">
-  import { initLGPD }       from './src/modules/lgpd.js'
-  import { initPWA }        from './src/modules/pwa.js'
-  import { initSession }    from './src/modules/auth.js'
-  // pages/index.js registra window.navigate ao ser importado
-  import './src/pages/index.js'
+  import { initLGPD }    from './src/modules/lgpd.js'
+  import { initPWA }     from './src/modules/pwa.js'
+  import { initSession } from './src/modules/auth.js'
+  import './src/pages/index.js'  // registra window.navigate
 
   initLGPD()
   initPWA()
-  initSession()
+  initSession()  // onAuthStateChange com INITIAL_SESSION cuida do resto
 </script>
 
 </body>
