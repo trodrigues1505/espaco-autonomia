@@ -202,17 +202,24 @@ export async function renderAlunos(container, page) {
       document.getElementById('edit-aluno-body').innerHTML = `
         <div style="margin-bottom:10px"><div style="font-weight:500;font-size:14px">${a.nome}</div><div style="font-size:11px;color:var(--txt2)">${a.email}</div></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          ${fi('','Perfil',`<select id="ea-tipo" ${inputStyle}>
+            <option value="aluno"     ${a.tipo==='aluno'    ?'selected':''}>Aluno</option>
+            <option value="professor" ${a.tipo==='professor'?'selected':''}>Professor</option>
+            <option value="admin"     ${a.tipo==='admin'    ?'selected':''}>Admin</option>
+          </select>`)}
+          ${fi('','Status',`<select id="ea-ativo" ${inputStyle}><option value="true" ${a.ativo?'selected':''}>Ativo</option><option value="false" ${!a.ativo?'selected':''}>Inativo</option></select>`)}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           ${fi('','Plano',`<select id="ea-plano" ${inputStyle} onchange="updateValorEdicao()">
-            <option value="brahma" ${mat?.plano_tipo==='brahma'?'selected':''}>Brahma — 1× por semana — R$100/mês</option>
-            <option value="shiva_1x" ${mat?.plano_tipo==='shiva_1x'?'selected':''}>Shiva 1x — 1× por semana — R$150/mês</option>
-            <option value="shiva_2x" ${mat?.plano_tipo==='shiva_2x'?'selected':''}>Shiva 2x — 2× por semana — R$200/mês</option>
-            <option value="vishnu_2x" ${mat?.plano_tipo==='vishnu_2x'?'selected':''}>Vishnu 2x — 2× por semana — R$250/mês</option>
+            <option value="brahma"       ${mat?.plano_tipo==='brahma'      ?'selected':''}>Brahma — 1× por semana — R$100/mês</option>
+            <option value="shiva_1x"     ${mat?.plano_tipo==='shiva_1x'    ?'selected':''}>Shiva 1x — 1× por semana — R$150/mês</option>
+            <option value="shiva_2x"     ${mat?.plano_tipo==='shiva_2x'    ?'selected':''}>Shiva 2x — 2× por semana — R$200/mês</option>
+            <option value="vishnu_2x"    ${mat?.plano_tipo==='vishnu_2x'   ?'selected':''}>Vishnu 2x — 2× por semana — R$250/mês</option>
             <option value="vishnu_livre" ${mat?.plano_tipo==='vishnu_livre'?'selected':''}>Vishnu Livre — uso livre — R$300/mês</option>
           </select>`)}
         </div>
         ${fi('','Valor mensal (R$)',`<input type="number" id="ea-valor" ${inputStyle} value="${mat?.valor_mensal||0}">`)}
         ${fi('','Vencimento',`<input type="date" id="ea-fim" ${inputStyle} value="${mat?.fim||''}">`)}
-        ${fi('','Status',`<select id="ea-ativo" ${inputStyle}><option value="true" ${a.ativo?'selected':''}>Ativo</option><option value="false" ${!a.ativo?'selected':''}>Inativo</option></select>`)}
         <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
           <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">ID no Asaas (cus_...)</label>
           <input id="ea-asaas" placeholder="cus_000..." style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none" value="${a.asaas_customer_id||''}">
@@ -228,6 +235,7 @@ export async function renderAlunos(container, page) {
     }
 
     window.salvarEdicaoAluno = async function() {
+      const tipoPerfil = document.getElementById('ea-tipo').value
       const plano = document.getElementById('ea-plano').value
       const opcao = PLANO_OPCOES[plano]||1
       const valor = Number(document.getElementById('ea-valor').value)||PLANO_VALORES[plano]||0
@@ -236,7 +244,7 @@ export async function renderAlunos(container, page) {
       await sb.from('matriculas').update({ativa:false}).eq('aluno_id', window._editAlunoId).eq('ativa', true)
       await sb.from('matriculas').insert({ aluno_id: window._editAlunoId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor, fim })
       const asaasId = document.getElementById('ea-asaas')?.value?.trim() || null
-      await sb.from('perfis').update({ ativo, asaas_customer_id: asaasId }).eq('id', window._editAlunoId)
+      await sb.from('perfis').update({ tipo: tipoPerfil, ativo, asaas_customer_id: asaasId }).eq('id', window._editAlunoId)
       document.getElementById('modal-edit-aluno').style.display = 'none'
       toast(asaasId ? '✓ Aluno atualizado! Asaas vinculado.' : '✓ Aluno atualizado!')
       navigate('alunos')
