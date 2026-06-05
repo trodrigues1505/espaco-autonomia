@@ -9,13 +9,14 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
 export async function renderCriarAulas(container, page) {
-  const sb = window._sb
+  const sb = window._sb || (await import('../../lib/supabase.js')).sb
   const perfil = window._perfil
   const tipo = perfil?.tipo
 
     const [aulasRes, profsRes, cfgRes] = await Promise.all([
       sb.from('aulas').select('*, professor:perfis!professor_id(nome), horarios:aulas_horarios(*)').order('criado_em', {ascending:false}),
-      sb.from('perfis').select('id,nome').in('tipo',['admin','professor']).order('nome'),
+      // Filtra apenas perfis com tipo professor ou admin — exclui alunos
+      sb.from('perfis').select('id,nome').in('tipo',['professor','admin']).order('nome'),
       sb.from('configuracoes').select('*'),
     ])
     const aulas = aulasRes.data || []
