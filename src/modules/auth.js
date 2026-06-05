@@ -1,16 +1,14 @@
 /**
  * src/modules/auth.js
- * Responsabilidade: autenticação, sessão, onboarding, inicialização do app.
  */
 
 import { sb } from '../lib/supabase.js'
 import { buildMenu, homePorPerfil, initMobileMenu } from './navigation.js'
 import { verificarContrato } from './contrato.js'
-import { sincronizarConsentimentoAposLogin } from './lgpd.js'
 import { initProfessorCancel } from './professor-cancel.js'
 import { toast, PLANO_NOMES } from './utils.js'
 
-// ── Onboarding — novo aluno via Google ───────────────────────
+// ── Onboarding ───────────────────────────────────────────────
 export async function mostrarOnboarding(user, nomeGoogle) {
   const { data: planos } = await sb
     .from('planos')
@@ -69,9 +67,7 @@ export async function mostrarOnboarding(user, nomeGoogle) {
 }
 
 window.highlightPlano = function (key) {
-  document.querySelectorAll('[id^="label-"]').forEach(el => {
-    el.style.borderColor = 'var(--borda)'; el.style.background = '#fff'
-  })
+  document.querySelectorAll('[id^="label-"]').forEach(el => { el.style.borderColor = 'var(--borda)'; el.style.background = '#fff' })
   const lbl = document.getElementById('label-' + key)
   if (lbl) { lbl.style.borderColor = 'var(--verde)'; lbl.style.background = 'rgba(31,56,31,.04)' }
 }
@@ -82,10 +78,8 @@ window.finalizarOnboarding = async function (userId, email) {
   const planoSel = document.querySelector('input[name="onb-plano"]:checked')
   if (!nome)     { toast('Informe seu nome');   return }
   if (!planoSel) { toast('Selecione um plano'); return }
-
   const btn = document.querySelector('#onboarding button')
   if (btn) { btn.textContent = 'Salvando...'; btn.disabled = true }
-
   try {
     const { error: errP } = await sb.from('perfis').upsert({ id: userId, nome, email, telefone: tel || null, tipo: 'aluno', ativo: true })
     if (errP) throw new Error('Erro no perfil: ' + errP.message)
@@ -118,33 +112,23 @@ window.fazerLogin = async function () {
     btn.classList.remove('login-loading')
     document.getElementById('btn-login-txt').textContent = 'Entrar'
   }
-  // Se ok, onAuthStateChange dispara SIGNED_IN e chama iniciarApp
+  // Sucesso: onAuthStateChange SIGNED_IN cuida do resto
 }
 
 window.fazerLogout = async function () {
   await sb.auth.signOut()
 }
 
-function loginGoogle() {
-  if (!window._sb) { alert('Aguarde...'); return }
-  window._sb.auth.signInWithOAuth({
+window.loginGoogle = function () {
+  sb.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo: window.location.href.split('?')[0] },
-  }).then(r => { if (r.error) alert('Erro: ' + r.error.message) })
+  })
 }
-window.loginGoogle = loginGoogle
 
-// ── Inicializar app ──────────────────────────────────────────
-export async function iniciarApp() {
+// ── iniciarApp ───────────────────────────────────────────────
+export async function iniciarApp(user) {
   try {
-    const { data: { session } } = await sb.auth.getSession()
-    if (!session?.user) {
-      document.getElementById('login-screen').style.display = 'block'
-      document.getElementById('app-shell').style.display    = 'none'
-      return
-    }
-    const user = session.user
-
     const { data: perfil, error: errPerfil } = await sb
       .from('perfis').select('*').eq('id', user.id).single()
 
@@ -153,14 +137,14 @@ export async function iniciarApp() {
       await mostrarOnboarding(user, user.user_metadata?.full_name || '')
       return
     }
-    if (errPerfil) throw new Error('Erro ao buscar perfil: ' + errPerfil.message)
+    if (errPerfil) throw new Error(errPerfil.message)
 
     window._perfil = perfil
 
-    document.getElementById('login-screen').style.display  = 'none'
-    document.getElementById('app-shell').style.display     = 'block'
-    document.getElementById('sb-nome').textContent         = perfil.nome
-    document.getElementById('sb-role-label').textContent   =
+    document.getElementById('login-screen').style.display = 'none'
+    document.getElementById('app-shell').style.display    = 'block'
+    document.getElementById('sb-nome').textContent        = perfil.nome
+    document.getElementById('sb-role-label').textContent  =
       { admin: 'Admin', professor: 'Professor', aluno: 'Aluno' }[perfil.tipo] || perfil.tipo
 
     if (perfil.tipo === 'aluno') {
@@ -172,8 +156,6 @@ export async function iniciarApp() {
     buildMenu(perfil.tipo)
     initMobileMenu()
     initProfessorCancel()
-
-    await sincronizarConsentimentoAposLogin(perfil.id)
 
     if (perfil.tipo === 'aluno') {
       await verificarContrato(perfil.id, perfil.nome)
@@ -190,9 +172,9 @@ export async function iniciarApp() {
   }
 }
 
-// ── Sessão ───────────────────────────────────────────────────
-export async function initSession() {
-  // Fix ## duplo na URL do OAuth do Supabase
+// ── initSession ──────────────────────────────────────────────
+export function initSession() {
+  // Fix ## duplo na URL do OAuth
   if (window.location.hash.includes('##')) {
     const clean = window.location.hash.replace(/^#+/, '#')
     window.history.replaceState(null, '', window.location.pathname + clean)
@@ -200,7 +182,6 @@ export async function initSession() {
     return
   }
 
-  // Erro no hash (link expirado etc.)
   const params = new URLSearchParams(window.location.hash.slice(1))
   if (params.get('error')) {
     window.history.replaceState(null, '', window.location.pathname)
@@ -210,22 +191,24 @@ export async function initSession() {
     return
   }
 
-  // onAuthStateChange é a fonte de verdade para sessão
-  // INITIAL_SESSION dispara quando a página carrega com sessão existente
-  // SIGNED_IN dispara após login explícito
-  // TOKEN_REFRESHED dispara em renovação silenciosa — ignoramos
-  sb.auth.onAuthStateChange(async (event, session) => {
+  // Única fonte de verdade para sessão.
+  // INITIAL_SESSION: página carregou com sessão existente (inclui hard refresh)
+  // SIGNED_IN:       login acabou de acontecer
+  // SIGNED_OUT:      logout
+  // TOKEN_REFRESHED: renovação silenciosa — NÃO reinicializa o app
+  sb.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT') {
+      window._perfil = null
       document.getElementById('app-shell').style.display    = 'none'
       document.getElementById('login-screen').style.display = 'block'
       return
     }
-    if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
-      if (session) {
-        await iniciarApp()
-      } else {
-        document.getElementById('login-screen').style.display = 'block'
-      }
+    if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session?.user) {
+      iniciarApp(session.user)
+    }
+    if ((event === 'INITIAL_SESSION') && !session) {
+      // Sem sessão — mostra login
+      document.getElementById('login-screen').style.display = 'block'
     }
   })
 }
@@ -233,7 +216,6 @@ export async function initSession() {
 // ── Listeners ────────────────────────────────────────────────
 document.getElementById('login-senha')
   ?.addEventListener('keydown', e => { if (e.key === 'Enter') window.fazerLogin() })
-
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('btn-google')?.addEventListener('click', loginGoogle)
+  document.getElementById('btn-google')?.addEventListener('click', window.loginGoogle)
 })

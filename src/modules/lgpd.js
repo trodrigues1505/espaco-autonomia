@@ -1,96 +1,77 @@
 /**
  * src/modules/lgpd.js
- * Responsabilidade: consentimento LGPD (Lei 13.709/2018).
+ * Consentimento LGPD (Lei 13.709/2018) — Art. 8° §6
+ * Grava no banco (tabela consentimentos) e em localStorage como cache.
  *
- * Fluxo:
- *  1. Se o usuário ainda não consentiu → exibe banner informativo
- *  2. Após login, o aceite é gravado no banco (tabela `consentimentos`)
- *     vinculado ao user_id — rastreável e auditável (LGPD Art. 8° §6)
- *  3. "Só essenciais" aceita apenas dados de funcionamento,
- *     sem gamificação/analytics
- *
- * NÃO usa localStorage como única fonte de verdade —
- * o registro definitivo está no Supabase.
+ * Pré-requisito: rodar supabase/consentimentos.sql no SQL Editor do Supabase.
  */
 
 import { sb } from '../lib/supabase.js'
 
-const VERSAO_POLITICA = 'v1'
-const KEY_LOCAL       = 'lgpd_consent_v1'      // apenas cache local
+const VERSAO = 'v1'
+const KEY    = 'lgpd_consent_v1'
 
-// ── Inicialização ────────────────────────────────────────────
+// ── Banner ───────────────────────────────────────────────────
 export function initLGPD() {
-  const consentLocal = localStorage.getItem(KEY_LOCAL)
-  if (!consentLocal) {
-    // Aguarda o PWA banner sumir antes de exibir
-    setTimeout(() => {
-      document.getElementById('lgpd-banner')?.classList.add('show')
-    }, 1500)
+  if (!localStorage.getItem(KEY)) {
+    setTimeout(() => document.getElementById('lgpd-banner')?.classList.add('show'), 2000)
   }
 }
 
-// ── Ações do banner ──────────────────────────────────────────
-export function lgpdAceitar() {
+export async function lgpdAceitar() {
   _salvarLocal('accepted')
-  _esconderBanner()
-  // Grava no banco se já estiver logado
-  _gravarConsentimentoBanco('accepted')
+  document.getElementById('lgpd-banner')?.classList.remove('show')
+  await _gravarBanco('accepted')
 }
 
-export function lgpdRejeitar() {
+export async function lgpdRejeitar() {
   _salvarLocal('essential_only')
-  _esconderBanner()
-  _gravarConsentimentoBanco('essential_only')
+  document.getElementById('lgpd-banner')?.classList.remove('show')
+  await _gravarBanco('essential_only')
 }
 
-/** Chamado após login — garante que o aceite está no banco */
+// ── Chamado após login ────────────────────────────────────────
 export async function sincronizarConsentimentoAposLogin(userId) {
-  const consentLocal = localStorage.getItem(KEY_LOCAL)
-  if (!consentLocal) return  // usuário ainda não viu o banner
+  const local = _lerLocal()
+  if (!local) return  // usuário ainda não viu o banner
 
-  // Verifica se já existe registro no banco
+  // Verifica se já existe no banco
   const { data } = await sb
     .from('consentimentos')
     .select('id')
     .eq('aluno_id', userId)
-    .eq('versao', VERSAO_POLITICA)
-    .single()
-    .then(r => r)
+    .eq('versao', VERSAO)
+    .maybeSingle()
 
   if (!data) {
-    await _gravarConsentimentoBanco(consentLocal, userId)
+    await _gravarBanco(local.nivel, userId)
   }
 }
 
-/** Retorna o nível de consentimento atual */
-export function nivelConsentimento() {
-  return localStorage.getItem(KEY_LOCAL) || null
-}
-
-// ── Privado ──────────────────────────────────────────────────
+// ── Privado ───────────────────────────────────────────────────
 function _salvarLocal(nivel) {
-  localStorage.setItem(KEY_LOCAL, nivel)
-  localStorage.setItem('lgpd_consent_date', new Date().toISOString())
+  localStorage.setItem(KEY, JSON.stringify({ nivel, data: new Date().toISOString() }))
 }
 
-function _esconderBanner() {
-  document.getElementById('lgpd-banner')?.classList.remove('show')
+function _lerLocal() {
+  try { return JSON.parse(localStorage.getItem(KEY)) } catch { return null }
 }
 
-async function _gravarConsentimentoBanco(nivel, userId) {
+async function _gravarBanco(nivel, userId) {
   const uid = userId || window._perfil?.id
-  if (!uid) return   // não logado ainda — será chamado novamente após login
+  if (!uid) return
 
-  await sb.from('consentimentos').upsert({
+  const { error } = await sb.from('consentimentos').upsert({
     aluno_id:   uid,
-    versao:     VERSAO_POLITICA,
-    nivel:      nivel,             // 'accepted' | 'essential_only'
+    versao:     VERSAO,
+    nivel,
     aceito_em:  new Date().toISOString(),
     user_agent: navigator.userAgent,
     idioma:     navigator.language || 'pt-BR',
   }, { onConflict: 'aluno_id,versao' })
+
+  if (error) console.warn('lgpd gravar banco:', error.message)
 }
 
-// Expõe para onclick inline no HTML
 window.lgpdAceitar  = lgpdAceitar
 window.lgpdRejeitar = lgpdRejeitar
