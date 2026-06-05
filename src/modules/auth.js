@@ -173,6 +173,8 @@ export async function iniciarApp(user) {
 }
 
 // ── initSession ──────────────────────────────────────────────
+let _appIniciado = false
+
 export function initSession() {
   // Fix ## duplo na URL do OAuth
   if (window.location.hash.includes('##')) {
@@ -198,13 +200,17 @@ export function initSession() {
   // TOKEN_REFRESHED: renovação silenciosa — NÃO reinicializa o app
   sb.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT') {
+      _appIniciado = false
       window._perfil = null
       document.getElementById('app-shell').style.display    = 'none'
       document.getElementById('login-screen').style.display = 'block'
       return
     }
     if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session?.user) {
-      iniciarApp(session.user)
+      if (!_appIniciado) {
+        _appIniciado = true
+        iniciarApp(session.user)
+      }
     }
     if ((event === 'INITIAL_SESSION') && !session) {
       // Sem sessão — mostra login
