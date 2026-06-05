@@ -85,12 +85,14 @@ export function modal(id, title, bodyHtml, footHtml) {
 }
 
 /** Campo de formulário com label */
-export function fi(label, inputHtml) {
-  return `
-    <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
-      <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">${label}</label>
-      ${inputHtml}
-    </div>`
+/** Campo de formulário: fi(idIgnorado, label, inputHtml) ou fi(label, inputHtml) */
+export function fi(idOrLabel, labelOrInput, inputHtmlOrUndef) {
+  const label    = inputHtmlOrUndef !== undefined ? labelOrInput   : idOrLabel
+  const inputHtml = inputHtmlOrUndef !== undefined ? inputHtmlOrUndef : labelOrInput
+  return `<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
+    <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">${label}</label>
+    ${inputHtml}
+  </div>`
 }
 
 export const inputStyle = `style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--txt);width:100%;outline:none"`
