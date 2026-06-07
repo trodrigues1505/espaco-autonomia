@@ -111,12 +111,15 @@ export async function renderConfig(container, page) {
 
     // ── Importação do Asaas ──────────────────────────────────
     async function buscarClientesAsaas(apiKey) {
+      const FN_URL = 'https://kctgcjvfsuinwlbgljdw.supabase.co/functions/v1/asaas-proxy'
       let todos = [], offset = 0
       while (true) {
-        const r = await fetch(`https://api.asaas.com/v3/customers?limit=100&offset=${offset}`, {
-          headers: { 'access_token': apiKey, 'Content-Type': 'application/json' }
+        const r = await fetch(FN_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ apiKey, offset })
         })
-        if (!r.ok) throw new Error(`Asaas API ${r.status}: ${await r.text()}`)
+        if (!r.ok) throw new Error(`Proxy erro ${r.status}: ${await r.text()}`)
         const json = await r.json()
         todos = todos.concat(json.data || [])
         if (!json.hasMore) break
