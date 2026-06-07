@@ -338,10 +338,13 @@ export async function renderCriarAulas(container, page) {
           + '</div>'
           + '<div style="padding:14px 20px;border-top:1px solid var(--borda);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0">'
             + '<button onclick="document.getElementById(\'modal-editar-aula\').remove()" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>'
-            + '<button onclick="salvarEdicaoAula('' + a.id + '\','' + a.tipo + '\')" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:\'DM Sans\',sans-serif">Salvar</button>'
+            + '<button id="btn-salvar-edicao-aula" data-id="' + a.id + '" data-tipo="' + a.tipo + '" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer">Salvar</button>'
           + '</div>'
         + '</div>'
       document.body.appendChild(div)
+      document.getElementById('btn-salvar-edicao-aula').addEventListener('click', function() {
+        salvarEdicaoAula(this.dataset.id, this.dataset.tipo)
+      })
     }
 
     window.salvarEdicaoAula = async function(id, tipo) {
@@ -396,4 +399,4 @@ export async function renderCriarAulas(container, page) {
       toast(ativa ? 'Aula pausada' : 'Aula ativada')
       navigate('criar-aulas')
     }
-}  
+}   
