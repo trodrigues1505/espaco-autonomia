@@ -161,8 +161,23 @@ function _ativarImpersonar(tipo, pessoa) {
 
   if (tipo === 'admin') {
     // Restaura perfil real do admin
-    window._perfil = window._perfilAdmin || window._perfil
+    const perfilAdmin = window._perfilAdmin || window._perfil
+    window._perfil = perfilAdmin
     window._perfilAdmin = null
+    // Restaura nome e badge corretos
+    document.getElementById('sb-nome').textContent = perfilAdmin.nome
+    document.getElementById('sb-role-label').textContent = 'Admin'
+    ;['admin','prof','aluno'].forEach(t => {
+      const btn = document.getElementById('imp-'+t)
+      if (!btn) return
+      btn.style.background = t==='admin' ? 'var(--dourado)' : 'rgba(242,236,206,.15)'
+      btn.style.color      = t==='admin' ? 'var(--verde)'   : 'rgba(242,236,206,.7)'
+      btn.style.fontWeight = t==='admin' ? '500'            : '400'
+    })
+    document.getElementById('impersonar-aviso')?.remove()
+    buildMenu('admin')
+    window.navigate('dashboard')
+    return
   } else {
     // Salva perfil admin e substitui pelo da pessoa selecionada
     if (!window._perfilAdmin) window._perfilAdmin = window._perfil
