@@ -18,7 +18,7 @@ export async function renderAlunoHome(container, page) {
     const agora = new Date()
 
     const [confsRes, matRes, cfgRes, saldoRes, gamRes, pgRes] = await Promise.all([
-      sb.from('confirmacoes').select('*, ocorrencia:ocorrencias(id,data_hora,aula:aulas(modalidade))').eq('aluno_id', userId).eq('status','confirmado').order('criado_em',{ascending:false}).limit(5),
+      sb.from('confirmacoes').select('*, ocorrencia:ocorrencias(id,data_hora,aula:aulas(modalidade))').eq('aluno_id', userId).eq('status','confirmado').order('criado_em',{ascending:false}),
       sb.from('matriculas').select('*, plano:planos(*)').eq('aluno_id', userId).eq('ativa',true).single(),
       sb.from('configuracoes').select('*'),
       sb.from('saldo_disponivel').select('*').eq('aluno_id', userId).single(),
@@ -31,8 +31,11 @@ export async function renderAlunoHome(container, page) {
     const saldo = saldoRes.data
     const gam = gamRes
     const pagamentos = pgRes
-    const confs = (confsRes.data||[]).filter(c=>c.ocorrencia && new Date(c.ocorrencia.data_hora) >= agora)
+    const confs = (confsRes.data||[]).filter(c=>c.ocorrencia && new Date(c.ocorrencia.data_hora) >= agora).slice(0,5)
     const saldoTotal = mat?.plano_tipo === 'vishnu_livre' ? '∞' : (saldo?.saldo_total ?? 0)
+    // Disponíveis para agendar = saldo total - confirmações futuras já feitas
+    const confsFuturas = (confsRes.data||[]).filter(c => c.ocorrencia && new Date(c.ocorrencia.data_hora) >= agora && c.status === 'confirmado')
+    const saldoDisponivel = mat?.plano_tipo === 'vishnu_livre' ? Infinity : Math.max(0, (saldo?.saldo_total ?? 0) - confsFuturas.length)
     const nivel = calcularNivel(gam?.prana_points||0)
     const nivelLabel = NIVEL_LABELS[nivel]
 
@@ -57,11 +60,16 @@ export async function renderAlunoHome(container, page) {
       </div>
       <div class="content">
         ${!pgOk?`<div style="background:#fceaea;border:1px solid #f5c1c1;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px"><span style="font-size:20px">⚠️</span><div><div style="font-weight:500;font-size:13px;color:#8a1a1a">Mensalidade em aberto</div><div style="font-size:11px;color:#c0392b;margin-top:2px">Regularize o pagamento para continuar confirmando aulas.</div></div></div>`:''}
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
           <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:12px 14px">
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Saldo</div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Saldo total</div>
             <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--verde)">${saldoTotal}</div>
             <div style="font-size:10px;color:var(--txt2)">aulas acumuladas</div>
+          </div>
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:12px 14px;border-left:3px solid ${saldoDisponivel>0||mat?.plano_tipo==='vishnu_livre'?'var(--verde)':'#c0392b'}">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Disponíveis</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:${saldoDisponivel>0||mat?.plano_tipo==='vishnu_livre'?'var(--verde)':'#c0392b'}">${mat?.plano_tipo==='vishnu_livre'?'∞':saldoDisponivel}</div>
+            <div style="font-size:10px;color:var(--txt2)">para agendar agora</div>
           </div>
           <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:12px 14px">
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Sequência</div>
@@ -113,4 +121,4 @@ export async function renderAlunoHome(container, page) {
       if (error||!data?.ok){toast('❌ '+(data?.motivo||error?.message));return}
       toast(data.mensagem); navigate('aluno-home')
     }
-}
+}   
