@@ -14,10 +14,13 @@ export async function renderAlunos(container, page) {
   const tipo = perfil?.tipo
 
     const busca = window._buscaAlunos || ''
-    let q = sb.from('perfis').select('*, matriculas(plano_tipo,opcao_aulas,valor_mensal,ativa,fim)').eq('tipo','aluno').order('nome')
-    // Busca asaas_customer_id separado (campo extra na tabela)
-    const { data: todos } = await q
-    const alunos = (todos||[]).filter(a => !busca || a.nome.toLowerCase().includes(busca.toLowerCase()) || a.email.toLowerCase().includes(busca.toLowerCase()))
+    const filtroPlanok = window._filtroPlanoAlunos || ''
+    const { data: todos } = await sb.from('perfis')
+      .select('*, matriculas(plano_tipo,opcao_aulas,valor_mensal,ativa,fim)')
+      .eq('tipo','aluno').order('nome')
+    let alunos = (todos||[])
+      .filter(a => !busca || a.nome.toLowerCase().includes(busca.toLowerCase()) || a.email.toLowerCase().includes(busca.toLowerCase()))
+      .filter(a => !filtroPlanok || (a.matriculas||[]).some(m=>m.ativa && m.plano_tipo===filtroPlanok))
 
     const planoBadge = {
       brahma:       badge('Brahma','#f0ede4','#5a5a4a'),
@@ -63,8 +66,16 @@ export async function renderAlunos(container, page) {
     container.innerHTML = `
       <div class="topbar">
         <div class="topbar-t">Alunos</div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input id="input-busca-aluno" placeholder="Buscar..." value="${busca}" oninput="window._buscaAlunos=this.value;navigate('alunos')" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;width:180px;font-family:'DM Sans',sans-serif;outline:none">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input id="input-busca-aluno" placeholder="Buscar..." value="${busca}" oninput="window._buscaAlunos=this.value;navigate('alunos')" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;width:150px;font-family:'DM Sans',sans-serif;outline:none">
+          <select onchange="window._filtroPlanoAlunos=this.value;navigate('alunos')" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;background:#fff;color:var(--txt)">
+            <option value="" ${!filtroPlanok?'selected':''}>Todos os planos</option>
+            <option value="brahma"       ${filtroPlanok==='brahma'      ?'selected':''}>Brahma</option>
+            <option value="shiva_1x"     ${filtroPlanok==='shiva_1x'    ?'selected':''}>Shiva 1x</option>
+            <option value="shiva_2x"     ${filtroPlanok==='shiva_2x'    ?'selected':''}>Shiva 2x</option>
+            <option value="vishnu_2x"    ${filtroPlanok==='vishnu_2x'   ?'selected':''}>Vishnu 2x</option>
+            <option value="vishnu_livre" ${filtroPlanok==='vishnu_livre'?'selected':''}>Vishnu Livre</option>
+          </select>
           <button onclick="document.getElementById('modal-cad-aluno').style.display='flex'" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-user-plus"></i> Cadastrar</button>
         </div>
       </div>
@@ -202,31 +213,75 @@ export async function renderAlunos(container, page) {
       document.getElementById('edit-aluno-body').innerHTML = `
         <div style="margin-bottom:10px"><div style="font-weight:500;font-size:14px">${a.nome}</div><div style="font-size:11px;color:var(--txt2)">${a.email}</div></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          ${fi('','Perfil',`<select id="ea-tipo" ${inputStyle}>
-            <option value="aluno"     ${a.tipo==='aluno'    ?'selected':''}>Aluno</option>
-            <option value="professor" ${a.tipo==='professor'?'selected':''}>Professor</option>
-            <option value="admin"     ${a.tipo==='admin'    ?'selected':''}>Admin</option>
-          </select>`)}
-          ${fi('','Status',`<select id="ea-ativo" ${inputStyle}><option value="true" ${a.ativo?'selected':''}>Ativo</option><option value="false" ${!a.ativo?'selected':''}>Inativo</option></select>`)}
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           ${fi('','Plano',`<select id="ea-plano" ${inputStyle} onchange="updateValorEdicao()">
-            <option value="brahma"       ${mat?.plano_tipo==='brahma'      ?'selected':''}>Brahma — 1× por semana — R$100/mês</option>
-            <option value="shiva_1x"     ${mat?.plano_tipo==='shiva_1x'    ?'selected':''}>Shiva 1x — 1× por semana — R$150/mês</option>
-            <option value="shiva_2x"     ${mat?.plano_tipo==='shiva_2x'    ?'selected':''}>Shiva 2x — 2× por semana — R$200/mês</option>
-            <option value="vishnu_2x"    ${mat?.plano_tipo==='vishnu_2x'   ?'selected':''}>Vishnu 2x — 2× por semana — R$250/mês</option>
+            <option value="brahma" ${mat?.plano_tipo==='brahma'?'selected':''}>Brahma — 1× por semana — R$100/mês</option>
+            <option value="shiva_1x" ${mat?.plano_tipo==='shiva_1x'?'selected':''}>Shiva 1x — 1× por semana — R$150/mês</option>
+            <option value="shiva_2x" ${mat?.plano_tipo==='shiva_2x'?'selected':''}>Shiva 2x — 2× por semana — R$200/mês</option>
+            <option value="vishnu_2x" ${mat?.plano_tipo==='vishnu_2x'?'selected':''}>Vishnu 2x — 2× por semana — R$250/mês</option>
             <option value="vishnu_livre" ${mat?.plano_tipo==='vishnu_livre'?'selected':''}>Vishnu Livre — uso livre — R$300/mês</option>
           </select>`)}
         </div>
         ${fi('','Valor mensal (R$)',`<input type="number" id="ea-valor" ${inputStyle} value="${mat?.valor_mensal||0}">`)}
         ${fi('','Vencimento',`<input type="date" id="ea-fim" ${inputStyle} value="${mat?.fim||''}">`)}
+        ${fi('','Status',`<select id="ea-ativo" ${inputStyle}><option value="true" ${a.ativo?'selected':''}>Ativo</option><option value="false" ${!a.ativo?'selected':''}>Inativo</option></select>`)}
         <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
           <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">ID no Asaas (cus_...)</label>
           <input id="ea-asaas" placeholder="cus_000..." style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none" value="${a.asaas_customer_id||''}">
           <div style="font-size:10px;color:${a.asaas_customer_id?'#1a5a1a':'#c0392b'};margin-top:3px">${a.asaas_customer_id?'✓ Vinculado ao Asaas':'⚠ Não vinculado — pagamentos não sincronizados'}</div>
         </div>
+        <div style="background:rgba(242,236,206,.4);border:1px solid var(--borda);border-radius:8px;padding:12px;margin-bottom:4px">
+          <div style="font-size:11px;font-weight:500;color:var(--verde);margin-bottom:8px">➕ Créditos manuais de aulas</div>
+          <div style="font-size:11px;color:var(--txt2);margin-bottom:8px">Use para repor aulas anteriores ao app ou por acordo especial.</div>
+          <div style="display:flex;align-items:flex-end;gap:8px">
+            <div style="display:flex;flex-direction:column;gap:3px;flex:1">
+              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Qtd de aulas</label>
+              <input type="number" id="ea-creditos" min="1" max="50" value="1" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;flex:2">
+              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Motivo</label>
+              <input type="text" id="ea-credito-motivo" placeholder="Ex: aulas a repor de maio" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
+            </div>
+            <button onclick="creditarAulasManual('${a.id}')" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Creditar</button>
+          </div>
+        </div>
       `
       document.getElementById('modal-edit-aluno').style.display = 'flex'
+    }
+
+    window.creditarAulasManual = async function(alunoId) {
+      const qtd = Number(document.getElementById('ea-creditos').value) || 0
+      const motivo = document.getElementById('ea-credito-motivo').value.trim()
+      if (qtd < 1) { toast('Informe ao menos 1 aula'); return }
+      if (!motivo) { toast('Informe o motivo do crédito'); return }
+
+      // Busca matrícula ativa para saber plano
+      const { data: mat } = await sb.from('matriculas').select('id,plano_tipo')
+        .eq('aluno_id', alunoId).eq('ativa', true).single()
+      if (!mat) { toast('Aluno sem matrícula ativa'); return }
+
+      // Usa RPC creditar_aulas ou insere diretamente no saldo
+      const mesRef = new Date().toISOString().slice(0,7) + '-01'
+      const { error } = await sb.from('saldo_aulas').upsert({
+        aluno_id: alunoId,
+        mes_ref: mesRef,
+        aulas_creditadas: qtd,
+        motivo: motivo,
+        tipo: 'manual',
+      }, { onConflict: 'aluno_id,mes_ref,tipo' })
+
+      if (error) {
+        // Fallback: tenta via RPC se a tabela tiver estrutura diferente
+        const { error: errRpc } = await sb.rpc('creditar_aulas_manual', {
+          p_aluno_id: alunoId,
+          p_quantidade: qtd,
+          p_motivo: motivo,
+        })
+        if (errRpc) { toast('Erro: ' + errRpc.message); return }
+      }
+
+      toast('✓ ' + qtd + ' aula(s) creditada(s) para ' + motivo)
+      document.getElementById('ea-creditos').value = 1
+      document.getElementById('ea-credito-motivo').value = ''
     }
 
     window.updateValorEdicao = function() {
@@ -235,7 +290,6 @@ export async function renderAlunos(container, page) {
     }
 
     window.salvarEdicaoAluno = async function() {
-      const tipoPerfil = document.getElementById('ea-tipo').value
       const plano = document.getElementById('ea-plano').value
       const opcao = PLANO_OPCOES[plano]||1
       const valor = Number(document.getElementById('ea-valor').value)||PLANO_VALORES[plano]||0
@@ -244,7 +298,7 @@ export async function renderAlunos(container, page) {
       await sb.from('matriculas').update({ativa:false}).eq('aluno_id', window._editAlunoId).eq('ativa', true)
       await sb.from('matriculas').insert({ aluno_id: window._editAlunoId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor, fim })
       const asaasId = document.getElementById('ea-asaas')?.value?.trim() || null
-      await sb.from('perfis').update({ tipo: tipoPerfil, ativo, asaas_customer_id: asaasId }).eq('id', window._editAlunoId)
+      await sb.from('perfis').update({ ativo, asaas_customer_id: asaasId }).eq('id', window._editAlunoId)
       document.getElementById('modal-edit-aluno').style.display = 'none'
       toast(asaasId ? '✓ Aluno atualizado! Asaas vinculado.' : '✓ Aluno atualizado!')
       navigate('alunos')
