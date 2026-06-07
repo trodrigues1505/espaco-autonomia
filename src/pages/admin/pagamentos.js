@@ -13,10 +13,27 @@ export async function renderPagamentos(container, page) {
   const perfil = window._perfil
   const tipo = perfil?.tipo
 
-    const [pgRes] = await Promise.all([
+    const [pgRes, perfisRes] = await Promise.all([
       sb.from('pagamentos').select('*, aluno:perfis!aluno_id(nome,email)').order('vencimento', {ascending:false}).limit(100),
+      // Busca todos os perfis com asaas_customer_id para resolver nomes quando aluno_id for nulo
+      sb.from('perfis').select('nome,email,asaas_customer_id').not('asaas_customer_id','is',null),
     ])
     const pgs = pgRes.data || []
+    // Mapa asaas_customer_id → perfil para fallback
+    const perfisPorAsaas = Object.fromEntries(
+      (perfisRes.data||[]).map(p => [p.asaas_customer_id, p])
+    )
+    // Enriquecer pagamentos sem aluno_id vinculado
+    pgs.forEach(p => {
+      if (!p.aluno && p.asaas_customer_id) {
+        p.aluno = perfisPorAsaas[p.asaas_customer_id] || null
+      }
+      // asaas_customer pode ser o campo que guarda o ID — tentar os dois nomes
+      const customerId = p.asaas_customer_id || p.asaas_customer
+      if (!p.aluno && customerId) {
+        p.aluno = perfisPorAsaas[customerId] || null
+      }
+    })
     const recebidos = pgs.filter(p=>p.status==='RECEIVED'||p.status==='CONFIRMED')
     const vencidos = pgs.filter(p=>p.status==='OVERDUE')
     const pendentes = pgs.filter(p=>p.status==='PENDING')
@@ -70,4 +87,4 @@ export async function renderPagamentos(container, page) {
         </div>
       </div>
     `
-}
+}  
