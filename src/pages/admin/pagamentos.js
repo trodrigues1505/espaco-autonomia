@@ -117,11 +117,11 @@ export async function renderPagamentos(container, page) {
 
   // Cards: mês selecionado, PENDING excludes OVERDUE
   const pgsMes    = pgs.filter(p => p.mes_ref?.slice(0,7) === mesSel)
-  const hoje2     = new Date().toISOString().slice(0,10)
-  const recebidos = pgsMes.filter(p => p.status === 'RECEIVED' || p.status === 'CONFIRMED')
-  // Aguardando: PENDING com vencimento até hoje (igual critério do Asaas)
-  const aguardando = pgsMes.filter(p => p.status === 'PENDING' && p.vencimento <= hoje2)
-  const vencidos  = pgsMes.filter(p => p.status === 'OVERDUE')
+  const recebidos  = pgsMes.filter(p => p.status === 'RECEIVED' || p.status === 'CONFIRMED')
+  // Paridade com Asaas: exclui PENDING com vencimento no último dia do mês
+  const ultimoDiaMes = new Date(agora.getFullYear(), agora.getMonth()+1, 0).toISOString().slice(0,10)
+  const aguardando = pgsMes.filter(p => p.status === 'PENDING' && p.vencimento !== ultimoDiaMes)
+  const vencidos   = pgsMes.filter(p => p.status === 'OVERDUE')
   const totalRec  = recebidos.reduce((s,p)  => s+(p.valor||0), 0)
   const totalAg   = aguardando.reduce((s,p) => s+(p.valor||0), 0)
   const totalVenc = vencidos.reduce((s,p)   => s+(p.valor||0), 0)
@@ -143,11 +143,13 @@ export async function renderPagamentos(container, page) {
   pgsFiltrados.sort((a,b) => {
     const nomeA = a.aluno?.nome || a.asaas_customer || ''
     const nomeB = b.aluno?.nome || b.asaas_customer || ''
-    if (pgSort === 'nome_asc')  return nomeA.localeCompare(nomeB)
-    if (pgSort === 'nome_desc') return nomeB.localeCompare(nomeA)
-    if (pgSort === 'valor_asc')  return (a.valor||0) - (b.valor||0)
-    if (pgSort === 'valor_desc') return (b.valor||0) - (a.valor||0)
-    if (pgSort === 'data_desc') return (b.vencimento||'').localeCompare(a.vencimento||'')
+    if (pgSort === 'nome_asc')    return nomeA.localeCompare(nomeB)
+    if (pgSort === 'nome_desc')   return nomeB.localeCompare(nomeA)
+    if (pgSort === 'valor_asc')   return (a.valor||0) - (b.valor||0)
+    if (pgSort === 'valor_desc')  return (b.valor||0) - (a.valor||0)
+    if (pgSort === 'data_desc')   return (b.vencimento||'').localeCompare(a.vencimento||'')
+    if (pgSort === 'status_asc')  return (a.status||'').localeCompare(b.status||'')
+    if (pgSort === 'status_desc') return (b.status||'').localeCompare(a.status||'')
     return (a.vencimento||'').localeCompare(b.vencimento||'') // data_asc default
   })
 
@@ -258,7 +260,7 @@ export async function renderPagamentos(container, page) {
           <span onclick="window._pgSort=window._pgSort==='nome_asc'?'nome_desc':'nome_asc';navigate('pagamentos')" style="cursor:pointer" title="Ordenar por nome">Aluno ${window._pgSort?.startsWith('nome')?window._pgSort==='nome_asc'?'↑':'↓':'↕'}</span>
           <span onclick="window._pgSort=window._pgSort==='data_asc'?'data_desc':'data_asc';navigate('pagamentos')" style="cursor:pointer" title="Ordenar por vencimento">Vencimento ${window._pgSort?.startsWith('data')?window._pgSort==='data_asc'?'↑':'↓':'↕'}</span>
           <span onclick="window._pgSort=window._pgSort==='valor_asc'?'valor_desc':'valor_asc';navigate('pagamentos')" style="cursor:pointer" title="Ordenar por valor">Valor ${window._pgSort?.startsWith('valor')?window._pgSort==='valor_asc'?'↑':'↓':'↕'}</span>
-          <span>Status</span><span>Mês ref.</span>
+          <span onclick="window._pgSort=window._pgSort==='status_asc'?'status_desc':'status_asc';navigate('pagamentos')" style="cursor:pointer" title="Ordenar por status">Status ${window._pgSort?.startsWith('status')?window._pgSort==='status_asc'?'↑':'↓':'↕'}</span><span>Mês ref.</span>
         </div>
         ${pgsFiltrados.length === 0
           ? `<div style="padding:24px 18px;font-size:12px;color:var(--txt2)">Nenhum pagamento${filtroAtivo!=='TODOS'?' com este filtro':''} em ${nomeMes(mesSel)}.</div>`
@@ -333,4 +335,4 @@ export async function renderPagamentos(container, page) {
       prog.style.display = 'none'
     }
   }
-}   
+}  
