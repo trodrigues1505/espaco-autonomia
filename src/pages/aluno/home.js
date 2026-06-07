@@ -34,8 +34,10 @@ export async function renderAlunoHome(container, page) {
     const confs = (confsRes.data||[]).filter(c=>c.ocorrencia && new Date(c.ocorrencia.data_hora) >= agora).slice(0,5)
     const saldoTotal = mat?.plano_tipo === 'vishnu_livre' ? '∞' : (saldo?.saldo_total ?? 0)
     // Disponíveis para agendar = saldo total - confirmações futuras já feitas
+    // Para plano livre (opcao_aulas=99) é ilimitado
     const confsFuturas = (confsRes.data||[]).filter(c => c.ocorrencia && new Date(c.ocorrencia.data_hora) >= agora && c.status === 'confirmado')
-    const saldoDisponivel = mat?.plano_tipo === 'vishnu_livre' ? Infinity : Math.max(0, (saldo?.saldo_total ?? 0) - confsFuturas.length)
+    const ehLivre = mat?.plano_tipo === 'vishnu_livre' || mat?.opcao_aulas === 99
+    const saldoDisponivel = ehLivre ? Infinity : Math.max(0, (saldo?.saldo_total ?? 0) - confsFuturas.length)
     const nivel = calcularNivel(gam?.prana_points||0)
     const nivelLabel = NIVEL_LABELS[nivel]
 
@@ -66,9 +68,9 @@ export async function renderAlunoHome(container, page) {
             <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--verde)">${saldoTotal}</div>
             <div style="font-size:10px;color:var(--txt2)">aulas acumuladas</div>
           </div>
-          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:12px 14px;border-left:3px solid ${saldoDisponivel>0||mat?.plano_tipo==='vishnu_livre'?'var(--verde)':'#c0392b'}">
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:12px 14px;border-left:3px solid ${saldoDisponivel>0||ehLivre?'var(--verde)':'#c0392b'}">
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Disponíveis</div>
-            <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:${saldoDisponivel>0||mat?.plano_tipo==='vishnu_livre'?'var(--verde)':'#c0392b'}">${mat?.plano_tipo==='vishnu_livre'?'∞':saldoDisponivel}</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:${saldoDisponivel>0||ehLivre?'var(--verde)':'#c0392b'}">${ehLivre?'∞':saldoDisponivel}</div>
             <div style="font-size:10px;color:var(--txt2)">para agendar agora</div>
           </div>
           <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:12px 14px">
@@ -121,4 +123,4 @@ export async function renderAlunoHome(container, page) {
       if (error||!data?.ok){toast('❌ '+(data?.motivo||error?.message));return}
       toast(data.mensagem); navigate('aluno-home')
     }
-}   
+}
