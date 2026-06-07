@@ -117,22 +117,39 @@ export async function renderPagamentos(container, page) {
 
   // Cards: mês selecionado, PENDING excludes OVERDUE
   const pgsMes    = pgs.filter(p => p.mes_ref?.slice(0,7) === mesSel)
+  const hoje2     = new Date().toISOString().slice(0,10)
   const recebidos = pgsMes.filter(p => p.status === 'RECEIVED' || p.status === 'CONFIRMED')
-  const aguardando = pgsMes.filter(p => p.status === 'PENDING')   // só PENDING puro
+  // Aguardando: PENDING com vencimento até hoje (igual critério do Asaas)
+  const aguardando = pgsMes.filter(p => p.status === 'PENDING' && p.vencimento <= hoje2)
   const vencidos  = pgsMes.filter(p => p.status === 'OVERDUE')
   const totalRec  = recebidos.reduce((s,p)  => s+(p.valor||0), 0)
   const totalAg   = aguardando.reduce((s,p) => s+(p.valor||0), 0)
   const totalVenc = vencidos.reduce((s,p)   => s+(p.valor||0), 0)
   const inadimp   = pgsMes.length ? Math.round(vencidos.length/pgsMes.length*100) : 0
 
-  // Filtro de status + mês na lista
+  // Filtro de status + mês + datas + ordenação
   const filtroAtivo = window._pgFiltro || 'TODOS'
-  const pgsFiltrados = pgs
+  const pgDe  = window._pgDe  || ''
+  const pgAte = window._pgAte || ''
+  const pgSort = window._pgSort || 'data_asc'
+
+  let pgsFiltrados = pgs
     .filter(p => p.mes_ref?.slice(0,7) === mesSel)
     .filter(p => filtroAtivo === 'TODOS' || p.status === filtroAtivo || (filtroAtivo==='RECEIVED' && p.status==='CONFIRMED'))
+    .filter(p => !pgDe  || (p.vencimento && p.vencimento >= pgDe))
+    .filter(p => !pgAte || (p.vencimento && p.vencimento <= pgAte))
 
-  // Modal de detalhe: alunos de um status específico
-  const detalheStatus = window._pgDetalhe || null
+  // Ordenação
+  pgsFiltrados.sort((a,b) => {
+    const nomeA = a.aluno?.nome || a.asaas_customer || ''
+    const nomeB = b.aluno?.nome || b.asaas_customer || ''
+    if (pgSort === 'nome_asc')  return nomeA.localeCompare(nomeB)
+    if (pgSort === 'nome_desc') return nomeB.localeCompare(nomeA)
+    if (pgSort === 'valor_asc')  return (a.valor||0) - (b.valor||0)
+    if (pgSort === 'valor_desc') return (b.valor||0) - (a.valor||0)
+    if (pgSort === 'data_desc') return (b.vencimento||'').localeCompare(a.vencimento||'')
+    return (a.vencimento||'').localeCompare(b.vencimento||'') // data_asc default
+  })
 
   // Saldo em conta
   const savedKey = localStorage.getItem(ASAAS_KEY_STORAGE) || ''
@@ -217,10 +234,31 @@ export async function renderPagamentos(container, page) {
         }).join('')}
       </div>
 
+      <!-- Filtros da tabela -->
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;align-items:flex-end">
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Vencimento de</label>
+          <input type="date" id="pg-de" value="${window._pgDe||''}"
+            onchange="window._pgDe=this.value;navigate('pagamentos')"
+            style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Até</label>
+          <input type="date" id="pg-ate" value="${window._pgAte||''}"
+            onchange="window._pgAte=this.value;navigate('pagamentos')"
+            style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff">
+        </div>
+        ${window._pgDe||window._pgAte?`<button onclick="window._pgDe='';window._pgAte='';navigate('pagamentos')" style="padding:5px 10px;background:#fceaea;color:#8a1a1a;border:1px solid #f5c1c1;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;align-self:flex-end">✕ Limpar datas</button>`:''}
+        <div style="margin-left:auto;font-size:11px;color:var(--txt2);align-self:flex-end">${pgsFiltrados.length} registro(s)</div>
+      </div>
+
       <!-- Tabela -->
       <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden">
         <div style="display:grid;grid-template-columns:1fr 110px 90px 100px 80px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
-          <span>Aluno</span><span>Vencimento</span><span>Valor</span><span>Status</span><span>Mês ref.</span>
+          <span onclick="window._pgSort=window._pgSort==='nome_asc'?'nome_desc':'nome_asc';navigate('pagamentos')" style="cursor:pointer" title="Ordenar por nome">Aluno ${window._pgSort?.startsWith('nome')?window._pgSort==='nome_asc'?'↑':'↓':'↕'}</span>
+          <span onclick="window._pgSort=window._pgSort==='data_asc'?'data_desc':'data_asc';navigate('pagamentos')" style="cursor:pointer" title="Ordenar por vencimento">Vencimento ${window._pgSort?.startsWith('data')?window._pgSort==='data_asc'?'↑':'↓':'↕'}</span>
+          <span onclick="window._pgSort=window._pgSort==='valor_asc'?'valor_desc':'valor_asc';navigate('pagamentos')" style="cursor:pointer" title="Ordenar por valor">Valor ${window._pgSort?.startsWith('valor')?window._pgSort==='valor_asc'?'↑':'↓':'↕'}</span>
+          <span>Status</span><span>Mês ref.</span>
         </div>
         ${pgsFiltrados.length === 0
           ? `<div style="padding:24px 18px;font-size:12px;color:var(--txt2)">Nenhum pagamento${filtroAtivo!=='TODOS'?' com este filtro':''} em ${nomeMes(mesSel)}.</div>`
@@ -295,4 +333,4 @@ export async function renderPagamentos(container, page) {
       prog.style.display = 'none'
     }
   }
-}
+}   
