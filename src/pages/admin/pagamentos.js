@@ -88,10 +88,16 @@ async function syncAsaas(apiKey, sbClient) {
 export async function renderPagamentos(container, page) {
   const sbClient = window._sb
 
-  // Carregar dados do banco
+  // Mês atual para filtrar cards
+  const agora = new Date()
+  const mesAtual = agora.toISOString().slice(0,7) // ex: "2026-06"
+  const mesInicio = mesAtual + '-01'
+  const mesFim = new Date(agora.getFullYear(), agora.getMonth()+1, 0).toISOString().slice(0,10)
+
+  // Carregar dados do banco — todos para a lista, filtrar mês para cards
   const [pgRes, perfisRes] = await Promise.all([
     sbClient.from('pagamentos').select('*, aluno:perfis!aluno_id(nome,email)')
-      .order('vencimento', { ascending: false }).limit(200),
+      .order('vencimento', { ascending: false }).limit(500),
     sbClient.from('perfis').select('nome,email,asaas_customer_id')
       .not('asaas_customer_id', 'is', null),
   ])
@@ -100,25 +106,40 @@ export async function renderPagamentos(container, page) {
   const perfisPorAsaas = Object.fromEntries(
     (perfisRes.data || []).map(p => [p.asaas_customer_id, p])
   )
+  // Resolver nome via asaas_customer quando aluno_id não está vinculado
   pgs.forEach(p => {
     if (!p.aluno?.nome && p.asaas_customer) {
       p.aluno = perfisPorAsaas[p.asaas_customer] || null
     }
   })
 
-  const recebidos  = pgs.filter(p => p.status === 'RECEIVED' || p.status === 'CONFIRMED')
-  const aguardando = pgs.filter(p => p.status === 'PENDING')
-  const vencidos   = pgs.filter(p => p.status === 'OVERDUE')
+  // Cards: apenas mês atual
+  const pgsMes = pgs.filter(p => p.mes_ref && p.mes_ref.slice(0,7) === mesAtual)
+  const recebidos  = pgsMes.filter(p => p.status === 'RECEIVED' || p.status === 'CONFIRMED')
+  const aguardando = pgsMes.filter(p => p.status === 'PENDING')
+  const vencidos   = pgsMes.filter(p => p.status === 'OVERDUE')
   const totalRec   = recebidos.reduce((s,p)  => s + (p.valor||0), 0)
   const totalAg    = aguardando.reduce((s,p) => s + (p.valor||0), 0)
   const totalVenc  = vencidos.reduce((s,p)   => s + (p.valor||0), 0)
-  const inadimp    = pgs.length ? Math.round(vencidos.length / pgs.length * 100) : 0
+  const inadimp    = pgsMes.length ? Math.round(vencidos.length / pgsMes.length * 100) : 0
 
-  // Filtro de status ativo
+  // Filtro de status ativo (lista completa)
   const filtroAtivo = window._pgFiltro || 'TODOS'
   const pgsFiltrados = filtroAtivo === 'TODOS' ? pgs : pgs.filter(p => p.status === filtroAtivo)
 
+  // Buscar saldo em conta automaticamente se tiver API key salva
   const savedKey = localStorage.getItem(ASAAS_KEY_STORAGE) || ''
+  let saldoConta = null
+  if (savedKey) {
+    try {
+      const balData = await fetch(FN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
+        body: JSON.stringify({ apiKey: savedKey, path: '/finance/balance' })
+      }).then(r => r.json())
+      saldoConta = balData.balance ?? null
+    } catch(e) { /* ignora */ }
+  }
 
   container.innerHTML = `
     <div class="topbar">
@@ -160,8 +181,8 @@ export async function renderPagamentos(container, page) {
         </div>
         <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;border-top:3px solid var(--verde)" id="card-saldo">
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:6px">Saldo em conta</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)" id="saldo-valor">—</div>
-          <div style="font-size:10px;color:var(--txt2);margin-top:6px">via Asaas · clique em sincronizar</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)" id="saldo-valor">${saldoConta !== null ? fmtR(saldoConta) : '—'}</div>
+          <div style="font-size:10px;color:var(--txt2);margin-top:6px">${saldoConta !== null ? 'Asaas · atualizado agora' : 'via Asaas · sincronize para ver'}</div>
         </div>
       </div>
 
@@ -171,19 +192,20 @@ export async function renderPagamentos(container, page) {
           <span style="font-size:20px">⚠️</span>
           <div>
             <div style="font-weight:500;font-size:13px;color:#8a1a1a">${vencidos.length} aluno(s) em atraso</div>
-            <div style="font-size:11px;color:#c0392b;margin-top:2px">${vencidos.map(p=>p.aluno?.nome||p.asaas_customer||'—').join(', ')}</div>
+            <div style="font-size:11px;color:#c0392b;margin-top:2px">${vencidos.map(p=>p.aluno?.nome||'ID: '+p.asaas_customer||'—').join(', ')}</div>
           </div>
         </div>` : ''}
 
       <!-- Filtros de status -->
-      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+      <div style="display:flex;gap:6px;margin-bottom:4px;flex-wrap:wrap">
         ${['TODOS','RECEIVED','PENDING','OVERDUE','CANCELLED'].map(s => `
           <button onclick="window._pgFiltro='${s}';navigate('pagamentos')"
             style="padding:5px 12px;border-radius:20px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${filtroAtivo===s?'var(--verde)':'var(--borda)'};background:${filtroAtivo===s?'var(--verde)':'#fff'};color:${filtroAtivo===s?'var(--bege)':'var(--txt2)'}">
             ${{TODOS:'Todos',RECEIVED:'Recebidos',PENDING:'Aguardando',OVERDUE:'Vencidos',CANCELLED:'Cancelados'}[s]}
-            ${s==='TODOS'?'('+pgs.length+')':s==='RECEIVED'?'('+recebidos.length+')':s==='PENDING'?'('+aguardando.length+')':s==='OVERDUE'?'('+vencidos.length+')':''}
+            (${s==='TODOS'?pgs.length:pgs.filter(p=>p.status===s||(s==='RECEIVED'&&p.status==='CONFIRMED')).length})
           </button>`).join('')}
       </div>
+      <div style="font-size:10px;color:var(--txt2);margin-bottom:10px">Cards mostram o mês atual (${mesAtual}) · Lista mostra todos os registros</div>
 
       <!-- Tabela -->
       <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden">
@@ -260,10 +282,7 @@ export async function renderPagamentos(container, page) {
       const { total, saldo } = await syncAsaas(apiKey, sbClient)
       document.getElementById('modal-sync-asaas').style.display = 'none'
       toast('✓ ' + total + ' cobranças sincronizadas')
-      if (saldo !== null) {
-        const el = document.getElementById('saldo-valor')
-        if (el) el.textContent = fmtR(saldo)
-      }
+      // Saldo atualizado no próximo render
       navigate('pagamentos')
     } catch(e) {
       toast('Erro: ' + e.message)
@@ -271,4 +290,4 @@ export async function renderPagamentos(container, page) {
       prog.style.display = 'none'
     }
   }
-}  
+}
