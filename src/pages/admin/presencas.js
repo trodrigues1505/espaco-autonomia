@@ -14,11 +14,18 @@ export async function renderPresencas(container, page) {
   const tipo = perfil?.tipo
 
     const hoje = new Date()
-    const inicioHoje = new Date(hoje); inicioHoje.setHours(0,0,0,0)
-    const fimHoje = new Date(hoje); fimHoje.setHours(23,59,59,999)
+    // Suporte a data selecionada via navegação
+    const dataSel = window._presencaData
+      ? new Date(window._presencaData + 'T12:00:00')
+      : hoje
+    const inicioDia = new Date(dataSel); inicioDia.setHours(0,0,0,0)
+    const fimDia    = new Date(dataSel); fimDia.setHours(23,59,59,999)
+    // Para compatibilidade com código legado que usava inicioHoje/fimHoje
+    const inicioHoje = inicioDia
+    const fimHoje    = fimDia
 
     const { data: ocHoje } = await sb.from('ocorrencias_vagas').select('*')
-      .gte('data_hora', inicioHoje.toISOString()).lte('data_hora', fimHoje.toISOString())
+      .gte('data_hora', inicioDia.toISOString()).lte('data_hora', fimDia.toISOString())
       .eq('cancelada', false).order('data_hora')
 
     const ocSelecionadaId = window._ocPresencaId || ocHoje?.[0]?.id
@@ -47,13 +54,35 @@ export async function renderPresencas(container, page) {
     const statusBg = { confirmado:'#e8f4e8', presente:'#e8f4e8', ausente:'#fceaea', pendente:'rgba(232,188,79,.15)', cancelado:'#f0ede4' }
     const statusColor = { confirmado:'#1a5a1a', presente:'#1a5a1a', ausente:'#8a1a1a', pendente:'#7a5a10', cancelado:'#5a5a4a' }
 
+    const ehHoje = dataSel.toDateString() === hoje.toDateString()
+    const dataFmtLonga = dataSel.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})
+    const dataISO = dataSel.toISOString().slice(0,10)
+
+    // Navegar dia anterior / próximo
+    const antOntem = new Date(dataSel); antOntem.setDate(dataSel.getDate()-1)
+    const amanha   = new Date(dataSel); amanha.setDate(dataSel.getDate()+1)
+    const anteriorISO = antOntem.toISOString().slice(0,10)
+    const amanhaISO   = amanha.toISOString().slice(0,10)
+
     container.innerHTML = `
       <div class="topbar">
         <div class="topbar-t">Presenças</div>
-        <div style="font-size:11px;color:var(--txt2)">${hoje.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'})}</div>
+        <div style="font-size:11px;color:var(--txt2)">${dataFmtLonga}</div>
       </div>
       <div class="content">
-        ${ocHoje?.length===0?'<div style="text-align:center;padding:40px;font-size:13px;color:var(--txt2)">Nenhuma aula hoje.</div>':''}
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+          <button onclick="window._presencaData='${anteriorISO}';window._ocPresencaId=null;navigate('presencas')"
+            style="padding:5px 10px;background:#fff;color:var(--txt);border:1px solid var(--borda);border-radius:5px;font-size:13px;cursor:pointer">‹</button>
+          <button onclick="window._presencaData=null;window._ocPresencaId=null;navigate('presencas')"
+            style="padding:5px 12px;background:${ehHoje?'var(--verde)':'#fff'};color:${ehHoje?'var(--bege)':'var(--txt)'};border:1px solid ${ehHoje?'var(--verde)':'var(--borda)'};border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">Hoje</button>
+          <button onclick="window._presencaData='${amanhaISO}';window._ocPresencaId=null;navigate('presencas')"
+            style="padding:5px 10px;background:#fff;color:var(--txt);border:1px solid var(--borda);border-radius:5px;font-size:13px;cursor:pointer">›</button>
+          <input type="date" value="${dataISO}"
+            onchange="window._presencaData=this.value;window._ocPresencaId=null;navigate('presencas')"
+            style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff;color:var(--txt);cursor:pointer">
+          <span style="font-size:11px;color:var(--txt2)">${ocHoje?.length||0} aula(s)</span>
+        </div>
+        ${ocHoje?.length===0?`<div style="text-align:center;padding:40px;font-size:13px;color:var(--txt2)">Nenhuma aula em ${dataFmtLonga}.</div>`:''}
         ${ocHoje?.length>0?`
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">${seletorAulas}</div>
           ${ocAtual?card(
