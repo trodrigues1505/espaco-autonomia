@@ -9,14 +9,13 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
 export async function renderCriarAulas(container, page) {
-  const sb = window._sb || (await import('../../lib/supabase.js')).sb
+  const sb = window._sb
   const perfil = window._perfil
   const tipo = perfil?.tipo
 
     const [aulasRes, profsRes, cfgRes] = await Promise.all([
       sb.from('aulas').select('*, professor:perfis!professor_id(nome), horarios:aulas_horarios(*)').order('criado_em', {ascending:false}),
-      // Filtra apenas perfis com tipo professor ou admin — exclui alunos
-      sb.from('perfis').select('id,nome').in('tipo',['professor','admin']).order('nome'),
+      sb.from('perfis').select('id,nome').in('tipo',['admin','professor']).order('nome'),
       sb.from('configuracoes').select('*'),
     ])
     const aulas = aulasRes.data || []
@@ -254,10 +253,126 @@ export async function renderCriarAulas(container, page) {
     }
 
     window.editarAula = async function(id) {
-      const { data: a } = await sb.from('aulas').select('*, horarios:aulas_horarios(*)').eq('id', id).single()
-      const novasVagas = prompt('Vagas por aula:', a.vagas)
-      if (novasVagas === null) return
-      await sb.from('aulas').update({ vagas: Number(novasVagas) }).eq('id', id)
+      const [aulaRes, profsEditRes] = await Promise.all([
+        sb.from('aulas').select('*, horarios:aulas_horarios(*)').eq('id', id).single(),
+        sb.from('perfis').select('id,nome').in('tipo',['professor','admin']).order('nome'),
+      ])
+      const a = aulaRes.data
+      const profsEdit = profsEditRes.data || []
+
+      // Montar modal de edição inline
+      const existente = document.getElementById('modal-editar-aula')
+      if (existente) existente.remove()
+
+      const diasCheckboxesEdit = ['seg','ter','qua','qui','sex','sab','dom'].map(d => {
+        const temDia = (a.horarios||[]).some(h => h.dia_semana === d)
+        return `<label style="display:flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--borda);border-radius:20px;font-size:11px;cursor:pointer">
+          <input type="checkbox" name="edit-dia" value="${d}" ${temDia?'checked':''} style="accent-color:var(--verde)"> ${DIAS_LABEL[d].slice(0,3)}
+        </label>`
+      }).join('')
+
+      const horasUnicasEdit = [...new Set((a.horarios||[]).map(h=>h.hora_inicio.slice(0,5)))]
+      const horasCheckboxesEdit = HORARIOS.map(h => {
+        const sel = horasUnicasEdit.includes(h)
+        return `<label style="display:flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--borda);border-radius:20px;font-size:11px;cursor:pointer">
+          <input type="checkbox" name="edit-hora" value="${h}" ${sel?'checked':''} style="accent-color:var(--verde)"> ${h}
+        </label>`
+      }).join('')
+
+      const profsOptsEdit = profsEdit.map(p =>
+        `<option value="${p.id}" ${p.id===a.professor_id?'selected':''}>${p.nome}</option>`
+      ).join('')
+
+      const div = document.createElement('div')
+      div.id = 'modal-editar-aula'
+      div.style.cssText = 'position:fixed;inset:0;background:rgba(31,56,31,.6);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px'
+      div.innerHTML = \`
+        <div style="background:#fff;border-radius:12px;width:560px;max-width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden">
+          <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)">Editar Aula</div>
+            <button onclick="document.getElementById('modal-editar-aula').remove()" style="background:none;border:none;color:var(--bege);font-size:18px;cursor:pointer;line-height:1">×</button>
+          </div>
+          <div style="overflow-y:auto;flex:1;padding:20px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Modalidade</label>
+                <select id="edit-mod" style="${inputStyle.replace('style="','').replace('"','')}">
+                  <option value="hatha" \${a.modalidade==='hatha'?'selected':''}>Hatha Yoga</option>
+                  <option value="acro"  \${a.modalidade==='acro' ?'selected':''}>Acro Yoga</option>
+                  <option value="raja"  \${a.modalidade==='raja' ?'selected':''}>Raja Yoga</option>
+                </select>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Vagas</label>
+                <input type="number" id="edit-vagas" value="\${a.vagas}" min="1" max="100" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
+              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Professor</label>
+              <select id="edit-prof" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">
+                <option value="">Sem professor</option>
+                \${profsOptsEdit}
+              </select>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
+              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Duração (min)</label>
+              <select id="edit-dur" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">
+                <option value="60" \${a.duracao_min===60?'selected':''}>60 minutos</option>
+                <option value="75" \${a.duracao_min===75?'selected':''}>75 minutos</option>
+                <option value="90" \${a.duracao_min===90?'selected':''}>90 minutos</option>
+              </select>
+            </div>
+            \${a.tipo==='fixa'?\`
+            <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
+              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Dias da semana</label>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">\${diasCheckboxesEdit}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
+              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Horários</label>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">\${horasCheckboxesEdit}</div>
+            </div>\`:''}
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--borda)">
+              <input type="checkbox" id="edit-ativa" \${a.ativa?'checked':''} style="accent-color:var(--verde);width:15px;height:15px">
+              <label for="edit-ativa" style="font-size:13px;cursor:pointer">Aula ativa</label>
+            </div>
+          </div>
+          <div style="padding:14px 20px;border-top:1px solid var(--borda);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0">
+            <button onclick="document.getElementById('modal-editar-aula').remove()" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+            <button onclick="salvarEdicaoAula('\${a.id}','\${a.tipo}')" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Salvar</button>
+          </div>
+        </div>\`
+      document.body.appendChild(div)
+    }
+
+    window.salvarEdicaoAula = async function(id, tipo) {
+      const mod   = document.getElementById('edit-mod').value
+      const vagas = Number(document.getElementById('edit-vagas').value)
+      const prof  = document.getElementById('edit-prof').value || null
+      const dur   = Number(document.getElementById('edit-dur').value)
+      const ativa = document.getElementById('edit-ativa').checked
+
+      const { error } = await sb.from('aulas').update({
+        modalidade: mod, vagas, professor_id: prof, duracao_min: dur, ativa
+      }).eq('id', id)
+      if (error) { toast('Erro: ' + error.message); return }
+
+      // Atualizar horários se fixa
+      if (tipo === 'fixa') {
+        const dias  = [...document.querySelectorAll('input[name="edit-dia"]:checked')].map(el=>el.value)
+        const horas = [...document.querySelectorAll('input[name="edit-hora"]:checked')].map(el=>el.value)
+        if (!dias.length || !horas.length) { toast('Selecione ao menos um dia e um horário'); return }
+        await sb.from('aulas_horarios').delete().eq('aula_id', id)
+        const novosHorarios = []
+        for (const hora of horas) {
+          for (const dia of dias) {
+            novosHorarios.push({ aula_id: id, dia_semana: dia, hora_inicio: hora + ':00' })
+          }
+        }
+        const { error: errH } = await sb.from('aulas_horarios').insert(novosHorarios)
+        if (errH) { toast('Erro ao salvar horários: ' + errH.message); return }
+      }
+
+      document.getElementById('modal-editar-aula').remove()
       toast('✓ Aula atualizada')
       navigate('criar-aulas')
     }
