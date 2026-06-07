@@ -335,4 +335,4 @@ export async function renderPagamentos(container, page) {
       prog.style.display = 'none'
     }
   }
-}  
+}   
