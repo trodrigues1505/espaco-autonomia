@@ -151,7 +151,8 @@ export async function renderAlunoGrade(container, page) {
           </div>` : ''
           gradeHTML += `<td style="border:1px solid rgba(212,200,158,.3);background:${bgCell};padding:5px 7px;vertical-align:top;cursor:${isAluno?'default':'pointer'}" ${!isAluno?`onclick="verDetalhesOcorrencia('${oc.id}')"`:''}">
             <div style="font-size:10px;font-weight:500;${borderCell};padding-left:4px;line-height:1.3;color:${!permitida?'#ccc':'var(--txt)'}">${NOMES[oc.modalidade]}</div>
-            <div style="font-size:9px;color:var(--txt2);margin-top:2px">${oc.confirmados||0}/${oc.vagas_total}</div>
+            <div style="font-size:9px;color:var(--txt2);margin-top:1px">${oc.confirmados||0}/${oc.vagas_total}</div>
+            ${oc.professor_nome?`<div style="font-size:9px;color:var(--txt2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px" title="${oc.professor_nome}">👤 ${oc.professor_nome.split(' ')[0]}</div>`:''}
             ${isFeriado&&!isAluno?`<div style="font-size:9px;color:#8a6b1a;margin-top:1px">⚠ feriado</div>`:''}
             ${actionHtml}
             ${adminActions}
