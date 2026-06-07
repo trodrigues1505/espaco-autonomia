@@ -58,16 +58,18 @@ async function syncAsaas(apiKey) {
   if (asaasIds.length) {
     await sb.from('pagamentos').delete().in('asaas_id', asaasIds)
   }
-  const registros = todos.map(p => ({
-    asaas_id:       p.id,
-    asaas_customer: p.customer,
-    valor:          p.value,
-    status:         p.status,
-    vencimento:     p.dueDate,
-    pago_em:        p.paymentDate ? new Date(p.paymentDate).toISOString() : null,
-    descricao:      p.description || null,
-    mes_ref:        p.dueDate?.slice(0,7) + '-01',
-  }))
+  const registros = todos
+    .filter(p => p.id && p.dueDate)  // descarta registros sem id ou data
+    .map(p => ({
+      asaas_id:       p.id,
+      asaas_customer: p.customer || null,
+      valor:          p.value || 0,
+      status:         p.status || 'PENDING',
+      vencimento:     p.dueDate,
+      pago_em:        p.paymentDate ? new Date(p.paymentDate).toISOString() : null,
+      descricao:      p.description || null,
+      mes_ref:        p.dueDate.slice(0,7) + '-01',
+    }))
   // Insere em lotes de 50
   for (let i = 0; i < registros.length; i += 50) {
     const { error } = await sb.from('pagamentos').insert(registros.slice(i, i + 50))
@@ -268,4 +270,4 @@ export async function renderPagamentos(container, page) {
       prog.style.display = 'none'
     }
   }
-}
+}   
