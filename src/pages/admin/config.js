@@ -112,11 +112,16 @@ export async function renderConfig(container, page) {
     // ── Importação do Asaas ──────────────────────────────────
     async function buscarClientesAsaas(apiKey) {
       const FN_URL = 'https://kctgcjvfsuinwlbgljdw.supabase.co/functions/v1/asaas-proxy'
+      // Supabase exige Authorization: Bearer <anon-key> mesmo em funções públicas
+      const { SUPABASE_ANON: anonKey } = await import('../../lib/supabase.js')
       let todos = [], offset = 0
       while (true) {
         const r = await fetch(FN_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + anonKey,
+          },
           body: JSON.stringify({ apiKey, offset })
         })
         if (!r.ok) throw new Error(`Proxy erro ${r.status}: ${await r.text()}`)
@@ -231,4 +236,4 @@ export async function renderConfig(container, page) {
         toast('Erro: ' + e.message)
       }
     }
-}
+}   
