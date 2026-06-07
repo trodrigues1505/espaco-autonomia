@@ -97,11 +97,13 @@ export async function renderPagamentos(container, page) {
     mesesDisponiveis.push(d.toISOString().slice(0,7))
   }
 
+  const filtroPlano = window._pgPlano || ''
+
   // Buscar dados
   const [pgRes, perfisRes] = await Promise.all([
     sbClient.from('pagamentos').select('*, aluno:perfis!aluno_id(nome,email)')
       .order('vencimento', { ascending: false }).limit(500),
-    sbClient.from('perfis').select('nome,email,asaas_customer_id')
+    sbClient.from('perfis').select('nome,email,asaas_customer_id,matriculas(plano_tipo,ativa)')
       .not('asaas_customer_id', 'is', null),
   ])
 
@@ -115,8 +117,14 @@ export async function renderPagamentos(container, page) {
     }
   })
 
+  // Filtro por plano: mantém só pagamentos de alunos no plano selecionado
+  const pgsParaFiltrar = !filtroPlano ? pgs : pgs.filter(p => {
+    const perfil = p.aluno ? perfisRes.data?.find(pf => pf.email === p.aluno?.email) : null
+    return perfil?.matriculas?.some(m => m.ativa && m.plano_tipo === filtroPlano)
+  })
+
   // Cards: mês selecionado, PENDING excludes OVERDUE
-  const pgsMes    = pgs.filter(p => p.mes_ref?.slice(0,7) === mesSel)
+  const pgsMes    = pgsParaFiltrar.filter(p => p.mes_ref?.slice(0,7) === mesSel)
   const recebidos  = pgsMes.filter(p => p.status === 'RECEIVED' || p.status === 'CONFIRMED')
   // Paridade com Asaas: exclui PENDING com vencimento no último dia do mês
   const ultimoDiaMes = new Date(agora.getFullYear(), agora.getMonth()+1, 0).toISOString().slice(0,10)
@@ -133,7 +141,7 @@ export async function renderPagamentos(container, page) {
   const pgAte = window._pgAte || ''
   const pgSort = window._pgSort || 'data_asc'
 
-  let pgsFiltrados = pgs
+  let pgsFiltrados = pgsParaFiltrar
     .filter(p => p.mes_ref?.slice(0,7) === mesSel)
     .filter(p => filtroAtivo === 'TODOS' || p.status === filtroAtivo || (filtroAtivo==='RECEIVED' && p.status==='CONFIRMED'))
     .filter(p => !pgDe  || (p.vencimento && p.vencimento >= pgDe))
@@ -166,7 +174,15 @@ export async function renderPagamentos(container, page) {
   container.innerHTML = `
     <div class="topbar">
       <div class="topbar-t">Pagamentos</div>
-      <div style="display:flex;gap:8px;align-items:center">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select onchange="window._pgPlano=this.value;navigate('pagamentos')" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:11px;font-family:'DM Sans',sans-serif;background:#fff;color:var(--txt)">
+          <option value="" ${!filtroPlano?'selected':''}>Todos os planos</option>
+          <option value="brahma"       ${filtroPlano==='brahma'      ?'selected':''}>Brahma</option>
+          <option value="shiva_1x"     ${filtroPlano==='shiva_1x'    ?'selected':''}>Shiva 1x</option>
+          <option value="shiva_2x"     ${filtroPlano==='shiva_2x'    ?'selected':''}>Shiva 2x</option>
+          <option value="vishnu_2x"    ${filtroPlano==='vishnu_2x'   ?'selected':''}>Vishnu 2x</option>
+          <option value="vishnu_livre" ${filtroPlano==='vishnu_livre'?'selected':''}>Vishnu Livre</option>
+        </select>
         <button onclick="abrirSyncAsaas()" style="padding:5px 12px;background:#fff;color:var(--verde);border:1px solid var(--borda);border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">↻ Sincronizar Asaas</button>
       </div>
     </div>
