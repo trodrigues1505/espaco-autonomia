@@ -15,10 +15,15 @@ export async function renderAlunos(container, page) {
 
     const busca = window._buscaAlunos || ''
     const filtroPlanok = window._filtroPlanoAlunos || ''
-    const { data: todos } = await sb.from('perfis')
-      .select('*, matriculas(plano_tipo,opcao_aulas,valor_mensal,ativa,fim)')
-      .eq('tipo','aluno').order('nome')
-    let alunos = (todos||[])
+    const [perfisRes, saldoRes] = await Promise.all([
+      sb.from('perfis').select('*, matriculas(plano_tipo,opcao_aulas,valor_mensal,ativa,fim)').eq('tipo','aluno').order('nome'),
+      sb.from('saldo_disponivel').select('aluno_id,saldo_total'),
+    ])
+    const todos = perfisRes.data || []
+    const saldoPorAluno = Object.fromEntries(
+      (saldoRes.data || []).map(s => [s.aluno_id, s.saldo_total ?? 0])
+    )
+    let alunos = todos
       .filter(a => !busca || a.nome.toLowerCase().includes(busca.toLowerCase()) || a.email.toLowerCase().includes(busca.toLowerCase()))
       .filter(a => !filtroPlanok || (a.matriculas||[]).some(m=>m.ativa && m.plano_tipo===filtroPlanok))
 
@@ -67,7 +72,7 @@ export async function renderAlunos(container, page) {
       <div class="topbar">
         <div class="topbar-t">Alunos</div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <input id="input-busca-aluno" placeholder="Buscar..." value="${busca}" oninput="window._buscaAlunos=this.value;navigate('alunos')" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;width:150px;font-family:'DM Sans',sans-serif;outline:none">
+          <input id="input-busca-aluno" placeholder="Buscar..." value="${busca}" oninput="window._buscaAlunos=this.value;navigate('alunos')" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;width:140px;font-family:'DM Sans',sans-serif;outline:none">
           <select onchange="window._filtroPlanoAlunos=this.value;navigate('alunos')" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;background:#fff;color:var(--txt)">
             <option value="" ${!filtroPlanok?'selected':''}>Todos os planos</option>
             <option value="brahma"       ${filtroPlanok==='brahma'      ?'selected':''}>Brahma</option>
@@ -130,8 +135,8 @@ export async function renderAlunos(container, page) {
           }).join('')}
         </div>
         ${card('Lista de Alunos ('+alunos.length+')', '',
-          `<div style="display:grid;grid-template-columns:1fr 80px 80px 80px 70px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
-            <span>Aluno</span><span>Plano</span><span>Aulas</span><span>Validade</span><span></span>
+          `<div style="display:grid;grid-template-columns:1fr 80px 60px 60px 80px 70px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
+            <span>Aluno</span><span>Plano</span><span>Freq.</span><span>Saldo</span><span>Validade</span><span></span>
           </div>
           ${alunos.length===0?'<div style="padding:18px;font-size:12px;color:var(--txt2)">Nenhum aluno encontrado.</div>':
             alunos.map(a => {
@@ -139,13 +144,18 @@ export async function renderAlunos(container, page) {
               const initials = a.nome.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()
               const opcaoLabel = mat?.opcao_aulas===99?'Livre':mat?.opcao_aulas===2?'2×/sem':mat?.opcao_aulas===1?'1×/sem':'—'
               const vencida = mat?.fim && new Date(mat.fim) < new Date()
-              return `<div style="display:grid;grid-template-columns:1fr 80px 80px 80px 70px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
+              const saldo = saldoPorAluno[a.id] ?? null
+              const ehLivre = mat?.plano_tipo === 'vishnu_livre' || mat?.opcao_aulas === 99
+              const saldoLabel = ehLivre ? '∞' : saldo !== null ? String(saldo) : '—'
+              const saldoCor = ehLivre ? 'var(--verde)' : saldo === 0 ? '#c0392b' : (saldo !== null && saldo <= 1) ? '#e67e22' : 'var(--verde)'
+              return `<div style="display:grid;grid-template-columns:1fr 80px 60px 60px 80px 70px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
                 <div style="display:flex;align-items:center;gap:8px">
                   <div style="width:28px;height:28px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:var(--verde);flex-shrink:0">${initials}</div>
                   <div><div style="font-weight:500">${a.nome}</div><div style="font-size:10px;color:var(--txt2)">${a.email}</div></div>
                 </div>
                 <span>${mat?PLANO_BADGES[mat?.plano_tipo]||mat?.plano_tipo||'—':badge('Sem plano','#fceaea','#8a1a1a')}</span>
                 <span style="font-size:11px;color:var(--txt2)">${opcaoLabel}</span>
+                <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:${saldoCor}">${saldoLabel}</span>
                 <span style="font-size:11px;color:${vencida?'#c0392b':'var(--txt2)'}">${mat?.fim?new Date(mat.fim+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):vencida?'Vencida':'—'}</span>
                 <button onclick="editarAluno('${a.id}')" style="padding:3px 10px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:11px;cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif">Editar</button>
               </div>`
@@ -230,11 +240,11 @@ export async function renderAlunos(container, page) {
           <div style="font-size:10px;color:${a.asaas_customer_id?'#1a5a1a':'#c0392b'};margin-top:3px">${a.asaas_customer_id?'✓ Vinculado ao Asaas':'⚠ Não vinculado — pagamentos não sincronizados'}</div>
         </div>
         <div style="background:rgba(242,236,206,.4);border:1px solid var(--borda);border-radius:8px;padding:12px;margin-bottom:4px">
-          <div style="font-size:11px;font-weight:500;color:var(--verde);margin-bottom:8px">➕ Créditos manuais de aulas</div>
-          <div style="font-size:11px;color:var(--txt2);margin-bottom:8px">Use para repor aulas anteriores ao app ou por acordo especial.</div>
+          <div style="font-size:11px;font-weight:500;color:var(--verde);margin-bottom:6px">➕ Créditos manuais de aulas</div>
+          <div style="font-size:11px;color:var(--txt2);margin-bottom:8px">Para repor aulas anteriores ao app ou por acordo especial.</div>
           <div style="display:flex;align-items:flex-end;gap:8px">
             <div style="display:flex;flex-direction:column;gap:3px;flex:1">
-              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Qtd de aulas</label>
+              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Qtd</label>
               <input type="number" id="ea-creditos" min="1" max="50" value="1" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
             </div>
             <div style="display:flex;flex-direction:column;gap:3px;flex:2">
@@ -253,33 +263,13 @@ export async function renderAlunos(container, page) {
       const motivo = document.getElementById('ea-credito-motivo').value.trim()
       if (qtd < 1) { toast('Informe ao menos 1 aula'); return }
       if (!motivo) { toast('Informe o motivo do crédito'); return }
-
-      // Busca matrícula ativa para saber plano
-      const { data: mat } = await sb.from('matriculas').select('id,plano_tipo')
-        .eq('aluno_id', alunoId).eq('ativa', true).single()
-      if (!mat) { toast('Aluno sem matrícula ativa'); return }
-
-      // Usa RPC creditar_aulas ou insere diretamente no saldo
-      const mesRef = new Date().toISOString().slice(0,7) + '-01'
-      const { error } = await sb.from('saldo_aulas').upsert({
-        aluno_id: alunoId,
-        mes_ref: mesRef,
-        aulas_creditadas: qtd,
-        motivo: motivo,
-        tipo: 'manual',
-      }, { onConflict: 'aluno_id,mes_ref,tipo' })
-
-      if (error) {
-        // Fallback: tenta via RPC se a tabela tiver estrutura diferente
-        const { error: errRpc } = await sb.rpc('creditar_aulas_manual', {
-          p_aluno_id: alunoId,
-          p_quantidade: qtd,
-          p_motivo: motivo,
-        })
-        if (errRpc) { toast('Erro: ' + errRpc.message); return }
-      }
-
-      toast('✓ ' + qtd + ' aula(s) creditada(s) para ' + motivo)
+      const { error } = await sb.rpc('creditar_aulas_manual', {
+        p_aluno_id: alunoId,
+        p_quantidade: qtd,
+        p_motivo: motivo,
+      })
+      if (error) { toast('Erro: ' + error.message); return }
+      toast('✓ ' + qtd + ' aula(s) creditada(s)!')
       document.getElementById('ea-creditos').value = 1
       document.getElementById('ea-credito-motivo').value = ''
     }
