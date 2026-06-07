@@ -70,6 +70,25 @@ export async function renderConfig(container, page) {
           <button onclick="salvarConfig()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500"><i class="ti ti-device-floppy"></i>Salvar configurações</button>
           <button onclick="sincronizarFeriados()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:#fff;color:var(--verde);border:1px solid var(--borda);border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500"><i class="ti ti-calendar-event"></i>Sincronizar Feriados <span id="sync-feriado-status"></span></button>
         </div>
+
+        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-top:14px">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid var(--borda)">Importar Alunos do Asaas</div>
+          <div style="font-size:12px;color:var(--txt2);margin-bottom:12px;line-height:1.5">
+            Busca todos os clientes cadastrados no Asaas e cria perfis de aluno no app.<br>
+            Alunos já existentes (mesmo e-mail) são atualizados. O aluno só terá acesso ao app após fazer o primeiro login.
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
+            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">API Key do Asaas</label>
+            <input id="asaas-apikey" type="password" placeholder="\$aact_..." style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">
+            <div style="font-size:10px;color:var(--txt2)">Encontre em Minha Conta → Integrações → Gerar chave de API</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <button onclick="previewImportAsaas()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#fff;color:var(--verde);border:1px solid var(--borda);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500">👁 Pré-visualizar</button>
+            <button onclick="executarImportAsaas()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500">⬇ Importar alunos</button>
+            <span id="asaas-status" style="font-size:12px;color:var(--txt2)"></span>
+          </div>
+          <div id="asaas-preview" style="margin-top:12px"></div>
+        </div>
       </div>
     `
     window.salvarConfig = async function() {
@@ -88,6 +107,97 @@ export async function renderConfig(container, page) {
         }
         toast('Configurações salvas!')
       } catch(e) { toast('Erro: ' + e.message) }
+    }
+
+    // ── Importação do Asaas ──────────────────────────────────
+    async function buscarClientesAsaas(apiKey) {
+      let todos = [], offset = 0
+      while (true) {
+        const r = await fetch(`https://api.asaas.com/v3/customers?limit=100&offset=${offset}`, {
+          headers: { 'access_token': apiKey, 'Content-Type': 'application/json' }
+        })
+        if (!r.ok) throw new Error(`Asaas API ${r.status}: ${await r.text()}`)
+        const json = await r.json()
+        todos = todos.concat(json.data || [])
+        if (!json.hasMore) break
+        offset += 100
+      }
+      return todos
+    }
+
+    window.previewImportAsaas = async function() {
+      const apiKey = document.getElementById('asaas-apikey').value.trim()
+      if (!apiKey) { toast('Informe a API Key do Asaas'); return }
+      const status = document.getElementById('asaas-status')
+      const preview = document.getElementById('asaas-preview')
+      status.textContent = '⏳ Buscando...'
+      try {
+        const clientes = await buscarClientesAsaas(apiKey)
+        status.textContent = `${clientes.length} clientes encontrados`
+        preview.innerHTML = `
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);margin-bottom:6px;font-weight:500">Prévia (${clientes.length} clientes)</div>
+          <div style="max-height:220px;overflow-y:auto;border:1px solid var(--borda);border-radius:6px">
+            ${clientes.map(c=>`<div style="display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid rgba(212,200,158,.25);font-size:12px">
+              <div style="width:28px;height:28px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:var(--verde);flex-shrink:0">${(c.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()}</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name||'—'}</div>
+                <div style="font-size:10px;color:var(--txt2)">${c.email||'sem e-mail'} · ${c.mobilePhone||c.phone||'sem tel'}</div>
+              </div>
+              <div style="font-size:10px;color:var(--txt2);flex-shrink:0">${c.id}</div>
+            </div>`).join('')}
+          </div>`
+      } catch(e) {
+        status.textContent = ''
+        toast('Erro: ' + e.message)
+      }
+    }
+
+    window.executarImportAsaas = async function() {
+      const apiKey = document.getElementById('asaas-apikey').value.trim()
+      if (!apiKey) { toast('Informe a API Key do Asaas'); return }
+      if (!confirm('Confirmar importação? Perfis existentes serão atualizados com dados do Asaas.')) return
+      const status = document.getElementById('asaas-status')
+      status.textContent = '⏳ Importando...'
+      try {
+        const clientes = await buscarClientesAsaas(apiKey)
+        let criados = 0, atualizados = 0, erros = 0
+        for (const c of clientes) {
+          if (!c.email) continue
+          const perfil = {
+            nome: c.name || c.email,
+            email: c.email,
+            telefone: c.mobilePhone || c.phone || null,
+            tipo: 'aluno',
+            ativo: true,
+            asaas_customer_id: c.id,
+          }
+          // Verificar se já existe
+          const { data: existente } = await sb.from('perfis').select('id').eq('email', c.email).single()
+          if (existente) {
+            const { error } = await sb.from('perfis').update({
+              telefone: perfil.telefone,
+              asaas_customer_id: perfil.asaas_customer_id,
+              ativo: true,
+            }).eq('id', existente.id)
+            error ? erros++ : atualizados++
+          } else {
+            // Cria perfil pré-cadastrado sem id de auth — será vinculado no primeiro login
+            const { error } = await sb.from('perfis_pendentes').upsert({
+              nome: perfil.nome,
+              email: perfil.email,
+              telefone: perfil.telefone,
+              asaas_customer_id: perfil.asaas_customer_id,
+            }, { onConflict: 'email' })
+            error ? erros++ : criados++
+          }
+        }
+        status.textContent = ''
+        toast(`✓ ${atualizados} atualizados · ${criados} pré-cadastros criados${erros?` · ${erros} erros`:''}`)
+        document.getElementById('asaas-preview').innerHTML = ''
+      } catch(e) {
+        status.textContent = ''
+        toast('Erro: ' + e.message)
+      }
     }
 
     window.sincronizarFeriados = async function() {
