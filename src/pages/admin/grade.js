@@ -133,6 +133,7 @@ export async function renderGrade(container, page) {
           let borderCell = `border-left:3px solid ${CORES[oc.modalidade]||'#888'}`
           if (confirmado) bgCell = 'rgba(232,188,79,.08)'
           if (!permitida) bgCell = '#f8f8f8'
+          if (oc.cancelada) { bgCell = 'rgba(192,57,43,.05)'; borderCell = 'border-left:3px solid #c0392b' }
 
           let actionHtml = ''
           if (isAluno && !passada) {
@@ -149,14 +150,17 @@ export async function renderGrade(container, page) {
             }
           }
 
-          const adminActions = !isAluno ? `<div style="display:flex;gap:2px;margin-top:3px">
+          const jaCancelada = oc.cancelada
+          const adminActions = !isAluno ? `<div style="display:flex;gap:2px;margin-top:3px;flex-wrap:wrap">
             <button onclick="event.stopPropagation();editarOcorrencia('${oc.id}')" style="padding:1px 5px;background:rgba(31,56,31,.1);color:var(--verde);border:none;border-radius:3px;font-size:9px;cursor:pointer" title="Editar">✎</button>
             <button onclick="event.stopPropagation();excluirOcorrencia('${oc.id}')" style="padding:1px 5px;background:rgba(255,0,0,.08);color:#c0392b;border:none;border-radius:3px;font-size:9px;cursor:pointer" title="Excluir">✕</button>
             <button onclick="event.stopPropagation();verPresencasOcorrencia('${oc.id}')" style="padding:1px 5px;background:rgba(31,56,31,.1);color:var(--verde);border:none;border-radius:3px;font-size:9px;cursor:pointer" title="Presenças">👥</button>
+            ${!jaCancelada?`<button onclick="event.stopPropagation();window._currentPage='grade';cancelarOcorrenciaGrade('${oc.id}',${JSON.stringify({id:oc.id,data_hora:oc.data_hora,modalidade:oc.modalidade,confirmados:oc.confirmados,professor_id:oc.professor_id})})" style="padding:1px 5px;background:rgba(192,57,43,.1);color:#c0392b;border:none;border-radius:3px;font-size:9px;cursor:pointer" title="Cancelar aula">⊘</button>`:'<span style="font-size:9px;color:#c0392b;padding:1px 4px">cancelada</span>'}
           </div>` : ''
           gradeHTML += `<td style="border:1px solid rgba(212,200,158,.3);background:${bgCell};padding:5px 7px;vertical-align:top;cursor:${isAluno?'default':'pointer'}" ${!isAluno?`onclick="verDetalhesOcorrencia('${oc.id}')"`:''}">
             <div style="font-size:10px;font-weight:500;${borderCell};padding-left:4px;line-height:1.3;color:${!permitida?'#ccc':'var(--txt)'}">${NOMES[oc.modalidade]}</div>
-            <div style="font-size:9px;color:var(--txt2);margin-top:2px">${oc.confirmados||0}/${oc.vagas_total}</div>
+            <div style="font-size:9px;color:var(--txt2);margin-top:1px">${oc.confirmados||0}/${oc.vagas_total}</div>
+            ${oc.professor_nome?`<div style="font-size:9px;color:var(--txt2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px" title="${oc.professor_nome}">👤 ${oc.professor_nome.split(' ')[0]}</div>`:''}
             ${isFeriado&&!isAluno?`<div style="font-size:9px;color:#8a6b1a;margin-top:1px">⚠ feriado</div>`:''}
             ${actionHtml}
             ${adminActions}
@@ -329,4 +333,4 @@ export async function renderGrade(container, page) {
       `
       window._ocAtual = ocId
     }
-}     
+}
