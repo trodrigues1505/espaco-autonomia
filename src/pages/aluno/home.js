@@ -116,11 +116,61 @@ export async function renderAlunoHome(container, page) {
           <span>🏆 Minhas Conquistas · ${gam?.prana_points||0} pts</span>
           <span style="font-size:11px;color:var(--txt2)">Ver todas →</span>
         </button>
+        ${!window.matchMedia('(display-mode: standalone)').matches && !localStorage.getItem('pwa-instalado') ? `
+        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-top:4px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:20px">📲</span>
+              <div>
+                <div style="font-size:13px;font-weight:500;color:var(--verde)">Instalar o app</div>
+                <div style="font-size:11px;color:var(--txt2)">Acesse mais rápido direto da tela inicial</div>
+              </div>
+            </div>
+            <button onclick="this.closest('[data-pwa]').style.display='none';localStorage.setItem('pwa-instalado','1')"
+              style="background:none;border:none;color:var(--txt2);font-size:16px;cursor:pointer;padding:4px">×</button>
+          </div>
+          <div id="pwa-ios-tip" style="display:none;background:rgba(242,236,206,.5);border-radius:6px;padding:10px 12px;font-size:12px;color:var(--txt);line-height:1.6;margin-bottom:8px">
+            No <strong>iPhone/iPad</strong>: toque em <strong>Compartilhar</strong> (ícone ↑ na barra do Safari) → <strong>"Adicionar à Tela de Início"</strong>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button id="btn-instalar-pwa" onclick="instalarAppAgora()"
+              style="flex:1;padding:9px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500">
+              Instalar agora
+            </button>
+            <button onclick="mostrarDicaIOS()"
+              style="padding:9px 12px;background:#fff;color:var(--verde);border:1px solid var(--borda);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer">
+              iPhone/iPad
+            </button>
+          </div>
+        </div>` : ''}
       </div>
     `
     window.cancelarConfHome = async function(confId, ocId) {
       const {data,error} = await sb.rpc('cancelar_confirmacao',{p_aluno_id:userId,p_ocorrencia_id:ocId})
       if (error||!data?.ok){toast('❌ '+(data?.motivo||error?.message));return}
       toast(data.mensagem); navigate('aluno-home')
+    }
+
+    window.instalarAppAgora = async function() {
+      if (window._deferredPrompt) {
+        window._deferredPrompt.prompt()
+        const { outcome } = await window._deferredPrompt.userChoice
+        if (outcome === 'accepted') {
+          localStorage.setItem('pwa-instalado', '1')
+          toast('✓ App instalado!')
+        }
+        window._deferredPrompt = null
+      } else {
+        // Sem prompt disponível — mostra dica genérica
+        document.getElementById('pwa-ios-tip').style.display = 'block'
+        document.getElementById('btn-instalar-pwa').textContent = 'Siga as instruções acima'
+        document.getElementById('btn-instalar-pwa').style.background = 'var(--borda)'
+        document.getElementById('btn-instalar-pwa').style.color = 'var(--txt2)'
+      }
+    }
+
+    window.mostrarDicaIOS = function() {
+      const tip = document.getElementById('pwa-ios-tip')
+      if (tip) tip.style.display = tip.style.display === 'none' ? 'block' : 'none'
     }
 }
