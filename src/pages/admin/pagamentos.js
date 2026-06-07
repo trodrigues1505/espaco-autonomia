@@ -3,7 +3,6 @@
  * Painel de pagamentos — dados do banco + sync com API Asaas
  */
 
-import { sb } from '../../lib/supabase.js'
 import { SUPABASE_ANON } from '../../lib/supabase.js'
 import { toast } from '../../modules/utils.js'
 
@@ -28,7 +27,7 @@ async function asaasProxy(path, apiKey, params = {}) {
   return r.json()
 }
 
-async function syncAsaas(apiKey) {
+async function syncAsaas(apiKey, sbClient) {
   // Busca pagamentos do mês atual + mês anterior
   const hoje = new Date()
   const de = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1).toISOString().slice(0,10)
@@ -56,7 +55,7 @@ async function syncAsaas(apiKey) {
   // Salvar no banco: delete os existentes e reinsere em lote
   const asaasIds = todos.map(p => p.id).filter(Boolean)
   if (asaasIds.length) {
-    await sb.from('pagamentos').delete().in('asaas_id', asaasIds)
+    await sbClient.from('pagamentos').delete().in('asaas_id', asaasIds)
   }
   const registros = todos
     .filter(p => p.id && p.dueDate)  // descarta registros sem id ou data
@@ -72,7 +71,7 @@ async function syncAsaas(apiKey) {
     }))
   // Insere em lotes de 50
   for (let i = 0; i < registros.length; i += 50) {
-    const { error } = await sb.from('pagamentos').insert(registros.slice(i, i + 50))
+    const { error } = await sbClient.from('pagamentos').insert(registros.slice(i, i + 50))
     if (error) throw new Error('Erro ao salvar pagamentos: ' + error.message)
   }
 
@@ -256,7 +255,9 @@ export async function renderPagamentos(container, page) {
     prog.style.display = 'block'
 
     try {
-      const { total, saldo } = await syncAsaas(apiKey)
+      // Limpa registros de teste antes de sincronizar
+      await sbClient.from('pagamentos').delete().like('asaas_id', 'teste_%')
+      const { total, saldo } = await syncAsaas(apiKey, sbClient)
       document.getElementById('modal-sync-asaas').style.display = 'none'
       toast('✓ ' + total + ' cobranças sincronizadas')
       if (saldo !== null) {
@@ -270,4 +271,4 @@ export async function renderPagamentos(container, page) {
       prog.style.display = 'none'
     }
   }
-}   
+}  
