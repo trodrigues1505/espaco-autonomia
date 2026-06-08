@@ -2,13 +2,9 @@
  * src/modules/professor-cancel.js
  * Responsabilidade: cancelamento de aula pelo professor.
  *
- * Fluxo:
- *  1. Professor clica em "Cancelar" em qualquer aula futura
- *  2. Modal abre mostrando dados da aula + campo de justificativa obrigatório
- *  3. Ao confirmar:
- *     a. Atualiza ocorrencia: cancelada=true, motivo_cancelamento, cancelada_por
- *     b. Chama RPC estornar_confirmacoes_ocorrencia (devolve saldo dos alunos)
- *     c. Toast + recarrega página
+ * Colunas reais da tabela ocorrencias:
+ *   id, aula_id, data_hora, vagas_override, cancelada,
+ *   motivo_cancel, eh_feriado, nome_feriado, criado_em
  *
  * Depende de: window._sb, window._perfil, window.toast, window.navigate
  */
@@ -61,13 +57,12 @@ export async function confirmarCancelamentoAula() {
   if (btn) { btn.textContent = 'Cancelando…'; btn.disabled = true }
 
   try {
+    // Usa os nomes reais das colunas: cancelada + motivo_cancel
     const { error } = await window._sb
       .from('ocorrencias')
       .update({
-        cancelada:            true,
-        cancelada_em:         new Date().toISOString(),
-        cancelada_por:        window._perfil?.id,
-        motivo_cancelamento:  justificativa,
+        cancelada:     true,
+        motivo_cancel: justificativa,
       })
       .eq('id', _cancelAulaId)
 
@@ -81,7 +76,7 @@ export async function confirmarCancelamentoAula() {
       })
       .then(r => { if (r.error) console.warn('estornar_confirmacoes_ocorrencia:', r.error.message) })
 
-    window.toast('✓ Aula cancelada. Alunos serão notificados.')
+    window.toast('✓ Aula cancelada.')
     fecharModalCancelarAula()
     const destino = window._cancelReturnPage || 'prof-aulas'
     window._cancelReturnPage = null
@@ -117,4 +112,4 @@ window.cancelarOcorrenciaGrade = async function(ocId, infoObj) {
   if (perfil?.tipo === 'admin') {
     window._cancelReturnPage = window._currentPage || 'grade'
   }
-}    
+}
