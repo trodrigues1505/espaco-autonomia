@@ -240,8 +240,24 @@ export async function renderCriarAulas(container, page) {
           if (errH) { toast('Erro horários: '+errH.message); return }
         }
         document.getElementById('modal-criar-aula').style.display = 'none'
-        toast('✓ Aulas criadas! Clique em "Gerar" para criar as datas.')
-        navigate('criar-aulas')
+        toast('✓ Aula criada! Confirme o período para gerar as datas.')
+        // Pega o ID da última aula criada e abre o modal de gerar
+        if (novaAula?.id) {
+          window._aulaParaGerar = novaAula.id
+          navigate('criar-aulas')
+          // Pequeno delay para o DOM renderizar antes de abrir o modal
+          setTimeout(() => {
+            const hoje2 = new Date().toISOString().slice(0,10)
+            const em3anos = new Date(); em3anos.setFullYear(em3anos.getFullYear()+3)
+            const deEl = document.getElementById('ger-de')
+            const ateEl = document.getElementById('ger-ate')
+            if (deEl) deEl.value = hoje2
+            if (ateEl) ateEl.value = em3anos.toISOString().slice(0,10)
+            document.getElementById('modal-gerar').style.display = 'flex'
+          }, 300)
+        } else {
+          navigate('criar-aulas')
+        }
       } else {
         const hora = [...document.querySelectorAll('input[name="hora"]:checked')].map(el=>el.value)[0]
         const data = document.getElementById('na-data').value
@@ -268,9 +284,9 @@ export async function renderCriarAulas(container, page) {
     window.gerarOcorrenciasAula = function(aulaId) {
       window._aulaParaGerar = aulaId
       const hoje = new Date().toISOString().slice(0,10)
-      const em90 = new Date(); em90.setDate(em90.getDate()+90)
+      const em3anos = new Date(); em3anos.setFullYear(em3anos.getFullYear()+3)
       document.getElementById('ger-de').value = hoje
-      document.getElementById('ger-ate').value = em90.toISOString().slice(0,10)
+      document.getElementById('ger-ate').value = em3anos.toISOString().slice(0,10)
       document.getElementById('modal-gerar').style.display = 'flex'
     }
 
