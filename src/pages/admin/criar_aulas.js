@@ -18,8 +18,9 @@ export async function renderCriarAulas(container, page) {
       sb.from('aulas').select('*, professor:perfis!professor_id(nome), horarios:aulas_horarios(*)').order('criado_em', {ascending:false}),
       sb.from('perfis').select('id,nome').eq('tipo','professor').order('nome'),
       sb.from('configuracoes').select('*'),
-      sb.from('ocorrencias').select('aula_id').gte('data_hora', hojeISO).eq('cancelada', false),
-      sb.from('ocorrencias').select('aula_id').eq('cancelada', false),
+      // FIX: usa neq('cancelada', true) para capturar tanto false quanto null
+      sb.from('ocorrencias').select('aula_id').gte('data_hora', hojeISO).neq('cancelada', true),
+      sb.from('ocorrencias').select('aula_id').neq('cancelada', true),
     ])
     const aulas = aulasRes.data || []
     const profs = profsRes.data || []
@@ -215,7 +216,6 @@ export async function renderCriarAulas(container, page) {
       const t = document.getElementById('na-tipo').value
       document.getElementById('na-dias-wrap').style.display = t==='fixa'?'block':'none'
       document.getElementById('na-data-wrap').style.display = t==='avulsa'?'block':'none'
-      // Verifica feriado para avulsa
       if (t==='avulsa') {
         document.getElementById('na-data').addEventListener('change', async function() {
           const { data: fer } = await sb.from('feriados').select('*').eq('data', this.value)
@@ -237,24 +237,23 @@ export async function renderCriarAulas(container, page) {
         if (!dias.length) { toast('Selecione ao menos um dia da semana'); return }
         if (!horas.length) { toast('Selecione ao menos um horário'); return }
 
-        // Cria uma aula para cada combinação dia+hora
+        let ultimaAula = null
         for (const hora of horas) {
           const { data: novaAula, error: errAula } = await sb.from('aulas').insert({
             modalidade: mod, tipo, vagas: Number(vagas), duracao_min: Number(dur),
             professor_id: prof||null, criado_por: window._perfil.id
           }).select().single()
           if (errAula) { toast('Erro: '+errAula.message); return }
+          ultimaAula = novaAula
           const horarios = dias.map(d => ({ aula_id: novaAula.id, dia_semana: d, hora_inicio: hora+':00' }))
           const { error: errH } = await sb.from('aulas_horarios').insert(horarios)
           if (errH) { toast('Erro horários: '+errH.message); return }
         }
         document.getElementById('modal-criar-aula').style.display = 'none'
         toast('✓ Aula criada! Confirme o período para gerar as datas.')
-        // Pega o ID da última aula criada e abre o modal de gerar
-        if (novaAula?.id) {
-          window._aulaParaGerar = novaAula.id
+        if (ultimaAula?.id) {
+          window._aulaParaGerar = ultimaAula.id
           navigate('criar-aulas')
-          // Pequeno delay para o DOM renderizar antes de abrir o modal
           setTimeout(() => {
             const hoje2 = new Date().toISOString().slice(0,10)
             const em3anos = new Date(); em3anos.setFullYear(em3anos.getFullYear()+3)
@@ -329,7 +328,6 @@ export async function renderCriarAulas(container, page) {
               const partes = h.hora_inicio.split(':')
               const hora = Number(partes[0])
               const min = Number(partes[1]||0)
-              // Usa horário local BR (UTC-3)
               const dStr = cursor.toISOString().slice(0,10)
               const dtISO = dStr + 'T' + String(hora).padStart(2,'0') + ':' + String(min).padStart(2,'0') + ':00-03:00'
               const feriadoNome = feriadosDatas.has(dStr) ? (feriados||[]).find(f=>f.data===dStr)?.nome : null
@@ -344,7 +342,6 @@ export async function renderCriarAulas(container, page) {
           return
         }
 
-        // Insere em lotes de 50
         let inseridos = 0
         for (let i=0; i<ocorrencias.length; i+=50) {
           const lote = ocorrencias.slice(i, i+50)
@@ -375,7 +372,6 @@ export async function renderCriarAulas(container, page) {
     window.excluirAula = async function(id) {
       if (!confirm('Excluir esta aula e todas as suas ocorrências futuras?')) return
       const hoje = new Date().toISOString()
-      // Remove ocorrências futuras e suas confirmações
       const { data: ocs } = await sb.from('ocorrencias').select('id').eq('aula_id', id).gte('data_hora', hoje)
       if (ocs?.length) {
         for (const oc of ocs) await sb.from('confirmacoes').delete().eq('ocorrencia_id', oc.id)
@@ -410,7 +406,7 @@ export async function renderCriarAulas(container, page) {
         html += '<div style="border:1px solid var(--borda);border-radius:8px;padding:14px;margin-bottom:12px">'
           + `<div style="font-size:12px;font-weight:600;color:var(--verde);margin-bottom:10px">${NOMES[ex.modalidade]} · ${diasStr}</div>`
         for (const a of grupo) {
-          const nOcs = ocsPorAula[a.id] || 0
+          const nOcs = ocsFuturas[a.id] || 0
           html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(242,236,206,.3);border-radius:6px;margin-bottom:6px;gap:10px">'
             + '<div>'
               + `<div style="font-size:12px;font-weight:500">${a.professor?.nome||'Sem professor'}</div>`
@@ -451,11 +447,9 @@ export async function renderCriarAulas(container, page) {
       const de  = new Date().toISOString().slice(0,10)
       const ate = (() => { const d = new Date(); d.setFullYear(d.getFullYear()+3); return d.toISOString().slice(0,10) })()
 
-      // Garante que os inputs existem no DOM (modal pode não ter sido aberto)
       let deEl = document.getElementById('ger-de')
       let ateEl = document.getElementById('ger-ate')
       if (!deEl || !ateEl) {
-        // Cria inputs ocultos temporários
         deEl  = Object.assign(document.createElement('input'), { id:'ger-de',  type:'date', value: de,  style:'display:none' })
         ateEl = Object.assign(document.createElement('input'), { id:'ger-ate', type:'date', value: ate, style:'display:none' })
         document.body.appendChild(deEl)
@@ -472,7 +466,6 @@ export async function renderCriarAulas(container, page) {
         toast(`Gerando ${totalGerado}/${pendentes.length}...`)
       }
 
-      // Limpa inputs temporários
       document.getElementById('ger-de')?.remove()
       document.getElementById('ger-ate')?.remove()
 
@@ -485,4 +478,4 @@ export async function renderCriarAulas(container, page) {
       toast(ativa ? 'Aula pausada' : 'Aula ativada')
       navigate('criar-aulas')
     }
-}
+}    
