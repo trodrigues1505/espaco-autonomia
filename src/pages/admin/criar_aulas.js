@@ -19,7 +19,7 @@ export async function renderCriarAulas(container, page) {
       sb.from('perfis').select('id,nome').eq('tipo','professor').order('nome'),
       sb.from('configuracoes').select('*'),
       sb.from('ocorrencias').select('aula_id').gte('data_hora', hojeISO).eq('cancelada', false),
-      sb.from('ocorrencias').select('aula_id').eq('cancelada', false).limit(1000),
+      sb.from('ocorrencias').select('aula_id').eq('cancelada', false),
     ])
     const aulas = aulasRes.data || []
     const profs = profsRes.data || []
