@@ -13,26 +13,42 @@ export async function renderCriarAulas(container, page) {
   const perfil = window._perfil
   const tipo = perfil?.tipo
 
-    const [aulasRes, profsRes, cfgRes] = await Promise.all([
+    const hojeISO = new Date().toISOString()
+    const [aulasRes, profsRes, cfgRes, ocsRes] = await Promise.all([
       sb.from('aulas').select('*, professor:perfis!professor_id(nome), horarios:aulas_horarios(*)').order('criado_em', {ascending:false}),
       sb.from('perfis').select('id,nome').eq('tipo','professor').order('nome'),
       sb.from('configuracoes').select('*'),
+      sb.from('ocorrencias').select('aula_id').gte('data_hora', hojeISO).eq('cancelada', false),
     ])
     const aulas = aulasRes.data || []
     const profs = profsRes.data || []
     const cfg = Object.fromEntries((cfgRes.data||[]).map(c=>[c.chave,c.valor]))
+
+    // Mapa aula_id → quantidade de ocorrências futuras
+    const ocsPorAula = {}
+    for (const oc of (ocsRes.data || [])) {
+      ocsPorAula[oc.aula_id] = (ocsPorAula[oc.aula_id] || 0) + 1
+    }
+
     // Filtros
     const filtroMod  = window._criarFiltroMod  || ''
     const filtroProf = window._criarFiltroProf || ''
     const filtroStat = window._criarFiltroStat || ''
+    const filtroDia  = window._criarFiltroDia  || ''
+    const filtroHora = window._criarFiltroHora || ''
     const filtrar = arr => arr
       .filter(a => !filtroMod  || a.modalidade === filtroMod)
       .filter(a => !filtroProf || a.professor_id === filtroProf)
       .filter(a => !filtroStat || (filtroStat==='ativa'?a.ativa:!a.ativa))
+      .filter(a => !filtroDia  || (a.horarios||[]).some(h=>h.dia_semana===filtroDia))
+      .filter(a => !filtroHora || (a.horarios||[]).some(h=>h.hora_inicio.slice(0,5)===filtroHora))
     const fixas   = filtrar(aulas.filter(a=>a.tipo==='fixa'))
     const avulsas = filtrar(aulas.filter(a=>a.tipo==='avulsa'))
 
-    // Detectar redundâncias: aulas fixas com mesma modalidade + dia + horário
+    // Horários únicos para o filtro
+    const horasUnicas = [...new Set(aulas.flatMap(a=>(a.horarios||[]).map(h=>h.hora_inicio.slice(0,5))))].sort()
+
+    // Detectar redundâncias
     const chaveAula = a => (a.horarios||[]).map(h=>a.modalidade+'|'+h.dia_semana+'|'+h.hora_inicio.slice(0,5)).sort().join(',')
     const chaveMap = {}, redundantes = new Set()
     for (const a of aulas.filter(a=>a.tipo==='fixa' && a.ativa)) {
@@ -43,17 +59,20 @@ export async function renderCriarAulas(container, page) {
 
     function renderAulaRow(a) {
       const diasStr = (a.horarios||[]).map(h=>`${DIAS_LABEL[h.dia_semana]||h.dia_semana} ${h.hora_inicio.slice(0,5)}`).join(', ')
-      const statusBadge = a.ativa
-        ? badge('Ativa','#e8f4e8','#1a5a1a')
-        : badge('Inativa','#fceaea','#8a1a1a')
+      const statusBadge = a.ativa ? badge('Ativa','#e8f4e8','#1a5a1a') : badge('Inativa','#fceaea','#8a1a1a')
       const isRed = redundantes.has(a.id)
+      const nOcs  = ocsPorAula[a.id] || 0
+      const geradoBadge = nOcs > 0
+        ? `<span style="background:#e8f4e8;color:#1a5a1a;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:500">✓ ${nOcs} futuras</span>`
+        : `<span style="background:#fceaea;color:#8a1a1a;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:500">⚠ Não gerada</span>`
       return `<div style="display:grid;grid-template-columns:1fr 110px 70px 60px 110px 60px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px;background:${isRed?'rgba(255,180,180,.12)':'transparent'}">
-        <span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">${dot(a.modalidade)}<strong>${NOMES[a.modalidade]}</strong><span style="font-size:10px;color:var(--txt2)">${diasStr}</span>${isRed?'<span style="background:#fceaea;color:#8a1a1a;font-size:9px;padding:1px 6px;border-radius:8px">⚠ redundante</span>':''}</span>
+        <span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">${dot(a.modalidade)}<strong>${NOMES[a.modalidade]}</strong><span style="font-size:10px;color:var(--txt2)">${diasStr}</span>${isRed?'<span style="background:#fceaea;color:#8a1a1a;font-size:9px;padding:1px 6px;border-radius:8px;margin-left:2px">⚠ redundante</span>':''}</span>
         <span style="font-size:11px;color:var(--txt2)">${a.professor?.nome||'—'}</span>
         <span style="font-size:11px">${a.vagas} vagas</span>
         <span>${statusBadge}</span>
         <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-start">
-          <button onclick="gerarOcorrenciasAula('${a.id}')" style="padding:2px 8px;background:rgba(31,56,31,.08);color:var(--verde);border:1px solid rgba(31,56,31,.2);border-radius:4px;font-size:9px;cursor:pointer;font-family:'DM Sans',sans-serif">▶ Gerar</button>
+          ${geradoBadge}
+          <button onclick="gerarOcorrenciasAula('${a.id}')" style="padding:2px 8px;background:rgba(31,56,31,.08);color:var(--verde);border:1px solid rgba(31,56,31,.2);border-radius:4px;font-size:9px;cursor:pointer;font-family:'DM Sans',sans-serif">${nOcs>0?'↻ Regerar':'▶ Gerar'}</button>
         </div>
         <div style="display:flex;gap:3px">
           <button onclick="editarAula('${a.id}')" style="padding:3px 7px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Editar">✎</button>
@@ -121,7 +140,10 @@ export async function renderCriarAulas(container, page) {
           <i class="ti ti-info-circle"></i>
           <span>Após criar uma aula fixa, clique em <strong>Gerar</strong> para criar as datas do semestre no banco.</span>
         </div>
-        ${redundantes.size>0?`<div style="background:#fceaea;border:1px solid #f5c1c1;border-radius:6px;padding:9px 13px;font-size:12px;color:#8a1a1a;margin-bottom:12px">⚠ <strong>${redundantes.size} aula(s) com possível redundância</strong> — mesma modalidade, dia e horário já cadastrados.</div>`:''}
+        ${redundantes.size>0?`<div style="background:#fceaea;border:1px solid #f5c1c1;border-radius:6px;padding:9px 13px;font-size:12px;color:#8a1a1a;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <span>⚠ <strong>${redundantes.size} aula(s) com possível redundância</strong> — mesma modalidade, dia e horário já cadastrados.</span>
+          <button onclick="abrirModalRedundancias()" style="padding:4px 12px;background:#8a1a1a;color:#fff;border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Ver e resolver →</button>
+        </div>`:''}
         <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:flex-end">
           <div style="display:flex;flex-direction:column;gap:3px">
             <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Modalidade</label>
@@ -140,6 +162,20 @@ export async function renderCriarAulas(container, page) {
             </select>
           </div>
           <div style="display:flex;flex-direction:column;gap:3px">
+            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Dia</label>
+            <select onchange="window._criarFiltroDia=this.value;navigate('criar-aulas')" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff">
+              <option value="" ${!filtroDia?'selected':''}>Todos</option>
+              ${['seg','ter','qua','qui','sex','sab','dom'].map(d=>`<option value="${d}" ${filtroDia===d?'selected':''}>${DIAS_LABEL[d]||d}</option>`).join('')}
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Horário</label>
+            <select onchange="window._criarFiltroHora=this.value;navigate('criar-aulas')" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff">
+              <option value="" ${!filtroHora?'selected':''}>Todos</option>
+              ${horasUnicas.map(h=>`<option value="${h}" ${filtroHora===h?'selected':''}>${h}</option>`).join('')}
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px">
             <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Status</label>
             <select onchange="window._criarFiltroStat=this.value;navigate('criar-aulas')" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff">
               <option value="" ${!filtroStat?'selected':''}>Todos</option>
@@ -147,7 +183,7 @@ export async function renderCriarAulas(container, page) {
               <option value="inativa" ${filtroStat==='inativa'?'selected':''}>Inativa</option>
             </select>
           </div>
-          ${filtroMod||filtroProf||filtroStat?`<button onclick="window._criarFiltroMod='';window._criarFiltroProf='';window._criarFiltroStat='';navigate('criar-aulas')" style="padding:5px 10px;background:#fceaea;color:#8a1a1a;border:1px solid #f5c1c1;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;align-self:flex-end">✕ Limpar</button>`:''}
+          ${filtroMod||filtroProf||filtroStat||filtroDia||filtroHora?`<button onclick="window._criarFiltroMod='';window._criarFiltroProf='';window._criarFiltroStat='';window._criarFiltroDia='';window._criarFiltroHora='';navigate('criar-aulas')" style="padding:5px 10px;background:#fceaea;color:#8a1a1a;border:1px solid #f5c1c1;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;align-self:flex-end">✕ Limpar</button>`:''}
         </div>
         ${card('Aulas Fixas ('+fixas.length+')', '',
           `<div style="display:grid;grid-template-columns:1fr 110px 90px 60px 80px 70px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
@@ -321,6 +357,61 @@ export async function renderCriarAulas(container, page) {
       await sb.from('aulas_horarios').delete().eq('aula_id', id)
       await sb.from('aulas').delete().eq('id', id)
       toast('Aula excluída')
+      navigate('criar-aulas')
+    }
+
+    window.abrirModalRedundancias = function() {
+      const grupos = {}
+      for (const a of aulas.filter(a=>a.tipo==='fixa' && a.ativa)) {
+        const k = chaveAula(a); if (!k) continue
+        if (!grupos[k]) grupos[k] = []
+        grupos[k].push(a)
+      }
+      const gruposRed = Object.values(grupos).filter(g=>g.length>1)
+      document.getElementById('modal-redundancias')?.remove()
+      const div = document.createElement('div')
+      div.id = 'modal-redundancias'
+      div.style.cssText = 'position:fixed;inset:0;background:rgba(31,56,31,.7);z-index:250;display:flex;align-items:center;justify-content:center;padding:16px'
+      let html = '<div style="background:#fff;border-radius:12px;width:620px;max-width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden">'
+        + '<div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">'
+          + '<div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)">Resolver Redundâncias</div>'
+          + '<button onclick="document.getElementById('modal-redundancias').remove()" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer">×</button>'
+        + '</div><div style="overflow-y:auto;flex:1;padding:16px">'
+      for (const grupo of gruposRed) {
+        const ex = grupo[0]
+        const diasStr = (ex.horarios||[]).map(h=>`${DIAS_LABEL[h.dia_semana]||h.dia_semana} ${h.hora_inicio.slice(0,5)}`).join(', ')
+        html += '<div style="border:1px solid var(--borda);border-radius:8px;padding:14px;margin-bottom:12px">'
+          + `<div style="font-size:12px;font-weight:600;color:var(--verde);margin-bottom:10px">${NOMES[ex.modalidade]} · ${diasStr}</div>`
+        for (const a of grupo) {
+          const nOcs = ocsPorAula[a.id] || 0
+          html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(242,236,206,.3);border-radius:6px;margin-bottom:6px;gap:10px">'
+            + '<div>'
+              + `<div style="font-size:12px;font-weight:500">${a.professor?.nome||'Sem professor'}</div>`
+              + `<div style="font-size:10px;color:var(--txt2)">${nOcs>0?'✓ '+nOcs+' aulas geradas':'⚠ Não gerada'} · Criada ${a.criado_em?new Date(a.criado_em).toLocaleDateString('pt-BR'):'—'}</div>`
+            + '</div>'
+            + `<button onclick="excluirAulaRedundante('${a.id}')" style="padding:4px 10px;background:#fceaea;color:#8a1a1a;border:1px solid #f5c1c1;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">Excluir esta</button>`
+          + '</div>'
+        }
+        html += '</div>'
+      }
+      html += '</div><div style="padding:12px 16px;border-top:1px solid var(--borda);font-size:11px;color:var(--txt2)">Excluir remove a aula e ocorrências futuras. Passadas são preservadas.</div></div>'
+      div.innerHTML = html
+      document.body.appendChild(div)
+      div.addEventListener('click', e => { if (e.target===div) div.remove() })
+    }
+
+    window.excluirAulaRedundante = async function(id) {
+      if (!confirm('Excluir esta aula e suas ocorrências futuras?')) return
+      const hoje = new Date().toISOString()
+      const { data: ocs } = await sb.from('ocorrencias').select('id').eq('aula_id', id).gte('data_hora', hoje)
+      if (ocs?.length) {
+        for (const oc of ocs) await sb.from('confirmacoes').delete().eq('ocorrencia_id', oc.id)
+        await sb.from('ocorrencias').delete().eq('aula_id', id).gte('data_hora', hoje)
+      }
+      await sb.from('aulas_horarios').delete().eq('aula_id', id)
+      await sb.from('aulas').delete().eq('id', id)
+      toast('✓ Aula excluída')
+      document.getElementById('modal-redundancias')?.remove()
       navigate('criar-aulas')
     }
 
