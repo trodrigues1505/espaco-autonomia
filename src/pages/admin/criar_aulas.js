@@ -14,21 +14,24 @@ export async function renderCriarAulas(container, page) {
   const tipo = perfil?.tipo
 
     const hojeISO = new Date().toISOString()
-    const [aulasRes, profsRes, cfgRes, ocsRes] = await Promise.all([
+    const [aulasRes, profsRes, cfgRes, ocsFutRes, ocsTodosRes] = await Promise.all([
       sb.from('aulas').select('*, professor:perfis!professor_id(nome), horarios:aulas_horarios(*)').order('criado_em', {ascending:false}),
       sb.from('perfis').select('id,nome').eq('tipo','professor').order('nome'),
       sb.from('configuracoes').select('*'),
       sb.from('ocorrencias').select('aula_id').gte('data_hora', hojeISO).eq('cancelada', false),
+      sb.from('ocorrencias').select('aula_id').eq('cancelada', false).limit(1000),
     ])
     const aulas = aulasRes.data || []
     const profs = profsRes.data || []
     const cfg = Object.fromEntries((cfgRes.data||[]).map(c=>[c.chave,c.valor]))
 
-    // Mapa aula_id → quantidade de ocorrências futuras
-    const ocsPorAula = {}
-    for (const oc of (ocsRes.data || [])) {
-      ocsPorAula[oc.aula_id] = (ocsPorAula[oc.aula_id] || 0) + 1
+    // Mapa aula_id → ocorrências futuras
+    const ocsFuturas = {}
+    for (const oc of (ocsFutRes.data || [])) {
+      ocsFuturas[oc.aula_id] = (ocsFuturas[oc.aula_id] || 0) + 1
     }
+    // Set de aulas que já tiveram alguma ocorrência (passada ou futura)
+    const aulasComOcs = new Set((ocsTodosRes.data || []).map(o => o.aula_id))
 
     // Filtros
     const filtroMod  = window._criarFiltroMod  || ''
@@ -61,10 +64,13 @@ export async function renderCriarAulas(container, page) {
       const diasStr = (a.horarios||[]).map(h=>`${DIAS_LABEL[h.dia_semana]||h.dia_semana} ${h.hora_inicio.slice(0,5)}`).join(', ')
       const statusBadge = a.ativa ? badge('Ativa','#e8f4e8','#1a5a1a') : badge('Inativa','#fceaea','#8a1a1a')
       const isRed = redundantes.has(a.id)
-      const nOcs  = ocsPorAula[a.id] || 0
-      const geradoBadge = nOcs > 0
-        ? `<span style="background:#e8f4e8;color:#1a5a1a;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:500">✓ ${nOcs} futuras</span>`
-        : `<span style="background:#fceaea;color:#8a1a1a;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:500">⚠ Não gerada</span>`
+      const nFut  = ocsFuturas[a.id] || 0
+      const jaGerou = aulasComOcs.has(a.id)
+      const geradoBadge = nFut > 0
+        ? `<span style="background:#e8f4e8;color:#1a5a1a;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:500">✓ ${nFut} futuras</span>`
+        : jaGerou
+          ? `<span style="background:rgba(232,188,79,.2);color:#7a5a10;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:500">⚠ Sem futuras</span>`
+          : `<span style="background:#fceaea;color:#8a1a1a;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:500">✗ Nunca gerada</span>`
       return `<div style="display:grid;grid-template-columns:1fr 110px 70px 60px 110px 60px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px;background:${isRed?'rgba(255,180,180,.12)':'transparent'}">
         <span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">${dot(a.modalidade)}<strong>${NOMES[a.modalidade]}</strong><span style="font-size:10px;color:var(--txt2)">${diasStr}</span>${isRed?'<span style="background:#fceaea;color:#8a1a1a;font-size:9px;padding:1px 6px;border-radius:8px;margin-left:2px">⚠ redundante</span>':''}</span>
         <span style="font-size:11px;color:var(--txt2)">${a.professor?.nome||'—'}</span>
@@ -72,7 +78,7 @@ export async function renderCriarAulas(container, page) {
         <span>${statusBadge}</span>
         <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-start">
           ${geradoBadge}
-          <button onclick="gerarOcorrenciasAula('${a.id}')" style="padding:2px 8px;background:rgba(31,56,31,.08);color:var(--verde);border:1px solid rgba(31,56,31,.2);border-radius:4px;font-size:9px;cursor:pointer;font-family:'DM Sans',sans-serif">${nOcs>0?'↻ Regerar':'▶ Gerar'}</button>
+          <button onclick="gerarOcorrenciasAula('${a.id}')" style="padding:2px 8px;background:rgba(31,56,31,.08);color:var(--verde);border:1px solid rgba(31,56,31,.2);border-radius:4px;font-size:9px;cursor:pointer;font-family:'DM Sans',sans-serif">${nFut>0?'↻ Regerar':jaGerou?'↻ Regerar':'▶ Gerar'}</button>
         </div>
         <div style="display:flex;gap:3px">
           <button onclick="editarAula('${a.id}')" style="padding:3px 7px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Editar">✎</button>
@@ -133,7 +139,10 @@ export async function renderCriarAulas(container, page) {
     container.innerHTML = `
       <div class="topbar">
         <div class="topbar-t">Criar Aulas</div>
-        <button onclick="document.getElementById('modal-criar-aula').style.display='flex'" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-plus"></i> Nova Aula</button>
+        <div style="display:flex;gap:6px">
+          ${[...aulasComOcs].filter ? aulas.filter(a=>a.tipo==='fixa'&&a.ativa&&!ocsFuturas[a.id]).length > 0 ? `<button onclick="gerarTodasPendentes()" style="padding:6px 13px;background:#fff;color:var(--verde);border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">▶ Gerar pendentes (${aulas.filter(a=>a.tipo==='fixa'&&a.ativa&&!ocsFuturas[a.id]).length})</button>` : '' : ''}
+          <button onclick="document.getElementById('modal-criar-aula').style.display='flex'" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-plus"></i> Nova Aula</button>
+        </div>
       </div>
       <div class="content">
         <div style="background:rgba(31,56,31,.04);border:1px solid rgba(31,56,31,.12);border-radius:6px;padding:9px 13px;font-size:12px;color:var(--verde);margin-bottom:12px;display:flex;align-items:center;gap:8px">
@@ -290,13 +299,13 @@ export async function renderCriarAulas(container, page) {
       document.getElementById('modal-gerar').style.display = 'flex'
     }
 
-    window.executarGerarOcorrencias = async function() {
+    window.executarGerarOcorrencias = async function(silencioso = false) {
       const de = document.getElementById('ger-de').value
       const ate = document.getElementById('ger-ate').value
       if (!de||!ate) { toast('Preencha as datas'); return }
 
       const btnGerar = document.querySelector('#modal-gerar button[onclick="executarGerarOcorrencias()"]')
-      if (btnGerar) { btnGerar.textContent = 'Gerando...'; btnGerar.disabled = true }
+      if (btnGerar && !silencioso) { btnGerar.textContent = 'Gerando...'; btnGerar.disabled = true }
 
       try {
         const { data: aula, error: errAula } = await sb.from('aulas').select('*, horarios:aulas_horarios(*)').eq('id', window._aulaParaGerar).single()
@@ -344,9 +353,11 @@ export async function renderCriarAulas(container, page) {
           inseridos += lote.length
         }
 
-        document.getElementById('modal-gerar').style.display = 'none'
-        toast('✓ '+inseridos+' aulas geradas com sucesso!')
-        navigate('criar-aulas')
+        if (!silencioso) {
+          document.getElementById('modal-gerar').style.display = 'none'
+          toast('✓ '+inseridos+' aulas geradas com sucesso!')
+          navigate('criar-aulas')
+        }
       } finally {
         if (btnGerar) { btnGerar.textContent = 'Gerar'; btnGerar.disabled = false }
       }
@@ -432,9 +443,28 @@ export async function renderCriarAulas(container, page) {
       navigate('criar-aulas')
     }
 
+    window.gerarTodasPendentes = async function() {
+      const pendentes = aulas.filter(a => a.tipo==='fixa' && a.ativa && !ocsFuturas[a.id])
+      if (!pendentes.length) { toast('Nenhuma aula pendente'); return }
+      if (!confirm(`Gerar ocorrências para ${pendentes.length} aula(s) sem datas futuras? Período: hoje até 3 anos.`)) return
+      const hoje2 = new Date().toISOString().slice(0,10)
+      const em3anos = new Date(); em3anos.setFullYear(em3anos.getFullYear()+3)
+      let totalGerado = 0
+      for (const aula of pendentes) {
+        window._aulaParaGerar = aula.id
+        document.getElementById('ger-de').value = hoje2
+        document.getElementById('ger-ate').value = em3anos.toISOString().slice(0,10)
+        await executarGerarOcorrencias(true) // true = silencioso
+        totalGerado++
+        toast(`Gerando... ${totalGerado}/${pendentes.length}`)
+      }
+      toast('✓ ' + totalGerado + ' aulas geradas!')
+      navigate('criar-aulas')
+    }
+
     window.toggleAulaStatus = async function(id, ativa) {
       await sb.from('aulas').update({ativa: !ativa}).eq('id', id)
       toast(ativa ? 'Aula pausada' : 'Aula ativada')
       navigate('criar-aulas')
     }
-}   
+}
