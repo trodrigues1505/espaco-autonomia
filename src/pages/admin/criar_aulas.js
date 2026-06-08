@@ -18,18 +18,18 @@ export async function renderCriarAulas(container, page) {
       sb.from('aulas').select('*, professor:perfis!professor_id(nome), horarios:aulas_horarios(*)').order('criado_em', {ascending:false}),
       sb.from('perfis').select('id,nome').eq('tipo','professor').order('nome'),
       sb.from('configuracoes').select('*'),
-      // FIX: usa neq('cancelada', true) para capturar tanto false quanto null
-      sb.from('ocorrencias').select('aula_id').gte('data_hora', hojeISO).neq('cancelada', true),
-      sb.from('ocorrencias').select('aula_id').neq('cancelada', true),
+      // RPC agrupa no banco — evita o limite de 1000 linhas do PostgREST
+      sb.rpc('get_aulas_com_ocorrencias', { p_data_hora: hojeISO }),
+      sb.rpc('get_aulas_com_ocorrencias', { p_data_hora: null }),
     ])
     const aulas = aulasRes.data || []
     const profs = profsRes.data || []
     const cfg = Object.fromEntries((cfgRes.data||[]).map(c=>[c.chave,c.valor]))
 
-    // Mapa aula_id → ocorrências futuras
+    // Mapa aula_id → contagem de ocorrências futuras
     const ocsFuturas = {}
-    for (const oc of (ocsFutRes.data || [])) {
-      ocsFuturas[oc.aula_id] = (ocsFuturas[oc.aula_id] || 0) + 1
+    for (const row of (ocsFutRes.data || [])) {
+      ocsFuturas[row.aula_id] = Number(row.total)
     }
     // Set de aulas que já tiveram alguma ocorrência (passada ou futura)
     const aulasComOcs = new Set((ocsTodosRes.data || []).map(o => o.aula_id))
@@ -478,4 +478,4 @@ export async function renderCriarAulas(container, page) {
       toast(ativa ? 'Aula pausada' : 'Aula ativada')
       navigate('criar-aulas')
     }
-}
+}  
