@@ -80,15 +80,15 @@ export function homePorPerfil(tipo) {
 // ── Impersonar (admin simula outro perfil) ───────────────────
 export function impersonar(tipo) {
   const perfil = window._perfil
-  if (!perfil || perfil.tipo !== 'admin') return
+  // Permite voltar ao admin mesmo quando _perfil já foi substituído
+  const isAdmin = perfil?.tipo === 'admin' || window._perfilAdmin?.tipo === 'admin'
+  if (!isAdmin) return
 
   if (tipo === 'admin') {
-    // Volta ao modo admin sem modal
-    _ativarImpersonar('admin', window._perfil)
+    _ativarImpersonar('admin', window._perfilAdmin || window._perfil)
     return
   }
 
-  // Para aluno e professor: abre modal de seleção de pessoa
   _abrirModalImpersonar(tipo)
 }
 window.impersonar = impersonar
@@ -103,7 +103,6 @@ async function _abrirModalImpersonar(tipo) {
     .eq('ativo', true)
     .order('nome')
 
-  // Remove modal anterior se existir
   document.getElementById('modal-impersonar')?.remove()
 
   const div = document.createElement('div')
@@ -160,11 +159,9 @@ function _ativarImpersonar(tipo, pessoa) {
   window._viewAs = tipo
 
   if (tipo === 'admin') {
-    // Restaura perfil real do admin
     const perfilAdmin = window._perfilAdmin || window._perfil
     window._perfil = perfilAdmin
     window._perfilAdmin = null
-    // Restaura nome e badge corretos
     document.getElementById('sb-nome').textContent = perfilAdmin.nome
     document.getElementById('sb-role-label').textContent = 'Admin'
     ;['admin','prof','aluno'].forEach(t => {
@@ -174,31 +171,32 @@ function _ativarImpersonar(tipo, pessoa) {
       btn.style.color      = t==='admin' ? 'var(--verde)'   : 'rgba(242,236,206,.7)'
       btn.style.fontWeight = t==='admin' ? '500'            : '400'
     })
+    // Remove aviso de impersonação
     document.getElementById('impersonar-aviso')?.remove()
+    // Reexibe a barra de impersonar no sidebar
+    const bar = document.getElementById('impersonate-bar')
+    if (bar) bar.style.display = 'block'
     buildMenu('admin')
     window.navigate('dashboard')
     return
-  } else {
-    // Salva perfil admin e substitui pelo da pessoa selecionada
-    if (!window._perfilAdmin) window._perfilAdmin = window._perfil
-    window._perfil = pessoa
-
-    // Atualiza plano no sidebar se aluno
-    if (tipo === 'aluno') {
-      const mat = (pessoa.matriculas||[]).find(m=>m.ativa)
-      window._plano = mat?.plano_tipo || null
-      const planoEl = document.getElementById('sb-plano')
-      if (planoEl) planoEl.textContent = mat?.plano_tipo || ''
-    }
   }
 
-  // Atualiza nome e badge no sidebar
+  // Salva perfil admin antes de substituir
+  if (!window._perfilAdmin) window._perfilAdmin = window._perfil
+  window._perfil = pessoa
+
+  if (tipo === 'aluno') {
+    const mat = (pessoa.matriculas||[]).find(m=>m.ativa)
+    window._plano = mat?.plano_tipo || null
+    const planoEl = document.getElementById('sb-plano')
+    if (planoEl) planoEl.textContent = mat?.plano_tipo || ''
+  }
+
   document.getElementById('sb-nome').textContent = pessoa.nome
   document.getElementById('sb-role-label').textContent = {
     admin: 'Admin', professor: 'Modo Professor', aluno: 'Modo Aluno',
   }[tipo]
 
-  // Destaca botão ativo
   ;['admin', 'prof', 'aluno'].forEach(t => {
     const btn = document.getElementById(`imp-${t}`)
     if (!btn) return
@@ -208,24 +206,21 @@ function _ativarImpersonar(tipo, pessoa) {
     btn.style.fontWeight = key === tipo ? '500'            : '400'
   })
 
-  // Aviso de modo impersonar no topo
+  // Aviso no topo — pointer-events:none para não bloquear cliques no conteúdo
   let aviso = document.getElementById('impersonar-aviso')
-  if (tipo !== 'admin') {
-    if (!aviso) {
-      aviso = document.createElement('div')
-      aviso.id = 'impersonar-aviso'
-      aviso.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:300;background:var(--dourado);color:var(--verde);text-align:center;padding:5px;font-size:11px;font-family:"DM Sans",sans-serif;font-weight:500'
-      document.body.appendChild(aviso)
-    }
-    aviso.textContent = `👁 Visualizando como: ${pessoa.nome} · `
-    const voltar = document.createElement('span')
-    voltar.textContent = 'Voltar ao Admin'
-    voltar.style.cssText = 'text-decoration:underline;cursor:pointer;font-weight:600'
-    voltar.onclick = () => impersonar('admin')
-    aviso.appendChild(voltar)
-  } else {
-    aviso?.remove()
+  if (!aviso) {
+    aviso = document.createElement('div')
+    aviso.id = 'impersonar-aviso'
+    // pointer-events:none no container; só o link "Voltar" recebe cliques
+    aviso.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:300;background:var(--dourado);color:var(--verde);text-align:center;padding:5px;font-size:11px;font-family:"DM Sans",sans-serif;font-weight:500;pointer-events:none'
+    document.body.appendChild(aviso)
   }
+  aviso.textContent = `👁 Visualizando como: ${pessoa.nome} · `
+  const voltar = document.createElement('span')
+  voltar.textContent = 'Voltar ao Admin'
+  voltar.style.cssText = 'text-decoration:underline;cursor:pointer;font-weight:600;pointer-events:auto'
+  voltar.onclick = () => impersonar('admin')
+  aviso.appendChild(voltar)
 
   buildMenu(tipo)
   window.navigate(HOME_POR_PERFIL[tipo] || 'dashboard')
