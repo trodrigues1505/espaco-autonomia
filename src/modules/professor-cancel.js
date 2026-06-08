@@ -28,12 +28,13 @@ export function abrirModalCancelarAula(ocorrenciaId, infoObj) {
     const hora = dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
     const dia  = dt.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' })
     const nomes = { hatha: 'Hatha Yoga', acro: 'Acro Yoga', raja: 'Raja Yoga' }
+    const nConf = infoObj.confirmados || 0
     infoEl.innerHTML = `
-      <strong>${nomes[infoObj.modalidade] || infoObj.modalidade}</strong> —
-      ${dia}, ${hora}
-      <span style="margin-left:8px;font-size:11px;color:var(--txt2)">
-        ${infoObj.confirmados || 0} aluno(s) confirmado(s)
-      </span>`
+      <div style="margin-bottom:8px"><strong>${nomes[infoObj.modalidade] || infoObj.modalidade}</strong> — ${dia}, ${hora}</div>
+      ${nConf > 0
+        ? `<div style="background:#fceaea;border:1px solid #f5c1c1;border-radius:6px;padding:8px 12px;font-size:12px;color:#8a1a1a">⚠ <strong>${nConf} aluno(s) confirmado(s)</strong> — o saldo será estornado e eles verão a aula como cancelada na grade.</div>`
+        : `<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.3);border-radius:6px;padding:8px 12px;font-size:12px;color:#7a5a10">ℹ Nenhum aluno confirmado. Um aviso aparecerá na grade para todos os alunos.</div>`
+      }`
   }
 
   document.getElementById('input-cancel-justif').value = ''
@@ -107,3 +108,15 @@ export function initProfessorCancel() {
 window.abrirModalCancelarAula    = abrirModalCancelarAula
 window.fecharModalCancelarAula   = fecharModalCancelarAula
 window.confirmarCancelamentoAula = confirmarCancelamentoAula
+
+window.cancelarOcorrenciaGrade = async function(ocId, infoObj) {
+  const perfil = window._perfil
+  if (perfil?.tipo !== 'admin' && infoObj?.professor_id !== perfil?.id) {
+    window.toast('Você não tem permissão para cancelar esta aula.')
+    return
+  }
+  abrirModalCancelarAula(ocId, infoObj)
+  if (perfil?.tipo === 'admin') {
+    window._cancelReturnPage = window._currentPage || 'grade'
+  }
+}   
