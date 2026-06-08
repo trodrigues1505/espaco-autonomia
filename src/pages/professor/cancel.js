@@ -21,7 +21,6 @@ export function abrirModalCancelarAula(ocorrenciaId, infoObj) {
   _cancelAulaId   = ocorrenciaId
   _cancelAulaInfo = infoObj
 
-  // Preenche resumo da aula no modal
   const infoEl = document.getElementById('modal-cancel-info')
   if (infoEl && infoObj) {
     const dt   = new Date(infoObj.data_hora)
@@ -62,7 +61,6 @@ export async function confirmarCancelamentoAula() {
   if (btn) { btn.textContent = 'Cancelando…'; btn.disabled = true }
 
   try {
-    // 1. Marca a ocorrência como cancelada
     const { error } = await window._sb
       .from('ocorrencias')
       .update({
@@ -75,8 +73,7 @@ export async function confirmarCancelamentoAula() {
 
     if (error) throw new Error(error.message)
 
-    // 2. Estorna saldo dos alunos confirmados (RPC server-side)
-    //    Se a função ainda não existir no banco, o erro é silenciado
+    // Estorna saldo dos alunos confirmados (RPC server-side)
     await window._sb
       .rpc('estornar_confirmacoes_ocorrencia', {
         p_ocorrencia_id: _cancelAulaId,
@@ -98,7 +95,6 @@ export async function confirmarCancelamentoAula() {
 
 // ── Inicialização ────────────────────────────────────────────
 export function initProfessorCancel() {
-  // Fecha ao clicar no overlay
   document.getElementById('modal-cancel-aula')
     ?.addEventListener('click', e => {
       if (e.target === e.currentTarget) fecharModalCancelarAula()
@@ -111,18 +107,14 @@ window.fecharModalCancelarAula   = fecharModalCancelarAula
 window.confirmarCancelamentoAula = confirmarCancelamentoAula
 
 // ── Cancelamento pela grade/admin ────────────────────────────
-// Permite que admin cancele qualquer ocorrência, e professor cancele as suas
 window.cancelarOcorrenciaGrade = async function(ocId, infoObj) {
-  // Verifica permissão
   const perfil = window._perfil
   if (perfil?.tipo !== 'admin' && infoObj?.professor_id !== perfil?.id) {
     window.toast('Você não tem permissão para cancelar esta aula.')
     return
   }
   abrirModalCancelarAula(ocId, infoObj)
-  // Após fechar, o navigate do confirmarCancelamentoAula chama prof-aulas;
-  // para o admin, vamos sobrescrever o destino temporariamente
   if (perfil?.tipo === 'admin') {
     window._cancelReturnPage = window._currentPage || 'grade'
   }
-} vv
+}
