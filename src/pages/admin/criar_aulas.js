@@ -478,4 +478,4 @@ export async function renderCriarAulas(container, page) {
       toast(ativa ? 'Aula pausada' : 'Aula ativada')
       navigate('criar-aulas')
     }
-}    
+}
