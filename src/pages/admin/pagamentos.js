@@ -51,6 +51,50 @@ async function syncAsaas(apiKey, sbClient) {
     if (!idsVistos.has(p.id)) { todos.push(p); idsVistos.add(p.id) }
   }
 
+  // ── Auto-link: busca clientes no Asaas e faz match por email nos perfis ──
+  // Coleta customer IDs únicos sem link ainda
+  const customerIds = [...new Set(todos.map(p => p.customer).filter(Boolean))]
+
+  // Busca perfis que já têm asaas_customer_id para não sobrescrever
+  const { data: perfisComId } = await sbClient
+    .from('perfis')
+    .select('id, email, asaas_customer_id')
+    .not('asaas_customer_id', 'is', null)
+  const jaVinculados = new Set((perfisComId || []).map(p => p.asaas_customer_id))
+
+  // Para IDs novos, busca o email no Asaas e tenta linkar ao perfil
+  const novosIds = customerIds.filter(id => !jaVinculados.has(id))
+  if (novosIds.length > 0) {
+    // Busca todos os perfis sem ID para cruzar por email
+    const { data: perfisSemId } = await sbClient
+      .from('perfis')
+      .select('id, email')
+      .is('asaas_customer_id', null)
+    const perfilPorEmail = Object.fromEntries(
+      (perfisSemId || []).map(p => [p.email.toLowerCase(), p.id])
+    )
+
+    for (const customerId of novosIds) {
+      try {
+        const clienteAsaas = await asaasProxy(`/customers/${customerId}`, apiKey)
+        if (clienteAsaas?.email) {
+          const emailNorm = clienteAsaas.email.toLowerCase()
+          const perfilId = perfilPorEmail[emailNorm]
+          if (perfilId) {
+            await sbClient
+              .from('perfis')
+              .update({ asaas_customer_id: customerId })
+              .eq('id', perfilId)
+            // Atualiza o map local para que pagamentos subsequentes no mesmo sync já peguem
+            jaVinculados.add(customerId)
+          }
+        }
+      } catch(e) {
+        // Ignora erros individuais de customer lookup para não travar o sync
+      }
+    }
+  }
+
   // Delete + insert
   const asaasIds = todos.map(p => p.id).filter(Boolean)
   if (asaasIds.length) {
@@ -86,11 +130,9 @@ export async function renderPagamentos(container, page) {
   const sbClient = window._sb
   const agora    = new Date()
 
-  // Mês selecionado (padrão: mês atual)
   if (!window._pgMes) window._pgMes = agora.toISOString().slice(0,7)
   const mesSel = window._pgMes
 
-  // Gerar lista dos últimos 12 meses para o seletor
   const mesesDisponiveis = []
   for (let i = 0; i < 12; i++) {
     const d = new Date(agora.getFullYear(), agora.getMonth() - i, 1)
@@ -99,7 +141,7 @@ export async function renderPagamentos(container, page) {
 
   const filtroPlano = window._pgPlano || ''
 
-  // Buscar dados
+  // Buscar dados — inclui nome do cliente Asaas via join e por asaas_customer_id
   const [pgRes, perfisRes] = await Promise.all([
     sbClient.from('pagamentos').select('*, aluno:perfis!aluno_id(nome,email)')
       .order('vencimento', { ascending: false }).limit(500),
@@ -108,25 +150,29 @@ export async function renderPagamentos(container, page) {
   ])
 
   const pgs = pgRes.data || []
+
+  // Mapa customer_id → perfil para resolver nome quando o join direto não existe
   const perfisPorAsaas = Object.fromEntries(
     (perfisRes.data || []).map(p => [p.asaas_customer_id, p])
   )
+
+  // Para cada pagamento sem nome, tenta resolver pelo asaas_customer
   pgs.forEach(p => {
     if (!p.aluno?.nome && p.asaas_customer) {
-      p.aluno = perfisPorAsaas[p.asaas_customer] || null
+      const perfilMatch = perfisPorAsaas[p.asaas_customer]
+      if (perfilMatch) {
+        p.aluno = { nome: perfilMatch.nome, email: perfilMatch.email }
+      }
     }
   })
 
-  // Filtro por plano: mantém só pagamentos de alunos no plano selecionado
   const pgsParaFiltrar = !filtroPlano ? pgs : pgs.filter(p => {
     const perfil = p.aluno ? perfisRes.data?.find(pf => pf.email === p.aluno?.email) : null
     return perfil?.matriculas?.some(m => m.ativa && m.plano_tipo === filtroPlano)
   })
 
-  // Cards: mês selecionado, PENDING excludes OVERDUE
   const pgsMes    = pgsParaFiltrar.filter(p => p.mes_ref?.slice(0,7) === mesSel)
   const recebidos  = pgsMes.filter(p => p.status === 'RECEIVED' || p.status === 'CONFIRMED')
-  // Paridade com Asaas: exclui PENDING com vencimento no último dia do mês
   const ultimoDiaMes = new Date(agora.getFullYear(), agora.getMonth()+1, 0).toISOString().slice(0,10)
   const aguardando = pgsMes.filter(p => p.status === 'PENDING' && p.vencimento !== ultimoDiaMes)
   const vencidos   = pgsMes.filter(p => p.status === 'OVERDUE')
@@ -135,7 +181,6 @@ export async function renderPagamentos(container, page) {
   const totalVenc = vencidos.reduce((s,p)   => s+(p.valor||0), 0)
   const inadimp   = pgsMes.length ? Math.round(vencidos.length/pgsMes.length*100) : 0
 
-  // Filtro de status + mês + datas + ordenação
   const filtroAtivo = window._pgFiltro || 'TODOS'
   const pgDe  = window._pgDe  || ''
   const pgAte = window._pgAte || ''
@@ -147,10 +192,9 @@ export async function renderPagamentos(container, page) {
     .filter(p => !pgDe  || (p.vencimento && p.vencimento >= pgDe))
     .filter(p => !pgAte || (p.vencimento && p.vencimento <= pgAte))
 
-  // Ordenação
   pgsFiltrados.sort((a,b) => {
-    const nomeA = a.aluno?.nome || a.asaas_customer || ''
-    const nomeB = b.aluno?.nome || b.asaas_customer || ''
+    const nomeA = a.aluno?.nome || ''
+    const nomeB = b.aluno?.nome || ''
     if (pgSort === 'nome_asc')    return nomeA.localeCompare(nomeB)
     if (pgSort === 'nome_desc')   return nomeB.localeCompare(nomeA)
     if (pgSort === 'valor_asc')   return (a.valor||0) - (b.valor||0)
@@ -158,10 +202,9 @@ export async function renderPagamentos(container, page) {
     if (pgSort === 'data_desc')   return (b.vencimento||'').localeCompare(a.vencimento||'')
     if (pgSort === 'status_asc')  return (a.status||'').localeCompare(b.status||'')
     if (pgSort === 'status_desc') return (b.status||'').localeCompare(a.status||'')
-    return (a.vencimento||'').localeCompare(b.vencimento||'') // data_asc default
+    return (a.vencimento||'').localeCompare(b.vencimento||'')
   })
 
-  // Saldo em conta
   const savedKey = localStorage.getItem(ASAAS_KEY_STORAGE) || ''
   let saldoConta = null
   if (savedKey) {
@@ -170,6 +213,9 @@ export async function renderPagamentos(container, page) {
       saldoConta = bal.balance ?? null
     } catch(e) {}
   }
+
+  // Conta quantos pagamentos ainda mostram cus_id (sem nome resolvido)
+  const semNome = pgs.filter(p => !p.aluno?.nome && p.asaas_customer).length
 
   container.innerHTML = `
     <div class="topbar">
@@ -187,6 +233,12 @@ export async function renderPagamentos(container, page) {
       </div>
     </div>
     <div class="content">
+
+      ${semNome > 0 ? `
+        <div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:9px 13px;font-size:12px;color:#7a5a10;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+          <i class="ti ti-link-off"></i>
+          <span><strong>${semNome} pagamento(s)</strong> sem nome resolvido. Sincronize com o Asaas para fazer o vínculo automático por e-mail.</span>
+        </div>` : ''}
 
       <!-- Seletor de mês -->
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
@@ -231,7 +283,6 @@ export async function renderPagamentos(container, page) {
         </div>
       </div>
 
-      <!-- Alerta vencidos -->
       ${vencidos.length > 0 ? `
         <div style="background:#fceaea;border:1px solid #f5c1c1;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
           <span style="font-size:20px">⚠️</span>
@@ -244,11 +295,11 @@ export async function renderPagamentos(container, page) {
       <!-- Filtros de status -->
       <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
         ${['TODOS','RECEIVED','PENDING','OVERDUE','CANCELLED'].map(s => {
-          const cnt = s==='TODOS' ? pgsFiltrados.length + (filtroAtivo==='TODOS'?0:0) :
+          const cnt = s==='TODOS' ? pgsMes.length :
             pgs.filter(p => p.mes_ref?.slice(0,7)===mesSel && (p.status===s||(s==='RECEIVED'&&p.status==='CONFIRMED'))).length
           const label = {TODOS:'Todos',RECEIVED:'Recebidos',PENDING:'Aguardando',OVERDUE:'Vencidos',CANCELLED:'Cancelados'}[s]
           return `<button onclick="window._pgFiltro='${s}';navigate('pagamentos')"
-            style="padding:5px 12px;border-radius:20px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${filtroAtivo===s?'var(--verde)':'var(--borda)'};background:${filtroAtivo===s?'var(--verde)':'#fff'};color:${filtroAtivo===s?'var(--bege)':'var(--txt2)'}">${label} (${s==='TODOS'?pgsMes.length:cnt})</button>`
+            style="padding:5px 12px;border-radius:20px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${filtroAtivo===s?'var(--verde)':'var(--borda)'};background:${filtroAtivo===s?'var(--verde)':'#fff'};color:${filtroAtivo===s?'var(--bege)':'var(--txt2)'}">${label} (${cnt})</button>`
         }).join('')}
       </div>
 
@@ -283,8 +334,8 @@ export async function renderPagamentos(container, page) {
           : pgsFiltrados.map(p => `
             <div style="display:grid;grid-template-columns:1fr 110px 90px 100px 80px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
               <div>
-                <div style="font-weight:500">${p.aluno?.nome || p.asaas_customer || '—'}</div>
-                <div style="font-size:10px;color:var(--txt2)">${p.aluno?.email || ''}</div>
+                <div style="font-weight:500">${p.aluno?.nome || '—'}</div>
+                <div style="font-size:10px;color:var(--txt2)">${p.aluno?.email || (p.asaas_customer ? '🔗 ' + p.asaas_customer : '')}</div>
               </div>
               <span style="font-size:11px">${fmtData(p.vencimento)}</span>
               <span style="font-weight:500">${fmtR(p.valor)}</span>
@@ -299,7 +350,7 @@ export async function renderPagamentos(container, page) {
         <div style="background:#fff;border-radius:12px;width:420px;max-width:100%;overflow:hidden">
           <div style="background:var(--verde);padding:16px 20px">
             <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)">Sincronizar com Asaas</div>
-            <div style="font-size:11px;color:rgba(242,236,206,.7);margin-top:2px">Importa cobranças dos últimos 2 meses + vencidas</div>
+            <div style="font-size:11px;color:rgba(242,236,206,.7);margin-top:2px">Importa cobranças dos últimos 2 meses + vencidas · vincula alunos por e-mail automaticamente</div>
           </div>
           <div style="padding:20px">
             <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px">
@@ -311,7 +362,7 @@ export async function renderPagamentos(container, page) {
                 Lembrar chave neste dispositivo
               </label>
             </div>
-            <div id="sync-progress" style="display:none;font-size:12px;color:var(--txt2);margin-bottom:10px">⏳ Sincronizando...</div>
+            <div id="sync-progress" style="display:none;font-size:12px;color:var(--txt2);margin-bottom:10px">⏳ Sincronizando e vinculando alunos...</div>
           </div>
           <div style="padding:0 20px 16px;display:flex;justify-content:flex-end;gap:8px">
             <button onclick="document.getElementById('modal-sync-asaas').style.display='none'"
@@ -351,4 +402,4 @@ export async function renderPagamentos(container, page) {
       prog.style.display = 'none'
     }
   }
-}   
+}
