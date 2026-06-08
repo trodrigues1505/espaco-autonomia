@@ -21,20 +21,18 @@ export function abrirModalCancelarAula(ocorrenciaId, infoObj) {
   _cancelAulaId   = ocorrenciaId
   _cancelAulaInfo = infoObj
 
-  // Preenche resumo da aula no modal
   const infoEl = document.getElementById('modal-cancel-info')
   if (infoEl && infoObj) {
     const dt   = new Date(infoObj.data_hora)
     const hora = dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
     const dia  = dt.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' })
     const nomes = { hatha: 'Hatha Yoga', acro: 'Acro Yoga', raja: 'Raja Yoga' }
-    const nConf = infoObj.confirmados || 0
     infoEl.innerHTML = `
-      <div style="margin-bottom:8px"><strong>${nomes[infoObj.modalidade] || infoObj.modalidade}</strong> — ${dia}, ${hora}</div>
-      ${nConf > 0
-        ? `<div style="background:#fceaea;border:1px solid #f5c1c1;border-radius:6px;padding:8px 12px;font-size:12px;color:#8a1a1a">⚠ <strong>${nConf} aluno(s) confirmado(s)</strong> — o saldo será estornado e eles verão a aula como cancelada na grade.</div>`
-        : `<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.3);border-radius:6px;padding:8px 12px;font-size:12px;color:#7a5a10">ℹ Nenhum aluno confirmado. Um aviso aparecerá na grade para todos os alunos.</div>`
-      }`
+      <strong>${nomes[infoObj.modalidade] || infoObj.modalidade}</strong> —
+      ${dia}, ${hora}
+      <span style="margin-left:8px;font-size:11px;color:var(--txt2)">
+        ${infoObj.confirmados || 0} aluno(s) confirmado(s)
+      </span>`
   }
 
   document.getElementById('input-cancel-justif').value = ''
@@ -63,7 +61,6 @@ export async function confirmarCancelamentoAula() {
   if (btn) { btn.textContent = 'Cancelando…'; btn.disabled = true }
 
   try {
-    // 1. Marca a ocorrência como cancelada
     const { error } = await window._sb
       .from('ocorrencias')
       .update({
@@ -76,8 +73,7 @@ export async function confirmarCancelamentoAula() {
 
     if (error) throw new Error(error.message)
 
-    // 2. Estorna saldo dos alunos confirmados (RPC server-side)
-    //    Se a função ainda não existir no banco, o erro é silenciado
+    // Estorna saldo dos alunos confirmados (RPC server-side)
     await window._sb
       .rpc('estornar_confirmacoes_ocorrencia', {
         p_ocorrencia_id: _cancelAulaId,
@@ -87,7 +83,9 @@ export async function confirmarCancelamentoAula() {
 
     window.toast('✓ Aula cancelada. Alunos serão notificados.')
     fecharModalCancelarAula()
-    window.navigate?.('prof-aulas')
+    const destino = window._cancelReturnPage || 'prof-aulas'
+    window._cancelReturnPage = null
+    window.navigate?.(destino)
 
   } catch (e) {
     window.toast('Erro: ' + e.message)
@@ -97,7 +95,6 @@ export async function confirmarCancelamentoAula() {
 
 // ── Inicialização ────────────────────────────────────────────
 export function initProfessorCancel() {
-  // Fecha ao clicar no overlay
   document.getElementById('modal-cancel-aula')
     ?.addEventListener('click', e => {
       if (e.target === e.currentTarget) fecharModalCancelarAula()
@@ -109,6 +106,7 @@ window.abrirModalCancelarAula    = abrirModalCancelarAula
 window.fecharModalCancelarAula   = fecharModalCancelarAula
 window.confirmarCancelamentoAula = confirmarCancelamentoAula
 
+// ── Cancelamento pela grade/admin ────────────────────────────
 window.cancelarOcorrenciaGrade = async function(ocId, infoObj) {
   const perfil = window._perfil
   if (perfil?.tipo !== 'admin' && infoObj?.professor_id !== perfil?.id) {
@@ -119,4 +117,4 @@ window.cancelarOcorrenciaGrade = async function(ocId, infoObj) {
   if (perfil?.tipo === 'admin') {
     window._cancelReturnPage = window._currentPage || 'grade'
   }
-}   
+}    
