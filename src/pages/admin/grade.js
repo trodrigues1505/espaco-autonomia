@@ -15,7 +15,6 @@ export async function renderGrade(container, page) {
 
     const isAluno = page === 'aluno-grade'
     const hoje = new Date()
-    // Semana com offset navegável
     const offset = window._gradeOffset || 0
     const diaSemana = hoje.getDay() === 0 ? 6 : hoje.getDay() - 1
     const seg = new Date(hoje); seg.setDate(hoje.getDate() - diaSemana + offset*7); seg.setHours(0,0,0,0)
@@ -32,7 +31,11 @@ export async function renderGrade(container, page) {
     const planoAluno = matRes.data?.plano_tipo
     const profsDisponiveis = profsRes.data || []
 
-    // ── Aplicar filtros ───────────────────────────────────────
+    // ── Armazena mapa de ocorrências para uso nos handlers ──
+    // Evita passar JSON inline nos atributos HTML (causa quebra de aspas)
+    window._gradeOcsMap = {}
+    ocorrencias.forEach(o => { window._gradeOcsMap[o.id] = o })
+
     const f = window._gradeFiltros || {}
     if (f.modalidade) ocorrencias = ocorrencias.filter(o => o.modalidade === f.modalidade)
     if (f.professor)  ocorrencias = ocorrencias.filter(o => o.professor_id === f.professor || o.professor_nome === f.professor)
@@ -43,14 +46,12 @@ export async function renderGrade(container, page) {
       return h === f.horario
     })
 
-    // Modalidades permitidas por plano
     let modPermitidas = ['hatha','acro','raja']
     if (isAluno && planoAluno) {
       const mp = {brahma:['hatha'], shiva:['hatha','raja'], vishnu:['hatha','raja','acro']}
       modPermitidas = mp[planoAluno] || ['hatha']
     }
 
-    // Buscar confirmações do aluno
     let minhasConfs = new Set()
     if (isAluno) {
       const ids = ocorrencias.map(o=>o.id)
@@ -60,12 +61,10 @@ export async function renderGrade(container, page) {
       }
     }
 
-    // Verificar feriados na semana
     const { data: feriados } = await sb.from('feriados').select('*').gte('data', seg.toISOString().slice(0,10)).lte('data', dom.toISOString().slice(0,10))
     const feriadosDatas = new Set((feriados||[]).map(f=>f.data))
 
-    // Agrupar ocorrências por dia e hora
-    const grade = {} // grade[dia_iso][hora] = ocorrencia
+    const grade = {}
     ocorrencias.forEach(o => {
       const dt = new Date(o.data_hora)
       const diaKey = dt.toISOString().slice(0,10)
@@ -74,7 +73,6 @@ export async function renderGrade(container, page) {
       grade[diaKey][horaKey] = o
     })
 
-    // Todas as horas com aulas
     const horasSet = new Set()
     ocorrencias.forEach(o => {
       const dt = new Date(o.data_hora)
@@ -82,7 +80,6 @@ export async function renderGrade(container, page) {
     })
     const horas = [...horasSet].sort()
 
-    // Dias da semana
     const diasDaSemana = []
     for (let i=0; i<7; i++) {
       const d = new Date(seg); d.setDate(seg.getDate()+i)
@@ -91,9 +88,7 @@ export async function renderGrade(container, page) {
 
     const prazoMin = Number(cfg.prazo_confirmacao_min||60)
 
-    // Construir grade HTML
     let gradeHTML = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:600px">`
-    // Cabeçalho
     gradeHTML += `<tr><th style="background:var(--verde);color:var(--bege);padding:8px;font-size:11px;font-weight:500;width:60px">Hora</th>`
     diasDaSemana.forEach(d => {
       const dStr = d.toISOString().slice(0,10)
@@ -107,7 +102,6 @@ export async function renderGrade(container, page) {
     })
     gradeHTML += '</tr>'
 
-    // Linhas de hora
     if (horas.length === 0) {
       gradeHTML += `<tr><td colspan="8" style="text-align:center;padding:30px;font-size:13px;color:var(--txt2)">Nenhuma aula agendada esta semana.</td></tr>`
     }
@@ -151,12 +145,18 @@ export async function renderGrade(container, page) {
           }
 
           const jaCancelada = oc.cancelada
+          // FIX: passa só o ID — o handler busca o objeto em window._gradeOcsMap
+          // Isso evita JSON.stringify inline que quebra os atributos HTML com aspas duplas
           const adminActions = !isAluno ? `<div style="display:flex;gap:2px;margin-top:3px;flex-wrap:wrap">
             <button onclick="event.stopPropagation();editarOcorrencia('${oc.id}')" style="padding:1px 5px;background:rgba(31,56,31,.1);color:var(--verde);border:none;border-radius:3px;font-size:9px;cursor:pointer" title="Editar">✎</button>
             <button onclick="event.stopPropagation();excluirOcorrencia('${oc.id}')" style="padding:1px 5px;background:rgba(255,0,0,.08);color:#c0392b;border:none;border-radius:3px;font-size:9px;cursor:pointer" title="Excluir">✕</button>
             <button onclick="event.stopPropagation();verPresencasOcorrencia('${oc.id}')" style="padding:1px 5px;background:rgba(31,56,31,.1);color:var(--verde);border:none;border-radius:3px;font-size:9px;cursor:pointer" title="Presenças">👥</button>
-            ${!jaCancelada?`<button onclick="event.stopPropagation();window._currentPage='grade';cancelarOcorrenciaGrade('${oc.id}',${JSON.stringify({id:oc.id,data_hora:oc.data_hora,modalidade:oc.modalidade,confirmados:oc.confirmados,professor_id:oc.professor_id})})" style="padding:1px 5px;background:rgba(192,57,43,.1);color:#c0392b;border:none;border-radius:3px;font-size:9px;cursor:pointer" title="Cancelar aula">⊘</button>`:'<span style="font-size:9px;color:#c0392b;padding:1px 4px">cancelada</span>'}
+            ${!jaCancelada
+              ? `<button onclick="event.stopPropagation();window._currentPage='grade';cancelarOcorrenciaGrade('${oc.id}',window._gradeOcsMap['${oc.id}'])" style="padding:1px 5px;background:rgba(192,57,43,.1);color:#c0392b;border:none;border-radius:3px;font-size:9px;cursor:pointer" title="Cancelar aula">⊘</button>`
+              : '<span style="font-size:9px;color:#c0392b;padding:1px 4px">cancelada</span>'
+            }
           </div>` : ''
+
           gradeHTML += `<td style="border:1px solid rgba(212,200,158,.3);background:${bgCell};padding:5px 7px;vertical-align:top;cursor:${isAluno?'default':'pointer'}" ${!isAluno?`onclick="verDetalhesOcorrencia('${oc.id}')"`:''}">
             <div style="font-size:10px;font-weight:500;${borderCell};padding-left:4px;line-height:1.3;color:${!permitida?'#ccc':'var(--txt)'}">${NOMES[oc.modalidade]}</div>
             <div style="font-size:9px;color:var(--txt2);margin-top:1px">${oc.confirmados||0}/${oc.vagas_total}</div>
@@ -171,13 +171,11 @@ export async function renderGrade(container, page) {
     })
     gradeHTML += '</table></div>'
 
-    // Legenda
     const legendaHtml = `<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px">
       ${['hatha','acro','raja'].map(m=>`<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--txt2)">${dot(m)}${NOMES[m]}</span>`).join('')}
       ${isAluno?`<span style="font-size:11px;color:var(--txt2)">· Prazo: <strong>${prazoMin>=60?prazoMin/60+'h':prazoMin+'min'}</strong> antes</span>`:''}
     </div>`
 
-    // Navegação de semana
     const fAtivo = window._gradeFiltros && Object.values(window._gradeFiltros).some(v=>v)
     const horasUnicas = [...new Set((ocRes.data||[]).map(o => {
       const dt = new Date(o.data_hora)
@@ -238,7 +236,6 @@ export async function renderGrade(container, page) {
       </div>`:''}
     </div>`
 
-    // Modal detalhes ocorrência (admin)
     const modalDetalhes = !isAluno ? modal('modal-det-oc', 'Detalhes da Aula',
       `<div id="det-oc-body">Carregando...</div>`,
       `<button onclick="document.getElementById('modal-det-oc').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Fechar</button>
@@ -300,15 +297,15 @@ export async function renderGrade(container, page) {
     }
 
     window.verDetalhesOcorrencia = async function(ocId) {
-      const modal = document.getElementById('modal-det-oc')
-      modal.style.display = 'flex'
+      const modalEl = document.getElementById('modal-det-oc')
+      modalEl.style.display = 'flex'
       const body = document.getElementById('det-oc-body')
       body.innerHTML = 'Carregando...'
-      const [ocRes, confsRes] = await Promise.all([
+      const [ocRes2, confsRes] = await Promise.all([
         sb.from('ocorrencias_vagas').select('*').eq('id', ocId).single(),
         sb.from('confirmacoes').select('*, aluno:perfis!aluno_id(nome)').eq('ocorrencia_id', ocId).in('status',['confirmado','presente','ausente']).order('confirmado_em'),
       ])
-      const oc = ocRes.data
+      const oc = ocRes2.data
       const confs = confsRes.data || []
       const dt = new Date(oc.data_hora)
       body.innerHTML = `
@@ -333,4 +330,4 @@ export async function renderGrade(container, page) {
       `
       window._ocAtual = ocId
     }
-}
+}    
