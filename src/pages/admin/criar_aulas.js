@@ -447,17 +447,35 @@ export async function renderCriarAulas(container, page) {
       const pendentes = aulas.filter(a => a.tipo==='fixa' && a.ativa && !ocsFuturas[a.id])
       if (!pendentes.length) { toast('Nenhuma aula pendente'); return }
       if (!confirm(`Gerar ocorrências para ${pendentes.length} aula(s) sem datas futuras? Período: hoje até 3 anos.`)) return
-      const hoje2 = new Date().toISOString().slice(0,10)
-      const em3anos = new Date(); em3anos.setFullYear(em3anos.getFullYear()+3)
+
+      const de  = new Date().toISOString().slice(0,10)
+      const ate = (() => { const d = new Date(); d.setFullYear(d.getFullYear()+3); return d.toISOString().slice(0,10) })()
+
+      // Garante que os inputs existem no DOM (modal pode não ter sido aberto)
+      let deEl = document.getElementById('ger-de')
+      let ateEl = document.getElementById('ger-ate')
+      if (!deEl || !ateEl) {
+        // Cria inputs ocultos temporários
+        deEl  = Object.assign(document.createElement('input'), { id:'ger-de',  type:'date', value: de,  style:'display:none' })
+        ateEl = Object.assign(document.createElement('input'), { id:'ger-ate', type:'date', value: ate, style:'display:none' })
+        document.body.appendChild(deEl)
+        document.body.appendChild(ateEl)
+      }
+      deEl.value  = de
+      ateEl.value = ate
+
       let totalGerado = 0
       for (const aula of pendentes) {
         window._aulaParaGerar = aula.id
-        document.getElementById('ger-de').value = hoje2
-        document.getElementById('ger-ate').value = em3anos.toISOString().slice(0,10)
-        await executarGerarOcorrencias(true) // true = silencioso
+        await executarGerarOcorrencias(true)
         totalGerado++
-        toast(`Gerando... ${totalGerado}/${pendentes.length}`)
+        toast(`Gerando ${totalGerado}/${pendentes.length}...`)
       }
+
+      // Limpa inputs temporários
+      document.getElementById('ger-de')?.remove()
+      document.getElementById('ger-ate')?.remove()
+
       toast('✓ ' + totalGerado + ' aulas geradas!')
       navigate('criar-aulas')
     }
