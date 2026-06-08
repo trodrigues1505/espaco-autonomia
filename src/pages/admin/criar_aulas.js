@@ -13,22 +13,32 @@ export async function renderCriarAulas(container, page) {
   const perfil = window._perfil
   const tipo = perfil?.tipo
 
-    const hoje = new Date().toISOString()
-    const [aulasRes, profsRes, cfgRes, ocsRes] = await Promise.all([
+    const [aulasRes, profsRes, cfgRes] = await Promise.all([
       sb.from('aulas').select('*, professor:perfis!professor_id(nome), horarios:aulas_horarios(*)').order('criado_em', {ascending:false}),
-      sb.from('perfis').select('id,nome').in('tipo',['admin','professor']).order('nome'),
+      sb.from('perfis').select('id,nome').eq('tipo','professor').order('nome'),
       sb.from('configuracoes').select('*'),
-      sb.from('ocorrencias').select('aula_id').gte('data_hora', hoje).eq('cancelada', false),
     ])
     const aulas = aulasRes.data || []
     const profs = profsRes.data || []
     const cfg = Object.fromEntries((cfgRes.data||[]).map(c=>[c.chave,c.valor]))
-    const fixas = aulas.filter(a=>a.tipo==='fixa')
-    const avulsas = aulas.filter(a=>a.tipo==='avulsa')
-    // Mapa aula_id → quantidade de ocorrências futuras geradas
-    const ocsPorAula = {}
-    for (const oc of (ocsRes.data || [])) {
-      ocsPorAula[oc.aula_id] = (ocsPorAula[oc.aula_id] || 0) + 1
+    // Filtros
+    const filtroMod  = window._criarFiltroMod  || ''
+    const filtroProf = window._criarFiltroProf || ''
+    const filtroStat = window._criarFiltroStat || ''
+    const filtrar = arr => arr
+      .filter(a => !filtroMod  || a.modalidade === filtroMod)
+      .filter(a => !filtroProf || a.professor_id === filtroProf)
+      .filter(a => !filtroStat || (filtroStat==='ativa'?a.ativa:!a.ativa))
+    const fixas   = filtrar(aulas.filter(a=>a.tipo==='fixa'))
+    const avulsas = filtrar(aulas.filter(a=>a.tipo==='avulsa'))
+
+    // Detectar redundâncias: aulas fixas com mesma modalidade + dia + horário
+    const chaveAula = a => (a.horarios||[]).map(h=>a.modalidade+'|'+h.dia_semana+'|'+h.hora_inicio.slice(0,5)).sort().join(',')
+    const chaveMap = {}, redundantes = new Set()
+    for (const a of aulas.filter(a=>a.tipo==='fixa' && a.ativa)) {
+      const k = chaveAula(a)
+      if (k && chaveMap[k]) { redundantes.add(a.id); redundantes.add(chaveMap[k]) }
+      else if (k) chaveMap[k] = a.id
     }
 
     function renderAulaRow(a) {
@@ -36,18 +46,14 @@ export async function renderCriarAulas(container, page) {
       const statusBadge = a.ativa
         ? badge('Ativa','#e8f4e8','#1a5a1a')
         : badge('Inativa','#fceaea','#8a1a1a')
-      const nOcs = ocsPorAula[a.id] || 0
-      const geradoBadge = nOcs > 0
-        ? `<span style="background:#e8f4e8;color:#1a5a1a;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:500">✓ ${nOcs} futuras</span>`
-        : `<span style="background:#fceaea;color:#8a1a1a;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:500">⚠ Não gerada</span>`
-      return `<div style="display:grid;grid-template-columns:1fr 110px 70px 60px 110px 60px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
-        <span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">${dot(a.modalidade)}<strong>${NOMES[a.modalidade]}</strong><span style="font-size:10px;color:var(--txt2)">${diasStr}</span></span>
+      const isRed = redundantes.has(a.id)
+      return `<div style="display:grid;grid-template-columns:1fr 110px 70px 60px 110px 60px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px;background:${isRed?'rgba(255,180,180,.12)':'transparent'}">
+        <span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">${dot(a.modalidade)}<strong>${NOMES[a.modalidade]}</strong><span style="font-size:10px;color:var(--txt2)">${diasStr}</span>${isRed?'<span style="background:#fceaea;color:#8a1a1a;font-size:9px;padding:1px 6px;border-radius:8px">⚠ redundante</span>':''}</span>
         <span style="font-size:11px;color:var(--txt2)">${a.professor?.nome||'—'}</span>
         <span style="font-size:11px">${a.vagas} vagas</span>
         <span>${statusBadge}</span>
         <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-start">
-          ${geradoBadge}
-          <button onclick="gerarOcorrenciasAula('${a.id}')" style="padding:2px 8px;background:rgba(31,56,31,.08);color:var(--verde);border:1px solid rgba(31,56,31,.2);border-radius:4px;font-size:9px;cursor:pointer;font-family:'DM Sans',sans-serif">${nOcs>0?'↻ Regerar':'▶ Gerar'}</button>
+          <button onclick="gerarOcorrenciasAula('${a.id}')" style="padding:2px 8px;background:rgba(31,56,31,.08);color:var(--verde);border:1px solid rgba(31,56,31,.2);border-radius:4px;font-size:9px;cursor:pointer;font-family:'DM Sans',sans-serif">▶ Gerar</button>
         </div>
         <div style="display:flex;gap:3px">
           <button onclick="editarAula('${a.id}')" style="padding:3px 7px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Editar">✎</button>
@@ -111,18 +117,46 @@ export async function renderCriarAulas(container, page) {
         <button onclick="document.getElementById('modal-criar-aula').style.display='flex'" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-plus"></i> Nova Aula</button>
       </div>
       <div class="content">
-        <div style="background:rgba(31,56,31,.04);border:1px solid rgba(31,56,31,.12);border-radius:6px;padding:9px 13px;font-size:12px;color:var(--verde);margin-bottom:16px;display:flex;align-items:center;gap:8px">
+        <div style="background:rgba(31,56,31,.04);border:1px solid rgba(31,56,31,.12);border-radius:6px;padding:9px 13px;font-size:12px;color:var(--verde);margin-bottom:12px;display:flex;align-items:center;gap:8px">
           <i class="ti ti-info-circle"></i>
           <span>Após criar uma aula fixa, clique em <strong>Gerar</strong> para criar as datas do semestre no banco.</span>
         </div>
+        ${redundantes.size>0?`<div style="background:#fceaea;border:1px solid #f5c1c1;border-radius:6px;padding:9px 13px;font-size:12px;color:#8a1a1a;margin-bottom:12px">⚠ <strong>${redundantes.size} aula(s) com possível redundância</strong> — mesma modalidade, dia e horário já cadastrados.</div>`:''}
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:flex-end">
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Modalidade</label>
+            <select onchange="window._criarFiltroMod=this.value;navigate('criar-aulas')" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff">
+              <option value="" ${!filtroMod?'selected':''}>Todas</option>
+              <option value="hatha" ${filtroMod==='hatha'?'selected':''}>Hatha Yoga</option>
+              <option value="acro"  ${filtroMod==='acro' ?'selected':''}>Acro Yoga</option>
+              <option value="raja"  ${filtroMod==='raja' ?'selected':''}>Raja Yoga</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Professor</label>
+            <select onchange="window._criarFiltroProf=this.value;navigate('criar-aulas')" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff">
+              <option value="" ${!filtroProf?'selected':''}>Todos</option>
+              ${profs.map(p=>`<option value="${p.id}" ${filtroProf===p.id?'selected':''}>${p.nome}</option>`).join('')}
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Status</label>
+            <select onchange="window._criarFiltroStat=this.value;navigate('criar-aulas')" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff">
+              <option value="" ${!filtroStat?'selected':''}>Todos</option>
+              <option value="ativa"   ${filtroStat==='ativa'  ?'selected':''}>Ativa</option>
+              <option value="inativa" ${filtroStat==='inativa'?'selected':''}>Inativa</option>
+            </select>
+          </div>
+          ${filtroMod||filtroProf||filtroStat?`<button onclick="window._criarFiltroMod='';window._criarFiltroProf='';window._criarFiltroStat='';navigate('criar-aulas')" style="padding:5px 10px;background:#fceaea;color:#8a1a1a;border:1px solid #f5c1c1;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;align-self:flex-end">✕ Limpar</button>`:''}
+        </div>
         ${card('Aulas Fixas ('+fixas.length+')', '',
-          `<div style="display:grid;grid-template-columns:1fr 110px 70px 60px 110px 60px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
+          `<div style="display:grid;grid-template-columns:1fr 110px 90px 60px 80px 70px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
             <span>Modalidade / Dias</span><span>Professor</span><span>Vagas</span><span>Status</span><span>Ocorrências</span><span>Ação</span>
           </div>
           ${fixas.length===0?'<div style="padding:18px;font-size:12px;color:var(--txt2)">Nenhuma aula fixa criada.</div>':fixas.map(renderAulaRow).join('')}`
         )}
         ${card('Aulas Avulsas ('+avulsas.length+')', '',
-          `<div style="display:grid;grid-template-columns:1fr 110px 70px 60px 110px 60px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
+          `<div style="display:grid;grid-template-columns:1fr 110px 90px 60px 80px 70px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
             <span>Modalidade / Data</span><span>Professor</span><span>Vagas</span><span>Status</span><span></span><span>Ação</span>
           </div>
           ${avulsas.length===0?'<div style="padding:18px;font-size:12px;color:var(--txt2)">Nenhuma aula avulsa criada.</div>':avulsas.map(renderAulaRow).join('')}`
