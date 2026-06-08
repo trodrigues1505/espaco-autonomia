@@ -374,7 +374,7 @@ export async function renderCriarAulas(container, page) {
       div.style.cssText = 'position:fixed;inset:0;background:rgba(31,56,31,.7);z-index:250;display:flex;align-items:center;justify-content:center;padding:16px'
       let html = '<div style="background:#fff;border-radius:12px;width:620px;max-width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden">'
         + '<div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">'
-          + '<div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)">Resolver Redundâncias</div>'
+          + '<div style="font-family:Cormorant Garamond,serif;font-size:18px;font-weight:500;color:var(--bege)">Resolver Redundâncias</div>'
           + '<button onclick="document.getElementById('modal-redundancias').remove()" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer">×</button>'
         + '</div><div style="overflow-y:auto;flex:1;padding:16px">'
       for (const grupo of gruposRed) {
