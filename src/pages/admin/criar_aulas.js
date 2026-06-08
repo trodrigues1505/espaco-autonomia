@@ -375,7 +375,7 @@ export async function renderCriarAulas(container, page) {
       let html = '<div style="background:#fff;border-radius:12px;width:620px;max-width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden">'
         + '<div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">'
           + '<div style="font-family:Cormorant Garamond,serif;font-size:18px;font-weight:500;color:var(--bege)">Resolver Redundâncias</div>'
-          + '<button onclick="document.getElementById('modal-redundancias').remove()" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer">×</button>'
+          + '<button id="btn-fechar-red" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer">×</button>'
         + '</div><div style="overflow-y:auto;flex:1;padding:16px">'
       for (const grupo of gruposRed) {
         const ex = grupo[0]
@@ -397,6 +397,7 @@ export async function renderCriarAulas(container, page) {
       html += '</div><div style="padding:12px 16px;border-top:1px solid var(--borda);font-size:11px;color:var(--txt2)">Excluir remove a aula e ocorrências futuras. Passadas são preservadas.</div></div>'
       div.innerHTML = html
       document.body.appendChild(div)
+      document.getElementById('btn-fechar-red')?.addEventListener('click', () => div.remove())
       div.addEventListener('click', e => { if (e.target===div) div.remove() })
     }
 
