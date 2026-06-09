@@ -135,7 +135,7 @@ export async function renderAlunos(container, page) {
           }).join('')}
         </div>
         ${card('Lista de Alunos ('+alunos.length+')', '',
-          `<div style="display:grid;grid-template-columns:1fr 80px 60px 60px 80px 70px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
+          `<div style="display:grid;grid-template-columns:1fr 80px 60px 60px 80px 140px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
             <span>Aluno</span><span>Plano</span><span>Freq.</span><span>Saldo</span><span>Validade</span><span></span>
           </div>
           ${alunos.length===0?'<div style="padding:18px;font-size:12px;color:var(--txt2)">Nenhum aluno encontrado.</div>':
@@ -148,7 +148,7 @@ export async function renderAlunos(container, page) {
               const ehLivre = mat?.plano_tipo === 'vishnu_livre' || mat?.opcao_aulas === 99
               const saldoLabel = ehLivre ? '∞' : saldo !== null ? String(saldo) : '—'
               const saldoCor = ehLivre ? 'var(--verde)' : saldo === 0 ? '#c0392b' : (saldo !== null && saldo <= 1) ? '#e67e22' : 'var(--verde)'
-              return `<div style="display:grid;grid-template-columns:1fr 80px 60px 60px 80px 70px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
+              return `<div style="display:grid;grid-template-columns:1fr 80px 60px 60px 80px 140px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
                 <div style="display:flex;align-items:center;gap:8px">
                   <div style="width:28px;height:28px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:var(--verde);flex-shrink:0">${initials}</div>
                   <div><div style="font-weight:500">${a.nome}</div><div style="font-size:10px;color:var(--txt2)">${a.email}</div></div>
@@ -157,7 +157,10 @@ export async function renderAlunos(container, page) {
                 <span style="font-size:11px;color:var(--txt2)">${opcaoLabel}</span>
                 <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:${saldoCor}">${saldoLabel}</span>
                 <span style="font-size:11px;color:${vencida?'#c0392b':'var(--txt2)'}">${mat?.fim?new Date(mat.fim+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):vencida?'Vencida':'—'}</span>
-                <button onclick="editarAluno('${a.id}')" style="padding:3px 10px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:11px;cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif">Editar</button>
+                <div style="display:flex;gap:4px">
+                  <button onclick="editarAluno('${a.id}')" style="padding:3px 10px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:11px;cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif">Editar</button>
+                  <button onclick="confirmarExcluirAluno('${a.id}','${a.nome.replace(/'/g,"\\'")}')" style="padding:3px 8px;background:transparent;border:1px solid #f5c1c1;border-radius:5px;font-size:11px;cursor:pointer;color:#c0392b;font-family:'DM Sans',sans-serif" title="Excluir aluno">✕</button>
+                </div>
               </div>`
             }).join('')
           }`
@@ -165,13 +168,30 @@ export async function renderAlunos(container, page) {
       </div>
       ${modalCadastro}
       ${modalEditar}
+
+      <!-- Modal confirmação exclusão -->
+      <div id="modal-excluir-aluno" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.6);z-index:200;align-items:center;justify-content:center;padding:16px">
+        <div style="background:#fff;border-radius:12px;width:400px;max-width:100%;overflow:hidden">
+          <div style="background:#c0392b;padding:16px 20px">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:#fff">Excluir Aluno</div>
+          </div>
+          <div style="padding:20px">
+            <div id="excluir-aluno-msg" style="font-size:13px;color:var(--txt);margin-bottom:8px"></div>
+            <div style="font-size:11px;color:#c0392b;background:#fceaea;border:1px solid #f5c1c1;border-radius:6px;padding:10px;margin-top:10px">
+              ⚠ Esta ação remove o perfil, matrículas e presenças do aluno. Não pode ser desfeita.
+            </div>
+          </div>
+          <div style="padding:0 20px 16px;display:flex;justify-content:flex-end;gap:8px">
+            <button onclick="document.getElementById('modal-excluir-aluno').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+            <button id="btn-confirmar-exclusao" style="padding:7px 14px;background:#c0392b;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Excluir</button>
+          </div>
+        </div>
+      </div>
     `
 
-    // valoresPlano → use PLANO_VALORES
-    // opcaoPlano → use PLANO_OPCOES
     window.updateValorPlano = function() {
       const p = document.getElementById('ca-plano')?.value
-      if (p && document.getElementById('ca-valor')) document.getElementById('ca-valor').value = valoresPlano[p]||0
+      if (p && document.getElementById('ca-valor')) document.getElementById('ca-valor').value = PLANO_VALORES[p]||0
     }
 
     window.salvarNovoAluno = async function() {
@@ -183,19 +203,16 @@ export async function renderAlunos(container, page) {
       const valor = Number(document.getElementById('ca-valor').value)||PLANO_VALORES[plano]||0
       if (!nome||!email) { toast('Preencha nome e e-mail'); return }
 
-      // Cria usuário no Auth (admin API não disponível no client — orienta fluxo de convite)
       let invited = null, errInv = null
       try {
         const r = await sb.auth.admin?.inviteUserByEmail(email)
         invited = r?.data; errInv = r?.error
       } catch(e) { errInv = { message: 'use service role key' } }
 
-      // Fallback: cria perfil direto e orienta senha manual
       const { data: existente } = await sb.from('perfis').select('id').eq('email', email).single()
       let alunoId = existente?.id
 
       if (!alunoId) {
-        // Pré-cadastra perfil — aluno completa ao fazer login com Google
         const tempId = crypto.randomUUID()
         const { error: errP } = await sb.from('perfis').insert({
           id: tempId, nome, email, telefone: tel||null, tipo: 'aluno', ativo: true
@@ -276,7 +293,7 @@ export async function renderAlunos(container, page) {
 
     window.updateValorEdicao = function() {
       const p = document.getElementById('ea-plano')?.value
-      if (p && document.getElementById('ea-valor')) document.getElementById('ea-valor').value = valoresPlano[p]||0
+      if (p && document.getElementById('ea-valor')) document.getElementById('ea-valor').value = PLANO_VALORES[p]||0
     }
 
     window.salvarEdicaoAluno = async function() {
@@ -292,5 +309,37 @@ export async function renderAlunos(container, page) {
       document.getElementById('modal-edit-aluno').style.display = 'none'
       toast(asaasId ? '✓ Aluno atualizado! Asaas vinculado.' : '✓ Aluno atualizado!')
       navigate('alunos')
+    }
+
+    window.confirmarExcluirAluno = function(alunoId, nomeAluno) {
+      document.getElementById('excluir-aluno-msg').textContent = 'Tem certeza que deseja excluir ' + nomeAluno + '?'
+      document.getElementById('modal-excluir-aluno').style.display = 'flex'
+      document.getElementById('btn-confirmar-exclusao').onclick = function() {
+        excluirAluno(alunoId)
+      }
+    }
+
+    window.excluirAluno = async function(alunoId) {
+      const btn = document.getElementById('btn-confirmar-exclusao')
+      btn.disabled = true
+      btn.textContent = 'Excluindo...'
+      try {
+        // Remove presenças
+        await sb.from('presencas').delete().eq('aluno_id', alunoId)
+        // Remove saldo bonus
+        await sb.from('saldo_aulas').delete().eq('aluno_id', alunoId)
+        // Remove matrículas
+        await sb.from('matriculas').delete().eq('aluno_id', alunoId)
+        // Remove perfil
+        const { error } = await sb.from('perfis').delete().eq('id', alunoId)
+        if (error) throw new Error(error.message)
+        document.getElementById('modal-excluir-aluno').style.display = 'none'
+        toast('✓ Aluno excluído.')
+        navigate('alunos')
+      } catch(e) {
+        toast('Erro ao excluir: ' + e.message)
+        btn.disabled = false
+        btn.textContent = 'Excluir'
+      }
     }
 }
