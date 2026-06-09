@@ -51,21 +51,17 @@ async function syncAsaas(apiKey, sbClient) {
     if (!idsVistos.has(p.id)) { todos.push(p); idsVistos.add(p.id) }
   }
 
-  // ── Auto-link: busca clientes no Asaas e faz match por email nos perfis ──
-  // Coleta customer IDs únicos sem link ainda
+  // ── Auto-link via pagamentos: casa customers encontrados nas cobranças ──
   const customerIds = [...new Set(todos.map(p => p.customer).filter(Boolean))]
 
-  // Busca perfis que já têm asaas_customer_id para não sobrescrever
   const { data: perfisComId } = await sbClient
     .from('perfis')
     .select('id, email, asaas_customer_id')
     .not('asaas_customer_id', 'is', null)
   const jaVinculados = new Set((perfisComId || []).map(p => p.asaas_customer_id))
 
-  // Para IDs novos, busca o email no Asaas e tenta linkar ao perfil
   const novosIds = customerIds.filter(id => !jaVinculados.has(id))
   if (novosIds.length > 0) {
-    // Busca todos os perfis sem ID para cruzar por email
     const { data: perfisSemId } = await sbClient
       .from('perfis')
       .select('id, email')
@@ -85,13 +81,49 @@ async function syncAsaas(apiKey, sbClient) {
               .from('perfis')
               .update({ asaas_customer_id: customerId })
               .eq('id', perfilId)
-            // Atualiza o map local para que pagamentos subsequentes no mesmo sync já peguem
             jaVinculados.add(customerId)
           }
         }
       } catch(e) {
-        // Ignora erros individuais de customer lookup para não travar o sync
+        // Ignora erros individuais para não travar o sync
       }
+    }
+  }
+
+  // ── Auto-link completo: varre TODOS os customers do Asaas ──
+  // Cobre alunos cadastrados antes da implementação do Asaas,
+  // que não têm cobranças no período e nunca foram vinculados.
+  const { data: todosPerfis } = await sbClient
+    .from('perfis')
+    .select('id, email, asaas_customer_id')
+    .eq('tipo', 'aluno')
+
+  const perfilPorEmailGlobal = Object.fromEntries(
+    (todosPerfis || [])
+      .filter(p => !p.asaas_customer_id)
+      .map(p => [p.email.toLowerCase(), p.id])
+  )
+
+  if (Object.keys(perfilPorEmailGlobal).length > 0) {
+    let offsetCustomers = 0
+    while (true) {
+      const clientesPage = await asaasProxy(
+        `/customers?limit=100&offset=${offsetCustomers}`, apiKey
+      )
+      for (const cliente of (clientesPage.data || [])) {
+        if (!cliente.email) continue
+        const emailNorm = cliente.email.toLowerCase()
+        const perfilId = perfilPorEmailGlobal[emailNorm]
+        if (perfilId) {
+          await sbClient
+            .from('perfis')
+            .update({ asaas_customer_id: cliente.id })
+            .eq('id', perfilId)
+          delete perfilPorEmailGlobal[emailNorm] // evita update duplo na mesma varredura
+        }
+      }
+      if (!clientesPage.hasMore) break
+      offsetCustomers += 100
     }
   }
 
@@ -350,7 +382,7 @@ export async function renderPagamentos(container, page) {
         <div style="background:#fff;border-radius:12px;width:420px;max-width:100%;overflow:hidden">
           <div style="background:var(--verde);padding:16px 20px">
             <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)">Sincronizar com Asaas</div>
-            <div style="font-size:11px;color:rgba(242,236,206,.7);margin-top:2px">Importa cobranças dos últimos 2 meses + vencidas · vincula alunos por e-mail automaticamente</div>
+            <div style="font-size:11px;color:rgba(242,236,206,.7);margin-top:2px">Importa cobranças dos últimos 2 meses + vencidas · vincula todos os alunos por e-mail automaticamente</div>
           </div>
           <div style="padding:20px">
             <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px">
