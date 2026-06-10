@@ -27,14 +27,6 @@ export async function renderAlunos(container, page) {
       .filter(a => !busca || a.nome.toLowerCase().includes(busca.toLowerCase()) || a.email.toLowerCase().includes(busca.toLowerCase()))
       .filter(a => !filtroPlanok || (a.matriculas||[]).some(m=>m.ativa && m.plano_tipo===filtroPlanok))
 
-    const planoBadge = {
-      brahma:       badge('Brahma','#f0ede4','#5a5a4a'),
-      shiva_1x:     badge('Shiva 1x','#e8f4e8','#1a5a1a'),
-      shiva_2x:     badge('Shiva 2x','#d4edda','#155724'),
-      vishnu_2x:    badge('Vishnu 2x','rgba(232,188,79,.15)','#7a5a10'),
-      vishnu_livre: badge('Vishnu Livre','rgba(232,188,79,.25)','#5a3a00'),
-    }
-
     const modalCadastro = modal('modal-cad-aluno', 'Cadastrar Aluno',
       `${fi('','Nome completo',`<input type="text" id="ca-nome" ${inputStyle} placeholder="Nome do aluno">`)}
       ${fi('','E-mail',`<input type="email" id="ca-email" ${inputStyle} placeholder="email@exemplo.com">`)}
@@ -62,7 +54,7 @@ export async function renderAlunos(container, page) {
        <button onclick="salvarNovoAluno()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Cadastrar</button>`
     )
 
-    const modalEditar = modal('modal-edit-aluno', 'Editar Plano',
+    const modalEditar = modal('modal-edit-aluno', 'Editar Aluno',
       `<div id="edit-aluno-body">Carregando...</div>`,
       `<button onclick="document.getElementById('modal-edit-aluno').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
        <button onclick="salvarEdicaoAluno()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Salvar</button>`
@@ -85,7 +77,6 @@ export async function renderAlunos(container, page) {
         </div>
       </div>
       <div class="content">
-        <!-- Stats row 1 -->
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px">
           <div style="background:var(--verde);border-radius:var(--r);padding:14px 16px">
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.7);margin-bottom:4px">Total de Alunos</div>
@@ -110,7 +101,6 @@ export async function renderAlunos(container, page) {
             <div style="font-size:10px;color:var(--txt2);margin-top:2px">planos vencendo</div>
           </div>
         </div>
-        <!-- Stats row 2: por plano com barra -->
         <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 18px;margin-bottom:14px">
           <div style="font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:12px;font-weight:500">Distribuição por Plano</div>
           ${[
@@ -169,7 +159,6 @@ export async function renderAlunos(container, page) {
       ${modalCadastro}
       ${modalEditar}
 
-      <!-- Modal confirmação exclusão -->
       <div id="modal-excluir-aluno" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.6);z-index:200;align-items:center;justify-content:center;padding:16px">
         <div style="background:#fff;border-radius:12px;width:400px;max-width:100%;overflow:hidden">
           <div style="background:#c0392b;padding:16px 20px">
@@ -203,10 +192,10 @@ export async function renderAlunos(container, page) {
       const valor = Number(document.getElementById('ca-valor').value)||PLANO_VALORES[plano]||0
       if (!nome||!email) { toast('Preencha nome e e-mail'); return }
 
-      let invited = null, errInv = null
+      let errInv = null
       try {
         const r = await sb.auth.admin?.inviteUserByEmail(email)
-        invited = r?.data; errInv = r?.error
+        errInv = r?.error
       } catch(e) { errInv = { message: 'use service role key' } }
 
       const { data: existente } = await sb.from('perfis').select('id').eq('email', email).single()
@@ -238,7 +227,14 @@ export async function renderAlunos(container, page) {
       const mat = (a.matriculas||[]).find(m=>m.ativa)
       window._editAlunoId = alunoId
       document.getElementById('edit-aluno-body').innerHTML = `
-        <div style="margin-bottom:10px"><div style="font-weight:500;font-size:14px">${a.nome}</div><div style="font-size:11px;color:var(--txt2)">${a.email}</div></div>
+        <!-- Dados pessoais editáveis -->
+        <div style="background:rgba(242,236,206,.3);border:1px solid var(--borda);border-radius:8px;padding:12px;margin-bottom:14px">
+          <div style="font-size:11px;font-weight:500;color:var(--verde);margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px">Dados Pessoais</div>
+          ${fi('','Nome completo',`<input type="text" id="ea-nome" ${inputStyle} value="${(a.nome||'').replace(/"/g,'&quot;')}">`)}
+          ${fi('','Telefone',`<input type="tel" id="ea-tel" ${inputStyle} value="${a.telefone||''}" placeholder="(11) 99999-9999">`)}
+          <div style="font-size:11px;color:var(--txt2);margin-top:4px">E-mail: <strong>${a.email}</strong> (não editável — usado para login)</div>
+        </div>
+        <!-- Plano -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           ${fi('','Plano',`<select id="ea-plano" ${inputStyle} onchange="updateValorEdicao()">
             <option value="brahma" ${mat?.plano_tipo==='brahma'?'selected':''}>Brahma — 1× por semana — R$100/mês</option>
@@ -297,15 +293,30 @@ export async function renderAlunos(container, page) {
     }
 
     window.salvarEdicaoAluno = async function() {
+      const nome = document.getElementById('ea-nome')?.value.trim()
+      const tel  = document.getElementById('ea-tel')?.value.trim()
+      if (!nome) { toast('O nome não pode ficar vazio'); return }
+
       const plano = document.getElementById('ea-plano').value
       const opcao = PLANO_OPCOES[plano]||1
       const valor = Number(document.getElementById('ea-valor').value)||PLANO_VALORES[plano]||0
       const fim = document.getElementById('ea-fim').value || null
       const ativo = document.getElementById('ea-ativo').value === 'true'
+      const asaasId = document.getElementById('ea-asaas')?.value?.trim() || null
+
+      // Salva dados pessoais
+      const { error: errPerfil } = await sb.from('perfis').update({
+        nome,
+        telefone: tel || null,
+        ativo,
+        asaas_customer_id: asaasId,
+      }).eq('id', window._editAlunoId)
+      if (errPerfil) { toast('Erro ao salvar perfil: ' + errPerfil.message); return }
+
+      // Salva matrícula
       await sb.from('matriculas').update({ativa:false}).eq('aluno_id', window._editAlunoId).eq('ativa', true)
       await sb.from('matriculas').insert({ aluno_id: window._editAlunoId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor, fim })
-      const asaasId = document.getElementById('ea-asaas')?.value?.trim() || null
-      await sb.from('perfis').update({ ativo, asaas_customer_id: asaasId }).eq('id', window._editAlunoId)
+
       document.getElementById('modal-edit-aluno').style.display = 'none'
       toast(asaasId ? '✓ Aluno atualizado! Asaas vinculado.' : '✓ Aluno atualizado!')
       navigate('alunos')
@@ -324,13 +335,9 @@ export async function renderAlunos(container, page) {
       btn.disabled = true
       btn.textContent = 'Excluindo...'
       try {
-        // Remove presenças
         await sb.from('presencas').delete().eq('aluno_id', alunoId)
-        // Remove saldo bonus
         await sb.from('saldo_aulas').delete().eq('aluno_id', alunoId)
-        // Remove matrículas
         await sb.from('matriculas').delete().eq('aluno_id', alunoId)
-        // Remove perfil
         const { error } = await sb.from('perfis').delete().eq('id', alunoId)
         if (error) throw new Error(error.message)
         document.getElementById('modal-excluir-aluno').style.display = 'none'
