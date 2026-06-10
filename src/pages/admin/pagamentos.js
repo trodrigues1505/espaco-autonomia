@@ -315,7 +315,8 @@ export async function renderPagamentos(container, page) {
         <div style="margin-left:auto;font-size:11px;color:var(--txt2);align-self:flex-end">${pgsFiltrados.length} registro(s)</div>
       </div>
 
-      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden">
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden;min-width:520px">
         <div style="display:grid;grid-template-columns:1fr 110px 90px 100px 80px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
           <span onclick="window._pgSort=window._pgSort==='nome_asc'?'nome_desc':'nome_asc';navigate('pagamentos')" style="cursor:pointer">Aluno ${window._pgSort?.startsWith('nome')?window._pgSort==='nome_asc'?'↑':'↓':'↕'}</span>
           <span onclick="window._pgSort=window._pgSort==='data_asc'?'data_desc':'data_asc';navigate('pagamentos')" style="cursor:pointer">Vencimento ${window._pgSort?.startsWith('data')?window._pgSort==='data_asc'?'↑':'↓':'↕'}</span>
@@ -339,6 +340,7 @@ export async function renderPagamentos(container, page) {
               </div>`
             }).join('')
         }
+      </div>
       </div>
 
       <!-- Modal perfil aluno (via pagamentos) -->
@@ -445,7 +447,7 @@ export async function renderPagamentos(container, page) {
         </div>`).join('')}
       ` : '<div style="font-size:12px;color:var(--txt2)">Nenhum pagamento encontrado.</div>'}
       <div style="margin-top:16px;display:flex;gap:8px">
-        <button onclick="document.getElementById('modal-pg-aluno').style.display='none';window.editarAluno('${alunoId}')" style="flex:1;padding:8px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Editar aluno</button>
+        <button onclick="document.getElementById('modal-pg-aluno').style.display='none';navigate('alunos').then(()=>setTimeout(()=>window.editarAluno&&window.editarAluno('${alunoId}'),300))" style="flex:1;padding:8px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Editar aluno</button>
         <button onclick="document.getElementById('modal-pg-aluno').style.display='none'" style="padding:8px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Fechar</button>
       </div>
     `
