@@ -7,7 +7,7 @@ import { buildMenu, homePorPerfil, initMobileMenu } from './navigation.js'
 import { verificarContrato } from './contrato.js'
 import { initProfessorCancel } from './professor-cancel.js'
 import { toast, PLANO_NOMES } from './utils.js'
-
+   
 // ── Onboarding ───────────────────────────────────────────────
 export async function mostrarOnboarding(user, nomeGoogle) {
   const { data: planos } = await sb
