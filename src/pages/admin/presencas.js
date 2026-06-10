@@ -35,7 +35,6 @@ export async function renderPresencas(container, page) {
     ocAtual = ocRes.data
   }
 
-  // Busca todos os alunos para o seletor de adição manual
   const { data: todosAlunos } = await sb.from('perfis')
     .select('id,nome,email')
     .eq('tipo','aluno')
@@ -65,9 +64,10 @@ export async function renderPresencas(container, page) {
   const anteriorISO = antOntem.toISOString().slice(0,10)
   const amanhaISO   = amanha.toISOString().slice(0,10)
 
-  // IDs já confirmados para não duplicar no seletor
   const alunosJaConfirmados = new Set(confs.map(c => c.aluno?.id).filter(Boolean))
   const alunosDisponiveis = (todosAlunos||[]).filter(a => !alunosJaConfirmados.has(a.id))
+
+  const aulaPassada = ocAtual ? new Date(ocAtual.data_hora) < hoje : false
 
   container.innerHTML = `
     <div class="topbar">
@@ -94,16 +94,16 @@ export async function renderPresencas(container, page) {
           `${NOMES[ocAtual.modalidade]} — ${new Date(ocAtual.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`,
           `<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
             ${badge(ocAtual.confirmados+'/'+(ocAtual.vagas_total)+' conf.','#e8f4e8','#1a5a1a')}
+            ${aulaPassada ? '<span style="font-size:10px;color:#e67e22;background:rgba(230,126,34,.1);padding:2px 8px;border-radius:10px">Aula já realizada</span>' : ''}
             <button onclick="marcarTodosPresentes()" style="padding:3px 10px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">✓ Todos presentes</button>
           </div>`,
-          `<!-- Adicionar aluno manualmente -->
-          <div style="padding:10px 18px;background:rgba(242,236,206,.25);border-bottom:1px solid var(--borda);display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          `<div style="padding:10px 18px;background:rgba(242,236,206,.25);border-bottom:1px solid var(--borda);display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <span style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500;white-space:nowrap">+ Adicionar aluno</span>
             <select id="sel-add-aluno" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff;color:var(--txt);flex:1;min-width:180px">
               <option value="">— selecionar aluno —</option>
               ${alunosDisponiveis.map(a=>`<option value="${a.id}">${a.nome}</option>`).join('')}
             </select>
-            <button onclick="adicionarAlunoPresenca('${ocSelecionadaId}')" style="padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Adicionar</button>
+            <button onclick="adicionarAlunoPresenca('${ocSelecionadaId}')" style="padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Adicionar${aulaPassada?' (débita saldo)':''}</button>
           </div>
           <div style="display:grid;grid-template-columns:1fr 90px 100px 120px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
             <span>Aluno</span><span>Confirmou</span><span>Status</span><span>Ações</span>
@@ -119,7 +119,7 @@ export async function renderPresencas(container, page) {
               <div style="display:flex;gap:4px">
                 <button onclick="setPresenca('${c.id}',true)" style="padding:3px 7px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Presente">✓</button>
                 <button onclick="setPresenca('${c.id}',false)" style="padding:3px 7px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Ausente">✕</button>
-                <button onclick="excluirPresenca('${c.id}','${c.aluno?.nome||''}')" style="padding:3px 7px;background:#f0ede4;color:#5a5a4a;border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Remover presença">🗑</button>
+                <button onclick="excluirPresenca('${c.id}','${(c.aluno?.nome||'').replace(/'/g,"\\'")}','${c.aluno?.id||''}')" style="padding:3px 7px;background:#f0ede4;color:#5a5a4a;border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Remover presença">🗑</button>
               </div>
             </div>`).join('')
           }`
@@ -148,12 +148,10 @@ export async function renderPresencas(container, page) {
     navigate('presencas')
   }
 
-  // ── NOVO: Adicionar aluno manualmente a qualquer hora ──
   window.adicionarAlunoPresenca = async function(ocId) {
     const alunoId = document.getElementById('sel-add-aluno')?.value
     if (!alunoId) { toast('Selecione um aluno'); return }
 
-    // Verifica se já tem confirmação (qualquer status)
     const { data: existe } = await sb.from('confirmacoes')
       .select('id,status')
       .eq('ocorrencia_id', ocId)
@@ -161,8 +159,8 @@ export async function renderPresencas(container, page) {
       .single()
 
     if (existe) {
-      // Reativa se estava cancelado
       if (existe.status === 'cancelado') {
+        // Reativa sem debitar novamente (já foi debitado antes)
         await sb.from('confirmacoes').update({ status:'presente', presenca_em: new Date().toISOString() }).eq('id', existe.id)
         toast('✓ Presença reativada!')
       } else {
@@ -172,30 +170,26 @@ export async function renderPresencas(container, page) {
       return
     }
 
-    // Cria nova confirmação marcada como presente diretamente
-    const { error } = await sb.from('confirmacoes').insert({
-      ocorrencia_id: ocId,
-      aluno_id: alunoId,
-      status: 'presente',
-      confirmado_em: new Date().toISOString(),
-      presenca_em: new Date().toISOString(),
+    // Nova presença — usa RPC que debita saldo corretamente
+    const { data, error } = await sb.rpc('admin_adicionar_presenca', {
+      p_aluno_id: alunoId,
+      p_ocorrencia_id: ocId,
     })
-    if (error) { toast('Erro: '+error.message); return }
-    toast('✓ Aluno adicionado à presença!')
+    if (error || !data?.ok) {
+      toast('Erro: ' + (data?.motivo || error?.message))
+      return
+    }
+    toast('✓ Aluno adicionado!' + (aulaPassada ? ' Saldo debitado.' : ''))
     navigate('presencas')
   }
 
-  // ── NOVO: Excluir presença e estornar crédito se necessário ──
-  window.excluirPresenca = async function(confId, nomeAluno) {
+  window.excluirPresenca = async function(confId, nomeAluno, alunoId) {
     if (!confirm('Remover presença de ' + nomeAluno + '?\nSe o saldo foi debitado, ele será estornado.')) return
 
     const { data: conf } = await sb.from('confirmacoes').select('aluno_id,ocorrencia_id,status').eq('id', confId).single()
     if (!conf) { toast('Confirmação não encontrada'); return }
 
-    // Cancela a confirmação
-    const { error } = await sb.from('confirmacoes')
-      .update({ status: 'cancelado' })
-      .eq('id', confId)
+    const { error } = await sb.from('confirmacoes').update({ status: 'cancelado' }).eq('id', confId)
     if (error) { toast('Erro: '+error.message); return }
 
     // Estorna crédito se aluno não tem plano livre
