@@ -1,6 +1,6 @@
 /**
  * src/pages/aluno/plano.js
- * Meu plano — detalhes e saldo
+ * Meu plano — detalhes, saldo e edição de perfil
  */
 
 import { sb }         from '../../lib/supabase.js'
@@ -11,10 +11,9 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
 export async function renderAlunoPlano(container, page) {
   const sb = window._sb
   const perfil = window._perfil
-  const tipo = perfil?.tipo
 
     const [matRes, planosRes] = await Promise.all([
-      sb.from('matriculas').select('*, plano:planos(*, modalidades:plano_modalidades(modalidade))').eq('aluno_id', window._perfil.id).eq('ativa',true).single(),
+      sb.from('matriculas').select('*, plano:planos(*, modalidades:plano_modalidades(modalidade))').eq('aluno_id', perfil.id).eq('ativa',true).single(),
       sb.from('planos').select('*, modalidades:plano_modalidades(modalidade)').order('preco_1x'),
     ])
     const mat = matRes.data
@@ -33,8 +32,7 @@ export async function renderAlunoPlano(container, page) {
     const vencimento = mat?.fim ? new Date(mat.fim+'T12:00') : null
     const diasRestantes = vencimento ? Math.ceil((vencimento-new Date())/(1000*60*60*24)) : null
 
-    // Busca pagamentos do aluno
-    const { data: pgAluno } = await sb.from('pagamentos').select('*').eq('aluno_id', window._perfil.id).order('vencimento',{ascending:false}).limit(6)
+    const { data: pgAluno } = await sb.from('pagamentos').select('*').eq('aluno_id', perfil.id).order('vencimento',{ascending:false}).limit(6)
     const pgAtual = (pgAluno||[]).find(p=>p.mes_ref?.slice(0,7)===new Date().toISOString().slice(0,7))
     const pgStatusOk = !pgAluno?.length || pgAtual?.status==='RECEIVED' || pgAtual?.status==='CONFIRMED'
 
@@ -44,6 +42,32 @@ export async function renderAlunoPlano(container, page) {
     container.innerHTML = `
       <div class="topbar"><div class="topbar-t">Meu Plano</div></div>
       <div class="content">
+
+        <!-- Card de perfil editável -->
+        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">Meus Dados</div>
+            <button onclick="abrirEditarPerfil()" style="padding:5px 12px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:11px;cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif">✎ Editar</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;gap:8px;font-size:13px">
+              <span style="color:var(--txt2);min-width:70px;font-size:11px;text-transform:uppercase;letter-spacing:.6px;padding-top:1px">Nome</span>
+              <span id="perfil-nome-display" style="font-weight:500">${perfil.nome}</span>
+            </div>
+            <div style="display:flex;gap:8px;font-size:13px">
+              <span style="color:var(--txt2);min-width:70px;font-size:11px;text-transform:uppercase;letter-spacing:.6px;padding-top:1px">E-mail</span>
+              <span style="color:var(--txt2)">${perfil.email}</span>
+            </div>
+            ${perfil.telefone?`<div style="display:flex;gap:8px;font-size:13px">
+              <span style="color:var(--txt2);min-width:70px;font-size:11px;text-transform:uppercase;letter-spacing:.6px;padding-top:1px">Telefone</span>
+              <span id="perfil-tel-display">${perfil.telefone}</span>
+            </div>`:`<div style="display:flex;gap:8px;font-size:13px">
+              <span style="color:var(--txt2);min-width:70px;font-size:11px;text-transform:uppercase;letter-spacing:.6px;padding-top:1px">Telefone</span>
+              <span id="perfil-tel-display" style="color:#c0392b;font-size:12px">Não cadastrado</span>
+            </div>`}
+          </div>
+        </div>
+
         ${!mat?`<div style="text-align:center;padding:40px;font-size:13px;color:var(--txt2)">Nenhuma matrícula ativa. Entre em contato com o Espaço Autonomia.</div>`:`
           <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden;margin-bottom:16px">
             <div style="padding:18px;background:var(--verde)">
@@ -77,8 +101,7 @@ export async function renderAlunoPlano(container, page) {
             </div>
           `:''}
         `}
-      </div>
-    
+
         <!-- Histórico de pagamentos do aluno -->
         ${(pgAluno||[]).length?`<div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden;margin-bottom:14px">
           <div style="padding:13px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
@@ -91,5 +114,62 @@ export async function renderAlunoPlano(container, page) {
             <div style="text-align:right"><div style="font-weight:500">R$${(p.valor||0).toFixed(2).replace('.',',')}</div>
             <div style="font-size:10px;color:${pgStatusColor[p.status]||'#888'};margin-top:1px">${pgStatusLabel[p.status]||p.status}</div></div>
           </div>`).join('')}
-        </div>`:''}`
-}
+        </div>`:''}
+
+      </div>
+
+      <!-- Modal editar perfil -->
+      <div id="modal-editar-perfil" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.6);z-index:200;align-items:center;justify-content:center;padding:16px">
+        <div style="background:#fff;border-radius:12px;width:400px;max-width:100%;overflow:hidden">
+          <div style="background:var(--verde);padding:16px 20px">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)">Editar Meus Dados</div>
+          </div>
+          <div style="padding:20px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Nome completo</label>
+              <input id="edit-perfil-nome" type="text" value="${perfil.nome.replace(/"/g,'&quot;')}" style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Telefone / WhatsApp</label>
+              <input id="edit-perfil-tel" type="tel" value="${perfil.telefone||''}" placeholder="(11) 99999-9999" style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
+            </div>
+            <div style="font-size:11px;color:var(--txt2);background:rgba(242,236,206,.4);border-radius:6px;padding:8px 12px">
+              O e-mail não pode ser alterado pois é usado para o login com Google.
+            </div>
+          </div>
+          <div style="padding:0 20px 16px;display:flex;justify-content:flex-end;gap:8px">
+            <button onclick="document.getElementById('modal-editar-perfil').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+            <button onclick="salvarEdicaoPerfil()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Salvar</button>
+          </div>
+        </div>
+      </div>
+    `
+
+    window.abrirEditarPerfil = function() {
+      document.getElementById('modal-editar-perfil').style.display = 'flex'
+    }
+
+    window.salvarEdicaoPerfil = async function() {
+      const nome = document.getElementById('edit-perfil-nome').value.trim()
+      const tel  = document.getElementById('edit-perfil-tel').value.trim()
+      if (!nome) { toast('O nome não pode ficar vazio'); return }
+
+      const { error } = await sb.from('perfis').update({
+        nome,
+        telefone: tel || null,
+      }).eq('id', perfil.id)
+
+      if (error) { toast('Erro ao salvar: ' + error.message); return }
+
+      // Atualiza o perfil em memória e os displays na tela
+      window._perfil.nome     = nome
+      window._perfil.telefone = tel || null
+      document.getElementById('sb-nome').textContent = nome
+      document.getElementById('perfil-nome-display').textContent = nome
+      const telDisplay = document.getElementById('perfil-tel-display')
+      if (telDisplay) telDisplay.textContent = tel || 'Não cadastrado'
+
+      document.getElementById('modal-editar-perfil').style.display = 'none'
+      toast('✓ Dados atualizados!')
+    }
+}   
