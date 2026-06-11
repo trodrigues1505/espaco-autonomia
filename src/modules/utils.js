@@ -38,11 +38,11 @@ export const PLANO_VALORES = { brahma: 100, shiva_1x: 150, shiva_2x: 200, vishnu
 export const PLANO_OPCOES  = { brahma: 1,   shiva_1x: 1,   shiva_2x: 2,   vishnu_2x: 2,   vishnu_livre: 99  }
 
 export const PLANO_BADGES = {
-  brahma:       `<span style="background:#f0ede4;color:#5a5a4a;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500">Brahma</span>`,
-  shiva_1x:     `<span style="background:#e8f4e8;color:#1a5a1a;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500">Shiva 1x</span>`,
-  shiva_2x:     `<span style="background:#d4edda;color:#155724;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500">Shiva 2x</span>`,
-  vishnu_2x:    `<span style="background:rgba(232,188,79,.15);color:#7a5a10;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;border:1px solid rgba(232,188,79,.3)">Vishnu 2x</span>`,
-  vishnu_livre: `<span style="background:rgba(232,188,79,.25);color:#5a3a00;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;border:1px solid rgba(232,188,79,.4)">Vishnu Livre</span>`,
+  brahma:       `<span style="background:#f0ede4;color:#5a5a4a;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap">Brahma</span>`,
+  shiva_1x:     `<span style="background:#e8f4e8;color:#1a5a1a;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap">Shiva 1x</span>`,
+  shiva_2x:     `<span style="background:#d4edda;color:#155724;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap">Shiva 2x</span>`,
+  vishnu_2x:    `<span style="background:rgba(232,188,79,.15);color:#7a5a10;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;border:1px solid rgba(232,188,79,.3);white-space:nowrap">Vishnu 2x</span>`,
+  vishnu_livre: `<span style="background:rgba(232,188,79,.25);color:#5a3a00;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;border:1px solid rgba(232,188,79,.4);white-space:nowrap">Vishnu Livre</span>`,
 }
 
 // ── Helpers de HTML ──────────────────────────────────────────
@@ -54,7 +54,7 @@ export function dot(mod) {
 
 /** Badge pill colorida */
 export function badge(txt, bg, color) {
-  return `<span style="background:${bg};color:${color};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500">${txt}</span>`
+  return `<span style="background:${bg};color:${color};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap">${txt}</span>`
 }
 
 /** Card com cabeçalho e corpo */
@@ -84,10 +84,9 @@ export function modal(id, title, bodyHtml, footHtml) {
     </div>`
 }
 
-/** Campo de formulário com label */
 /** Campo de formulário: fi(idIgnorado, label, inputHtml) ou fi(label, inputHtml) */
 export function fi(idOrLabel, labelOrInput, inputHtmlOrUndef) {
-  const label    = inputHtmlOrUndef !== undefined ? labelOrInput   : idOrLabel
+  const label     = inputHtmlOrUndef !== undefined ? labelOrInput    : idOrLabel
   const inputHtml = inputHtmlOrUndef !== undefined ? inputHtmlOrUndef : labelOrInput
   return `<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
     <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">${label}</label>
@@ -125,4 +124,4 @@ export function toast(msg, dur = 2400) {
   }, dur)
 }
 // Expõe globalmente para uso em onclick inline
-window.toast = toast
+window.toast = toast   
