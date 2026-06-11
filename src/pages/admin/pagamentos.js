@@ -447,7 +447,7 @@ export async function renderPagamentos(container, page) {
         </div>`).join('')}
       ` : '<div style="font-size:12px;color:var(--txt2)">Nenhum pagamento encontrado.</div>'}
       <div style="margin-top:16px;display:flex;gap:8px">
-        <button onclick="document.getElementById('modal-pg-aluno').style.display='none';navigate('alunos').then(()=>setTimeout(()=>window.editarAluno&&window.editarAluno('${alunoId}'),300))" style="flex:1;padding:8px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Editar aluno</button>
+        <button onclick="document.getElementById('modal-pg-aluno').style.display='none';window._pendingEditAluno='${alunoId}';navigate('alunos')" style="flex:1;padding:8px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Editar aluno</button>
         <button onclick="document.getElementById('modal-pg-aluno').style.display='none'" style="padding:8px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Fechar</button>
       </div>
     `
