@@ -179,7 +179,12 @@ export async function renderPresencas(container, page) {
       toast('Erro: ' + (data?.motivo || error?.message))
       return
     }
-    toast('✓ Aluno adicionado!' + (aulaPassada ? ' Saldo debitado.' : ''))
+    // Guarda se debitou para uso no estorno posterior
+    if (!window._presencaDebitou) window._presencaDebitou = {}
+    const { data: novaConf } = await sb.from('confirmacoes')
+      .select('id').eq('ocorrencia_id', ocId).eq('aluno_id', alunoId).single()
+    if (novaConf?.id) window._presencaDebitou[novaConf.id] = !!data.debitou
+    toast('✓ Aluno adicionado!' + (data.debitou ? ' Saldo debitado.' : ''))
     navigate('presencas')
   }
 
@@ -192,14 +197,18 @@ export async function renderPresencas(container, page) {
     const { error } = await sb.from('confirmacoes').update({ status: 'cancelado' }).eq('id', confId)
     if (error) { toast('Erro: '+error.message); return }
 
-    // Estorna crédito se aluno não tem plano livre
+    // Só estorna se sabemos que houve débito:
+    // - presença adicionada pelo admin nesta sessão: flag em _presencaDebitou
+    // - presença feita pelo aluno: status era 'confirmado' (passou por confirmar_presenca que sempre debita)
+    const foiDebitado = window._presencaDebitou?.[confId] ?? (conf.status === 'confirmado')
     const { data: mat } = await sb.from('matriculas')
       .select('plano_tipo,opcao_aulas')
       .eq('aluno_id', conf.aluno_id)
       .eq('ativa', true)
       .single()
     const ehLivre = mat?.plano_tipo === 'vishnu_livre' || mat?.opcao_aulas === 99
-    if (!ehLivre) {
+
+    if (!ehLivre && foiDebitado) {
       await sb.rpc('creditar_aulas_manual', {
         p_aluno_id: conf.aluno_id,
         p_quantidade: 1,
@@ -207,7 +216,8 @@ export async function renderPresencas(container, page) {
       })
     }
 
-    toast('✓ Presença removida' + (!ehLivre ? ' e crédito estornado' : ''))
+    if (window._presencaDebitou) delete window._presencaDebitou[confId]
+    toast('✓ Presença removida' + (!ehLivre && foiDebitado ? ' e crédito estornado' : ''))
     navigate('presencas')
   }
 }
