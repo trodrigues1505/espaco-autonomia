@@ -349,4 +349,11 @@ export async function renderAlunos(container, page) {
         btn.textContent = 'Excluir'
       }
     }
+
+    // Abre modal de edição automaticamente se vier de outra aba (ex: pagamentos)
+    if (window._pendingEditAluno) {
+      const idParaEditar = window._pendingEditAluno
+      window._pendingEditAluno = null
+      setTimeout(() => window.editarAluno && window.editarAluno(idParaEditar), 50)
+    }
 }
