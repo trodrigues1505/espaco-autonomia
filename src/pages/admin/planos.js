@@ -269,7 +269,7 @@ export async function renderPlanos(container, page) {
     if (mods.length) {
       const { error: errMod } = await sb
         .from('plano_modalidades')
-        .upsert  
+        .upsert(
           mods.map(m => ({ plano_tipo: tipo, modalidade: m })),
           { onConflict: 'plano_tipo,modalidade', ignoreDuplicates: true }
         )
@@ -280,4 +280,4 @@ export async function renderPlanos(container, page) {
     toast('✓ Plano atualizado!')
     navigate('planos')
   }
-}
+}   
