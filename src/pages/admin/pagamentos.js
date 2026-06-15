@@ -149,7 +149,8 @@ export async function renderPagamentos(container, page) {
   const [pgRes, perfisRes] = await Promise.all([
     sbClient.from('pagamentos').select('*, aluno:perfis!aluno_id(id,nome,email)')
       .order('vencimento', { ascending: false }).limit(500),
-    sbClient.from('perfis').select('id,nome,email,asaas_customer_id,matriculas(plano_tipo,ativa)')
+    // FK explícita para evitar ambiguidade com professor_id
+    sbClient.from('perfis').select('id,nome,email,asaas_customer_id,matriculas!matriculas_aluno_id_fkey(plano_tipo,ativa)')
       .not('asaas_customer_id', 'is', null),
   ])
 
@@ -219,7 +220,6 @@ export async function renderPagamentos(container, page) {
 
   const semNome = pgs.filter(p => !p.aluno?.nome && p.asaas_customer).length
 
-  // Armazena mapa de alunoId para uso nos modais
   window._pgAlunosMap = {}
   pgs.forEach(p => {
     if (p.aluno?.id) window._pgAlunosMap[p.aluno.id] = p.aluno
@@ -343,7 +343,7 @@ export async function renderPagamentos(container, page) {
       </div>
       </div>
 
-      <!-- Modal perfil aluno (via pagamentos) -->
+      <!-- Modal perfil aluno -->
       <div id="modal-pg-aluno" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.6);z-index:200;align-items:center;justify-content:center;padding:16px">
         <div style="background:#fff;border-radius:12px;width:480px;max-width:100%;max-height:85vh;overflow-y:auto">
           <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0">
@@ -475,4 +475,4 @@ export async function renderPagamentos(container, page) {
       prog.style.display = 'none'
     }
   }
-}
+}       
