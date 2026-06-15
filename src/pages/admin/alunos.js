@@ -9,6 +9,7 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
 export async function renderAlunos(container, page) {
+  const _sb = window._sb || sb
   const perfil = window._perfil
   const tipo = perfil?.tipo
 
@@ -16,9 +17,9 @@ export async function renderAlunos(container, page) {
   const filtroPlanok = window._filtroPlanoAlunos || ''
 
   const [perfisRes, saldoRes, professoresRes] = await Promise.all([
-    sb.from('perfis').select('*, matriculas(plano_tipo,opcao_aulas,valor_mensal,desconto_fixo,desconto_avulso_valor,desconto_avulso_meses,desconto_avulso_usado,ativa,fim,professor_id)').eq('tipo','aluno').order('nome'),
-    sb.from('saldo_disponivel').select('aluno_id,saldo_total'),
-    sb.from('perfis').select('id,nome').eq('tipo','professor').order('nome'),
+    _sb.from('perfis').select('*, matriculas(plano_tipo,opcao_aulas,valor_mensal,desconto_fixo,desconto_avulso_valor,desconto_avulso_meses,desconto_avulso_usado,ativa,fim,professor_id)').eq('tipo','aluno').order('nome'),
+    _sb.from('saldo_disponivel').select('aluno_id,saldo_total'),
+    _sb.from('perfis').select('id,nome').eq('tipo','professor').order('nome'),
   ])
 
   const todos = perfisRes.data || []
@@ -209,16 +210,16 @@ export async function renderAlunos(container, page) {
 
     let errInv = null
     try {
-      const r = await sb.auth.admin?.inviteUserByEmail(email)
+      const r = await _sb.auth.admin?.inviteUserByEmail(email)
       errInv = r?.error
     } catch(e) { errInv = { message: 'use service role key' } }
 
-    const { data: existente } = await sb.from('perfis').select('id').eq('email', email).single()
+    const { data: existente } = await _sb.from('perfis').select('id').eq('email', email).single()
     let alunoId = existente?.id
 
     if (!alunoId) {
       const tempId = crypto.randomUUID()
-      const { error: errP } = await sb.from('perfis').insert({
+      const { error: errP } = await _sb.from('perfis').insert({
         id: tempId, nome, email, telefone: tel||null, tipo: 'aluno', ativo: true
       })
       if (!errP) alunoId = tempId
@@ -226,15 +227,15 @@ export async function renderAlunos(container, page) {
 
     if (alunoId) {
       const asaasNovo = document.getElementById('ca-asaas')?.value.trim() || null
-      await sb.from('matriculas').update({ativa:false}).eq('aluno_id', alunoId).eq('ativa', true)
-      await sb.from('matriculas').insert({
+      await _sb.from('matriculas').update({ativa:false}).eq('aluno_id', alunoId).eq('ativa', true)
+      await _sb.from('matriculas').insert({
         aluno_id: alunoId,
         plano_tipo: plano,
         opcao_aulas: opcao,
         valor_mensal: valor,
         professor_id: professorId,
       })
-      if (asaasNovo) await sb.from('perfis').update({ asaas_customer_id: asaasNovo }).eq('id', alunoId)
+      if (asaasNovo) await _sb.from('perfis').update({ asaas_customer_id: asaasNovo }).eq('id', alunoId)
       document.getElementById('modal-cad-aluno').style.display = 'none'
       toast('✓ Aluno cadastrado! Peça para entrar com Google usando: '+email)
       navigate('alunos')
@@ -244,7 +245,7 @@ export async function renderAlunos(container, page) {
   }
 
   window.editarAluno = async function(alunoId) {
-    const { data: a } = await sb.from('perfis').select('*, matriculas(*)').eq('id', alunoId).single()
+    const { data: a } = await _sb.from('perfis').select('*, matriculas(*)').eq('id', alunoId).single()
     const mat = (a.matriculas||[]).find(m=>m.ativa)
     window._editAlunoId = alunoId
 
@@ -336,7 +337,7 @@ export async function renderAlunos(container, page) {
     const motivo = document.getElementById('ea-credito-motivo').value.trim()
     if (qtd < 1) { toast('Informe ao menos 1 aula'); return }
     if (!motivo) { toast('Informe o motivo do crédito'); return }
-    const { error } = await sb.rpc('creditar_aulas_manual', {
+    const { error } = await _sb.rpc('creditar_aulas_manual', {
       p_aluno_id: alunoId,
       p_quantidade: qtd,
       p_motivo: motivo,
@@ -370,7 +371,7 @@ export async function renderAlunos(container, page) {
     const descontoAvulsoMeses = Number(document.getElementById('ea-desconto-avulso-meses').value) || 0
 
     // Salva dados pessoais
-    const { error: errPerfil } = await sb.from('perfis').update({
+    const { error: errPerfil } = await _sb.from('perfis').update({
       nome,
       telefone: tel || null,
       ativo,
@@ -379,8 +380,8 @@ export async function renderAlunos(container, page) {
     if (errPerfil) { toast('Erro ao salvar perfil: ' + errPerfil.message); return }
 
     // Salva matrícula (desativa a atual, cria nova com os valores atualizados)
-    await sb.from('matriculas').update({ativa:false}).eq('aluno_id', window._editAlunoId).eq('ativa', true)
-    const { error: errMat } = await sb.from('matriculas').insert({
+    await _sb.from('matriculas').update({ativa:false}).eq('aluno_id', window._editAlunoId).eq('ativa', true)
+    const { error: errMat } = await _sb.from('matriculas').insert({
       aluno_id:               window._editAlunoId,
       plano_tipo:             plano,
       opcao_aulas:            opcao,
@@ -412,10 +413,10 @@ export async function renderAlunos(container, page) {
     btn.disabled = true
     btn.textContent = 'Excluindo...'
     try {
-      await sb.from('presencas').delete().eq('aluno_id', alunoId)
-      await sb.from('saldo_aulas').delete().eq('aluno_id', alunoId)
-      await sb.from('matriculas').delete().eq('aluno_id', alunoId)
-      const { error } = await sb.from('perfis').delete().eq('id', alunoId)
+      await _sb.from('presencas').delete().eq('aluno_id', alunoId)
+      await _sb.from('saldo_aulas').delete().eq('aluno_id', alunoId)
+      await _sb.from('matriculas').delete().eq('aluno_id', alunoId)
+      const { error } = await _sb.from('perfis').delete().eq('id', alunoId)
       if (error) throw new Error(error.message)
       document.getElementById('modal-excluir-aluno').style.display = 'none'
       toast('✓ Aluno excluído.')
