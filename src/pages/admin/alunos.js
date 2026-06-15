@@ -273,7 +273,7 @@ export async function renderAlunos(container, page) {
         ${fi('','Professor',`<select id="ea-professor" ${inputStyle}>
           <option value="">— Sem professor —</option>
           ${professores.map(p=>`<option value="${p.id}" ${mat?.professor_id===p.id?'selected':''}>${p.nome}</option>`).join('')}
-        </select>`)}
+        </select>`)}     
       </div>
       ${fi('','Valor mensal (R$)',`<input type="number" id="ea-valor" ${inputStyle} value="${mat?.valor_mensal||0}">`)}
       ${fi('','Vencimento',`<input type="date" id="ea-fim" ${inputStyle} value="${mat?.fim||''}">`)}
