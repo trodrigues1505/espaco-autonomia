@@ -17,7 +17,7 @@ export async function renderAlunos(container, page) {
   const filtroPlanok = window._filtroPlanoAlunos || ''
 
   const [perfisRes, saldoRes, professoresRes] = await Promise.all([
-    _sb.from('perfis').select('*, matriculas(plano_tipo,opcao_aulas,valor_mensal,desconto_fixo,desconto_avulso_valor,desconto_avulso_meses,desconto_avulso_usado,ativa,fim,professor_id)').eq('tipo','aluno').order('nome'),
+    _sb.from('perfis').select('*, matriculas!matriculas_aluno_id_fkey(plano_tipo,opcao_aulas,valor_mensal,desconto_fixo,desconto_avulso_valor,desconto_avulso_meses,desconto_avulso_usado,ativa,fim,professor_id)').eq('tipo','aluno').order('nome'),
     _sb.from('saldo_disponivel').select('aluno_id,saldo_total'),
     _sb.from('perfis').select('id,nome').eq('tipo','professor').order('nome'),
   ])
@@ -245,7 +245,7 @@ export async function renderAlunos(container, page) {
   }
 
   window.editarAluno = async function(alunoId) {
-    const { data: a } = await _sb.from('perfis').select('*, matriculas(*)').eq('id', alunoId).single()
+    const { data: a } = await _sb.from('perfis').select('*, matriculas!matriculas_aluno_id_fkey(*)').eq('id', alunoId).single()
     const mat = (a.matriculas||[]).find(m=>m.ativa)
     window._editAlunoId = alunoId
 
