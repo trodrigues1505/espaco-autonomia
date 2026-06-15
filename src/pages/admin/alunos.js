@@ -9,7 +9,6 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
 export async function renderAlunos(container, page) {
-  const sb = window._sb
   const perfil = window._perfil
   const tipo = perfil?.tipo
 
@@ -273,7 +272,7 @@ export async function renderAlunos(container, page) {
         ${fi('','Professor',`<select id="ea-professor" ${inputStyle}>
           <option value="">— Sem professor —</option>
           ${professores.map(p=>`<option value="${p.id}" ${mat?.professor_id===p.id?'selected':''}>${p.nome}</option>`).join('')}
-        </select>`)}     
+        </select>`)}
       </div>
       ${fi('','Valor mensal (R$)',`<input type="number" id="ea-valor" ${inputStyle} value="${mat?.valor_mensal||0}">`)}
       ${fi('','Vencimento',`<input type="date" id="ea-fim" ${inputStyle} value="${mat?.fim||''}">`)}
@@ -434,4 +433,4 @@ export async function renderAlunos(container, page) {
     window._pendingEditAluno = null
     setTimeout(() => window.editarAluno && window.editarAluno(idParaEditar), 50)
   }
-}     
+}
