@@ -286,7 +286,7 @@ export async function renderAlunoPlano(container, page) {
     const { error } = await sb.from('perfis').update({
       nome,
       telefone: tel || null,
-    }).eq('id', perfil.id)   
+    }).eq('id', perfil.id)
 
     if (error) { toast('Erro ao salvar: ' + error.message); return }
 
@@ -300,4 +300,4 @@ export async function renderAlunoPlano(container, page) {
     document.getElementById('modal-editar-perfil').style.display = 'none'
     toast('✓ Dados atualizados!')
   }
-}    
+}       
