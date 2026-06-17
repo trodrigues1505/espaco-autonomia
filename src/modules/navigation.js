@@ -18,6 +18,7 @@ const MENUS = {
     { id: 'presencas',   label: 'Presenças',      icon: 'ti-checkbox'         },
     { id: 'pagamentos',  label: 'Pagamentos',     icon: 'ti-currency-dollar'  },
     { id: 'planos',      label: 'Planos',         icon: 'ti-award'            },
+    { id: 'previsao-professor', label: 'Repasse Professor', icon: 'ti-calculator' },
     { sec: 'Sistema' },
     { id: 'config',      label: 'Configurações',  icon: 'ti-settings'         },
   ],
@@ -145,11 +146,22 @@ async function selecionarImpersonar(pessoaId, tipo) {
   const sb = window._sb
   document.getElementById('modal-impersonar')?.remove()
 
+  // Busca perfil sem join em matriculas para evitar FK ambígua (PGRST201)
   const { data: pessoa } = await sb.from('perfis')
-    .select('*, matriculas(plano_tipo,opcao_aulas,ativa)')
+    .select('*')
     .eq('id', pessoaId).single()
 
   if (!pessoa) { window.toast?.('Perfil não encontrado'); return }
+
+  // Busca matrícula separadamente usando FK explícita
+  if (tipo === 'aluno') {
+    const { data: mats } = await sb.from('matriculas')
+      .select('plano_tipo,opcao_aulas,ativa')
+      .eq('aluno_id', pessoaId)
+    pessoa.matriculas = mats || []
+  } else {
+    pessoa.matriculas = []
+  }
 
   _ativarImpersonar(tipo, pessoa)
 }
@@ -211,7 +223,6 @@ function _ativarImpersonar(tipo, pessoa) {
   if (!aviso) {
     aviso = document.createElement('div')
     aviso.id = 'impersonar-aviso'
-    // pointer-events:none no container; só o link "Voltar" recebe cliques
     aviso.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:300;background:var(--dourado);color:var(--verde);text-align:center;padding:5px;font-size:11px;font-family:"DM Sans",sans-serif;font-weight:500;pointer-events:none'
     document.body.appendChild(aviso)
   }
