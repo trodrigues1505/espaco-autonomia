@@ -5,9 +5,7 @@
  *   2. Importe aqui
  *   3. Adicione uma linha no rotaMap
  */
-
-const V = '?v=2'
-
+const V = '?v=4'
 const rotaMap = {
   'dashboard':          () => import('./admin/dashboard.js'  + V).then(m => m.renderDashboard),
   'config':             () => import('./admin/config.js'     + V).then(m => m.renderConfig),
@@ -21,6 +19,7 @@ const rotaMap = {
   'prof-home':          () => import('./professor/home.js'   + V).then(m => m.renderProfHome),
   'prof-chamada':       () => import('./professor/home.js'   + V).then(m => m.renderProfHome),
   'prof-aulas':         () => import('./professor/aulas.js'  + V).then(m => m.renderProfAulas),
+  'prof-repasse':       () => import('./professor/repasse.js'+ V).then(m => m.renderProfRepasse),
   'aluno-home':         () => import('./aluno/home.js'       + V).then(m => m.renderAlunoHome),
   'aluno-conquistas':   () => import('./aluno/conquistas.js' + V).then(m => m.renderConquistas),
   'aluno-grade':        () => import('./aluno/grade.js'      + V).then(m => m.renderAlunoGrade),
@@ -28,7 +27,6 @@ const rotaMap = {
   'aluno-plano':        () => import('./aluno/plano.js'      + V).then(m => m.renderAlunoPlano),
   'previsao-professor': () => import('./admin/previsao-professor.js' + V).then(m => m.renderPrevisaoProfessor),
 }
-
 export async function navigate(page) {
   document.querySelectorAll('.ni').forEach(n => n.classList.remove('on'))
   document.getElementById(`ni-${page}`)?.classList.add('on')
