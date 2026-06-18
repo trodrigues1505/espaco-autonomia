@@ -27,6 +27,7 @@ const MENUS = {
     { id: 'prof-home',    label: 'Dashboard',    icon: 'ti-layout-dashboard' },
     { id: 'prof-aulas',   label: 'Minhas Aulas', icon: 'ti-calendar'         },
     { id: 'prof-chamada', label: 'Chamada',      icon: 'ti-checkbox'         },
+    { id: 'prof-repasse', label: 'Meu Repasse',  icon: 'ti-calculator'       },
   ],
   aluno: [
     { sec: 'Meu Espaço' },
