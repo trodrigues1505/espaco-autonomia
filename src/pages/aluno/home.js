@@ -1,6 +1,5 @@
 /**
  * src/pages/aluno/home.js
- * Home do aluno — saldo + gamificação
  */
 
 import { sb }         from '../../lib/supabase.js'
@@ -8,14 +7,14 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 import { getSaldoAluno, getGamificacao, getPagamentosAluno, verificarConquistas } from '../../modules/gamificacao.js'
-import { carregarNotificacoes, renderPainelNotif, initNotifHandlers } from '../../modules/notificacoes.js'
+import { carregarNotificacoes, renderPainelNotif, initNotifHandlers,
+         calcularBadgesMenu, aplicarBadgesMenu } from '../../modules/notificacoes.js'
 
 export async function renderAlunoHome(container, page) {
   const sb = window._sb
   const perfil = window._perfil
-  const tipo = perfil?.tipo
 
-  const userId = window._perfil.id
+  const userId = perfil.id
   const agora = new Date()
 
   const [confsRes, matRes, cfgRes, saldoRes, gamRes, pgRes, notifs] = await Promise.all([
@@ -25,7 +24,7 @@ export async function renderAlunoHome(container, page) {
     sb.from('saldo_disponivel').select('*').eq('aluno_id', userId).single(),
     getGamificacao(userId),
     getPagamentosAluno(userId),
-    carregarNotificacoes(),
+    carregarNotificacoes(perfil),
   ])
 
   const mat = matRes.data
@@ -52,9 +51,13 @@ export async function renderAlunoHome(container, page) {
     diasCalor.push({ data: k, presente: !!historico[k] })
   }
 
+  // Badges no menu
+  const badges = calcularBadgesMenu(notifs)
+  aplicarBadgesMenu(badges)
+
   container.innerHTML = `
     <div class="topbar">
-      <div class="topbar-t">Olá, ${window._perfil.nome.split(' ')[0]}!</div>
+      <div class="topbar-t">Olá, ${perfil.nome.split(' ')[0]}!</div>
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-size:18px">${nivelLabel?.split(' ')[0]||'🌱'}</span>
         <span style="font-size:12px;color:var(--txt2)">${gam?.prana_points||0} pts</span>
@@ -134,19 +137,15 @@ export async function renderAlunoHome(container, page) {
         </div>
         <div style="display:flex;gap:8px">
           <button id="btn-instalar-pwa" onclick="instalarAppAgora()"
-            style="flex:1;padding:9px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500">
-            Instalar agora
-          </button>
+            style="flex:1;padding:9px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500">Instalar agora</button>
           <button onclick="mostrarDicaIOS()"
-            style="padding:9px 12px;background:#fff;color:var(--verde);border:1px solid var(--borda);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer">
-            iPhone/iPad
-          </button>
+            style="padding:9px 12px;background:#fff;color:var(--verde);border:1px solid var(--borda);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer">iPhone/iPad</button>
         </div>
       </div>` : ''}
     </div>
   `
 
-  initNotifHandlers(notifs)
+  initNotifHandlers(notifs, perfil.id)
 
   window.cancelarConfHome = async function(confId, ocId) {
     const {data,error} = await sb.rpc('cancelar_confirmacao',{p_aluno_id:userId,p_ocorrencia_id:ocId})
@@ -158,10 +157,7 @@ export async function renderAlunoHome(container, page) {
     if (window._deferredPrompt) {
       window._deferredPrompt.prompt()
       const { outcome } = await window._deferredPrompt.userChoice
-      if (outcome === 'accepted') {
-        localStorage.setItem('pwa-instalado', '1')
-        toast('✓ App instalado!')
-      }
+      if (outcome === 'accepted') { localStorage.setItem('pwa-instalado', '1'); toast('✓ App instalado!') }
       window._deferredPrompt = null
     } else {
       document.getElementById('pwa-ios-tip').style.display = 'block'
