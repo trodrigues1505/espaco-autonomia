@@ -1,17 +1,10 @@
 /**
  * src/pages/admin/previsao-professor.js
  * Previsão de repasse — quanto cada professor vai receber no mês
- *
- * Regra de negócio:
- *   - Professor recebe 50% do valor líquido da mensalidade de cada aluno seu
- *   - O valor é proporcional às aulas confirmadas com presença no mês
- *   - Se o aluno frequentou aula de outro professor, o repasse vai para
- *     o professor daquela aula (proporcional ao número de aulas)
- *   - valor_liquido = valor_mensal - desconto_fixo - desconto_avulso (se ativo)
- *   - repasse = 50% × (valor_liquido / total_aulas_aluno_no_mês) × aulas_com_este_professor
  */
 
 import { toast } from '../../modules/utils.js'
+import { renderHistoricoRepasse, abrirModalRegistrarRepasse } from './repasse-pago.js'
 
 function fmtR(v) {
   return 'R$ ' + (v||0).toFixed(2).replace('.', ',')
@@ -32,28 +25,24 @@ export async function renderPrevisaoProfessor(container, page) {
   if (!window._ppProfId) window._ppProfId = ''
   const profSelId = window._ppProfId
 
-  // meses disponíveis (12 meses para trás + mês atual)
   const mesesDisponiveis = []
   for (let i = 0; i < 13; i++) {
     const d = new Date(agora.getFullYear(), agora.getMonth() - i, 1)
     mesesDisponiveis.push(d.toISOString().slice(0, 7))
   }
 
-  // carrega professores para o filtro
   const { data: professores } = await sb
     .from('perfis')
     .select('id, nome')
     .eq('tipo', 'professor')
     .order('nome')
 
-  // se não tem professor selecionado e só tem 1, seleciona automaticamente
   let profIdEfetivo = profSelId
   if (!profIdEfetivo && professores?.length === 1) {
     profIdEfetivo = professores[0].id
     window._ppProfId = profIdEfetivo
   }
 
-  // busca dados de repasse via RPC
   let linhas = []
   let errRpc = null
   if (profIdEfetivo) {
@@ -66,8 +55,6 @@ export async function renderPrevisaoProfessor(container, page) {
     if (errRpc) console.error('RPC previsao_repasse_professor:', errRpc)
   }
 
-  // agrupa por professor da aula (para mostrar o repasse total por professor da aula)
-  // e calcula total do professor selecionado
   const porProfAula = {}
   for (const l of linhas) {
     const k = l.professor_id_aula
@@ -87,8 +74,6 @@ export async function renderPrevisaoProfessor(container, page) {
 
   const totalRepasse = linhas.reduce((s, l) => s + Number(l.repasse || 0), 0)
   const totalAulas   = linhas.reduce((s, l) => s + (l.aulas_confirmadas || 0), 0)
-
-  // nome do professor selecionado
   const profSelecionado = professores?.find(p => p.id === profIdEfetivo)
 
   container.innerHTML = `
@@ -106,7 +91,6 @@ export async function renderPrevisaoProfessor(container, page) {
     </div>
     <div class="content">
 
-      <!-- Seletor de mês -->
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
         <span style="font-size:11px;color:var(--txt2);font-weight:500">Mês:</span>
         ${mesesDisponiveis.map(m => `
@@ -123,7 +107,6 @@ export async function renderPrevisaoProfessor(container, page) {
                Erro ao carregar dados: ${errRpc.message}
              </div>`
           : `
-        <!-- Cards de resumo -->
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">
           <div style="background:var(--verde);border-radius:var(--r);padding:16px 18px">
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.7);margin-bottom:6px">Repasse Total</div>
@@ -133,7 +116,7 @@ export async function renderPrevisaoProfessor(container, page) {
           <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px">
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:6px">Alunos com presença</div>
             <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--verde)">${new Set(linhas.map(l=>l.aluno_id)).size}</div>
-            <div style="font-size:10px;color:var(--txt2);margin-top:3px">de ${linhas.length === 0 ? 0 : '...'} alunos vinculados</div>
+            <div style="font-size:10px;color:var(--txt2);margin-top:3px">alunos vinculados</div>
           </div>
           <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px">
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:6px">Total de aulas</div>
@@ -148,7 +131,6 @@ export async function renderPrevisaoProfessor(container, page) {
                <br><span style="font-size:11px;margin-top:6px;display:block">O repasse é calculado com base nas presenças confirmadas no mês.</span>
              </div>`
           : `
-          <!-- Detalhamento por professor da aula -->
           ${Object.values(porProfAula).map(grupo => {
             const ehProprio = grupo.professor_id === profIdEfetivo
             return `
@@ -168,8 +150,6 @@ export async function renderPrevisaoProfessor(container, page) {
                   <div style="font-size:10px;color:var(--txt2)">repasse proporcional</div>
                 </div>
               </div>
-
-              <!-- tabela de alunos -->
               <div style="padding:0 18px">
                 <div style="display:grid;grid-template-columns:1fr 80px 80px 80px 90px 80px;padding:8px 0;border-bottom:1px solid rgba(212,200,158,.3);font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500;gap:8px">
                   <span>Aluno</span><span>Mensal</span><span>Desconto</span><span>Líquido</span><span>Aulas</span><span>Repasse</span>
@@ -186,7 +166,6 @@ export async function renderPrevisaoProfessor(container, page) {
                   </div>`
                 }).join('')}
               </div>
-
               <div style="padding:10px 18px;background:rgba(242,236,206,.3);display:flex;justify-content:flex-end;align-items:center;gap:6px">
                 <span style="font-size:11px;color:var(--txt2)">Subtotal</span>
                 <span style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${fmtR(grupo.repasse)}</span>
@@ -194,13 +173,18 @@ export async function renderPrevisaoProfessor(container, page) {
             </div>`
           }).join('')}
 
-          <!-- Total final -->
-          <div style="background:var(--verde);border-radius:var(--r);padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
+          <div style="background:var(--verde);border-radius:var(--r);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px">
             <div>
               <div style="font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.7)">Total a pagar para ${profSelecionado?.nome||'professor'}</div>
               <div style="font-size:11px;color:rgba(242,236,206,.5);margin-top:2px">${nomeMes(mesSel)} · baseado em ${totalAulas} presença(s) confirmada(s)</div>
             </div>
-            <div style="font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:500;color:var(--bege)">${fmtR(totalRepasse)}</div>
+            <div style="display:flex;align-items:center;gap:12px;flex-shrink:0">
+              <div style="font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:500;color:var(--bege)">${fmtR(totalRepasse)}</div>
+              <button onclick="abrirModalRegistrarRepasse('${profIdEfetivo}','${(profSelecionado?.nome||'').replace(/'/g,"\\'")}',${totalRepasse},'${mesSel}')"
+                style="padding:8px 16px;background:var(--bege);color:var(--verde);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;white-space:nowrap">
+                💰 Registrar pagamento
+              </button>
+            </div>
           </div>
 
           <div style="margin-top:10px;font-size:11px;color:var(--txt2);text-align:center;padding:8px">
@@ -213,4 +197,15 @@ export async function renderPrevisaoProfessor(container, page) {
 
     </div>
   `
-}
+
+  // Renderiza histórico de repasses abaixo do conteúdo principal
+  if (profIdEfetivo) {
+    const contentDiv = container.querySelector('.content')
+    if (contentDiv) {
+      await renderHistoricoRepasse(contentDiv, profIdEfetivo, true)
+    }
+  }
+
+  // Expõe a função para o botão inline no HTML
+  window.abrirModalRegistrarRepasse = abrirModalRegistrarRepasse
+}   
