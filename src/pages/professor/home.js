@@ -1,18 +1,18 @@
 /**
  * src/pages/professor/home.js
- * Dashboard professor — aulas do dia + chamada
  */
 
 import { sb }         from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
-import { carregarNotificacoes, renderPainelNotif, initNotifHandlers } from '../../modules/notificacoes.js'
+import { carregarNotificacoes, renderPainelNotif, initNotifHandlers,
+         calcularBadgesMenu, aplicarBadgesMenu } from '../../modules/notificacoes.js'
 
 export async function renderProfHome(container, page) {
   const sb = window._sb
+  // Captura perfil no momento do render
   const perfil = window._perfil
-  const tipo = perfil?.tipo
 
   const hoje = new Date()
   const inicioHoje = new Date(hoje); inicioHoje.setHours(0,0,0,0)
@@ -20,16 +20,18 @@ export async function renderProfHome(container, page) {
 
   const { data: ocHoje } = await sb.from('ocorrencias_vagas').select('*')
     .gte('data_hora', inicioHoje.toISOString()).lte('data_hora', fimHoje.toISOString())
-    .eq('cancelada', false).eq('professor_id', window._perfil.id).order('data_hora')
+    .eq('cancelada', false).eq('professor_id', perfil.id).order('data_hora')
 
   if (page === 'prof-home') {
     const proxima = (ocHoje||[]).find(o => new Date(o.data_hora) >= hoje) || ocHoje?.[0]
+    const notifs = await carregarNotificacoes(perfil)
 
-    // carrega notificações em paralelo com o que já temos
-    const notifs = await carregarNotificacoes()
+    // Badges no menu
+    const badges = calcularBadgesMenu(notifs)
+    aplicarBadgesMenu(badges)
 
     container.innerHTML = `
-      <div class="topbar"><div class="topbar-t">Olá, ${window._perfil.nome.split(' ')[0]}</div></div>
+      <div class="topbar"><div class="topbar-t">Olá, ${perfil.nome.split(' ')[0]}</div></div>
       <div class="content">
         ${renderPainelNotif(notifs)}
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
@@ -55,7 +57,7 @@ export async function renderProfHome(container, page) {
       </div>
     `
 
-    initNotifHandlers(notifs)
+    initNotifHandlers(notifs, perfil.id)
     return
   }
 
@@ -126,5 +128,3 @@ export async function renderProfHome(container, page) {
     navigate('prof-chamada')
   }
 }
-
-
