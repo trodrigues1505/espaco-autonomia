@@ -1,9 +1,10 @@
 /**
  * src/pages/professor/repasse.js
- * Previsão de repasse do professor logado
+ * Previsão de repasse do professor logado + histórico de repasses pagos
  */
 
 import { toast } from '../../modules/utils.js'
+import { renderHistoricoRepasse } from '../admin/repasse-pago.js'
 
 function fmtR(v) {
   return 'R$ ' + (v||0).toFixed(2).replace('.', ',')
@@ -19,7 +20,6 @@ export async function renderProfRepasse(container, page) {
   const sb = window._sb
   const perfil = window._perfil
 
-  // usa sempre o perfil do professor logado
   const profId = perfil.id
   const profNome = perfil.nome
 
@@ -43,7 +43,6 @@ export async function renderProfRepasse(container, page) {
   errRpc = error
   if (errRpc) console.error('RPC previsao_repasse_professor:', errRpc)
 
-  // agrupa por professor da aula
   const porProfAula = {}
   for (const l of linhas) {
     const k = l.professor_id_aula
@@ -71,13 +70,11 @@ export async function renderProfRepasse(container, page) {
     </div>
     <div class="content">
 
-      <!-- aviso de estimativa -->
       <div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:8px;font-size:12px;color:#7a5a10;margin-bottom:16px">
         <i class="ti ti-info-circle" style="font-size:16px;color:var(--dourado);flex-shrink:0"></i>
         <span><strong>Estimativa.</strong> O valor final é calculado no fechamento do mês, considerando todas as presenças confirmadas até o dia do pagamento.</span>
       </div>
 
-      <!-- seletor de mês -->
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
         <span style="font-size:11px;color:var(--txt2);font-weight:500">Mês:</span>
         ${mesesDisponiveis.map(m => `
@@ -92,7 +89,6 @@ export async function renderProfRepasse(container, page) {
              Erro ao carregar dados: ${errRpc.message}
            </div>`
         : `
-        <!-- cards de resumo -->
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">
           <div style="background:var(--verde);border-radius:var(--r);padding:16px 18px">
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.7);margin-bottom:6px">Repasse estimado</div>
@@ -123,10 +119,7 @@ export async function renderProfRepasse(container, page) {
               <div style="padding:12px 18px;background:${ehProprio?'rgba(31,56,31,.06)':'rgba(232,188,79,.08)'};border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
                 <div>
                   <div style="font-size:13px;font-weight:500;color:var(--txt)">
-                    ${ehProprio
-                      ? `Minhas aulas`
-                      : `Aulas de <strong>${grupo.professor_nome}</strong> que ministrei`
-                    }
+                    ${ehProprio ? `Minhas aulas` : `Aulas de <strong>${grupo.professor_nome}</strong> que ministrei`}
                   </div>
                   <div style="font-size:11px;color:var(--txt2);margin-top:2px">${grupo.aulas} aula(s) · ${grupo.alunos.length} aluno(s)</div>
                 </div>
@@ -135,7 +128,6 @@ export async function renderProfRepasse(container, page) {
                   <div style="font-size:10px;color:var(--txt2)">repasse estimado</div>
                 </div>
               </div>
-
               <div style="padding:0 18px">
                 <div style="display:grid;grid-template-columns:1fr 80px 80px 80px 90px 80px;padding:8px 0;border-bottom:1px solid rgba(212,200,158,.3);font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500;gap:8px">
                   <span>Aluno</span><span>Mensal</span><span>Desconto</span><span>Líquido</span><span>Aulas</span><span>Repasse</span>
@@ -152,7 +144,6 @@ export async function renderProfRepasse(container, page) {
                   </div>`
                 }).join('')}
               </div>
-
               <div style="padding:10px 18px;background:rgba(242,236,206,.3);display:flex;justify-content:flex-end;align-items:center;gap:6px">
                 <span style="font-size:11px;color:var(--txt2)">Subtotal</span>
                 <span style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${fmtR(grupo.repasse)}</span>
@@ -160,7 +151,6 @@ export async function renderProfRepasse(container, page) {
             </div>`
           }).join('')}
 
-          <!-- total final -->
           <div style="background:var(--verde);border-radius:var(--r);padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
             <div>
               <div style="font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.7)">Total estimado — ${nomeMes(mesSel)}</div>
@@ -176,6 +166,13 @@ export async function renderProfRepasse(container, page) {
         }
         `
       }
+
     </div>
   `
-}
+
+  // Histórico de repasses pagos (somente leitura para o professor)
+  const contentDiv = container.querySelector('.content')
+  if (contentDiv) {
+    await renderHistoricoRepasse(contentDiv, profId, false)
+  }
+}   
