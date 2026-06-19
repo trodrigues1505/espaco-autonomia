@@ -3,24 +3,30 @@
  * Responsabilidade: definição dos menus por perfil, construção
  * do sidebar e controle da rota ativa.
  * Depende de: window._perfil, renderPage() (pages/index.js)
+ *
+ * ALTERAÇÃO: buildMenu() agora recebe badges opcionais e os aplica
+ * nos itens do menu. aplicarBadgesMenu() também pode ser chamado
+ * separadamente após carregarNotificacoes().
  */
+
+import { calcularBadgesMenu, aplicarBadgesMenu } from './notificacoes.js'
 
 // ── Definição dos menus por perfil ───────────────────────────
 const MENUS = {
   admin: [
     { sec: 'Visão Geral' },
-    { id: 'dashboard',   label: 'Dashboard',      icon: 'ti-layout-dashboard' },
-    { id: 'grade',       label: 'Grade de Aulas', icon: 'ti-calendar'         },
+    { id: 'dashboard',          label: 'Dashboard',           icon: 'ti-layout-dashboard' },
+    { id: 'grade',              label: 'Grade de Aulas',      icon: 'ti-calendar'         },
     { sec: 'Gestão' },
-    { id: 'criar-aulas', label: 'Criar Aulas',    icon: 'ti-plus-circle'      },
-    { id: 'alunos',      label: 'Alunos',         icon: 'ti-users'            },
-    { id: 'professores', label: 'Professores',    icon: 'ti-user-star'        },
-    { id: 'presencas',   label: 'Presenças',      icon: 'ti-checkbox'         },
-    { id: 'pagamentos',  label: 'Pagamentos',     icon: 'ti-currency-dollar'  },
-    { id: 'planos',      label: 'Planos',         icon: 'ti-award'            },
-    { id: 'previsao-professor', label: 'Repasse Professor', icon: 'ti-calculator' },
+    { id: 'criar-aulas',        label: 'Criar Aulas',         icon: 'ti-plus-circle'      },
+    { id: 'alunos',             label: 'Alunos',              icon: 'ti-users'            },
+    { id: 'professores',        label: 'Professores',         icon: 'ti-user-star'        },
+    { id: 'presencas',          label: 'Presenças',           icon: 'ti-checkbox'         },
+    { id: 'pagamentos',         label: 'Pagamentos',          icon: 'ti-currency-dollar'  },
+    { id: 'planos',             label: 'Planos',              icon: 'ti-award'            },
+    { id: 'previsao-professor', label: 'Repasse Professor',   icon: 'ti-calculator'       },
     { sec: 'Sistema' },
-    { id: 'config',      label: 'Configurações',  icon: 'ti-settings'         },
+    { id: 'config',             label: 'Configurações',       icon: 'ti-settings'         },
   ],
   professor: [
     { sec: 'Minhas Aulas' },
@@ -45,7 +51,7 @@ const HOME_POR_PERFIL = {
 }
 
 // ── Constrói sidebar conforme perfil ─────────────────────────
-export function buildMenu(tipo) {
+export function buildMenu(tipo, badges = {}) {
   const nav = document.getElementById('nav-menu')
   nav.innerHTML = ''
 
@@ -59,7 +65,22 @@ export function buildMenu(tipo) {
       const d = document.createElement('div')
       d.className = 'ni'
       d.id = `ni-${item.id}`
-      d.innerHTML = `<i class="ti ${item.icon}"></i>${item.label}`
+      d.style.display = 'flex'
+      d.style.alignItems = 'center'
+      d.innerHTML = `<i class="ti ${item.icon}" style="flex-shrink:0"></i><span style="flex:1">${item.label}</span>`
+      // Badge numérico se houver notificações para este item
+      const count = badges[item.id] || 0
+      if (count > 0) {
+        const badge = document.createElement('span')
+        badge.className = 'notif-menu-badge'
+        badge.textContent = count
+        badge.style.cssText = `
+          background:#c0392b;color:#fff;border-radius:10px;padding:1px 6px;
+          font-size:10px;font-weight:600;margin-left:auto;flex-shrink:0;
+          font-family:'DM Sans',sans-serif;line-height:1.4
+        `
+        d.appendChild(badge)
+      }
       d.onclick = () => window.navigate(item.id)
       nav.appendChild(d)
     }
@@ -82,15 +103,12 @@ export function homePorPerfil(tipo) {
 // ── Impersonar (admin simula outro perfil) ───────────────────
 export function impersonar(tipo) {
   const perfil = window._perfil
-  // Permite voltar ao admin mesmo quando _perfil já foi substituído
   const isAdmin = perfil?.tipo === 'admin' || window._perfilAdmin?.tipo === 'admin'
   if (!isAdmin) return
-
   if (tipo === 'admin') {
     _ativarImpersonar('admin', window._perfilAdmin || window._perfil)
     return
   }
-
   _abrirModalImpersonar(tipo)
 }
 window.impersonar = impersonar
@@ -98,15 +116,10 @@ window.impersonar = impersonar
 async function _abrirModalImpersonar(tipo) {
   const sb = window._sb
   const tipoFiltro = tipo === 'professor' ? ['professor','admin'] : ['aluno']
-
   const { data: pessoas } = await sb.from('perfis')
-    .select('id,nome,email,tipo')
-    .in('tipo', tipoFiltro)
-    .eq('ativo', true)
-    .order('nome')
+    .select('id,nome,email,tipo').in('tipo', tipoFiltro).eq('ativo', true).order('nome')
 
   document.getElementById('modal-impersonar')?.remove()
-
   const div = document.createElement('div')
   div.id = 'modal-impersonar'
   div.style.cssText = 'position:fixed;inset:0;background:rgba(31,56,31,.7);z-index:400;display:flex;align-items:center;justify-content:center;padding:16px'
@@ -138,7 +151,6 @@ async function _abrirModalImpersonar(tipo) {
         }
       </div>
     </div>`
-
   document.body.appendChild(div)
   div.addEventListener('click', e => { if (e.target === div) div.remove() })
 }
@@ -146,24 +158,15 @@ async function _abrirModalImpersonar(tipo) {
 async function selecionarImpersonar(pessoaId, tipo) {
   const sb = window._sb
   document.getElementById('modal-impersonar')?.remove()
-
-  // Busca perfil sem join em matriculas para evitar FK ambígua (PGRST201)
-  const { data: pessoa } = await sb.from('perfis')
-    .select('*')
-    .eq('id', pessoaId).single()
-
+  const { data: pessoa } = await sb.from('perfis').select('*').eq('id', pessoaId).single()
   if (!pessoa) { window.toast?.('Perfil não encontrado'); return }
-
-  // Busca matrícula separadamente usando FK explícita
   if (tipo === 'aluno') {
     const { data: mats } = await sb.from('matriculas')
-      .select('plano_tipo,opcao_aulas,ativa')
-      .eq('aluno_id', pessoaId)
+      .select('plano_tipo,opcao_aulas,ativa').eq('aluno_id', pessoaId)
     pessoa.matriculas = mats || []
   } else {
     pessoa.matriculas = []
   }
-
   _ativarImpersonar(tipo, pessoa)
 }
 window.selecionarImpersonar = selecionarImpersonar
@@ -184,9 +187,7 @@ function _ativarImpersonar(tipo, pessoa) {
       btn.style.color      = t==='admin' ? 'var(--verde)'   : 'rgba(242,236,206,.7)'
       btn.style.fontWeight = t==='admin' ? '500'            : '400'
     })
-    // Remove aviso de impersonação
     document.getElementById('impersonar-aviso')?.remove()
-    // Reexibe a barra de impersonar no sidebar
     const bar = document.getElementById('impersonate-bar')
     if (bar) bar.style.display = 'block'
     buildMenu('admin')
@@ -194,7 +195,6 @@ function _ativarImpersonar(tipo, pessoa) {
     return
   }
 
-  // Salva perfil admin antes de substituir
   if (!window._perfilAdmin) window._perfilAdmin = window._perfil
   window._perfil = pessoa
 
@@ -219,7 +219,6 @@ function _ativarImpersonar(tipo, pessoa) {
     btn.style.fontWeight = key === tipo ? '500'            : '400'
   })
 
-  // Aviso no topo — pointer-events:none para não bloquear cliques no conteúdo
   let aviso = document.getElementById('impersonar-aviso')
   if (!aviso) {
     aviso = document.createElement('div')
@@ -234,6 +233,7 @@ function _ativarImpersonar(tipo, pessoa) {
   voltar.onclick = () => impersonar('admin')
   aviso.appendChild(voltar)
 
+  // Constrói menu sem badges durante impersonação (badges carregados pelo dashboard do role)
   buildMenu(tipo)
   window.navigate(HOME_POR_PERFIL[tipo] || 'dashboard')
 }
@@ -242,7 +242,6 @@ function _ativarImpersonar(tipo, pessoa) {
 export function initMobileMenu() {
   const sbEl = document.querySelector('.sb')
   if (!sbEl) return
-
   sbEl.addEventListener('click', e => {
     if (window.innerWidth > 768) return
     const nav = document.getElementById('nav-menu')
@@ -250,7 +249,6 @@ export function initMobileMenu() {
     const rect = sbEl.getBoundingClientRect()
     if (e.clientX > rect.right - 50) nav.classList.toggle('mobile-open')
   })
-
   document.addEventListener('click', e => {
     if (e.target.classList.contains('ni')) {
       document.getElementById('nav-menu')?.classList.remove('mobile-open')
