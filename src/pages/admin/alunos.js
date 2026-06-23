@@ -439,4 +439,4 @@ export async function renderAlunos(container, page) {
     window._pendingEditAluno = null
     setTimeout(() => window.editarAluno && window.editarAluno(idParaEditar), 50)
   }
-}    
+}   
