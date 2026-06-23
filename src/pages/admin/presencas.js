@@ -163,10 +163,10 @@ export async function renderPresencas(container, page) {
     if (!alunoId) { toast('Selecione um aluno'); return }
 
     const { data: existe } = await sb.from('confirmacoes')
-      .select('id,status')
-      .eq('ocorrencia_id', ocId)
-      .eq('aluno_id', alunoId)
-      .single()
+  .select('id,status')
+  .eq('ocorrencia_id', ocId)
+  .eq('aluno_id', alunoId)
+  .maybeSingle()
 
     if (existe.status === 'cancelado') {
   // Reutiliza o RPC que já lida com o enum corretamente
