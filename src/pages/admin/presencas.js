@@ -230,4 +230,4 @@ export async function renderPresencas(container, page) {
     toast('✓ Presença removida' + (!ehLivre && foiDebitado ? ' e crédito estornado' : ''))
     navigate('presencas')
   }
-}
+}   
