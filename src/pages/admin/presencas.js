@@ -1,11 +1,5 @@
 /**
  * src/pages/admin/presencas.js
- * Presenças admin
- *
- * CORREÇÕES:
- *  - Bug 1: query confirmacoes agora filtra .neq('status','cancelado')
- *  - Bug 7: adicionarAlunoPresenca agora passa a aula já iniciada ou não
- *           (o RPC foi atualizado para decidir status por hora — veja migration)
  */
 
 import { sb } from '../../lib/supabase.js'
@@ -33,7 +27,6 @@ export async function renderPresencas(container, page) {
   let confs = [], ocAtual = null
   if (ocSelecionadaId) {
     const [confRes, ocRes] = await Promise.all([
-      // BUG 1 CORRIGIDO: filtra status cancelado para não exibir presenças removidas
       sb.from('confirmacoes')
         .select('*, aluno:perfis!aluno_id(id,nome,email)')
         .eq('ocorrencia_id', ocSelecionadaId)
@@ -162,27 +155,33 @@ export async function renderPresencas(container, page) {
     const alunoId = document.getElementById('sel-add-aluno')?.value
     if (!alunoId) { toast('Selecione um aluno'); return }
 
+    // maybeSingle retorna null sem erro 406 quando não existe registro
     const { data: existe } = await sb.from('confirmacoes')
-  .select('id,status')
-  .eq('ocorrencia_id', ocId)
-  .eq('aluno_id', alunoId)
-  .maybeSingle()
+      .select('id,status')
+      .eq('ocorrencia_id', ocId)
+      .eq('aluno_id', alunoId)
+      .maybeSingle()
 
-    if (existe.status === 'cancelado') {
-  // Reutiliza o RPC que já lida com o enum corretamente
-  const { data, error } = await sb.rpc('admin_adicionar_presenca', {
-    p_aluno_id: alunoId,
-    p_ocorrencia_id: ocId,
-  })
-  if (error || !data?.ok) {
-    toast('Erro: ' + (data?.motivo || error?.message))
-    navigate('presencas')
-    return
-  }
-  toast('✓ Presença reativada!')
-}
+    if (existe) {
+      // Já existe um registro — só chama o RPC se estava cancelado
+      if (existe.status === 'cancelado') {
+        const { data, error } = await sb.rpc('admin_adicionar_presenca', {
+          p_aluno_id: alunoId,
+          p_ocorrencia_id: ocId,
+        })
+        if (error || !data?.ok) {
+          toast('Erro: ' + (data?.motivo || error?.message))
+          return
+        }
+        toast('✓ Presença reativada!')
+      } else {
+        toast('Aluno já está na lista')
+      }
+      navigate('presencas')
+      return
+    }
 
-    // Nova presença — RPC decide status por horário da aula (corrigido na migration)
+    // Não existe — cria via RPC (decide status por horário da aula)
     const { data, error } = await sb.rpc('admin_adicionar_presenca', {
       p_aluno_id: alunoId,
       p_ocorrencia_id: ocId,
