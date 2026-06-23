@@ -168,21 +168,19 @@ export async function renderPresencas(container, page) {
       .eq('aluno_id', alunoId)
       .single()
 
-    if (existe) {
-      if (existe.status === 'cancelado') {
-        // BUG 7: reativa com status correto baseado no horário da aula
-        const novoStatus = aulaPassada ? 'presente' : 'confirmado'
-        await sb.from('confirmacoes').update({
-          status: novoStatus,
-          presenca_em: aulaPassada ? new Date().toISOString() : null
-        }).eq('id', existe.id)
-        toast('✓ Presença reativada!')
-      } else {
-        toast('Aluno já está na lista')
-      }
-      navigate('presencas')
-      return
-    }
+    if (existe.status === 'cancelado') {
+  // Reutiliza o RPC que já lida com o enum corretamente
+  const { data, error } = await sb.rpc('admin_adicionar_presenca', {
+    p_aluno_id: alunoId,
+    p_ocorrencia_id: ocId,
+  })
+  if (error || !data?.ok) {
+    toast('Erro: ' + (data?.motivo || error?.message))
+    navigate('presencas')
+    return
+  }
+  toast('✓ Presença reativada!')
+}
 
     // Nova presença — RPC decide status por horário da aula (corrigido na migration)
     const { data, error } = await sb.rpc('admin_adicionar_presenca', {
