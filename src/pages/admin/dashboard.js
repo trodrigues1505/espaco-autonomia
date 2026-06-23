@@ -1,5 +1,9 @@
 /**
  * src/pages/admin/dashboard.js
+ *
+ * CORREÇÃO:
+ *  - Bug 4: botão "Ver" agora seta window._ocPresencaId antes de navegar,
+ *           para que presencas.js abra diretamente a aula clicada
  */
 
 import { sb }         from '../../lib/supabase.js'
@@ -11,7 +15,6 @@ import { carregarNotificacoes, renderPainelNotif, initNotifHandlers,
 
 export async function renderDashboard(container, page) {
   const sb = window._sb
-  // Captura o perfil NO MOMENTO do render — evita race condition de impersonação
   const perfil = window._perfil
 
   const hoje = new Date()
@@ -38,7 +41,6 @@ export async function renderDashboard(container, page) {
   const por = { brahma:0, shiva_1x:0, shiva_2x:0, vishnu_2x:0, vishnu_livre:0 }
   alunos.forEach(a => { if(por[a.plano_tipo]!==undefined) por[a.plano_tipo]++ })
 
-  // Aplica badges no menu lateral
   const badges = calcularBadgesMenu(notifs)
   aplicarBadgesMenu(badges)
 
@@ -64,11 +66,12 @@ export async function renderDashboard(container, page) {
               const cor = {hatha:'#2d7a2d',acro:'var(--dourado)',raja:'#5a2d8a'}[a.modalidade]||'#888'
               const nomes = {hatha:'Hatha Yoga',acro:'Acro Yoga',raja:'Raja Yoga'}
               const hora = new Date(a.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
+              // BUG 4 CORRIGIDO: seta _ocPresencaId e _presencaData antes de navegar
               return `<div style="display:grid;grid-template-columns:60px 1fr 90px 70px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.35);font-size:12px">
                 <span style="color:var(--txt2);font-size:11px">${hora}</span>
                 <span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${cor};flex-shrink:0"></span><strong>${nomes[a.modalidade]}</strong>${a.eh_feriado?`<span style="background:rgba(232,188,79,.2);color:#7a5a10;font-size:10px;padding:1px 6px;border-radius:10px">⚠ ${a.nome_feriado}</span>`:''}</span>
                 <span style="font-size:11px;color:var(--txt2)">${a.confirmados||0}/${a.vagas_total} conf.</span>
-                <button onclick="navigate('presencas')" style="padding:4px 8px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:11px;cursor:pointer;color:var(--txt2)">Ver</button>
+                <button onclick="window._ocPresencaId='${a.id}';window._presencaData=null;navigate('presencas')" style="padding:4px 8px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:11px;cursor:pointer;color:var(--txt2)">Ver</button>
               </div>`
             }).join('')}
         </div>
