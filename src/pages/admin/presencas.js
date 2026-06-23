@@ -1,6 +1,11 @@
 /**
  * src/pages/admin/presencas.js
  * Presenças admin
+ *
+ * CORREÇÕES:
+ *  - Bug 1: query confirmacoes agora filtra .neq('status','cancelado')
+ *  - Bug 7: adicionarAlunoPresenca agora passa a aula já iniciada ou não
+ *           (o RPC foi atualizado para decidir status por hora — veja migration)
  */
 
 import { sb } from '../../lib/supabase.js'
@@ -28,7 +33,12 @@ export async function renderPresencas(container, page) {
   let confs = [], ocAtual = null
   if (ocSelecionadaId) {
     const [confRes, ocRes] = await Promise.all([
-      sb.from('confirmacoes').select('*, aluno:perfis!aluno_id(id,nome,email)').eq('ocorrencia_id', ocSelecionadaId).order('confirmado_em'),
+      // BUG 1 CORRIGIDO: filtra status cancelado para não exibir presenças removidas
+      sb.from('confirmacoes')
+        .select('*, aluno:perfis!aluno_id(id,nome,email)')
+        .eq('ocorrencia_id', ocSelecionadaId)
+        .neq('status', 'cancelado')
+        .order('confirmado_em'),
       sb.from('ocorrencias_vagas').select('*').eq('id', ocSelecionadaId).single(),
     ])
     confs = confRes.data || []
@@ -160,8 +170,12 @@ export async function renderPresencas(container, page) {
 
     if (existe) {
       if (existe.status === 'cancelado') {
-        // Reativa sem debitar novamente (já foi debitado antes)
-        await sb.from('confirmacoes').update({ status:'presente', presenca_em: new Date().toISOString() }).eq('id', existe.id)
+        // BUG 7: reativa com status correto baseado no horário da aula
+        const novoStatus = aulaPassada ? 'presente' : 'confirmado'
+        await sb.from('confirmacoes').update({
+          status: novoStatus,
+          presenca_em: aulaPassada ? new Date().toISOString() : null
+        }).eq('id', existe.id)
         toast('✓ Presença reativada!')
       } else {
         toast('Aluno já está na lista')
@@ -170,7 +184,7 @@ export async function renderPresencas(container, page) {
       return
     }
 
-    // Nova presença — usa RPC que debita saldo corretamente
+    // Nova presença — RPC decide status por horário da aula (corrigido na migration)
     const { data, error } = await sb.rpc('admin_adicionar_presenca', {
       p_aluno_id: alunoId,
       p_ocorrencia_id: ocId,
@@ -179,7 +193,6 @@ export async function renderPresencas(container, page) {
       toast('Erro: ' + (data?.motivo || error?.message))
       return
     }
-    // Guarda se debitou para uso no estorno posterior
     if (!window._presencaDebitou) window._presencaDebitou = {}
     const { data: novaConf } = await sb.from('confirmacoes')
       .select('id').eq('ocorrencia_id', ocId).eq('aluno_id', alunoId).single()
@@ -197,10 +210,7 @@ export async function renderPresencas(container, page) {
     const { error } = await sb.from('confirmacoes').update({ status: 'cancelado' }).eq('id', confId)
     if (error) { toast('Erro: '+error.message); return }
 
-    // Só estorna se sabemos que houve débito:
-    // - presença adicionada pelo admin nesta sessão: flag em _presencaDebitou
-    // - presença feita pelo aluno: status era 'confirmado' (passou por confirmar_presenca que sempre debita)
-    const foiDebitado = window._presencaDebitou?.[confId] ?? (conf.status === 'confirmado')
+    const foiDebitado = window._presencaDebitou?.[confId] ?? (conf.status === 'presente')
     const { data: mat } = await sb.from('matriculas')
       .select('plano_tipo,opcao_aulas')
       .eq('aluno_id', conf.aluno_id)
