@@ -1,12 +1,17 @@
 /**
  * src/pages/admin/alunos.js
  * Gestão de alunos
+ *
+ * CORREÇÕES:
+ *  - Bug 2: restaura foco no input de busca após re-render (evita perda de cursor a cada letra)
+ *  - Bug 3: exibe painel de notificações contextuais no topo da página
  */
 
 import { sb }         from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
+import { carregarNotificacoes, renderPainelNotif, initNotifHandlers } from '../../modules/notificacoes.js'
 
 export async function renderAlunos(container, page) {
   const _sb = window._sb || sb
@@ -16,10 +21,12 @@ export async function renderAlunos(container, page) {
   const busca = window._buscaAlunos || ''
   const filtroPlanok = window._filtroPlanoAlunos || ''
 
-  const [perfisRes, saldoRes, professoresRes] = await Promise.all([
+  const [perfisRes, saldoRes, professoresRes, notifs] = await Promise.all([
     _sb.from('perfis').select('*, matriculas!matriculas_aluno_id_fkey(plano_tipo,opcao_aulas,valor_mensal,desconto_fixo,desconto_avulso_valor,desconto_avulso_meses,desconto_avulso_usado,ativa,fim,professor_id)').eq('tipo','aluno').order('nome'),
     _sb.from('saldo_disponivel').select('aluno_id,saldo_total'),
     _sb.from('perfis').select('id,nome').eq('tipo','professor').order('nome'),
+    // BUG 3: carrega notificações filtradas para esta página
+    carregarNotificacoes(perfil, 'alunos'),
   ])
 
   const todos = perfisRes.data || []
@@ -87,6 +94,7 @@ export async function renderAlunos(container, page) {
       </div>
     </div>
     <div class="content">
+      ${renderPainelNotif(notifs, { titulo: 'Avisos', maxVisiveis: 2 })}
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px">
         <div style="background:var(--verde);border-radius:var(--r);padding:14px 16px">
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.7);margin-bottom:4px">Total de Alunos</div>
@@ -193,6 +201,18 @@ export async function renderAlunos(container, page) {
     </div>
   `
 
+  // BUG 2 CORRIGIDO: restaura foco e cursor no input de busca após re-render
+  if (busca) {
+    const inp = document.getElementById('input-busca-aluno')
+    if (inp) {
+      inp.focus()
+      inp.setSelectionRange(inp.value.length, inp.value.length)
+    }
+  }
+
+  // BUG 3: inicializa handlers de dispensar notificações
+  initNotifHandlers(notifs, perfil.id)
+
   window.updateValorPlano = function() {
     const p = document.getElementById('ca-plano')?.value
     if (p && document.getElementById('ca-valor')) document.getElementById('ca-valor').value = PLANO_VALORES[p]||0
@@ -249,19 +269,15 @@ export async function renderAlunos(container, page) {
     const mat = (a.matriculas||[]).find(m=>m.ativa)
     window._editAlunoId = alunoId
 
-    // calcula desconto avulso ativo
     const descAvulsoAtivo = mat && mat.desconto_avulso_meses > mat.desconto_avulso_usado
 
     document.getElementById('edit-aluno-body').innerHTML = `
-      <!-- Dados pessoais -->
       <div style="background:rgba(242,236,206,.3);border:1px solid var(--borda);border-radius:8px;padding:12px;margin-bottom:14px">
         <div style="font-size:11px;font-weight:500;color:var(--verde);margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px">Dados Pessoais</div>
         ${fi('','Nome completo',`<input type="text" id="ea-nome" ${inputStyle} value="${(a.nome||'').replace(/"/g,'&quot;')}">`)}
         ${fi('','Telefone',`<input type="tel" id="ea-tel" ${inputStyle} value="${a.telefone||''}" placeholder="(11) 99999-9999">`)}
         <div style="font-size:11px;color:var(--txt2);margin-top:4px">E-mail: <strong>${a.email}</strong> (não editável — usado para login)</div>
       </div>
-
-      <!-- Plano -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         ${fi('','Plano',`<select id="ea-plano" ${inputStyle} onchange="updateValorEdicao()">
           <option value="brahma" ${mat?.plano_tipo==='brahma'?'selected':''}>Brahma — 1× por semana — R$100/mês</option>
@@ -278,17 +294,13 @@ export async function renderAlunos(container, page) {
       ${fi('','Valor mensal (R$)',`<input type="number" id="ea-valor" ${inputStyle} value="${mat?.valor_mensal||0}">`)}
       ${fi('','Vencimento',`<input type="date" id="ea-fim" ${inputStyle} value="${mat?.fim||''}">`)}
       ${fi('','Status',`<select id="ea-ativo" ${inputStyle}><option value="true" ${a.ativo?'selected':''}>Ativo</option><option value="false" ${!a.ativo?'selected':''}>Inativo</option></select>`)}
-
-      <!-- Descontos -->
       <div style="background:rgba(232,188,79,.08);border:1px solid rgba(232,188,79,.25);border-radius:8px;padding:12px;margin-bottom:12px">
         <div style="font-size:11px;font-weight:500;color:var(--verde);margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px">🏷 Descontos</div>
-
         <div style="display:flex;flex-direction:column;gap:3px;margin-bottom:10px">
           <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Desconto fixo mensal (R$)</label>
           <input type="number" id="ea-desconto-fixo" min="0" step="0.01" value="${mat?.desconto_fixo||0}" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
           <div style="font-size:10px;color:var(--txt2)">Aplica todo mês automaticamente. Ex: R$20 de desconto familiar.</div>
         </div>
-
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div style="display:flex;flex-direction:column;gap:3px">
             <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Desconto avulso (R$)</label>
@@ -304,15 +316,11 @@ export async function renderAlunos(container, page) {
         </div>`:''}
         <div style="margin-top:8px;font-size:10px;color:var(--txt2)">Desconto avulso: ex: R$30 por 3 meses para um aluno que vai viajar. Zere os campos para cancelar.</div>
       </div>
-
-      <!-- Asaas -->
       <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
         <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">ID no Asaas (cus_...)</label>
         <input id="ea-asaas" placeholder="cus_000..." style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none" value="${a.asaas_customer_id||''}">
         <div style="font-size:10px;color:${a.asaas_customer_id?'#1a5a1a':'#c0392b'};margin-top:3px">${a.asaas_customer_id?'✓ Vinculado ao Asaas':'⚠ Não vinculado — pagamentos não sincronizados'}</div>
       </div>
-
-      <!-- Créditos manuais -->
       <div style="background:rgba(242,236,206,.4);border:1px solid var(--borda);border-radius:8px;padding:12px;margin-bottom:4px">
         <div style="font-size:11px;font-weight:500;color:var(--verde);margin-bottom:6px">➕ Créditos manuais de aulas</div>
         <div style="font-size:11px;color:var(--txt2);margin-bottom:8px">Para repor aulas anteriores ao app ou por acordo especial.</div>
@@ -370,7 +378,6 @@ export async function renderAlunos(container, page) {
     const descontoAvulsoValor = Number(document.getElementById('ea-desconto-avulso-valor').value) || 0
     const descontoAvulsoMeses = Number(document.getElementById('ea-desconto-avulso-meses').value) || 0
 
-    // Salva dados pessoais
     const { error: errPerfil } = await _sb.from('perfis').update({
       nome,
       telefone: tel || null,
@@ -379,7 +386,6 @@ export async function renderAlunos(container, page) {
     }).eq('id', window._editAlunoId)
     if (errPerfil) { toast('Erro ao salvar perfil: ' + errPerfil.message); return }
 
-    // Salva matrícula (desativa a atual, cria nova com os valores atualizados)
     await _sb.from('matriculas').update({ativa:false}).eq('aluno_id', window._editAlunoId).eq('ativa', true)
     const { error: errMat } = await _sb.from('matriculas').insert({
       aluno_id:               window._editAlunoId,
@@ -428,10 +434,9 @@ export async function renderAlunos(container, page) {
     }
   }
 
-  // Abre modal de edição automaticamente se vier de outra aba (ex: pagamentos)
   if (window._pendingEditAluno) {
     const idParaEditar = window._pendingEditAluno
     window._pendingEditAluno = null
     setTimeout(() => window.editarAluno && window.editarAluno(idParaEditar), 50)
   }
-}
+}    
