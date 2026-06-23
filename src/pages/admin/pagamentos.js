@@ -105,18 +105,27 @@ async function syncAsaas(apiKey, sbClient) {
   if (asaasIds.length) {
     await sbClient.from('pagamentos').delete().in('asaas_id', asaasIds)
   }
-  const registros = todos
-    .filter(p => p.id && p.dueDate)
-    .map(p => ({
-      asaas_id:       p.id,
-      asaas_customer: p.customer || null,
-      valor:          p.value || 0,
-      status:         p.status || 'PENDING',
-      vencimento:     p.dueDate,
-      pago_em:        p.paymentDate ? new Date(p.paymentDate).toISOString() : null,
-      descricao:      p.description || null,
-      mes_ref:        p.dueDate.slice(0,7) + '-01',
-    }))
+  const { data: todosPerfisSb } = await sbClient
+  .from('perfis')
+  .select('id, asaas_customer_id')
+  .not('asaas_customer_id', 'is', null)
+const customerParaPerfilId = Object.fromEntries(
+  (todosPerfisSb || []).map(p => [p.asaas_customer_id, p.id])
+)
+
+const registros = todos
+  .filter(p => p.id && p.dueDate)
+  .map(p => ({
+    asaas_id:       p.id,
+    asaas_customer: p.customer || null,
+    aluno_id:       customerParaPerfilId[p.customer] || null,
+    valor:          p.value || 0,
+    status:         p.status || 'PENDING',
+    vencimento:     p.dueDate,
+    pago_em:        p.paymentDate ? new Date(p.paymentDate).toISOString() : null,
+    descricao:      p.description || null,
+    mes_ref:        p.dueDate.slice(0,7) + '-01',
+  }))
   for (let i = 0; i < registros.length; i += 50) {
     const { error } = await sbClient.from('pagamentos').insert(registros.slice(i, i + 50))
     if (error) throw new Error('Erro ao salvar: ' + error.message)
