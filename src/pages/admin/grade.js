@@ -247,7 +247,7 @@ export async function renderGrade(container, page) {
   const modalDetalhes = !isAluno ? modal('modal-det-oc', 'Detalhes da Aula',
     `<div id="det-oc-body">Carregando...</div>`,
     `<button onclick="document.getElementById('modal-det-oc').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Fechar</button>
-     <button onclick="navigate('presencas')" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Ver Presenças</button>`
+     <button onclick="window._ocPresencaId=window._ocAtual;navigate('presencas')" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Ver Presenças</button>`
   ) : ''
 
   // REGRA 2: aviso sem plano para aluno
