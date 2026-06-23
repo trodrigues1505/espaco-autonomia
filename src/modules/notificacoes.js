@@ -1,19 +1,11 @@
 /**
  * src/modules/notificacoes.js
  *
- * Sistema de notificações contextuais.
- *
  * CORREÇÕES nesta versão:
+ *   - Bug 1: admin_alunos_sumidos agora ignora alunos cadastrados há menos de 2 semanas
  *   - Queries de professor usam RPC SECURITY DEFINER para contornar RLS
- *     (auth.uid() admin ≠ perfil.id professor no two-profile setup)
  *   - carregarNotificacoes() recebe o perfil como argumento explícito
- *     para evitar race condition durante impersonação
- *   - Avisos de admin nunca vazam para sessão impersonada
  */
-
-// ─────────────────────────────────────────────────────────────
-// CHECKERS
-// ─────────────────────────────────────────────────────────────
 
 const TIPOS = {
 
@@ -143,14 +135,12 @@ const TIPOS = {
     roles: ['admin'],
     paginas: ['dashboard', 'alunos', 'presencas'],
     async checar(sb) {
-      // Alunos com saldo > 0 e nenhuma confirmação nas últimas 2 semanas
       const ha2semanas = new Date(); ha2semanas.setDate(ha2semanas.getDate() - 14)
       const { data: comSaldo } = await sb
         .from('saldo_disponivel')
         .select('aluno_id, saldo_total')
         .gt('saldo_total', 0)
       if (!comSaldo?.length) return []
-      // Busca quem confirmou algo nas últimas 2 semanas
       const ids = comSaldo.map(s => s.aluno_id)
       const { data: recentes } = await sb
         .from('confirmacoes')
@@ -161,15 +151,22 @@ const TIPOS = {
       const idsAtivos = new Set((recentes || []).map(c => c.aluno_id))
       const sumidos = comSaldo.filter(s => !idsAtivos.has(s.aluno_id))
       if (!sumidos.length) return []
-      // Busca nomes
+      // Busca nomes e data de criação em uma única query
       const { data: perfis } = await sb
-        .from('perfis').select('id, nome').in('id', sumidos.map(s => s.aluno_id))
+        .from('perfis').select('id, nome, criado_em').in('id', sumidos.map(s => s.aluno_id))
       const nomeMap = Object.fromEntries((perfis || []).map(p => [p.id, p.nome]))
+      // BUG 1 CORRIGIDO: ignora alunos cadastrados há menos de 2 semanas
+      const sumidosReais = sumidos.filter(s => {
+        const p = perfis?.find(pf => pf.id === s.aluno_id)
+        if (!p?.criado_em) return true
+        return new Date(p.criado_em) < ha2semanas
+      })
+      if (!sumidosReais.length) return []
       return [{
         key: `admin_alunos_sumidos_${new Date().toISOString().slice(0, 10)}`,
-        titulo: `${sumidos.length} aluno(s) sem confirmar aulas há 2+ semanas`,
-        corpo: sumidos.slice(0, 5).map(s => nomeMap[s.aluno_id] || '—').join(', ') +
-          (sumidos.length > 5 ? ` e mais ${sumidos.length - 5}` : ''),
+        titulo: `${sumidosReais.length} aluno(s) sem confirmar aulas há 2+ semanas`,
+        corpo: sumidosReais.slice(0, 5).map(s => nomeMap[s.aluno_id] || '—').join(', ') +
+          (sumidosReais.length > 5 ? ` e mais ${sumidosReais.length - 5}` : ''),
         nivel: 'info',
         acao: { label: 'Ver alunos', page: 'alunos' },
         menuIds: ['alunos', 'presencas'],
@@ -178,9 +175,6 @@ const TIPOS = {
   },
 
   // ── PROFESSOR ─────────────────────────────────────────────
-  // TODAS as queries de professor usam RPC SECURITY DEFINER
-  // para contornar a RLS quando auth.uid() ≠ perfil.id
-  // (two-profile pitfall do Thiago: admin 1d4eaaed, professor 6b79a085)
 
   prof_aulas_semana: {
     roles: ['professor'],
@@ -193,10 +187,8 @@ const TIPOS = {
       const ocs = data || []
       if (!ocs.length) return []
       const hoje = new Date().toISOString().slice(0, 10)
-      const hojeOcs = ocs.filter(o => o.data_hora?.slice(0, 10) === hoje)
       const proxima = ocs.find(o => new Date(o.data_hora) >= new Date())
       const notifs = []
-      // Aviso semanal
       notifs.push({
         key: `prof_semana_${_semKey()}_${perfil.id}`,
         titulo: `Você tem ${ocs.length} aula(s) nesta semana`,
@@ -207,7 +199,6 @@ const TIPOS = {
         acao: { label: 'Ver aulas', page: 'prof-aulas' },
         menuIds: ['prof-aulas'],
       })
-      // Aviso de próxima aula hoje
       if (proxima && proxima.data_hora?.slice(0, 10) === hoje) {
         const hora = new Date(proxima.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
         notifs.push({
@@ -289,7 +280,6 @@ const TIPOS = {
     paginas: ['aluno-home', 'aluno-grade'],
     async checar(sb, perfil) {
       const amanha = new Date(); amanha.setDate(amanha.getDate() + 1)
-      const depois = new Date(); depois.setDate(depois.getDate() + 2)
       const { data: confs } = await sb
         .from('confirmacoes')
         .select('ocorrencia:ocorrencias(id, data_hora, aula:aulas(modalidade))')
@@ -400,20 +390,11 @@ const TIPOS = {
 // FUNÇÃO PRINCIPAL
 // ─────────────────────────────────────────────────────────────
 
-/**
- * Carrega notificações para o perfil explicitamente passado.
- * SEMPRE passe o perfil como argumento — não usa window._perfil
- * para evitar race condition durante impersonação.
- *
- * @param {Object} perfilExplicito — o perfil a usar (window._perfil no momento do render)
- * @param {string|null} filtroPagina — se passado, retorna só notifs desta página
- */
 export async function carregarNotificacoes(perfilExplicito, filtroPagina = null) {
   const sb = window._sb
   const perfil = perfilExplicito
   if (!sb || !perfil) return []
 
-  // Garante que não vaza notificação de admin para sessão impersonada de professor/aluno
   const role = perfil.tipo
 
   const { data: lidas } = await sb
@@ -460,10 +441,6 @@ export async function marcarTodasLidas(notifs, perfilId) {
   await sb.from('notificacoes_lidas').upsert(rows, { onConflict: 'perfil_id,notif_key' })
 }
 
-/**
- * Calcula contagens por menuId para os badges do sidebar.
- * Retorna objeto { 'pagamentos': 2, 'alunos': 1, ... }
- */
 export function calcularBadgesMenu(notifs) {
   const badges = {}
   for (const n of notifs) {
@@ -566,18 +543,8 @@ export function initNotifHandlers(notifs, perfilId) {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// BADGES NO MENU LATERAL
-// ─────────────────────────────────────────────────────────────
-
-/**
- * Aplica badges numéricos nos itens do menu lateral.
- * Chama após buildMenu() e após carregarNotificacoes().
- */
 export function aplicarBadgesMenu(badges) {
-  // Remove badges anteriores
   document.querySelectorAll('.ni .notif-menu-badge').forEach(el => el.remove())
-
   for (const [menuId, count] of Object.entries(badges)) {
     if (!count) continue
     const niEl = document.getElementById(`ni-${menuId}`)
@@ -590,7 +557,6 @@ export function aplicarBadgesMenu(badges) {
       font-size:10px;font-weight:600;margin-left:auto;flex-shrink:0;
       font-family:'DM Sans',sans-serif;line-height:1.4
     `
-    // O item de menu usa display:flex — o badge vai para a direita automaticamente
     niEl.style.display = 'flex'
     niEl.style.alignItems = 'center'
     niEl.appendChild(badge)
