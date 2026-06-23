@@ -218,7 +218,9 @@ export async function renderPagamentos(container, page) {
     } catch(e) {}
   }
 
-  const semNome = pgs.filter(p => !p.aluno?.nome && p.asaas_customer).length
+  const semNome = pgs.filter(p => !p.aluno?.nome && p.asaas_customer &&
+  p.vencimento >= new Date().toISOString().slice(0,10)
+).length
 
   window._pgAlunosMap = {}
   pgs.forEach(p => {
