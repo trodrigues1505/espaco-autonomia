@@ -97,4 +97,4 @@ export async function renderDashboard(container, page) {
   `
 
   initNotifHandlers(notifs, perfil.id)
-}
+}   
