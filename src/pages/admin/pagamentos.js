@@ -6,6 +6,8 @@
 import { SUPABASE_ANON } from '../../lib/supabase.js'
 import { toast } from '../../modules/utils.js'
 
+import { uiAnimar } from '../../modules/ui.js'
+
 const FN_URL   = 'https://kctgcjvfsuinwlbgljdw.supabase.co/functions/v1/asaas-proxy'
 const ASAAS_KEY_STORAGE = 'ea_asaas_key'
 
@@ -395,7 +397,7 @@ export async function renderPagamentos(container, page) {
 
     </div>
   `
-
+uiAnimar(container)
   window.abrirSyncAsaas = function() {
     document.getElementById('modal-sync-asaas').style.display = 'flex'
   }
