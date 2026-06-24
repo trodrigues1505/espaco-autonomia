@@ -1,10 +1,5 @@
 /**
  * src/pages/admin/alunos.js
- * Gestão de alunos
- *
- * CORREÇÕES:
- *  - Bug 2: restaura foco no input de busca após re-render (evita perda de cursor a cada letra)
- *  - Bug 3: exibe painel de notificações contextuais no topo da página
  */
 
 import { sb }         from '../../lib/supabase.js'
@@ -12,11 +7,11 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 import { carregarNotificacoes, renderPainelNotif, initNotifHandlers } from '../../modules/notificacoes.js'
+import { uiAnimar } from '../../modules/ui.js'
 
 export async function renderAlunos(container, page) {
   const _sb = window._sb || sb
   const perfil = window._perfil
-  const tipo = perfil?.tipo
 
   const busca = window._buscaAlunos || ''
   const filtroPlanok = window._filtroPlanoAlunos || ''
@@ -25,7 +20,6 @@ export async function renderAlunos(container, page) {
     _sb.from('perfis').select('*, matriculas!matriculas_aluno_id_fkey(plano_tipo,opcao_aulas,valor_mensal,desconto_fixo,desconto_avulso_valor,desconto_avulso_meses,desconto_avulso_usado,ativa,fim,professor_id)').eq('tipo','aluno').order('nome'),
     _sb.from('saldo_disponivel').select('aluno_id,saldo_total'),
     _sb.from('perfis').select('id,nome').eq('tipo','professor').order('nome'),
-    // BUG 3: carrega notificações filtradas para esta página
     carregarNotificacoes(perfil, 'alunos'),
   ])
 
@@ -181,7 +175,6 @@ export async function renderAlunos(container, page) {
     </div>
     ${modalCadastro}
     ${modalEditar}
-
     <div id="modal-excluir-aluno" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.6);z-index:200;align-items:center;justify-content:center;padding:16px">
       <div style="background:#fff;border-radius:12px;width:400px;max-width:100%;overflow:hidden">
         <div style="background:#c0392b;padding:16px 20px">
@@ -201,16 +194,13 @@ export async function renderAlunos(container, page) {
     </div>
   `
 
-  // BUG 2 CORRIGIDO: restaura foco e cursor no input de busca após re-render
+  uiAnimar(container)
+
   if (busca) {
     const inp = document.getElementById('input-busca-aluno')
-    if (inp) {
-      inp.focus()
-      inp.setSelectionRange(inp.value.length, inp.value.length)
-    }
+    if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length) }
   }
 
-  // BUG 3: inicializa handlers de dispensar notificações
   initNotifHandlers(notifs, perfil.id)
 
   window.updateValorPlano = function() {
@@ -227,50 +217,31 @@ export async function renderAlunos(container, page) {
     const valor = Number(document.getElementById('ca-valor').value)||PLANO_VALORES[plano]||0
     const professorId = document.getElementById('ca-professor').value || null
     if (!nome||!email) { toast('Preencha nome e e-mail'); return }
-
     let errInv = null
-    try {
-      const r = await _sb.auth.admin?.inviteUserByEmail(email)
-      errInv = r?.error
-    } catch(e) { errInv = { message: 'use service role key' } }
-
+    try { const r = await _sb.auth.admin?.inviteUserByEmail(email); errInv = r?.error } catch(e) { errInv = { message: 'use service role key' } }
     const { data: existente } = await _sb.from('perfis').select('id').eq('email', email).single()
     let alunoId = existente?.id
-
     if (!alunoId) {
       const tempId = crypto.randomUUID()
-      const { error: errP } = await _sb.from('perfis').insert({
-        id: tempId, nome, email, telefone: tel||null, tipo: 'aluno', ativo: true
-      })
+      const { error: errP } = await _sb.from('perfis').insert({ id: tempId, nome, email, telefone: tel||null, tipo: 'aluno', ativo: true })
       if (!errP) alunoId = tempId
     }
-
     if (alunoId) {
       const asaasNovo = document.getElementById('ca-asaas')?.value.trim() || null
       await _sb.from('matriculas').update({ativa:false}).eq('aluno_id', alunoId).eq('ativa', true)
-      await _sb.from('matriculas').insert({
-        aluno_id: alunoId,
-        plano_tipo: plano,
-        opcao_aulas: opcao,
-        valor_mensal: valor,
-        professor_id: professorId,
-      })
+      await _sb.from('matriculas').insert({ aluno_id: alunoId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor, professor_id: professorId })
       if (asaasNovo) await _sb.from('perfis').update({ asaas_customer_id: asaasNovo }).eq('id', alunoId)
       document.getElementById('modal-cad-aluno').style.display = 'none'
       toast('✓ Aluno cadastrado! Peça para entrar com Google usando: '+email)
       navigate('alunos')
-    } else {
-      toast('Erro ao cadastrar. Verifique se o e-mail já existe.')
-    }
+    } else { toast('Erro ao cadastrar. Verifique se o e-mail já existe.') }
   }
 
   window.editarAluno = async function(alunoId) {
     const { data: a } = await _sb.from('perfis').select('*, matriculas!matriculas_aluno_id_fkey(*)').eq('id', alunoId).single()
     const mat = (a.matriculas||[]).find(m=>m.ativa)
     window._editAlunoId = alunoId
-
     const descAvulsoAtivo = mat && mat.desconto_avulso_meses > mat.desconto_avulso_usado
-
     document.getElementById('edit-aluno-body').innerHTML = `
       <div style="background:rgba(242,236,206,.3);border:1px solid var(--borda);border-radius:8px;padding:12px;margin-bottom:14px">
         <div style="font-size:11px;font-weight:500;color:var(--verde);margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px">Dados Pessoais</div>
@@ -280,11 +251,11 @@ export async function renderAlunos(container, page) {
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         ${fi('','Plano',`<select id="ea-plano" ${inputStyle} onchange="updateValorEdicao()">
-          <option value="brahma" ${mat?.plano_tipo==='brahma'?'selected':''}>Brahma — 1× por semana — R$100/mês</option>
-          <option value="shiva_1x" ${mat?.plano_tipo==='shiva_1x'?'selected':''}>Shiva 1x — 1× por semana — R$150/mês</option>
-          <option value="shiva_2x" ${mat?.plano_tipo==='shiva_2x'?'selected':''}>Shiva 2x — 2× por semana — R$200/mês</option>
-          <option value="vishnu_2x" ${mat?.plano_tipo==='vishnu_2x'?'selected':''}>Vishnu 2x — 2× por semana — R$250/mês</option>
-          <option value="vishnu_livre" ${mat?.plano_tipo==='vishnu_livre'?'selected':''}>Vishnu Livre — uso livre — R$300/mês</option>
+          <option value="brahma" ${mat?.plano_tipo==='brahma'?'selected':''}>Brahma</option>
+          <option value="shiva_1x" ${mat?.plano_tipo==='shiva_1x'?'selected':''}>Shiva 1x</option>
+          <option value="shiva_2x" ${mat?.plano_tipo==='shiva_2x'?'selected':''}>Shiva 2x</option>
+          <option value="vishnu_2x" ${mat?.plano_tipo==='vishnu_2x'?'selected':''}>Vishnu 2x</option>
+          <option value="vishnu_livre" ${mat?.plano_tipo==='vishnu_livre'?'selected':''}>Vishnu Livre</option>
         </select>`)}
         ${fi('','Professor',`<select id="ea-professor" ${inputStyle}>
           <option value="">— Sem professor —</option>
@@ -299,7 +270,6 @@ export async function renderAlunos(container, page) {
         <div style="display:flex;flex-direction:column;gap:3px;margin-bottom:10px">
           <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Desconto fixo mensal (R$)</label>
           <input type="number" id="ea-desconto-fixo" min="0" step="0.01" value="${mat?.desconto_fixo||0}" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
-          <div style="font-size:10px;color:var(--txt2)">Aplica todo mês automaticamente. Ex: R$20 de desconto familiar.</div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div style="display:flex;flex-direction:column;gap:3px">
@@ -311,19 +281,15 @@ export async function renderAlunos(container, page) {
             <input type="number" id="ea-desconto-avulso-meses" min="0" max="24" value="${mat?.desconto_avulso_meses||0}" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
         </div>
-        ${descAvulsoAtivo?`<div style="margin-top:8px;font-size:11px;color:#e67e22;background:rgba(230,126,34,.08);border-radius:5px;padding:6px 10px">
-          ⏳ Desconto avulso ativo: ${mat.desconto_avulso_meses - mat.desconto_avulso_usado} mês(es) restante(s) de ${mat.desconto_avulso_meses} total
-        </div>`:''}
-        <div style="margin-top:8px;font-size:10px;color:var(--txt2)">Desconto avulso: ex: R$30 por 3 meses para um aluno que vai viajar. Zere os campos para cancelar.</div>
+        ${descAvulsoAtivo?`<div style="margin-top:8px;font-size:11px;color:#e67e22">⏳ ${mat.desconto_avulso_meses - mat.desconto_avulso_usado} mês(es) restante(s)</div>`:''}
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
         <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">ID no Asaas (cus_...)</label>
         <input id="ea-asaas" placeholder="cus_000..." style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none" value="${a.asaas_customer_id||''}">
-        <div style="font-size:10px;color:${a.asaas_customer_id?'#1a5a1a':'#c0392b'};margin-top:3px">${a.asaas_customer_id?'✓ Vinculado ao Asaas':'⚠ Não vinculado — pagamentos não sincronizados'}</div>
+        <div style="font-size:10px;color:${a.asaas_customer_id?'#1a5a1a':'#c0392b'};margin-top:3px">${a.asaas_customer_id?'✓ Vinculado ao Asaas':'⚠ Não vinculado'}</div>
       </div>
       <div style="background:rgba(242,236,206,.4);border:1px solid var(--borda);border-radius:8px;padding:12px;margin-bottom:4px">
         <div style="font-size:11px;font-weight:500;color:var(--verde);margin-bottom:6px">➕ Créditos manuais de aulas</div>
-        <div style="font-size:11px;color:var(--txt2);margin-bottom:8px">Para repor aulas anteriores ao app ou por acordo especial.</div>
         <div style="display:flex;align-items:flex-end;gap:8px">
           <div style="display:flex;flex-direction:column;gap:3px;flex:1">
             <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Qtd</label>
@@ -345,11 +311,7 @@ export async function renderAlunos(container, page) {
     const motivo = document.getElementById('ea-credito-motivo').value.trim()
     if (qtd < 1) { toast('Informe ao menos 1 aula'); return }
     if (!motivo) { toast('Informe o motivo do crédito'); return }
-    const { error } = await _sb.rpc('creditar_aulas_manual', {
-      p_aluno_id: alunoId,
-      p_quantidade: qtd,
-      p_motivo: motivo,
-    })
+    const { error } = await _sb.rpc('creditar_aulas_manual', { p_aluno_id: alunoId, p_quantidade: qtd, p_motivo: motivo })
     if (error) { toast('Erro: ' + error.message); return }
     toast('✓ ' + qtd + ' aula(s) creditada(s)!')
     document.getElementById('ea-creditos').value = 1
@@ -365,7 +327,6 @@ export async function renderAlunos(container, page) {
     const nome = document.getElementById('ea-nome')?.value.trim()
     const tel  = document.getElementById('ea-tel')?.value.trim()
     if (!nome) { toast('O nome não pode ficar vazio'); return }
-
     const plano    = document.getElementById('ea-plano').value
     const opcao    = PLANO_OPCOES[plano]||1
     const valor    = Number(document.getElementById('ea-valor').value)||PLANO_VALORES[plano]||0
@@ -373,34 +334,18 @@ export async function renderAlunos(container, page) {
     const ativo    = document.getElementById('ea-ativo').value === 'true'
     const asaasId  = document.getElementById('ea-asaas')?.value?.trim() || null
     const professorId = document.getElementById('ea-professor').value || null
-
     const descontoFixo        = Number(document.getElementById('ea-desconto-fixo').value) || 0
     const descontoAvulsoValor = Number(document.getElementById('ea-desconto-avulso-valor').value) || 0
     const descontoAvulsoMeses = Number(document.getElementById('ea-desconto-avulso-meses').value) || 0
-
-    const { error: errPerfil } = await _sb.from('perfis').update({
-      nome,
-      telefone: tel || null,
-      ativo,
-      asaas_customer_id: asaasId,
-    }).eq('id', window._editAlunoId)
+    const { error: errPerfil } = await _sb.from('perfis').update({ nome, telefone: tel || null, ativo, asaas_customer_id: asaasId }).eq('id', window._editAlunoId)
     if (errPerfil) { toast('Erro ao salvar perfil: ' + errPerfil.message); return }
-
     await _sb.from('matriculas').update({ativa:false}).eq('aluno_id', window._editAlunoId).eq('ativa', true)
     const { error: errMat } = await _sb.from('matriculas').insert({
-      aluno_id:               window._editAlunoId,
-      plano_tipo:             plano,
-      opcao_aulas:            opcao,
-      valor_mensal:           valor,
-      fim,
-      professor_id:           professorId,
-      desconto_fixo:          descontoFixo,
-      desconto_avulso_valor:  descontoAvulsoValor,
-      desconto_avulso_meses:  descontoAvulsoMeses,
-      desconto_avulso_usado:  0,
+      aluno_id: window._editAlunoId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor, fim,
+      professor_id: professorId, desconto_fixo: descontoFixo,
+      desconto_avulso_valor: descontoAvulsoValor, desconto_avulso_meses: descontoAvulsoMeses, desconto_avulso_usado: 0,
     })
     if (errMat) { toast('Erro ao salvar matrícula: ' + errMat.message); return }
-
     document.getElementById('modal-edit-aluno').style.display = 'none'
     toast(asaasId ? '✓ Aluno atualizado! Asaas vinculado.' : '✓ Aluno atualizado!')
     navigate('alunos')
@@ -409,15 +354,12 @@ export async function renderAlunos(container, page) {
   window.confirmarExcluirAluno = function(alunoId, nomeAluno) {
     document.getElementById('excluir-aluno-msg').textContent = 'Tem certeza que deseja excluir ' + nomeAluno + '?'
     document.getElementById('modal-excluir-aluno').style.display = 'flex'
-    document.getElementById('btn-confirmar-exclusao').onclick = function() {
-      excluirAluno(alunoId)
-    }
+    document.getElementById('btn-confirmar-exclusao').onclick = function() { excluirAluno(alunoId) }
   }
 
   window.excluirAluno = async function(alunoId) {
     const btn = document.getElementById('btn-confirmar-exclusao')
-    btn.disabled = true
-    btn.textContent = 'Excluindo...'
+    btn.disabled = true; btn.textContent = 'Excluindo...'
     try {
       await _sb.from('presencas').delete().eq('aluno_id', alunoId)
       await _sb.from('saldo_aulas').delete().eq('aluno_id', alunoId)
@@ -427,11 +369,7 @@ export async function renderAlunos(container, page) {
       document.getElementById('modal-excluir-aluno').style.display = 'none'
       toast('✓ Aluno excluído.')
       navigate('alunos')
-    } catch(e) {
-      toast('Erro ao excluir: ' + e.message)
-      btn.disabled = false
-      btn.textContent = 'Excluir'
-    }
+    } catch(e) { toast('Erro ao excluir: ' + e.message); btn.disabled = false; btn.textContent = 'Excluir' }
   }
 
   if (window._pendingEditAluno) {
