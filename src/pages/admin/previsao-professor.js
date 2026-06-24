@@ -6,6 +6,8 @@
 import { toast } from '../../modules/utils.js'
 import { renderHistoricoRepasse, abrirModalRegistrarRepasse } from './repasse-pago.js'
 
+import { uiAnimar } from '../../modules/ui.js'
+
 function fmtR(v) {
   return 'R$ ' + (v||0).toFixed(2).replace('.', ',')
 }
@@ -205,7 +207,7 @@ export async function renderPrevisaoProfessor(container, page) {
       await renderHistoricoRepasse(contentDiv, profIdEfetivo, true)
     }
   }
-
+uiAnimar(container)
   // Expõe a função para o botão inline no HTML
   window.abrirModalRegistrarRepasse = abrirModalRegistrarRepasse
 }   
