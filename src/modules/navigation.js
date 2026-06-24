@@ -37,10 +37,12 @@ const MENUS = {
   ],
   aluno: [
     { sec: 'Meu Espaço' },
-    { id: 'aluno-home',   label: 'Início',         icon: 'ti-home'     },
-    { id: 'aluno-grade',  label: 'Grade de Aulas', icon: 'ti-calendar' },
-    { id: 'aluno-minhas', label: 'Minhas Aulas',   icon: 'ti-bookmark' },
-    { id: 'aluno-plano',  label: 'Meu Plano',      icon: 'ti-award'    },
+    { id: 'aluno-home',        label: 'Início',         icon: 'ti-home'     },
+    { id: 'aluno-grade',       label: 'Grade de Aulas', icon: 'ti-calendar' },
+    { id: 'aluno-minhas',      label: 'Minhas Aulas',   icon: 'ti-bookmark' },
+    { id: 'aluno-plano',       label: 'Meu Plano',      icon: 'ti-award'    },
+    { sec: 'Dharma Phala' },
+    { id: 'aluno-beneficios',  label: 'Benefícios',     icon: 'ti-sparkles' },
   ],
 }
 
@@ -254,4 +256,4 @@ export function initMobileMenu() {
       document.getElementById('nav-menu')?.classList.remove('mobile-open')
     }
   })
-}
+}    
