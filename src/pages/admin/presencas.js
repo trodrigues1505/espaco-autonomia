@@ -9,6 +9,7 @@ import { sb } from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
+import { uiAnimar } from '../../modules/ui.js'
 
 export async function renderPresencas(container, page) {
   const sb = window._sb
@@ -133,7 +134,7 @@ export async function renderPresencas(container, page) {
       `:''}
     </div>
   `
-
+uiAnimar(container)
   window.setPresenca = async function(confId, presente) {
     const { error } = await sb.rpc('admin_set_presenca', {
       p_conf_id: confId,
