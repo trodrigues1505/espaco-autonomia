@@ -331,4 +331,4 @@ function _cardBloqueado(b, planoTipoAtual, idx) {
         }
       </div>
     </div>`
-}   
+}       
