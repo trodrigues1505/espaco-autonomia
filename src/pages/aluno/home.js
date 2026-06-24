@@ -9,6 +9,7 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
 import { getSaldoAluno, getGamificacao, getPagamentosAluno, verificarConquistas } from '../../modules/gamificacao.js'
 import { carregarNotificacoes, renderPainelNotif, initNotifHandlers,
          calcularBadgesMenu, aplicarBadgesMenu } from '../../modules/notificacoes.js'
+import { uiAnimar } from '../../modules/ui.js'
 
 export async function renderAlunoHome(container, page) {
   const sb = window._sb
@@ -144,7 +145,7 @@ export async function renderAlunoHome(container, page) {
       </div>` : ''}
     </div>
   `
-
+uiAnimar(container)
   initNotifHandlers(notifs, perfil.id)
 
   window.cancelarConfHome = async function(confId, ocId) {
