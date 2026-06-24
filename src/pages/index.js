@@ -1,9 +1,5 @@
 /**
  * src/pages/index.js
- * Roteador central. Para adicionar uma página:
- *   1. Crie src/pages/<perfil>/nome.js com export async function renderNome(container, page)
- *   2. Importe aqui
- *   3. Adicione uma linha no rotaMap
  */
 const V = '?v=5'
 const rotaMap = {
@@ -25,9 +21,19 @@ const rotaMap = {
   'aluno-grade':        () => import('./aluno/grade.js'      + V).then(m => m.renderAlunoGrade),
   'aluno-minhas':       () => import('./aluno/minhas.js'     + V).then(m => m.renderAlunoMinhas),
   'aluno-plano':        () => import('./aluno/plano.js'      + V).then(m => m.renderAlunoPlano),
-  'aluno-beneficios':   () => import('./aluno/beneficios.js' + V).then(m => m.renderAlunosBeneficios),
   'previsao-professor': () => import('./admin/previsao-professor.js' + V).then(m => m.renderPrevisaoProfessor),
+  // Dharma Phala — um loader por benefício, todos apontam para o mesmo módulo
+  'aluno-beneficio-sangha':         () => import('./aluno/beneficios.js' + V).then(m => m.renderAlunosBeneficios),
+  'aluno-beneficio-kala-sadhya':    () => import('./aluno/beneficios.js' + V).then(m => m.renderAlunosBeneficios),
+  'aluno-beneficio-asana-marga':    () => import('./aluno/beneficios.js' + V).then(m => m.renderAlunosBeneficios),
+  'aluno-beneficio-yoga-adhyayana': () => import('./aluno/beneficios.js' + V).then(m => m.renderAlunosBeneficios),
+  'aluno-beneficio-jnana-marga':    () => import('./aluno/beneficios.js' + V).then(m => m.renderAlunosBeneficios),
+  'aluno-beneficio-sadhana-purna':  () => import('./aluno/beneficios.js' + V).then(m => m.renderAlunosBeneficios),
+  'aluno-beneficio-atma-vijnana':   () => import('./aluno/beneficios.js' + V).then(m => m.renderAlunosBeneficios),
+  'aluno-beneficio-shruti':         () => import('./aluno/beneficios.js' + V).then(m => m.renderAlunosBeneficios),
+  'aluno-beneficio-naada-mandir':   () => import('./aluno/beneficios.js' + V).then(m => m.renderAlunosBeneficios),
 }
+
 export async function navigate(page) {
   document.querySelectorAll('.ni').forEach(n => n.classList.remove('on'))
   document.getElementById(`ni-${page}`)?.classList.add('on')
@@ -46,4 +52,4 @@ export async function navigate(page) {
     console.error(`navigate(${page}):`, e)
   }
 }
-window.navigate = navigate    
+window.navigate = navigate       
