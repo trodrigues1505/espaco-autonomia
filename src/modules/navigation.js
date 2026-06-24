@@ -1,17 +1,27 @@
 /**
  * src/modules/navigation.js
- * Responsabilidade: definição dos menus por perfil, construção
- * do sidebar e controle da rota ativa.
- * Depende de: window._perfil, renderPage() (pages/index.js)
- *
- * ALTERAÇÃO: buildMenu() agora recebe badges opcionais e os aplica
- * nos itens do menu. aplicarBadgesMenu() também pode ser chamado
- * separadamente após carregarNotificacoes().
  */
 
 import { calcularBadgesMenu, aplicarBadgesMenu } from './notificacoes.js'
 
-// ── Definição dos menus por perfil ───────────────────────────
+// ── Benefícios com ícone e campo do plano ────────────────────
+// Cada item de Dharma Phala vira um item de menu individual.
+// O campo `beneficio` é a chave boolean na tabela planos.
+const DHARMA_PHALA = [
+  { id: 'aluno-beneficio-sangha',         label: 'Sangha',         icone: '🪷', beneficio: 'sangha'         },
+  { id: 'aluno-beneficio-kala-sadhya',    label: 'Kāla Sādhyā',   icone: '🗓', beneficio: 'kala_sadhya'    },
+  { id: 'aluno-beneficio-asana-marga',    label: 'Āsana Mārga',   icone: '🧘', beneficio: 'asana_marga'    },
+  { id: 'aluno-beneficio-yoga-adhyayana', label: 'Yoga Adhyayana', icone: '📖', beneficio: 'yoga_adhyayana' },
+  { id: 'aluno-beneficio-jnana-marga',    label: 'Jñāna Mārga',   icone: '📜', beneficio: 'jnana_marga'    },
+  { id: 'aluno-beneficio-sadhana-purna',  label: 'Sādhanā Pūrṇā', icone: '🌿', beneficio: 'sadhana_purna'  },
+  { id: 'aluno-beneficio-atma-vijnana',   label: 'Ātma Vijñāna',  icone: '🔍', beneficio: 'atma_vijnana'   },
+  { id: 'aluno-beneficio-shruti',         label: 'Śruti',          icone: '🎵', beneficio: 'shruti'         },
+  { id: 'aluno-beneficio-naada-mandir',   label: 'Nāda Mandir',   icone: '🕌', beneficio: 'naada_mandir'   },
+]
+
+// Todos os IDs de benefício — usados pelo router para apontar para beneficios.js
+export const BENEFICIO_IDS = DHARMA_PHALA.map(b => b.id)
+
 const MENUS = {
   admin: [
     { sec: 'Visão Geral' },
@@ -37,12 +47,11 @@ const MENUS = {
   ],
   aluno: [
     { sec: 'Meu Espaço' },
-    { id: 'aluno-home',        label: 'Início',         icon: 'ti-home'     },
-    { id: 'aluno-grade',       label: 'Grade de Aulas', icon: 'ti-calendar' },
-    { id: 'aluno-minhas',      label: 'Minhas Aulas',   icon: 'ti-bookmark' },
-    { id: 'aluno-plano',       label: 'Meu Plano',      icon: 'ti-award'    },
-    { sec: 'Dharma Phala' },
-    { id: 'aluno-beneficios',  label: 'Benefícios',     icon: 'ti-sparkles' },
+    { id: 'aluno-home',   label: 'Início',         icon: 'ti-home'     },
+    { id: 'aluno-grade',  label: 'Grade de Aulas', icon: 'ti-calendar' },
+    { id: 'aluno-minhas', label: 'Minhas Aulas',   icon: 'ti-bookmark' },
+    { id: 'aluno-plano',  label: 'Meu Plano',      icon: 'ti-award'    },
+    // Dharma Phala é injetado dinamicamente em buildMenu via _planoData
   ],
 }
 
@@ -57,35 +66,59 @@ export function buildMenu(tipo, badges = {}) {
   const nav = document.getElementById('nav-menu')
   nav.innerHTML = ''
 
-  for (const item of (MENUS[tipo] || [])) {
+  const itens = [...(MENUS[tipo] || [])]
+
+  // Para alunos: injeta seção Dharma Phala com os 9 benefícios
+  if (tipo === 'aluno') {
+    itens.push({ sec: 'Dharma Phala' })
+    const planoData = window._planoData || null
+    for (const b of DHARMA_PHALA) {
+      itens.push({ ...b, _bloqueado: planoData ? !planoData[b.beneficio] : false })
+    }
+  }
+
+  for (const item of itens) {
     if (item.sec) {
       const d = document.createElement('div')
       d.className = 'nav-sec'
       d.textContent = item.sec
       nav.appendChild(d)
-    } else {
-      const d = document.createElement('div')
-      d.className = 'ni'
-      d.id = `ni-${item.id}`
-      d.style.display = 'flex'
-      d.style.alignItems = 'center'
-      d.innerHTML = `<i class="ti ${item.icon}" style="flex-shrink:0"></i><span style="flex:1">${item.label}</span>`
-      // Badge numérico se houver notificações para este item
-      const count = badges[item.id] || 0
-      if (count > 0) {
-        const badge = document.createElement('span')
-        badge.className = 'notif-menu-badge'
-        badge.textContent = count
-        badge.style.cssText = `
-          background:#c0392b;color:#fff;border-radius:10px;padding:1px 6px;
-          font-size:10px;font-weight:600;margin-left:auto;flex-shrink:0;
-          font-family:'DM Sans',sans-serif;line-height:1.4
-        `
-        d.appendChild(badge)
-      }
-      d.onclick = () => window.navigate(item.id)
-      nav.appendChild(d)
+      continue
     }
+
+    const d = document.createElement('div')
+    d.className = 'ni'
+    d.id = `ni-${item.id}`
+    d.style.display = 'flex'
+    d.style.alignItems = 'center'
+
+    // Itens de benefício usam emoji como ícone; demais usam classe Tabler
+    const iconHtml = item.icone
+      ? `<span style="font-size:14px;flex-shrink:0;width:20px;text-align:center;${item._bloqueado ? 'filter:grayscale(1);opacity:.4' : ''}">${item.icone}</span>`
+      : `<i class="ti ${item.icon}" style="flex-shrink:0"></i>`
+
+    const labelStyle = item._bloqueado
+      ? 'flex:1;color:var(--txt2);opacity:.5'
+      : 'flex:1'
+
+    d.innerHTML = `${iconHtml}<span style="${labelStyle}">${item.label}</span>`
+
+    // Badge numérico
+    const count = badges[item.id] || 0
+    if (count > 0) {
+      const badge = document.createElement('span')
+      badge.className = 'notif-menu-badge'
+      badge.textContent = count
+      badge.style.cssText = `
+        background:#c0392b;color:#fff;border-radius:10px;padding:1px 6px;
+        font-size:10px;font-weight:600;margin-left:auto;flex-shrink:0;
+        font-family:'DM Sans',sans-serif;line-height:1.4
+      `
+      d.appendChild(badge)
+    }
+
+    d.onclick = () => window.navigate(item.id)
+    nav.appendChild(d)
   }
 
   // Barra de impersonar: visível apenas para admin real
@@ -166,8 +199,22 @@ async function selecionarImpersonar(pessoaId, tipo) {
     const { data: mats } = await sb.from('matriculas')
       .select('plano_tipo,opcao_aulas,ativa').eq('aluno_id', pessoaId)
     pessoa.matriculas = mats || []
+
+    // Carrega planoData para o aluno impersonado
+    const mat = (mats||[]).find(m => m.ativa)
+    if (mat?.plano_tipo) {
+      const { data: planoData } = await sb
+        .from('planos')
+        .select('sangha,kala_sadhya,asana_marga,yoga_adhyayana,jnana_marga,sadhana_purna,atma_vijnana,shruti,naada_mandir')
+        .eq('tipo', mat.plano_tipo)
+        .maybeSingle()
+      window._planoData = planoData || null
+    } else {
+      window._planoData = null
+    }
   } else {
     pessoa.matriculas = []
+    window._planoData = null
   }
   _ativarImpersonar(tipo, pessoa)
 }
@@ -180,6 +227,7 @@ function _ativarImpersonar(tipo, pessoa) {
     const perfilAdmin = window._perfilAdmin || window._perfil
     window._perfil = perfilAdmin
     window._perfilAdmin = null
+    window._planoData = null
     document.getElementById('sb-nome').textContent = perfilAdmin.nome
     document.getElementById('sb-role-label').textContent = 'Admin'
     ;['admin','prof','aluno'].forEach(t => {
@@ -235,7 +283,6 @@ function _ativarImpersonar(tipo, pessoa) {
   voltar.onclick = () => impersonar('admin')
   aviso.appendChild(voltar)
 
-  // Constrói menu sem badges durante impersonação (badges carregados pelo dashboard do role)
   buildMenu(tipo)
   window.navigate(HOME_POR_PERFIL[tipo] || 'dashboard')
 }
@@ -256,4 +303,4 @@ export function initMobileMenu() {
       document.getElementById('nav-menu')?.classList.remove('mobile-open')
     }
   })
-}    
+}       
