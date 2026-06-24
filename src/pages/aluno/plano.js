@@ -265,7 +265,7 @@ export async function renderAlunoPlano(container, page) {
       </div>
     </div>
   `
-
+uiAnimar(container)
   window.toggleBeneficio = function(f) {
     const desc = document.getElementById('desc-' + f)
     const chevron = document.getElementById('chevron-' + f)
@@ -301,5 +301,5 @@ export async function renderAlunoPlano(container, page) {
     document.getElementById('modal-editar-perfil').style.display = 'none'
     toast('✓ Dados atualizados!')
   }
-          uiAnimar(container)
+ 
 }       
