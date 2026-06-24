@@ -54,7 +54,7 @@ const SLUG_PARA_CAMPO = {
   'shruti':         'shruti',
   'naada-mandir':   'naada_mandir',
 }
-
+import { uiAnimar } from '../../modules/ui.js'
 const BENEFICIOS = {
   sangha: {
     nome: 'Sangha',
@@ -264,4 +264,5 @@ export async function renderAlunosBeneficios(container, page) {
         </div>` : ''}
     ` : ''}
   `
+  import { uiAnimar } from '../../modules/ui.js'
 }    
