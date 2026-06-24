@@ -19,7 +19,7 @@ const SANGHA_LINKS = {
 }
 
 // ── Número do estúdio para upgrade ───────────────────────────
-const ESTUDIO_WA = '5511444901620'
+const ESTUDIO_WA = '551144490162'
 
 // ── Quais planos incluem cada benefício ──────────────────────
 // (espelha a tabela planos; evita round-trip extra ao banco)
