@@ -8,7 +8,7 @@ import { calcularBadgesMenu, aplicarBadgesMenu } from './notificacoes.js'
 // Cada item de Dharma Phala vira um item de menu individual.
 // O campo `beneficio` é a chave boolean na tabela planos.
 const DHARMA_PHALA = [
-  { id: 'aluno-beneficio-sangha',         label: 'Sangha',         icone: '🪷', beneficio: 'sangha'         },
+  { id: 'aluno-beneficio-sangha',         label: 'Sangha',         icone: '🌸', beneficio: 'sangha'         },
   { id: 'aluno-beneficio-kala-sadhya',    label: 'Kāla Sādhyā',   icone: '🗓', beneficio: 'kala_sadhya'    },
   { id: 'aluno-beneficio-asana-marga',    label: 'Āsana Mārga',   icone: '🧘', beneficio: 'asana_marga'    },
   { id: 'aluno-beneficio-yoga-adhyayana', label: 'Yoga Adhyayana', icone: '📖', beneficio: 'yoga_adhyayana' },
