@@ -1,5 +1,8 @@
 /**
  * src/pages/admin/presencas.js
+ *
+ * TODOS os updates de status usam RPCs SECURITY DEFINER
+ * para evitar erro de cast do enum confirmacao_status.
  */
 
 import { sb } from '../../lib/supabase.js'
@@ -98,7 +101,7 @@ export async function renderPresencas(container, page) {
           `<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
             ${badge(ocAtual.confirmados+'/'+(ocAtual.vagas_total)+' conf.','#e8f4e8','#1a5a1a')}
             ${aulaPassada ? '<span style="font-size:10px;color:#e67e22;background:rgba(230,126,34,.1);padding:2px 8px;border-radius:10px">Aula já realizada</span>' : ''}
-            <button onclick="marcarTodosPresentes()" style="padding:3px 10px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">✓ Todos presentes</button>
+            <button onclick="marcarTodosPresentes('${ocSelecionadaId}')" style="padding:3px 10px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">✓ Todos presentes</button>
           </div>`,
           `<div style="padding:10px 18px;background:rgba(242,236,206,.25);border-bottom:1px solid var(--borda);display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <span style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500;white-space:nowrap">+ Adicionar aluno</span>
@@ -132,21 +135,22 @@ export async function renderPresencas(container, page) {
   `
 
   window.setPresenca = async function(confId, presente) {
-    const { error } = await sb.from('confirmacoes').update({
-      status: presente ? 'presente' : 'ausente',
-      presenca_em: new Date().toISOString()
-    }).eq('id', confId)
+    const { error } = await sb.rpc('admin_set_presenca', {
+      p_conf_id: confId,
+      p_presente: presente,
+    })
     if (error) { toast('Erro: '+error.message); return }
     toast(presente ? '✓ Marcado presente' : '✕ Marcado ausente')
     navigate('presencas')
   }
 
-  window.marcarTodosPresentes = async function() {
-    const ids = confs.filter(c=>c.status==='confirmado').map(c=>c.id)
-    if (!ids.length) { toast('Nenhum confirmado para marcar'); return }
-    for (const id of ids) {
-      await sb.from('confirmacoes').update({ status:'presente', presenca_em: new Date().toISOString() }).eq('id', id)
-    }
+  window.marcarTodosPresentes = async function(ocId) {
+    const temConfirmados = confs.some(c => c.status === 'confirmado')
+    if (!temConfirmados) { toast('Nenhum confirmado para marcar'); return }
+    const { error } = await sb.rpc('admin_marcar_todos_presentes', {
+      p_ocorrencia_id: ocId,
+    })
+    if (error) { toast('Erro: '+error.message); return }
     toast('✓ Todos marcados como presentes!')
     navigate('presencas')
   }
@@ -155,7 +159,6 @@ export async function renderPresencas(container, page) {
     const alunoId = document.getElementById('sel-add-aluno')?.value
     if (!alunoId) { toast('Selecione um aluno'); return }
 
-    // maybeSingle retorna null sem erro 406 quando não existe registro
     const { data: existe } = await sb.from('confirmacoes')
       .select('id,status')
       .eq('ocorrencia_id', ocId)
@@ -163,7 +166,6 @@ export async function renderPresencas(container, page) {
       .maybeSingle()
 
     if (existe) {
-      // Já existe um registro — só chama o RPC se estava cancelado
       if (existe.status === 'cancelado') {
         const { data, error } = await sb.rpc('admin_adicionar_presenca', {
           p_aluno_id: alunoId,
@@ -181,7 +183,6 @@ export async function renderPresencas(container, page) {
       return
     }
 
-    // Não existe — cria via RPC (decide status por horário da aula)
     const { data, error } = await sb.rpc('admin_adicionar_presenca', {
       p_aluno_id: alunoId,
       p_ocorrencia_id: ocId,
@@ -201,10 +202,11 @@ export async function renderPresencas(container, page) {
   window.excluirPresenca = async function(confId, nomeAluno, alunoId) {
     if (!confirm('Remover presença de ' + nomeAluno + '?\nSe o saldo foi debitado, ele será estornado.')) return
 
-    const { data: conf } = await sb.from('confirmacoes').select('aluno_id,ocorrencia_id,status').eq('id', confId).single()
+    const { data: conf } = await sb.from('confirmacoes')
+      .select('aluno_id,ocorrencia_id,status').eq('id', confId).single()
     if (!conf) { toast('Confirmação não encontrada'); return }
 
-    const { error } = await sb.from('confirmacoes').update({ status: 'cancelado' }).eq('id', confId)
+    const { error } = await sb.rpc('admin_cancelar_presenca', { p_conf_id: confId })
     if (error) { toast('Erro: '+error.message); return }
 
     const foiDebitado = window._presencaDebitou?.[confId] ?? (conf.status === 'presente')
@@ -227,4 +229,4 @@ export async function renderPresencas(container, page) {
     toast('✓ Presença removida' + (!ehLivre && foiDebitado ? ' e crédito estornado' : ''))
     navigate('presencas')
   }
-}   
+}       
