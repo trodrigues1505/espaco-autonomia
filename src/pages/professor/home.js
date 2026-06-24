@@ -8,6 +8,7 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 import { carregarNotificacoes, renderPainelNotif, initNotifHandlers,
          calcularBadgesMenu, aplicarBadgesMenu } from '../../modules/notificacoes.js'
+import { uiAnimar } from '../../modules/ui.js'
 
 export async function renderProfHome(container, page) {
   const sb = window._sb
@@ -117,7 +118,7 @@ export async function renderProfHome(container, page) {
     await sb.from('confirmacoes').update({ status: novoStatus, presenca_em: new Date().toISOString() }).eq('id', confId)
     navigate('prof-chamada')
   }
-
+uiAnimar(container)
   window.marcarTodosProfPresentes = async function() {
     for (const c of confs) {
       if (c.status !== 'presente') {
