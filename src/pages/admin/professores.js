@@ -8,6 +8,8 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
+import { uiAnimar } from '../../modules/ui.js'
+
 function lerModalidades(p) {
   try {
     if (!p.modalidades) return []
@@ -94,7 +96,7 @@ export async function renderProfessores(container, page) {
       </div>
     </div>
   `
-
+uiAnimar(container)
   window.editarProfessor = async function(profId) {
     const { data: p, error: errP } = await sb.from('perfis').select('*').eq('id', profId).single()
     if (errP || !p) { toast('Erro ao buscar professor'); return }
