@@ -1,25 +1,25 @@
 /**
  * src/pages/professor/aulas.js
- * Minhas aulas + cancelar
  */
+
 import { sb }         from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
+import { uiAnimar } from '../../modules/ui.js'
 
 export async function renderProfAulas(container, page) {
   const sb = window._sb
   const perfil = window._perfil
-
   const hoje = new Date()
   const em14d = new Date(); em14d.setDate(hoje.getDate()+14)
+
   const { data: ocs } = await sb.from('ocorrencias_vagas').select('*')
     .eq('professor_id', window._perfil.id)
     .gte('data_hora', hoje.toISOString())
     .lte('data_hora', em14d.toISOString())
     .order('data_hora')
 
-  // FIX: armazena as ocorrências num mapa global para evitar JSON inline nos atributos HTML
   window._profAulasMap = {}
   ;(ocs||[]).forEach(o => { window._profAulasMap[o.id] = o })
 
@@ -57,4 +57,6 @@ export async function renderProfAulas(container, page) {
       }
     </div>
   `
-}
+
+  uiAnimar(container)
+}   
