@@ -112,7 +112,6 @@ window.fazerLogin = async function () {
     btn.classList.remove('login-loading')
     document.getElementById('btn-login-txt').textContent = 'Entrar'
   }
-  // Sucesso: onAuthStateChange SIGNED_IN cuida do resto
 }
 
 window.fazerLogout = async function () {
@@ -147,10 +146,30 @@ export async function iniciarApp(user) {
     document.getElementById('sb-role-label').textContent  =
       { admin: 'Admin', professor: 'Professor', aluno: 'Aluno' }[perfil.tipo] || perfil.tipo
 
+    // Para alunos: busca matrícula + dados do plano para montar o menu de benefícios
     if (perfil.tipo === 'aluno') {
-      const { data: mat } = await sb.from('matriculas').select('plano_tipo')
-        .eq('aluno_id', perfil.id).eq('ativa', true).single()
-      if (mat) { document.getElementById('sb-plano').textContent = PLANO_NOMES[mat.plano_tipo] || ''; window._plano = mat.plano_tipo }
+      const { data: mat } = await sb
+        .from('matriculas')
+        .select('plano_tipo')
+        .eq('aluno_id', perfil.id)
+        .eq('ativa', true)
+        .maybeSingle()
+
+      if (mat?.plano_tipo) {
+        document.getElementById('sb-plano').textContent = PLANO_NOMES[mat.plano_tipo] || ''
+        window._plano = mat.plano_tipo
+
+        // Busca os booleans de benefício para o menu de Dharma Phala
+        const { data: planoData } = await sb
+          .from('planos')
+          .select('sangha,kala_sadhya,asana_marga,yoga_adhyayana,jnana_marga,sadhana_purna,atma_vijnana,shruti,naada_mandir')
+          .eq('tipo', mat.plano_tipo)
+          .maybeSingle()
+
+        window._planoData = planoData || null
+      } else {
+        window._planoData = null
+      }
     }
 
     buildMenu(perfil.tipo)
@@ -176,7 +195,6 @@ export async function iniciarApp(user) {
 let _appIniciado = false
 
 export function initSession() {
-  // Fix ## duplo na URL do OAuth
   if (window.location.hash.includes('##')) {
     const clean = window.location.hash.replace(/^#+/, '#')
     window.history.replaceState(null, '', window.location.pathname + clean)
@@ -193,15 +211,11 @@ export function initSession() {
     return
   }
 
-  // Única fonte de verdade para sessão.
-  // INITIAL_SESSION: página carregou com sessão existente (inclui hard refresh)
-  // SIGNED_IN:       login acabou de acontecer
-  // SIGNED_OUT:      logout
-  // TOKEN_REFRESHED: renovação silenciosa — NÃO reinicializa o app
   sb.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT') {
       _appIniciado = false
       window._perfil = null
+      window._planoData = null
       document.getElementById('app-shell').style.display    = 'none'
       document.getElementById('login-screen').style.display = 'block'
       return
@@ -213,7 +227,6 @@ export function initSession() {
       }
     }
     if ((event === 'INITIAL_SESSION') && !session) {
-      // Sem sessão — mostra login
       document.getElementById('login-screen').style.display = 'block'
     }
   })
@@ -224,4 +237,4 @@ document.getElementById('login-senha')
   ?.addEventListener('keydown', e => { if (e.key === 'Enter') window.fazerLogin() })
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-google')?.addEventListener('click', window.loginGoogle)
-})
+})     
