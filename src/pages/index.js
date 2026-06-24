@@ -5,7 +5,7 @@
  *   2. Importe aqui
  *   3. Adicione uma linha no rotaMap
  */
-const V = '?v=4'
+const V = '?v=5'
 const rotaMap = {
   'dashboard':          () => import('./admin/dashboard.js'  + V).then(m => m.renderDashboard),
   'config':             () => import('./admin/config.js'     + V).then(m => m.renderConfig),
@@ -25,6 +25,7 @@ const rotaMap = {
   'aluno-grade':        () => import('./aluno/grade.js'      + V).then(m => m.renderAlunoGrade),
   'aluno-minhas':       () => import('./aluno/minhas.js'     + V).then(m => m.renderAlunoMinhas),
   'aluno-plano':        () => import('./aluno/plano.js'      + V).then(m => m.renderAlunoPlano),
+  'aluno-beneficios':   () => import('./aluno/beneficios.js' + V).then(m => m.renderAlunosBeneficios),
   'previsao-professor': () => import('./admin/previsao-professor.js' + V).then(m => m.renderPrevisaoProfessor),
 }
 export async function navigate(page) {
@@ -45,4 +46,4 @@ export async function navigate(page) {
     console.error(`navigate(${page}):`, e)
   }
 }
-window.navigate = navigate
+window.navigate = navigate    
