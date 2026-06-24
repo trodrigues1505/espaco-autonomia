@@ -174,7 +174,8 @@ export async function renderAlunosBeneficios(container, page) {
 
 // ── Yoga Adhyayana — conteúdo semanal interativo ─────────────
 async function _renderYogaAdhyayana(container) {
-  const { AULA_SEMANA: aula } = await import('../../data/yoga_adhyayana.js?v=5')
+  // Import com cache bust via timestamp — atualiza automaticamente a cada deploy
+  const { AULA_SEMANA: aula } = await import(`../../data/yoga_adhyayana.js?t=${Date.now()}`)
 
   const nivelCor = {
     'Iniciante':      '#2d7a2d',
@@ -345,4 +346,4 @@ function _renderBeneficioGenerico(container, b, campo, temAcesso, planoTipo) {
   `
 
   uiAnimar(container)
-}
+}   
