@@ -59,7 +59,7 @@ const BENEFICIOS = {
   sangha: {
     nome: 'Sangha',
     subtitulo: 'Comunidade WhatsApp',
-    icone: '🪷',
+    icone: '🌸',
     descricao: `O Sangha é mais do que um grupo — é o coração pulsante da nossa comunidade.
 Aqui você encontra avisos importantes do estúdio, trocas entre praticantes, reflexões sobre a prática e o suporte de quem caminha junto.
 No Yoga, a Sangha (comunidade) é um dos três pilares fundamentais ao lado do Dharma e do Buddha.
@@ -264,4 +264,4 @@ export async function renderAlunosBeneficios(container, page) {
         </div>` : ''}
     ` : ''}
   `
-}       
+}    
