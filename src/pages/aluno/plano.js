@@ -7,6 +7,7 @@ import { sb }         from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
+import { uiAnimar } from '../../modules/ui.js'
 
 // Descrições fixas de cada benefício
 const FEAT_DESCRICOES = {
@@ -300,4 +301,5 @@ export async function renderAlunoPlano(container, page) {
     document.getElementById('modal-editar-perfil').style.display = 'none'
     toast('✓ Dados atualizados!')
   }
+          uiAnimar(container)
 }       
