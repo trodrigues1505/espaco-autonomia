@@ -1,7 +1,7 @@
 /**
  * src/pages/index.js
  */
-const V = '?v=5'
+const V = '?v=6'
 const rotaMap = {
   'dashboard':          () => import('./admin/dashboard.js'  + V).then(m => m.renderDashboard),
   'config':             () => import('./admin/config.js'     + V).then(m => m.renderConfig),
