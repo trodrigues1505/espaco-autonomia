@@ -8,6 +8,8 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 
+import { uiAnimar } from '../../modules/ui.js'
+
 export async function renderPlanos(container, page) {
   const sb = window._sb || (await import('../../lib/supabase.js')).sb
   const perfil = window._perfil
@@ -138,7 +140,7 @@ export async function renderPlanos(container, page) {
     </div>
     ${modalCriarPlano}
   `
-
+uiAnimar(container)
   window.salvarNovoPLano = async function() {
     const tipo = document.getElementById('np-tipo').value.trim().toLowerCase().replace(/[^a-z0-9_]/g,'_')
     const nome = document.getElementById('np-nome').value.trim()
