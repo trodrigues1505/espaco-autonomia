@@ -5,6 +5,7 @@
 
 import { toast } from '../../modules/utils.js'
 import { renderHistoricoRepasse } from '../admin/repasse-pago.js'
+import { uiAnimar } from '../../modules/ui.js'
 
 function fmtR(v) {
   return 'R$ ' + (v||0).toFixed(2).replace('.', ',')
@@ -169,7 +170,7 @@ export async function renderProfRepasse(container, page) {
 
     </div>
   `
-
+uiAnimar(container)
   // Histórico de repasses pagos (somente leitura para o professor)
   const contentDiv = container.querySelector('.content')
   if (contentDiv) {
