@@ -28,7 +28,7 @@ const MENUS = {
     { id: 'dashboard',          label: 'Dashboard',           icon: 'ti-layout-dashboard' },
     { id: 'grade',              label: 'Grade de Aulas',      icon: 'ti-calendar'         },
     { sec: 'Gestão' },
-    { id: 'criar-aulas',        label: 'Criar Aulas',         icon: 'ti-plus-circle'      },
+    { id: 'criar-aulas',        label: 'Criar Aulas',         icon: 'ti-circle-plus'      },
     { id: 'alunos',             label: 'Alunos',              icon: 'ti-users'            },
     { id: 'professores',        label: 'Professores',         icon: 'ti-user-star'        },
     { id: 'presencas',          label: 'Presenças',           icon: 'ti-checkbox'         },
@@ -121,9 +121,54 @@ export function buildMenu(tipo, badges = {}) {
     nav.appendChild(d)
   }
 
-  // Barra de impersonar: visível apenas para admin real
+  // Barra de impersonar: visível apenas para admin real em desktop
+  // Em mobile: botão flutuante
   const bar = document.getElementById('impersonate-bar')
   if (bar) bar.style.display = window._perfil?.tipo === 'admin' ? 'block' : 'none'
+
+  // Mobile: botão flutuante de impersonação para admin
+  document.getElementById('imp-mobile-btn')?.remove()
+  if (window._perfil?.tipo === 'admin' || window._perfilAdmin?.tipo === 'admin') {
+    const fab = document.createElement('div')
+    fab.id = 'imp-mobile-btn'
+    fab.style.cssText = `
+      display:none;
+      position:fixed;bottom:16px;right:16px;z-index:100;
+      background:var(--dourado);color:var(--verde);
+      border-radius:50%;width:44px;height:44px;
+      align-items:center;justify-content:center;
+      font-size:20px;cursor:pointer;
+      box-shadow:0 4px 16px rgba(0,0,0,.25);
+      font-family:'DM Sans',sans-serif;
+    `
+    fab.textContent = '👁'
+    fab.title = 'Ver como...'
+    fab.onclick = () => {
+      document.getElementById('impersonate-bar')?.style.display === 'block'
+        ? null
+        : document.querySelector('.sb')?.click()
+      // Abre o modal de impersonação diretamente
+      const bar = document.getElementById('impersonate-bar')
+      if (bar) {
+        bar.style.display = 'block'
+        bar.style.position = 'fixed'
+        bar.style.bottom = '70px'
+        bar.style.right = '16px'
+        bar.style.left = 'auto'
+        bar.style.top = 'auto'
+        bar.style.width = 'auto'
+        bar.style.borderRadius = '8px'
+        bar.style.padding = '10px 14px'
+        bar.style.zIndex = '200'
+      }
+    }
+    document.body.appendChild(fab)
+    // Mostra só em mobile
+    if (window.innerWidth <= 768) fab.style.display = 'flex'
+    window.addEventListener('resize', () => {
+      fab.style.display = window.innerWidth <= 768 ? 'flex' : 'none'
+    })
+  }
 }
 
 export function setActiveNav(id) {
@@ -303,4 +348,4 @@ export function initMobileMenu() {
       document.getElementById('nav-menu')?.classList.remove('mobile-open')
     }
   })
-}       
+}   
