@@ -423,7 +423,7 @@ button:active:not(:disabled) { transform: scale(.97); opacity: .85; }
   .sb-name { font-size: 12px; }
   .nav { display: none; }
   .sb-bottom { padding: 8px 14px; border-top: none; margin-left: auto; }
-  #impersonate-bar { display: none !important; }
+  #impersonate-bar { display: none !important; }  /* esconde em mobile pois não há espaço */
   .main { overflow: auto; min-height: 0; flex: 1; }
   .topbar { padding: 0 14px; height: 48px; }
   .topbar-t { font-size: 16px; }
@@ -461,4 +461,4 @@ button:active:not(:disabled) { transform: scale(.97); opacity: .85; }
 
   /* Desativa hover lift em mobile (sem cursor) */
   .card-hover:hover { box-shadow: none; transform: none; }
-}       
+}    
