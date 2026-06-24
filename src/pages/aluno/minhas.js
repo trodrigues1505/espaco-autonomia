@@ -7,6 +7,7 @@ import { sb }         from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
+import { uiAnimar } from '../../modules/ui.js'
 
 export async function renderAlunoMinhas(container, page) {
   const sb = window._sb
@@ -67,6 +68,7 @@ export async function renderAlunoMinhas(container, page) {
         `:''}
       </div>
     `
+          uiAnimar(container)
     window.cancelarMinhaConf = async function(confId, ocId) {
       const { data, error } = await sb.rpc('cancelar_confirmacao', { p_aluno_id: window._perfil.id, p_ocorrencia_id: ocId })
       if (error || !data?.ok) { toast('❌ '+(data?.motivo||error?.message)); return }
