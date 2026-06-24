@@ -1,9 +1,5 @@
 /**
  * src/pages/admin/dashboard.js
- *
- * CORREÇÃO:
- *  - Bug 4: botão "Ver" agora seta window._ocPresencaId antes de navegar,
- *           para que presencas.js abra diretamente a aula clicada
  */
 
 import { sb }         from '../../lib/supabase.js'
@@ -12,6 +8,7 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 import { carregarNotificacoes, renderPainelNotif, initNotifHandlers,
          calcularBadgesMenu, aplicarBadgesMenu } from '../../modules/notificacoes.js'
+import { uiAnimar } from '../../modules/ui.js'   // ← linha 1: import
 
 export async function renderDashboard(container, page) {
   const sb = window._sb
@@ -66,7 +63,6 @@ export async function renderDashboard(container, page) {
               const cor = {hatha:'#2d7a2d',acro:'var(--dourado)',raja:'#5a2d8a'}[a.modalidade]||'#888'
               const nomes = {hatha:'Hatha Yoga',acro:'Acro Yoga',raja:'Raja Yoga'}
               const hora = new Date(a.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
-              // BUG 4 CORRIGIDO: seta _ocPresencaId e _presencaData antes de navegar
               return `<div style="display:grid;grid-template-columns:60px 1fr 90px 70px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.35);font-size:12px">
                 <span style="color:var(--txt2);font-size:11px">${hora}</span>
                 <span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${cor};flex-shrink:0"></span><strong>${nomes[a.modalidade]}</strong>${a.eh_feriado?`<span style="background:rgba(232,188,79,.2);color:#7a5a10;font-size:10px;padding:1px 6px;border-radius:10px">⚠ ${a.nome_feriado}</span>`:''}</span>
@@ -79,16 +75,28 @@ export async function renderDashboard(container, page) {
           <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-bottom:14px">
             <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500;color:var(--verde);margin-bottom:12px">Alunos por plano</div>
             ${[
-              {k:'brahma',l:'Brahma',c:'var(--bege2)'},
-              {k:'shiva_1x',l:'Shiva 1x',c:'#7ab87a'},
-              {k:'shiva_2x',l:'Shiva 2x',c:'var(--verde-cl)'},
-              {k:'vishnu_2x',l:'Vishnu 2x',c:'var(--dourado)'},
-              {k:'vishnu_livre',l:'Vishnu Livre',c:'#d4a838'},
-            ].map(({k,l,c})=>{const n=por[k]||0;const pct=alunos.length?Math.round(n/alunos.length*100):0;return `<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span style="font-weight:500">${l}</span><span style="color:var(--txt2)">${n} alunos</span></div><div style="height:6px;background:#f0ede4;border-radius:4px"><div style="height:6px;background:${c};border-radius:4px;width:${pct}%"></div></div></div>`}).join('')}
+              {k:'brahma',      l:'Brahma',       c:'var(--bege2)'},
+              {k:'shiva_1x',    l:'Shiva 1x',     c:'#7ab87a'},
+              {k:'shiva_2x',    l:'Shiva 2x',     c:'var(--verde-cl)'},
+              {k:'vishnu_2x',   l:'Vishnu 2x',    c:'var(--dourado)'},
+              {k:'vishnu_livre',l:'Vishnu Livre',  c:'#d4a838'},
+            ].map(({k,l,c})=>{
+              const n   = por[k]||0
+              const pct = alunos.length ? Math.round(n/alunos.length*100) : 0
+              return `<div style="margin-bottom:8px">
+                <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+                  <span style="font-weight:500">${l}</span>
+                  <span style="color:var(--txt2)">${n} alunos</span>
+                </div>
+                <div style="height:6px;background:#f0ede4;border-radius:4px">
+                  <div style="height:6px;background:${c};border-radius:4px;width:${pct}%"></div>
+                </div>
+              </div>`
+            }).join('')}
           </div>
           <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
             <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500;color:var(--verde);margin-bottom:10px">Próximos feriados</div>
-            ${feriados.length===0?'<div style="font-size:12px;color:var(--txt2)">Nenhum nos próximos 30 dias</div>':
+            ${feriados.length===0 ? '<div style="font-size:12px;color:var(--txt2)">Nenhum nos próximos 30 dias</div>' :
               feriados.slice(0,4).map(f=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(212,200,158,.25);font-size:12px"><span>${f.nome}</span><span style="font-size:11px;color:var(--txt2)">${new Date(f.data+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</span></div>`).join('')}
           </div>
         </div>
@@ -97,4 +105,5 @@ export async function renderDashboard(container, page) {
   `
 
   initNotifHandlers(notifs, perfil.id)
-}   
+  uiAnimar(container)   // ← linha 2: chama tudo
+}       
