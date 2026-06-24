@@ -3,6 +3,8 @@
  * Dharma Phala — detalhe de um benefício do plano.
  */
 
+import { uiAnimar } from '../../modules/ui.js'
+
 const SANGHA_LINKS = {
   brahma:       'https://chat.whatsapp.com/BWIMnUs5ijOAZmoBCEt9su',
   shiva_1x:     'https://chat.whatsapp.com/ChO0Yyy1D3F7zFG43PYUIJ',
@@ -172,7 +174,7 @@ export async function renderAlunosBeneficios(container, page) {
 
 // ── Yoga Adhyayana — conteúdo semanal interativo ─────────────
 async function _renderYogaAdhyayana(container) {
-  const { AULA_SEMANA: aula } = await import('../../data/yoga_adhyayana.js')
+  const { AULA_SEMANA: aula } = await import('../../data/yoga_adhyayana.js?v=5')
 
   const nivelCor = {
     'Iniciante':      '#2d7a2d',
@@ -282,6 +284,8 @@ async function _renderYogaAdhyayana(container) {
   if (aula.secoes.length > 0) {
     window._yaToggle(aula.secoes[0].id)
   }
+
+  uiAnimar(container)
 }
 
 // ── Benefício genérico ────────────────────────────────────────
@@ -339,4 +343,6 @@ function _renderBeneficioGenerico(container, b, campo, temAcesso, planoTipo) {
         </div>` : ''}
     ` : ''}
   `
+
+  uiAnimar(container)
 }
