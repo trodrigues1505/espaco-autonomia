@@ -6,13 +6,6 @@
  * 1. Edite os campos abaixo com o conteúdo da nova aula
  * 2. Faça commit e push no GitHub
  * 3. O conteúdo atualiza automaticamente para todos os alunos
- *
- * Ícones por seção — sempre os mesmos:
- *   koshas:    🔵
- *   vayus:     🌬️
- *   chakras:   🌀
- *   doshas:    ⚖️
- *   elementos: 🌿
  */
 
 export const AULA_SEMANA = {
@@ -21,7 +14,7 @@ export const AULA_SEMANA = {
   categoria: 'Estudo de Āsanas',
   tema:      'Śalabhāsana — Postura do Gafanhoto',
   nivel:     'Intermediário',
-  imagem:    'https://media.istockphoto.com/id/617582130/photo/woman-doing-ashtanga-vinyasa-yoga-asana-salabhasana.jpg?s=612x612&w=0&k=20&c=OrrQt-mcpsrCRVpnjE3i4S5oLCVL4sf6kUvdErfva8Q=',
+  imagem:    'https://drive.google.com/uc?export=view&id=1MkiJ2rCjPOuMtfDyHObSeuhI65VbOV-g',
 
   citacao: 'Śalabhāsana ensina a elevar sem romper a base. Esforço sem integração vira compressão; potência sem consciência vira desgaste.',
 
@@ -31,38 +24,42 @@ export const AULA_SEMANA = {
     {
       id:     'koshas',
       titulo: 'Koshas estimulados',
-      icone:  '🔵',
+      icone:  'ti-circle-dotted',
+      cor:    '#1D9E75',
       itens: [
-        { termo: 'Annamaya',    desc: 'fortalecimento de lombar, glúteos, posteriores de coxa e musculatura paravertebral' },
-        { termo: 'Prāṇamaya',  desc: 'ativação do eixo posterior e intensificação da circulação energética no tronco' },
-        { termo: 'Manomaya',   desc: 'desenvolvimento de foco, persistência e presença sob esforço' },
-        { termo: 'Vijñānamaya',desc: 'refinamento da percepção entre sustentação, compressão e expansão' },
+        { termo: 'Annamaya',     desc: 'fortalecimento de lombar, glúteos, posteriores de coxa e musculatura paravertebral' },
+        { termo: 'Prāṇamaya',   desc: 'ativação do eixo posterior e intensificação da circulação energética no tronco' },
+        { termo: 'Manomaya',    desc: 'desenvolvimento de foco, persistência e presença sob esforço' },
+        { termo: 'Vijñānamaya', desc: 'refinamento da percepção entre sustentação, compressão e expansão' },
       ],
     },
     {
       id:     'vayus',
       titulo: 'Vāyus ativados',
-      icone:  '🌬️',
+      icone:  'ti-wind',
+      cor:    '#378ADD',
       itens: [
-        { termo: 'Udāna Vāyu', desc: 'elevação e sustentação do corpo contra a gravidade' },
-        { termo: 'Samāna Vāyu',desc: 'integração do centro abdominal para estabilizar a postura' },
-        { termo: 'Vyāna Vāyu', desc: 'distribuição da força ao longo do eixo corporal' },
+        { termo: 'Udāna Vāyu',  desc: 'elevação e sustentação do corpo contra a gravidade' },
+        { termo: 'Samāna Vāyu', desc: 'integração do centro abdominal para estabilizar a postura' },
+        { termo: 'Vyāna Vāyu',  desc: 'distribuição da força ao longo do eixo corporal' },
       ],
     },
     {
       id:     'chakras',
       titulo: 'Chakras envolvidos',
-      icone:  '🌀',
+      icone:  'ti-rotate-clockwise',
+      cor:    '#7F77DD',
       itens: [
-        { termo: 'Maṇipūra',   desc: 'ativação do centro de força e sustentação' },
+        { termo: 'Maṇipūra',      desc: 'ativação do centro de força e sustentação' },
         { termo: 'Svādhiṣṭhāna', desc: 'mobilização da energia pélvica' },
-        { termo: 'Anāhata',    desc: 'expansão indireta da região torácica pela ação posterior' },
+        { termo: 'Anāhata',       desc: 'expansão indireta da região torácica pela ação posterior' },
       ],
     },
     {
       id:     'doshas',
       titulo: 'Doshas favorecidos',
-      icone:  '⚖️',
+      icone:  'ti-scale',
+      cor:    '#BA7517',
       itens: [
         { termo: 'Kapha', desc: 'reduzido pela ativação muscular e aumento de calor' },
         { termo: 'Vāta',  desc: 'estabilizado quando a postura é sustentada com base abdominal' },
@@ -72,7 +69,8 @@ export const AULA_SEMANA = {
     {
       id:     'elementos',
       titulo: 'Elementos (Tattvas)',
-      icone:  '🌿',
+      icone:  'ti-leaf',
+      cor:    '#639922',
       itens: [
         { termo: 'Fogo',  desc: 'potência, transformação e ativação metabólica' },
         { termo: 'Terra', desc: 'sustentação estrutural e firmeza' },
@@ -82,4 +80,4 @@ export const AULA_SEMANA = {
   ],
 
   reflexao: 'Como você sustenta o esforço sem perder a base? Onde na sua prática — e na sua vida — você tende a elevar sem antes enraizar?',
-}
+}       
