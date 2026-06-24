@@ -174,10 +174,10 @@ export async function renderAlunosBeneficios(container) {
       <div class="loading-page"><div class="spin-big"></div></div>
     </div>`
 
-  // Busca matrícula ativa com dados do plano
+  // Busca matrícula ativa (sem FK para planos, query separada)
   const { data: mat, error } = await sb
     .from('matriculas')
-    .select('plano_tipo, opcao_aulas, plano:planos(*)')
+    .select('plano_tipo, opcao_aulas')
     .eq('aluno_id', perfil.id)
     .eq('ativa', true)
     .maybeSingle()
@@ -188,8 +188,11 @@ export async function renderAlunosBeneficios(container) {
     return
   }
 
-  const plano     = mat?.plano || null
   const planoTipo = mat?.plano_tipo || null
+
+  const { data: plano } = planoTipo
+    ? await sb.from('planos').select('*').eq('tipo', planoTipo).maybeSingle()
+    : { data: null }
 
   // ── Monta os cards ───────────────────────────────────────────
   const cardsHtml = BENEFICIOS.map((b, idx) => {
@@ -328,4 +331,4 @@ function _cardBloqueado(b, planoTipoAtual, idx) {
         }
       </div>
     </div>`
-}
+}   
