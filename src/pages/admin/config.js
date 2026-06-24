@@ -7,6 +7,7 @@ import { sb }         from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
+import { uiAnimar } from '../../modules/ui.js'
 
 export async function renderConfig(container, page) {
   const sb = window._sb
@@ -91,6 +92,7 @@ export async function renderConfig(container, page) {
         </div>
       </div>
     `
+    uiAnimar(container)
     window.salvarConfig = async function() {
       try {
         const updates = [
