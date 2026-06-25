@@ -1,7 +1,7 @@
 /**
  * src/pages/index.js
  */
-const V = '?v=6'
+const V = '?v=5'
 const rotaMap = {
   'dashboard':          () => import('./admin/dashboard.js'  + V).then(m => m.renderDashboard),
   'config':             () => import('./admin/config.js'     + V).then(m => m.renderConfig),
@@ -22,6 +22,7 @@ const rotaMap = {
   'aluno-minhas':       () => import('./aluno/minhas.js'     + V).then(m => m.renderAlunoMinhas),
   'aluno-plano':        () => import('./aluno/plano.js'      + V).then(m => m.renderAlunoPlano),
   'previsao-professor': () => import('./admin/previsao-professor.js' + V).then(m => m.renderPrevisaoProfessor),
+  'jnana-admin':        () => import('./admin/jnana.js'             + V).then(m => m.renderJnanaAdmin),
   // Dharma Phala — um loader por benefício, todos apontam para o mesmo módulo
   'aluno-beneficio-sangha':         () => import('./aluno/beneficios.js' + V).then(m => m.renderAlunosBeneficios),
   'aluno-beneficio-kala-sadhya':    () => import('./aluno/beneficios.js' + V).then(m => m.renderAlunosBeneficios),
@@ -52,4 +53,4 @@ export async function navigate(page) {
     console.error(`navigate(${page}):`, e)
   }
 }
-window.navigate = navigate       
+window.navigate = navigate    
