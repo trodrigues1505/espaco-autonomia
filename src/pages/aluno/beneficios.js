@@ -116,6 +116,11 @@ export async function renderAlunosBeneficios(container, page) {
     return
   }
 
+  if (campo === 'asana_marga' && temAcesso) {
+    await _renderAsanaMarga(container)
+    return
+  }
+
   _renderBeneficioGenerico(container, b, campo, temAcesso, planoTipo)
 }
 
@@ -330,4 +335,205 @@ function _renderBeneficioGenerico(container, b, campo, temAcesso, planoTipo) {
   `
 
   uiAnimar(container)
-}   
+}
+
+
+// ── Asana Marga — aula prática semanal ───────────────────────
+// Chamado por renderAlunosBeneficios quando campo === 'asana_marga' && temAcesso
+async function _renderAsanaMarga(container) {
+  const { AULA_PRATICA: aula } = await import(`../../data/asana_marga.js?t=${Date.now()}`)
+
+  const nivelCor = { 'Novatos': '#2d7a2d', 'Intermediário': '#c8a020', 'Avançado': '#8a1a1a' }[aula.nivel] || 'var(--verde)'
+  const nivelBg  = { 'Novatos': 'rgba(45,122,45,.1)', 'Intermediário': 'rgba(200,160,32,.1)', 'Avançado': 'rgba(138,26,26,.1)' }[aula.nivel] || 'rgba(31,56,31,.08)'
+
+  // Seções do stepper
+  const secoes = [
+    {
+      id:     'introducao',
+      titulo: 'Introdução',
+      icone:  'ti-Om',
+      cor:    '#7F77DD',
+      itens:  aula.introducao,
+    },
+    {
+      id:     'pranayama',
+      titulo: 'Prāṇāyāma',
+      icone:  'ti-wind',
+      cor:    '#378ADD',
+      itens:  aula.pranayama,
+    },
+    {
+      id:     'mantra',
+      titulo: 'Mantra',
+      icone:  'ti-music',
+      cor:    '#BA7517',
+      itens:  aula.mantra,
+    },
+    {
+      id:     'energetica',
+      titulo: 'Leitura Energética',
+      icone:  'ti-sparkles',
+      cor:    '#639922',
+      itens:  [
+        { termo: 'Koshas',  desc: aula.leitura_energetica.koshas.join(' · ') },
+        { termo: 'Chakras', desc: aula.leitura_energetica.cakras.join(' · ') },
+        { termo: 'Gunas',   desc: aula.leitura_energetica.gunas.join(' · ') },
+      ],
+    },
+  ]
+
+  let secaoAtiva = 0
+  let iframeAberto = false
+
+  function renderStepper() {
+    return secoes.map((s, idx) => {
+      const aberta  = idx === secaoAtiva
+      const passada = idx < secaoAtiva
+      const cor     = s.cor
+      const linha   = idx < secoes.length - 1
+        ? `<div style="width:2px;min-height:12px;flex:1;background:${passada ? cor : 'rgba(212,200,158,.4)'};margin:2px auto;transition:background .3s"></div>`
+        : ''
+
+      const itensHtml = aberta ? `
+        <div style="animation:_ya-slide-in .25s ease">
+          ${s.itens.map((item, i) => `
+            <div style="display:flex;gap:10px;padding:9px 0;
+                        border-bottom:${i < s.itens.length - 1 ? '1px solid rgba(212,200,158,.3)' : 'none'}">
+              <div style="width:6px;height:6px;border-radius:50%;background:${cor};
+                           flex-shrink:0;margin-top:6px"></div>
+              <div style="font-size:13px;line-height:1.6">
+                <span style="font-weight:500;color:var(--txt)">${item.termo}</span>
+                <span style="color:var(--txt2)">: ${item.desc}</span>
+              </div>
+            </div>`).join('')}
+          ${idx < secoes.length - 1
+            ? `<button onclick="window._amNext(${idx + 1})"
+                 style="margin-top:14px;width:100%;padding:9px;background:${cor};color:#fff;
+                        border:none;border-radius:7px;font-size:12px;font-weight:500;
+                        cursor:pointer;font-family:'DM Sans',sans-serif">
+                 Próximo: ${secoes[idx + 1].titulo} →
+               </button>`
+            : `<div style="margin-top:14px;padding:12px 14px;background:rgba(31,56,31,.06);
+                           border-radius:7px;text-align:center;font-size:12px;color:var(--txt2)">
+                 ✓ Preparação completa — hora de praticar!
+               </div>`
+          }
+        </div>` : ''
+
+      return `
+        <div style="display:flex;gap:12px">
+          <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:32px">
+            <button onclick="window._amNext(${idx})"
+              style="width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;
+                     display:flex;align-items:center;justify-content:center;flex-shrink:0;
+                     background:${aberta ? cor : passada ? cor : 'rgba(212,200,158,.4)'};
+                     transition:background .3s;padding:0">
+              <i class="ti ${s.icone}" style="font-size:14px;color:${aberta || passada ? '#fff' : 'var(--txt2)'}"></i>
+            </button>
+            ${linha}
+          </div>
+          <div style="flex:1">
+            <div onclick="window._amNext(${idx})" style="cursor:pointer;padding:5px 0 ${aberta ? '12px' : '16px'}">
+              <div style="font-size:13px;font-weight:500;color:${aberta ? cor : passada ? 'var(--txt2)' : 'var(--txt)'};transition:color .3s">${s.titulo}</div>
+              ${!aberta ? `<div style="font-size:11px;color:var(--txt2);margin-top:2px">${s.itens.length} itens</div>` : ''}
+            </div>
+            ${itensHtml}
+          </div>
+        </div>`
+    }).join('')
+  }
+
+  function montar() {
+    container.querySelector('.content').innerHTML = `
+
+      <!-- Cabeçalho -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <span style="font-size:26px">🧘</span>
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">Āsana Mārga</div>
+          <div style="font-size:12px;color:var(--txt2)">Aula prática da semana</div>
+        </div>
+      </div>
+
+      <!-- Badges -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+        <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">Aula ${aula.numero}</span>
+        <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.data}</span>
+        <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.modalidade}</span>
+        <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.duracao}</span>
+        <span style="font-size:11px;background:${nivelBg};color:${nivelCor};padding:3px 10px;border-radius:20px;font-weight:500">${aula.nivel}</span>
+      </div>
+
+      <!-- Descrição -->
+      <div style="border-left:3px solid var(--dourado);background:rgba(232,188,79,.07);
+                  border-radius:0 8px 8px 0;padding:13px 16px;margin-bottom:18px">
+        <p style="font-size:14px;font-style:italic;color:var(--verde);line-height:1.6;margin:0;
+                  font-family:'Cormorant Garamond',serif">${aula.descricao}</p>
+      </div>
+
+      <!-- Botão sequência -->
+      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);
+                  padding:16px 18px;margin-bottom:16px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;
+                    color:var(--verde);margin-bottom:4px">Sequência de Āsanas</div>
+        <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">
+          Faça-os devagar, sem forçar, respeitando seus limites — de 30s a 1min cada āsana.
+        </div>
+        <button onclick="window._amToggleIframe()"
+          id="btn-am-iframe"
+          style="width:100%;padding:11px;background:var(--verde);color:var(--bege);
+                 border:none;border-radius:8px;font-size:13px;font-weight:500;
+                 cursor:pointer;font-family:'DM Sans',sans-serif;
+                 display:flex;align-items:center;justify-content:center;gap:8px">
+          <i class="ti ti-eye"></i> Ver sequência completa
+        </button>
+        <div id="am-iframe-wrap" style="display:none;margin-top:12px;border-radius:8px;overflow:hidden;border:1px solid var(--borda)">
+          <iframe
+            src="${aula.link_tummee}"
+            style="width:100%;height:600px;border:none;display:block"
+            loading="lazy"
+            title="Sequência de āsanas — ${aula.modalidade}">
+          </iframe>
+        </div>
+      </div>
+
+      <!-- Stepper de preparação -->
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);
+                  font-weight:500;margin-bottom:10px">Estrutura da aula</div>
+      <div id="am-stepper" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px 16px">
+        ${renderStepper()}
+      </div>
+    `
+  }
+
+  if (!document.getElementById('_ya-style')) {
+    const s = document.createElement('style')
+    s.id = '_ya-style'
+    s.textContent = `@keyframes _ya-slide-in { from { opacity:0; transform:translateY(-6px) } to { opacity:1; transform:translateY(0) } }`
+    document.head.appendChild(s)
+  }
+
+  montar()
+
+  window._amNext = function(idx) {
+    secaoAtiva = idx
+    const stepper = document.getElementById('am-stepper')
+    if (stepper) stepper.innerHTML = renderStepper()
+  }
+
+  window._amToggleIframe = function() {
+    iframeAberto = !iframeAberto
+    const wrap = document.getElementById('am-iframe-wrap')
+    const btn  = document.getElementById('btn-am-iframe')
+    if (!wrap || !btn) return
+    wrap.style.display = iframeAberto ? 'block' : 'none'
+    btn.innerHTML = iframeAberto
+      ? '<i class="ti ti-eye-off"></i> Fechar sequência'
+      : '<i class="ti ti-eye"></i> Ver sequência completa'
+    btn.style.background = iframeAberto ? 'rgba(31,56,31,.15)' : 'var(--verde)'
+    btn.style.color      = iframeAberto ? 'var(--verde)'       : 'var(--bege)'
+    btn.style.border     = iframeAberto ? '1px solid var(--borda)' : 'none'
+  }
+
+  uiAnimar(container)
+}       
