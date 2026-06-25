@@ -72,13 +72,13 @@ A flexibilidade não é um desvio do caminho — ela é o caminho.`,
       </button>`
     },
   },
-  asana_marga:    { nome: 'Āsana Mārga',   subtitulo: 'App de Prática',          icone: '🧘', descricao: `Āsana Mārga — "o caminho das posturas" — leva a sua prática para onde você estiver.\nCom este benefício você acessa um aplicativo completo de prática guiada: sequências de āsanas, exercícios de prāṇāyāma e meditações conduzidas.\nO tapete pode ser em qualquer lugar — e o caminho também.`, acaoAtivo() { return '' } },
-  yoga_adhyayana: { nome: 'Yoga Adhyayana', subtitulo: 'Estudo Teórico',          icone: '📖', descricao: null, acaoAtivo() { return '' } },
-  jnana_marga:    { nome: 'Jñāna Mārga',   subtitulo: 'Estudo Literário',         icone: '📜', descricao: `Jñāna Mārga — "o caminho do conhecimento" — é para quem quer ir fundo.\nTextos clássicos como o Hatha Yoga Pradīpikā, os Yoga Sūtras de Patañjali e a Bhagavad Gītā carregam séculos de sabedoria destilada.\nA leitura contemplativa é, ela mesma, uma forma de meditação.`, acaoAtivo() { return '' } },
-  sadhana_purna:  { nome: 'Sādhanā Pūrṇā', subtitulo: 'Avaliação de Progresso',  icone: '🌿', descricao: `Sādhanā Pūrṇā — "prática plena" — é o olhar atento sobre a sua jornada.\nPeriodicamente você terá uma conversa com o professor para mapear sua evolução.\nO progresso no Yoga não se mede em meses, mas em camadas de consciência.`, acaoAtivo() { return '' } },
-  atma_vijnana:   { nome: 'Ātma Vijñāna',  subtitulo: 'Anamnese Personalizada',  icone: '🔍', descricao: `Ātma Vijñāna — "conhecimento do ser" — começa antes da primeira āsana.\nEste benefício garante uma conversa inicial aprofundada com o professor sobre histórico, objetivos e limitações.\nPorque a prática mais poderosa é aquela que parte de onde você realmente está.`, acaoAtivo() { return '' } },
-  shruti:         { nome: 'Śruti',          subtitulo: 'Áudio Diário',             icone: '🎵', descricao: `Śruti significa "o que foi ouvido" — e nas tradições do Yoga, o som é transmissão de sabedoria.\nDiariamente você recebe um áudio curto com mantras, prāṇāyāmas guiados ou reflexões.\nO som que você carrega dentro de você é o primeiro instrumento.`, acaoAtivo() { return '' } },
-  naada_mandir:   { nome: 'Nāda Mandir',   subtitulo: 'Biblioteca de Mantras',   icone: '🕌', descricao: `Nāda Mandir — "o templo do som" — é a nossa biblioteca de mantras sagrados.\nDo Oṃ ao Gāyatrī, do Mrityuñjaya ao Śānti Pāṭha: áudios com pronúncia correta, significado e contexto de uso.\nCom este benefício você leva o templo com você.`, acaoAtivo() { return '' } },
+  asana_marga:    { nome: 'Āsana Mārga',   subtitulo: 'App de Prática',         icone: '🧘', descricao: `Āsana Mārga — "o caminho das posturas" — leva a sua prática para onde você estiver.\nCom este benefício você acessa um aplicativo completo de prática guiada: sequências de āsanas, exercícios de prāṇāyāma e meditações conduzidas.\nO tapete pode ser em qualquer lugar — e o caminho também.`, acaoAtivo() { return '' } },
+  yoga_adhyayana: { nome: 'Yoga Adhyayana', subtitulo: 'Estudo Teórico',         icone: '📖', descricao: null, acaoAtivo() { return '' } },
+  jnana_marga:    { nome: 'Jñāna Mārga',   subtitulo: 'Estudo Literário',        icone: '📜', descricao: `Jñāna Mārga — "o caminho do conhecimento" — é para quem quer ir fundo.\nTextos clássicos como o Hatha Yoga Pradīpikā, os Yoga Sūtras de Patañjali e a Bhagavad Gītā carregam séculos de sabedoria destilada.\nA leitura contemplativa é, ela mesma, uma forma de meditação.`, acaoAtivo() { return '' } },
+  sadhana_purna:  { nome: 'Sādhanā Pūrṇā', subtitulo: 'Avaliação de Progresso', icone: '🌿', descricao: `Sādhanā Pūrṇā — "prática plena" — é o olhar atento sobre a sua jornada.\nPeriodicamente você terá uma conversa com o professor para mapear sua evolução.\nO progresso no Yoga não se mede em meses, mas em camadas de consciência.`, acaoAtivo() { return '' } },
+  atma_vijnana:   { nome: 'Ātma Vijñāna',  subtitulo: 'Anamnese Personalizada', icone: '🔍', descricao: `Ātma Vijñāna — "conhecimento do ser" — começa antes da primeira āsana.\nEste benefício garante uma conversa inicial aprofundada com o professor sobre histórico, objetivos e limitações.\nPorque a prática mais poderosa é aquela que parte de onde você realmente está.`, acaoAtivo() { return '' } },
+  shruti:         { nome: 'Śruti',          subtitulo: 'Áudio Diário',            icone: '🎵', descricao: `Śruti significa "o que foi ouvido" — e nas tradições do Yoga, o som é transmissão de sabedoria.\nDiariamente você recebe um áudio curto com mantras, prāṇāyāmas guiados ou reflexões.\nO som que você carrega dentro de você é o primeiro instrumento.`, acaoAtivo() { return '' } },
+  naada_mandir:   { nome: 'Nāda Mandir',   subtitulo: 'Biblioteca de Mantras',  icone: '🕌', descricao: `Nāda Mandir — "o templo do som" — é a nossa biblioteca de mantras sagrados.\nDo Oṃ ao Gāyatrī, do Mrityuñjaya ao Śānti Pāṭha: áudios com pronúncia correta, significado e contexto de uso.\nCom este benefício você leva o templo com você.`, acaoAtivo() { return '' } },
 }
 
 // ── Render principal ──────────────────────────────────────────
@@ -119,113 +119,153 @@ export async function renderAlunosBeneficios(container, page) {
   _renderBeneficioGenerico(container, b, campo, temAcesso, planoTipo)
 }
 
-// ── Yoga Adhyayana — cards viráveis ──────────────────────────
+// ── Yoga Adhyayana — stepper vertical ────────────────────────
 async function _renderYogaAdhyayana(container) {
   const { AULA_SEMANA: aula } = await import(`../../data/yoga_adhyayana.js?t=${Date.now()}`)
 
   const nivelCor = { 'Iniciante': '#2d7a2d', 'Intermediário': '#c8a020', 'Avançado': '#8a1a1a' }[aula.nivel] || 'var(--verde)'
   const nivelBg  = { 'Iniciante': 'rgba(45,122,45,.1)', 'Intermediário': 'rgba(200,160,32,.1)', 'Avançado': 'rgba(138,26,26,.1)' }[aula.nivel] || 'rgba(31,56,31,.08)'
 
-  // CSS do flip injetado uma única vez
-  if (!document.getElementById('_ya-flip-style')) {
-    const s = document.createElement('style')
-    s.id = '_ya-flip-style'
-    s.textContent = `
-      .ya-flip { perspective: 800px; cursor: pointer; }
-      .ya-flip-inner { position: relative; width: 100%; height: 130px; transition: transform .45s cubic-bezier(.4,0,.2,1); transform-style: preserve-3d; }
-      .ya-flip.flipped .ya-flip-inner { transform: rotateY(180deg); }
-      .ya-flip-front, .ya-flip-back { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 10px; }
-      .ya-flip-front { background: #fff; border: 1px solid var(--borda); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 12px; }
-      .ya-flip-back  { background: var(--verde); border: 1px solid var(--verde); transform: rotateY(180deg); padding: 12px; overflow-y: auto; }
+  // Estado do stepper — qual seção está aberta
+  let secaoAtiva = 0
+
+  function renderStepper() {
+    return aula.secoes.map((s, idx) => {
+      const aberta  = idx === secaoAtiva
+      const passada = idx < secaoAtiva
+      const cor     = s.cor
+
+      // Linha conectora (não renderiza após o último)
+      const linha = idx < aula.secoes.length - 1
+        ? `<div style="width:2px;min-height:12px;flex:1;background:${passada ? cor : 'rgba(212,200,158,.4)'};
+                       margin:2px auto;transition:background .3s"></div>`
+        : ''
+
+      const itensHtml = aberta
+        ? `<div style="animation:_ya-slide-in .25s ease;overflow:hidden">
+            ${s.itens.map((item, i) => `
+              <div style="display:flex;gap:10px;padding:9px 0;
+                          border-bottom:${i < s.itens.length-1 ? '1px solid rgba(212,200,158,.3)' : 'none'}">
+                <div style="width:6px;height:6px;border-radius:50%;background:${cor};
+                             flex-shrink:0;margin-top:6px"></div>
+                <div style="font-size:13px;line-height:1.6">
+                  <span style="font-weight:500;color:var(--txt)">${item.termo}</span>
+                  <span style="color:var(--txt2)">: ${item.desc}</span>
+                </div>
+              </div>`).join('')}
+            ${idx < aula.secoes.length - 1
+              ? `<button onclick="window._yaNext(${idx + 1})"
+                   style="margin-top:14px;width:100%;padding:9px;background:${cor};color:#fff;
+                          border:none;border-radius:7px;font-size:12px;font-weight:500;
+                          cursor:pointer;font-family:'DM Sans',sans-serif;
+                          transition:opacity .15s">
+                   Próximo: ${aula.secoes[idx + 1].titulo} →
+                 </button>`
+              : `<div style="margin-top:14px;padding:12px 14px;background:rgba(31,56,31,.06);
+                             border-radius:7px;text-align:center;font-size:12px;color:var(--txt2)">
+                   ✓ Você completou todas as seções desta semana
+                 </div>`
+            }
+          </div>`
+        : ''
+
+      return `
+        <div style="display:flex;gap:12px">
+          <!-- Coluna esquerda: bullet + linha -->
+          <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:32px">
+            <button onclick="window._yaNext(${idx})"
+              style="width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;
+                     display:flex;align-items:center;justify-content:center;flex-shrink:0;
+                     background:${aberta ? cor : passada ? cor : 'rgba(212,200,158,.4)'};
+                     transition:background .3s;padding:0">
+              <i class="ti ${s.icone}" style="font-size:14px;color:${aberta || passada ? '#fff' : 'var(--txt2)'}"></i>
+            </button>
+            ${linha}
+          </div>
+          <!-- Coluna direita: conteúdo -->
+          <div style="flex:1;padding-bottom:${idx < aula.secoes.length - 1 ? '0' : '0'}">
+            <div onclick="window._yaNext(${idx})" style="cursor:pointer;padding:5px 0 ${aberta ? '12px' : '16px'}">
+              <div style="font-size:13px;font-weight:500;color:${aberta ? cor : passada ? 'var(--txt2)' : 'var(--txt)'};
+                          transition:color .3s">${s.titulo}</div>
+              ${!aberta ? `<div style="font-size:11px;color:var(--txt2);margin-top:2px">${s.itens.length} itens</div>` : ''}
+            </div>
+            ${itensHtml}
+          </div>
+        </div>`
+    }).join('')
+  }
+
+  function montar() {
+    container.querySelector('.content').innerHTML = `
+
+      <!-- Cabeçalho -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <span style="font-size:26px">📖</span>
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">Yoga Adhyayana</div>
+          <div style="font-size:12px;color:var(--txt2)">Conteúdo da semana</div>
+        </div>
+      </div>
+
+      <!-- Badges -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+        <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">Aula ${aula.numero}</span>
+        <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.data}</span>
+        <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.categoria}</span>
+        <span style="font-size:11px;background:${nivelBg};color:${nivelCor};padding:3px 10px;border-radius:20px;font-weight:500">${aula.nivel}</span>
+      </div>
+
+      <!-- Imagem + tema -->
+      <div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:16px;background:var(--verde);min-height:160px">
+        <img src="${aula.imagem}" alt="${aula.tema}"
+          style="width:100%;max-height:240px;object-fit:cover;object-position:center top;display:block;opacity:.9"
+          onerror="this.style.display='none'">
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:16px;
+                    background:linear-gradient(to top,rgba(31,56,31,.92) 0%,transparent 100%)">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;
+                      color:var(--bege);line-height:1.2">${aula.tema}</div>
+          <div style="font-size:11px;color:rgba(242,236,206,.75);margin-top:3px">${aula.nivel_descricao}</div>
+        </div>
+      </div>
+
+      <!-- Citação -->
+      <div style="border-left:3px solid var(--dourado);background:rgba(232,188,79,.07);
+                  border-radius:0 8px 8px 0;padding:13px 16px;margin-bottom:20px">
+        <p style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;
+                  color:var(--verde);line-height:1.6;margin:0">"${aula.citacao}"</p>
+      </div>
+
+      <!-- Stepper -->
+      <div id="ya-stepper" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px 16px;margin-bottom:16px">
+        ${renderStepper()}
+      </div>
+
+      <!-- Reflexão -->
+      <div style="background:var(--verde);border-radius:12px;padding:20px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;
+                    color:rgba(242,236,206,.55);margin-bottom:8px;font-weight:500">Reflexão da semana</div>
+        <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--bege);
+                  line-height:1.7;margin:0;font-style:italic">${aula.reflexao}</p>
+      </div>
     `
+  }
+
+  // Injeta keyframe de animação uma única vez
+  if (!document.getElementById('_ya-style')) {
+    const s = document.createElement('style')
+    s.id = '_ya-style'
+    s.textContent = `@keyframes _ya-slide-in { from { opacity:0; transform:translateY(-6px) } to { opacity:1; transform:translateY(0) } }`
     document.head.appendChild(s)
   }
 
-  const cardsHtml = aula.secoes.map(s => `
-    <div class="ya-flip" id="yacard-${s.id}" onclick="window._yaFlip('${s.id}')">
-      <div class="ya-flip-inner">
-        <div class="ya-flip-front">
-          <i class="ti ${s.icone}" style="font-size:28px;color:${s.cor}"></i>
-          <div style="font-size:12px;font-weight:500;color:var(--txt);text-align:center;line-height:1.3">${s.titulo}</div>
-          <div style="font-size:10px;color:var(--txt2)">${s.itens.length} itens · toque</div>
-        </div>
-        <div class="ya-flip-back">
-          <div style="font-size:11px;font-weight:500;color:rgba(242,236,206,.7);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px">${s.titulo}</div>
-          ${s.itens.map(item => `
-            <div style="margin-bottom:6px">
-              <span style="font-size:11px;font-weight:500;color:var(--bege)">${item.termo}:</span>
-              <span style="font-size:11px;color:rgba(242,236,206,.75)"> ${item.desc}</span>
-            </div>`).join('')}
-          <div style="font-size:10px;color:rgba(242,236,206,.4);margin-top:6px;text-align:right">toque para fechar</div>
-        </div>
-      </div>
-    </div>`).join('')
+  montar()
 
-  container.querySelector('.content').innerHTML = `
-
-    <!-- Cabeçalho -->
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-      <span style="font-size:26px">📖</span>
-      <div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">Yoga Adhyayana</div>
-        <div style="font-size:12px;color:var(--txt2)">Conteúdo da semana</div>
-      </div>
-    </div>
-
-    <!-- Badges -->
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-      <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">Aula ${aula.numero}</span>
-      <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.data}</span>
-      <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.categoria}</span>
-      <span style="font-size:11px;background:${nivelBg};color:${nivelCor};padding:3px 10px;border-radius:20px;font-weight:500">${aula.nivel}</span>
-    </div>
-
-    <!-- Imagem + tema -->
-    <div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:16px;background:var(--verde);min-height:180px">
-      <img src="${aula.imagem}" alt="${aula.tema}"
-        style="width:100%;max-height:260px;object-fit:cover;object-position:center top;display:block;opacity:.9"
-        onerror="this.style.display='none'">
-      <div style="position:absolute;bottom:0;left:0;right:0;padding:18px 16px;
-                  background:linear-gradient(to top,rgba(31,56,31,.92) 0%,transparent 100%)">
-        <div style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--bege);line-height:1.2">${aula.tema}</div>
-        <div style="font-size:11px;color:rgba(242,236,206,.75);margin-top:4px">${aula.nivel_descricao}</div>
-      </div>
-    </div>
-
-    <!-- Citação -->
-    <div style="border-left:3px solid var(--dourado);background:rgba(232,188,79,.07);
-                border-radius:0 8px 8px 0;padding:13px 16px;margin-bottom:18px">
-      <p style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;
-                color:var(--verde);line-height:1.6;margin:0">"${aula.citacao}"</p>
-    </div>
-
-    <!-- Instrução -->
-    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);
-                font-weight:500;margin-bottom:10px">Toque em cada card para explorar</div>
-
-    <!-- Grid de cards viráveis -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px">
-      ${cardsHtml}
-    </div>
-
-    <!-- Reflexão -->
-    <div style="background:var(--verde);border-radius:12px;padding:20px">
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;
-                  color:rgba(242,236,206,.55);margin-bottom:8px;font-weight:500">Reflexão da semana</div>
-      <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--bege);
-                line-height:1.7;margin:0;font-style:italic">${aula.reflexao}</p>
-    </div>
-  `
-
-  // Toggle flip
-  window._yaFlip = function(id) {
-    const card = document.getElementById('yacard-' + id)
-    if (!card) return
-    const jaAberto = card.classList.contains('flipped')
-    // Fecha todos
-    document.querySelectorAll('.ya-flip').forEach(c => c.classList.remove('flipped'))
-    // Abre o clicado se estava fechado
-    if (!jaAberto) card.classList.add('flipped')
+  window._yaNext = function(idx) {
+    secaoAtiva = idx
+    const stepper = document.getElementById('ya-stepper')
+    if (stepper) {
+      stepper.innerHTML = renderStepper()
+    }
   }
 
   uiAnimar(container)
