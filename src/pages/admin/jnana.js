@@ -258,6 +258,8 @@ Se um campo não existir no texto, use null ou array vazio.`,
       const data = await response.json()
       const raw  = data.content?.[0]?.text || ''
 
+      console.log('IA retornou:', raw) // debug — remover depois
+
       let parsed
       try {
         parsed = JSON.parse(raw.replace(/```json|```/g, '').trim())
@@ -421,4 +423,4 @@ Se um campo não existir no texto, use null ou array vazio.`,
     toast('✓ Postura excluída.')
     navigate('jnana-admin')
   }
-}     
+}  
