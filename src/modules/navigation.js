@@ -121,54 +121,9 @@ export function buildMenu(tipo, badges = {}) {
     nav.appendChild(d)
   }
 
-  // Barra de impersonar: visível apenas para admin real em desktop
-  // Em mobile: botão flutuante
+  // Barra de impersonar: visível apenas para admin real
   const bar = document.getElementById('impersonate-bar')
   if (bar) bar.style.display = window._perfil?.tipo === 'admin' ? 'block' : 'none'
-
-  // Mobile: botão flutuante de impersonação para admin
-  document.getElementById('imp-mobile-btn')?.remove()
-  if (window._perfil?.tipo === 'admin' || window._perfilAdmin?.tipo === 'admin') {
-    const fab = document.createElement('div')
-    fab.id = 'imp-mobile-btn'
-    fab.style.cssText = `
-      display:none;
-      position:fixed;bottom:16px;right:16px;z-index:100;
-      background:var(--dourado);color:var(--verde);
-      border-radius:50%;width:44px;height:44px;
-      align-items:center;justify-content:center;
-      font-size:20px;cursor:pointer;
-      box-shadow:0 4px 16px rgba(0,0,0,.25);
-      font-family:'DM Sans',sans-serif;
-    `
-    fab.textContent = '👁'
-    fab.title = 'Ver como...'
-    fab.onclick = () => {
-      document.getElementById('impersonate-bar')?.style.display === 'block'
-        ? null
-        : document.querySelector('.sb')?.click()
-      // Abre o modal de impersonação diretamente
-      const bar = document.getElementById('impersonate-bar')
-      if (bar) {
-        bar.style.display = 'block'
-        bar.style.position = 'fixed'
-        bar.style.bottom = '70px'
-        bar.style.right = '16px'
-        bar.style.left = 'auto'
-        bar.style.top = 'auto'
-        bar.style.width = 'auto'
-        bar.style.borderRadius = '8px'
-        bar.style.padding = '10px 14px'
-        bar.style.zIndex = '200'
-      }
-    }
-    document.body.appendChild(fab)
-    // Mostra só em mobile
-    if (window.innerWidth <= 768) fab.style.display = 'flex'
-    window.addEventListener('resize', () => {
-      fab.style.display = window.innerWidth <= 768 ? 'flex' : 'none'
-    })
-  }
 }
 
 export function setActiveNav(id) {
@@ -341,11 +296,20 @@ export function initMobileMenu() {
     const nav = document.getElementById('nav-menu')
     if (!nav) return
     const rect = sbEl.getBoundingClientRect()
-    if (e.clientX > rect.right - 50) nav.classList.toggle('mobile-open')
+    if (e.clientX > rect.right - 50) {
+      nav.classList.toggle('mobile-open')
+      // Mostra/esconde impersonate-bar junto com o nav
+      const bar = document.getElementById('impersonate-bar')
+      if (bar && (window._perfil?.tipo === 'admin' || window._perfilAdmin?.tipo === 'admin')) {
+        bar.style.display = nav.classList.contains('mobile-open') ? 'block' : 'none'
+      }
+    }
   })
   document.addEventListener('click', e => {
     if (e.target.classList.contains('ni')) {
       document.getElementById('nav-menu')?.classList.remove('mobile-open')
+      const bar = document.getElementById('impersonate-bar')
+      if (bar && window.innerWidth <= 768) bar.style.display = 'none'
     }
   })
 }   
