@@ -121,6 +121,11 @@ export async function renderAlunosBeneficios(container, page) {
     return
   }
 
+  if (campo === 'jnana_marga' && temAcesso) {
+    await _renderJnanaMarga(container)
+    return
+  }
+
   _renderBeneficioGenerico(container, b, campo, temAcesso, planoTipo)
 }
 
@@ -536,4 +541,222 @@ async function _renderAsanaMarga(container) {
   }
 
   uiAnimar(container)
-}       
+}
+
+
+// ── Jñāna Mārga — postura do dia + histórico ─────────────────
+async function _renderJnanaMarga(container) {
+  const sb  = window._sb
+  const hoje = new Date().toISOString().slice(0, 10)
+
+  // Carrega todas as posturas publicadas até hoje
+  const { data: posturas, error } = await sb
+    .from('jnana_posturas')
+    .select('*')
+    .lte('publicada_em', hoje)
+    .order('publicada_em', { ascending: false })
+
+  if (error) {
+    container.querySelector('.content').innerHTML =
+      `<p style="color:#c0392b;font-size:13px">Erro: ${error.message}</p>`
+    return
+  }
+
+  if (!posturas || posturas.length === 0) {
+    container.querySelector('.content').innerHTML = `
+      <div style="text-align:center;padding:48px 24px">
+        <div style="font-size:40px;margin-bottom:12px">📜</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--verde);margin-bottom:8px">Em breve</div>
+        <div style="font-size:13px;color:var(--txt2)">O conteúdo do Jñāna Mārga chegará em breve.</div>
+      </div>`
+    return
+  }
+
+  const hoje_postura = posturas.find(p => p.publicada_em === hoje) || posturas[0]
+  let posturaSel = hoje_postura
+
+  function renderPostura(p) {
+    // Stepper de seções
+    const secoes = [
+      p.simbolismo ? { id:'simb', titulo:'Simbolismo', icone:'ti-sun', cor:'#7F77DD', conteudo: `<p style="font-size:13px;color:var(--txt);line-height:1.8;font-style:italic">${p.simbolismo}</p>` } : null,
+      p.instrucoes?.length ? { id:'inst', titulo:'Instruções', icone:'ti-list-check', cor:'#1D9E75', conteudo:
+        `<ol style="padding-left:18px;display:flex;flex-direction:column;gap:10px">
+          ${p.instrucoes.map(i => `<li style="font-size:13px;color:var(--txt);line-height:1.6">${i}</li>`).join('')}
+        </ol>` } : null,
+      p.beneficios ? { id:'benef', titulo:'Benefícios', icone:'ti-heart', cor:'#c0392b', conteudo: `<p style="font-size:13px;color:var(--txt);line-height:1.8">${p.beneficios}</p>` } : null,
+      (p.sistemas?.length || p.elementos?.length || p.ayurveda || p.chakras) ? {
+        id:'sist', titulo:'Sistemas & Energia', icone:'ti-sparkles', cor:'#639922',
+        conteudo: `
+          ${p.sistemas?.length ? `<div style="margin-bottom:10px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:5px">Sistemas equilibrados</div><div style="font-size:13px;color:var(--txt)">${p.sistemas.join(' · ')}</div></div>` : ''}
+          ${p.elementos?.length ? `<div style="margin-bottom:10px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:5px">Elementos</div><div style="font-size:13px;color:var(--txt)">${p.elementos.join(' · ')}</div></div>` : ''}
+          ${p.ayurveda ? `<div style="margin-bottom:10px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:5px">Ayurveda</div><div style="font-size:13px;color:var(--txt)">${p.ayurveda}</div></div>` : ''}
+          ${p.chakras ? `<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:5px">Chakras</div><div style="font-size:13px;color:var(--txt)">${p.chakras}</div></div>` : ''}
+        `
+      } : null,
+    ].filter(Boolean)
+
+    let secaoAtiva = 0
+
+    function renderStepper() {
+      return secoes.map((s, idx) => {
+        const aberta  = idx === secaoAtiva
+        const passada = idx < secaoAtiva
+        const linha   = idx < secoes.length - 1
+          ? `<div style="width:2px;min-height:12px;flex:1;background:${passada ? s.cor : 'rgba(212,200,158,.4)'};margin:2px auto;transition:background .3s"></div>`
+          : ''
+        return `
+          <div style="display:flex;gap:12px">
+            <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:32px">
+              <button onclick="window._jnStep(${idx})"
+                style="width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;
+                       display:flex;align-items:center;justify-content:center;
+                       background:${aberta ? s.cor : passada ? s.cor : 'rgba(212,200,158,.4)'};
+                       transition:background .3s;padding:0;flex-shrink:0">
+                <i class="ti ${s.icone}" style="font-size:14px;color:${aberta||passada?'#fff':'var(--txt2)'}"></i>
+              </button>
+              ${linha}
+            </div>
+            <div style="flex:1">
+              <div onclick="window._jnStep(${idx})" style="cursor:pointer;padding:5px 0 ${aberta?'12px':'16px'}">
+                <div style="font-size:13px;font-weight:500;color:${aberta ? s.cor : passada ? 'var(--txt2)' : 'var(--txt)'};transition:color .3s">${s.titulo}</div>
+              </div>
+              ${aberta ? `
+                <div style="animation:_ya-slide-in .25s ease">
+                  ${s.conteudo}
+                  ${idx < secoes.length - 1
+                    ? `<button onclick="window._jnStep(${idx+1})"
+                         style="margin-top:14px;width:100%;padding:9px;background:${s.cor};color:#fff;
+                                border:none;border-radius:7px;font-size:12px;font-weight:500;
+                                cursor:pointer;font-family:'DM Sans',sans-serif">
+                         Próximo: ${secoes[idx+1].titulo} →
+                       </button>`
+                    : `<div style="margin-top:14px;padding:12px;background:rgba(31,56,31,.06);
+                                   border-radius:7px;text-align:center;font-size:12px;color:var(--txt2)">
+                         ✓ Postura completa
+                       </div>`
+                  }
+                </div>` : ''}
+            </div>
+          </div>`
+      }).join('')
+    }
+
+    window._jnStep = function(idx) {
+      secaoAtiva = idx
+      const el = document.getElementById('jn-stepper')
+      if (el) el.innerHTML = renderStepper()
+    }
+
+    const isHoje = p.publicada_em === hoje
+    const dataFmt = new Date(p.publicada_em + 'T12:00').toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long' })
+
+    return `
+      <!-- Header postura -->
+      <div style="background:var(--verde);border-radius:12px;overflow:hidden;margin-bottom:16px">
+        ${p.imagem ? `
+          <div style="position:relative">
+            <img src="${p.imagem}" alt="${p.nome_popular}" referrerpolicy="no-referrer"
+              style="width:100%;max-height:220px;object-fit:cover;object-position:center center;display:block;opacity:.9"
+              onerror="this.parentElement.style.display='none'">
+            <div style="position:absolute;bottom:0;left:0;right:0;padding:16px;
+                        background:linear-gradient(to top,rgba(31,56,31,.92) 0%,transparent 100%)">
+              <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:var(--bege);line-height:1.1">${p.nome_popular}</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:rgba(242,236,206,.8);margin-top:3px">${p.nome_sanscrito}</div>
+              ${p.etimologia ? `<div style="font-size:11px;color:rgba(242,236,206,.55);margin-top:6px">${p.etimologia}</div>` : ''}
+            </div>
+          </div>
+        ` : `
+          <div style="padding:20px">
+        `}
+        ${!p.imagem ? `
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.55);margin-bottom:6px">
+              ${isHoje ? '✦ Postura de hoje' : dataFmt}
+            </div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--bege);line-height:1.1">${p.nome_popular}</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-style:italic;color:rgba(242,236,206,.8);margin-top:4px">${p.nome_sanscrito}</div>
+            ${p.etimologia ? `<div style="font-size:11px;color:rgba(242,236,206,.55);margin-top:8px">${p.etimologia}</div>` : ''}
+          </div>
+        ` : `
+          <div style="padding:8px 16px 12px">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.55)">
+              ${isHoje ? '✦ Postura de hoje' : dataFmt}
+            </div>
+          </div>
+        `}
+      </div>
+
+      <!-- Stepper -->
+      <div id="jn-stepper" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px 16px;margin-bottom:16px">
+        ${renderStepper()}
+      </div>
+    `
+  }
+
+  // Render completo
+  const historicoHtml = posturas.length > 1 ? `
+    <div style="margin-top:6px">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:10px">
+        Posturas anteriores (${posturas.length - 1})
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${posturas.filter(p => p.publicada_em !== hoje_postura.publicada_em).map(p => `
+          <button onclick="window._jnSelPost('${p.id}')"
+            id="jn-hist-${p.id}"
+            style="display:flex;align-items:center;justify-content:space-between;
+                   padding:11px 14px;background:#fff;border:1px solid var(--borda);
+                   border-radius:8px;cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif;
+                   transition:border-color .15s">
+            <div>
+              <div style="font-size:13px;font-weight:500;color:var(--txt)">${p.nome_popular}</div>
+              <div style="font-size:11px;color:var(--txt2);font-style:italic">${p.nome_sanscrito}</div>
+            </div>
+            <div style="font-size:11px;color:var(--txt2);flex-shrink:0;margin-left:12px">
+              ${new Date(p.publicada_em + 'T12:00').toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})}
+            </div>
+          </button>`).join('')}
+      </div>
+    </div>` : ''
+
+  container.querySelector('.content').innerHTML = `
+    <!-- Cabeçalho do benefício -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <span style="font-size:26px">📜</span>
+      <div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">Jñāna Mārga</div>
+        <div style="font-size:12px;color:var(--txt2)">GUIPPY · Estudo literário diário</div>
+      </div>
+    </div>
+
+      <div style="font-size:11px;color:var(--txt2);margin-bottom:16px">
+        <strong style="color:var(--verde)">${posturas.length}</strong> postura${posturas.length !== 1 ? 's' : ''} publicada${posturas.length !== 1 ? 's' : ''} até hoje
+      </div>
+
+    <!-- Postura selecionada -->
+    <div id="jn-postura-view">
+      ${renderPostura(posturaSel)}
+    </div>
+
+    <!-- Histórico -->
+    ${historicoHtml}
+  `
+
+  // Selecionar postura do histórico
+  window._jnSelPost = function(id) {
+    const p = posturas.find(x => x.id === id)
+    if (!p) return
+    posturaSel = p
+    // Destaca botão selecionado
+    document.querySelectorAll('[id^="jn-hist-"]').forEach(b => {
+      b.style.borderColor = b.id === `jn-hist-${id}` ? 'var(--verde)' : 'var(--borda)'
+      b.style.background  = b.id === `jn-hist-${id}` ? 'rgba(31,56,31,.04)' : '#fff'
+    })
+    // Atualiza view e scroll
+    const view = document.getElementById('jn-postura-view')
+    if (view) {
+      view.innerHTML = renderPostura(p)
+      view.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
+  uiAnimar(container)
+}   
