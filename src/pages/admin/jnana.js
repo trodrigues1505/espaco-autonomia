@@ -221,11 +221,17 @@ export async function renderJnanaAdmin(container, page) {
     btn.innerHTML = '<span class="spinner"></span> Interpretando...'
 
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const SUPABASE_ANON = (await import('../../lib/supabase.js')).SUPABASE_ANON
+      const FN_URL = 'https://kctgcjvfsuinwlbgljdw.supabase.co/functions/v1/anthropic-proxy'
+
+      const response = await fetch(FN_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': 'Bearer ' + SUPABASE_ANON,
+        },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
+          model:      'claude-sonnet-4-6',
           max_tokens: 1000,
           system: `Você é um extrator de dados de textos sobre posturas de yoga.
 Extraia as informações do texto e retorne APENAS um JSON válido, sem markdown, sem explicações.
@@ -415,4 +421,4 @@ Se um campo não existir no texto, use null ou array vazio.`,
     toast('✓ Postura excluída.')
     navigate('jnana-admin')
   }
-}
+}     
