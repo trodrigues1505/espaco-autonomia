@@ -218,6 +218,7 @@ async function _renderYogaAdhyayana(container) {
       <!-- Imagem + tema -->
       <div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:16px;background:var(--verde);min-height:160px">
         <img src="${aula.imagem}" alt="${aula.tema}"
+          referrerpolicy="no-referrer"
           style="width:100%;max-height:240px;object-fit:cover;object-position:center center;display:block;opacity:.9"
           onerror="this.style.display='none'">
         <div style="position:absolute;bottom:0;left:0;right:0;padding:16px;
@@ -329,4 +330,4 @@ function _renderBeneficioGenerico(container, b, campo, temAcesso, planoTipo) {
   `
 
   uiAnimar(container)
-}    
+}   
