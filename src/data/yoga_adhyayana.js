@@ -80,4 +80,4 @@ export const AULA_SEMANA = {
   ],
 
   reflexao: 'Como você sustenta o esforço sem perder a base? Onde na sua prática — e na sua vida — você tende a elevar sem antes enraizar?',
-}   
+}    
