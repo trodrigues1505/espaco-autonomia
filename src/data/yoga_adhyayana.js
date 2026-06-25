@@ -14,7 +14,7 @@ export const AULA_SEMANA = {
   categoria: 'Estudo de Āsanas',
   tema:      'Śalabhāsana — Postura do Gafanhoto',
   nivel:     'Intermediário',
-  imagem:    'https://drive.google.com/uc?export=view&id=1MkiJ2rCjPOuMtfDyHObSeuhI65VbOV-g',
+  imagem:    'https://i.imgur.com/EZxD4lE.jpeg',
 
   citacao: 'Śalabhāsana ensina a elevar sem romper a base. Esforço sem integração vira compressão; potência sem consciência vira desgaste.',
 
@@ -80,4 +80,4 @@ export const AULA_SEMANA = {
   ],
 
   reflexao: 'Como você sustenta o esforço sem perder a base? Onde na sua prática — e na sua vida — você tende a elevar sem antes enraizar?',
-}       
+}   
