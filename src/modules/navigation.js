@@ -36,7 +36,8 @@ const MENUS = {
     { id: 'planos',             label: 'Planos',              icon: 'ti-award'            },
     { id: 'previsao-professor', label: 'Repasse Professor',   icon: 'ti-calculator'       },
     { sec: 'Sistema' },
-    { id: 'config',             label: 'Configurações',       icon: 'ti-settings'         },
+    { id: 'jnana-admin',        label: 'Jñāna Mārga',         icon: 'ti-book'             },
+    { id: 'config',             label: 'Configurações',        icon: 'ti-settings'         },
   ],
   professor: [
     { sec: 'Minhas Aulas' },
