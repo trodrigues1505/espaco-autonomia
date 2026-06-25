@@ -255,6 +255,12 @@ Se um campo não existir no texto, use null ou array vazio.`,
         }),
       })
 
+      if (!response.ok) {
+        const errText = await response.text()
+        console.error('Proxy erro:', response.status, errText)
+        throw new Error('Proxy retornou ' + response.status + ': ' + errText)
+      }
+
       const data = await response.json()
       const raw  = data.content?.[0]?.text || ''
 
@@ -423,4 +429,4 @@ Se um campo não existir no texto, use null ou array vazio.`,
     toast('✓ Postura excluída.')
     navigate('jnana-admin')
   }
-}  
+}       
