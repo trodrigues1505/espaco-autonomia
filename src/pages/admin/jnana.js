@@ -99,6 +99,8 @@ export async function renderJnanaAdmin(container, page) {
                   ${isHoje ? '✓ Hoje' : new Date(p.publicada_em+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'})}
                 </span>
                 <div style="display:flex;gap:4px">
+                  <button onclick="previaPosura('${p.id}')"
+                    style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--verde);border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Prévia">👁</button>
                   <button onclick="editarPostura('${p.id}')"
                     style="padding:3px 8px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✎</button>
                   <button onclick="excluirPostura('${p.id}','${p.nome_popular.replace(/'/g,"\\'")}')"
@@ -191,7 +193,79 @@ export async function renderJnanaAdmin(container, page) {
     document.getElementById('modal-jnana').style.display = 'flex'
   }
 
-  // ── Editar postura existente ──────────────────────────────
+  // ── Prévia ────────────────────────────────────────────────
+  window.previaPosura = async function(id) {
+    const { data: p } = await sb.from('jnana_posturas').select('*').eq('id', id).single()
+    if (!p) { toast('Postura não encontrada'); return }
+
+    document.getElementById('modal-previa-jnana')?.remove()
+    const div = document.createElement('div')
+    div.id = 'modal-previa-jnana'
+    div.style.cssText = 'position:fixed;inset:0;background:rgba(31,56,31,.7);z-index:300;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto'
+
+    const imgHtml = p.imagem ? `
+      <div style="position:relative;cursor:zoom-in" onclick="_abrirLightbox('${p.imagem}','${p.nome_popular}')" title="Clique para ampliar">
+        <img src="${p.imagem}" referrerpolicy="no-referrer"
+          style="width:100%;max-height:200px;object-fit:cover;object-position:center;display:block;opacity:.9"
+          onerror="this.style.display='none'">
+        <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);border-radius:20px;padding:3px 8px;font-size:10px;color:#fff;display:flex;align-items:center;gap:4px">
+          <i class="ti ti-zoom-in" style="font-size:12px"></i> ampliar
+        </div>
+      </div>` : ''
+
+    div.innerHTML = `
+      <div style="background:#fff;border-radius:12px;width:560px;max-width:100%;margin:auto;overflow:hidden">
+        <div style="background:var(--verde);padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--bege)">
+            Prévia — visão do aluno
+          </div>
+          <button onclick="document.getElementById('modal-previa-jnana').remove()"
+            style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
+        </div>
+        <div style="padding:18px">
+          <!-- Header postura -->
+          <div style="background:var(--verde);border-radius:10px;overflow:hidden;margin-bottom:14px">
+            ${imgHtml}
+            <div style="padding:${p.imagem ? '10px 14px 14px' : '16px'}">
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:rgba(242,236,206,.55);margin-bottom:4px">✦ Prévia admin</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--bege)">${p.nome_popular}</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:rgba(242,236,206,.8);margin-top:3px">${p.nome_sanscrito}</div>
+              ${p.etimologia ? `<div style="font-size:11px;color:rgba(242,236,206,.5);margin-top:6px">${p.etimologia}</div>` : ''}
+            </div>
+          </div>
+          <!-- Seções -->
+          ${p.simbolismo ? `
+            <div style="margin-bottom:12px;background:#f9f7f0;border-radius:8px;padding:12px 14px">
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Simbolismo</div>
+              <p style="font-size:13px;color:var(--txt);line-height:1.7;margin:0;font-style:italic">${p.simbolismo}</p>
+            </div>` : ''}
+          ${(p.instrucoes||[]).length ? `
+            <div style="margin-bottom:12px;background:#f9f7f0;border-radius:8px;padding:12px 14px">
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:8px">Instruções (${p.instrucoes.length} passos)</div>
+              ${p.instrucoes.map((inst, i) => `
+                <div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid rgba(212,200,158,.25);font-size:12px">
+                  <span style="color:var(--verde);font-weight:600;flex-shrink:0">${i+1}.</span>
+                  <span style="color:var(--txt)">${inst}</span>
+                </div>`).join('')}
+            </div>` : ''}
+          ${p.beneficios ? `
+            <div style="margin-bottom:12px;background:#f9f7f0;border-radius:8px;padding:12px 14px">
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Benefícios</div>
+              <p style="font-size:13px;color:var(--txt);line-height:1.7;margin:0">${p.beneficios}</p>
+            </div>` : ''}
+          ${(p.sistemas||[]).length || (p.elementos||[]).length || p.ayurveda || p.chakras ? `
+            <div style="background:#f9f7f0;border-radius:8px;padding:12px 14px">
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:8px">Sistemas & Energia</div>
+              ${(p.sistemas||[]).length ? `<div style="margin-bottom:6px;font-size:12px"><strong>Sistemas:</strong> ${p.sistemas.join(' · ')}</div>` : ''}
+              ${(p.elementos||[]).length ? `<div style="margin-bottom:6px;font-size:12px"><strong>Elementos:</strong> ${p.elementos.join(' · ')}</div>` : ''}
+              ${p.ayurveda ? `<div style="margin-bottom:6px;font-size:12px"><strong>Ayurveda:</strong> ${p.ayurveda}</div>` : ''}
+              ${p.chakras  ? `<div style="font-size:12px"><strong>Chakras:</strong> ${p.chakras}</div>` : ''}
+            </div>` : ''}
+        </div>
+      </div>`
+    document.body.appendChild(div)
+    div.addEventListener('click', e => { if (e.target === div) div.remove() })
+  }
   window.editarPostura = async function(id) {
     const { data: p } = await sb.from('jnana_posturas').select('*').eq('id', id).single()
     if (!p) { toast('Postura não encontrada'); return }
@@ -221,14 +295,18 @@ export async function renderJnanaAdmin(container, page) {
     btn.innerHTML = '<span class="spinner"></span> Interpretando...'
 
     try {
-      const SUPABASE_ANON = (await import('../../lib/supabase.js')).SUPABASE_ANON
       const FN_URL = 'https://kctgcjvfsuinwlbgljdw.supabase.co/functions/v1/anthropic-proxy'
+
+      // Usa o token da sessão atual (usuário logado) em vez do anon key
+      const { data: { session } } = await window._sb.auth.getSession()
+      const authToken = session?.access_token
+      if (!authToken) { throw new Error('Sessão expirada. Faça login novamente.') }
 
       const response = await fetch(FN_URL, {
         method: 'POST',
         headers: {
           'Content-Type':  'application/json',
-          'Authorization': 'Bearer ' + SUPABASE_ANON,
+          'Authorization': 'Bearer ' + authToken,
         },
         body: JSON.stringify({
           model:      'claude-sonnet-4-6',
