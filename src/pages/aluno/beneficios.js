@@ -644,4 +644,4 @@ function _renderBeneficioGenerico(container, b, campo, temAcesso, planoTipo) {
     ` : ''}
   `
   uiAnimar(container)
-}´      
+}       
