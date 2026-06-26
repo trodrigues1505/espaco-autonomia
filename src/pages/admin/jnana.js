@@ -177,7 +177,24 @@ export async function renderJnanaAdmin(container, page) {
 
   uiAnimar(container)
 
-  // ── Abrir modal (nova postura) ────────────────────────────
+  // ── Lightbox (precisa estar no escopo global para os onclick inline) ──
+  window._abrirLightbox = function(src, alt) {
+    document.getElementById('_ea-lightbox')?.remove()
+    const lb = document.createElement('div')
+    lb.id = '_ea-lightbox'
+    lb.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:600;
+      display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out`
+    lb.innerHTML = `
+      <img src="${src}" alt="${alt}" referrerpolicy="no-referrer"
+        style="max-width:100%;max-height:90vh;border-radius:8px;object-fit:contain;
+               box-shadow:0 20px 60px rgba(0,0,0,.5)">
+      <button onclick="document.getElementById('_ea-lightbox').remove()"
+        style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);
+               border:none;border-radius:50%;width:36px;height:36px;color:#fff;
+               font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>`
+    lb.addEventListener('click', e => { if (e.target === lb) lb.remove() })
+    document.body.appendChild(lb)
+  }
   window.abrirFormJnana = function() {
     window._editJnanaId = null
     document.getElementById('jnana-modal-titulo').textContent = 'Nova Postura'
