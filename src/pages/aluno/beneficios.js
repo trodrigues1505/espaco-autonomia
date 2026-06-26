@@ -475,10 +475,21 @@ async function _renderJnanaMarga(container) {
       })
     } : null
 
-    // Chakras
+    // Chakras — extrai nomes conhecidos do texto e busca no dicionário
+    const NOMES_CHAKRAS = ['Muladhara','Svadisthana','Svādhiṣṭhāna','Manipura','Maṇipūra','Anahata','Anāhata','Vishuddha','Ajna','Sahasrara']
     const secChakras = p.chakras ? {
       id:'chak', titulo:'Chakras', icone:'ti-rotate-clockwise', cor:'#7F77DD',
-      itens: [{ termo: 'Chakras ativados', desc: p.chakras }]
+      itens: (() => {
+        const encontrados = NOMES_CHAKRAS.filter(c => p.chakras.includes(c))
+        if (encontrados.length > 0) {
+          return encontrados.map(c => ({ termo: c, desc: descDicionario(c) || p.chakras }))
+        }
+        // Fallback: tenta separar por vírgula ou ponto
+        const partes = p.chakras.split(/[,;.]/).map(s => s.trim()).filter(Boolean)
+        return partes.length > 1
+          ? partes.map(t => ({ termo: t, desc: descDicionario(t) || 'Chakra ativado por esta postura.' }))
+          : [{ termo: 'Chakras ativados', desc: p.chakras }]
+      })()
     } : null
 
     return [secSistemas, secElementos, secAyur, secChakras].filter(Boolean)
