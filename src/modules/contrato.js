@@ -50,8 +50,6 @@ const CONTRATO_TEXTO = `
 </div>`
 
 // ── Bloqueio total da UI ──────────────────────────────────────
-// Cria um overlay transparente sobre o app-shell enquanto o contrato está pendente.
-// Isso garante que mesmo que o modal seja fechado via DevTools, a UI permanece inacessível.
 function bloquearUI() {
   if (document.getElementById('contrato-bloqueio')) return
   const bloqueio = document.createElement('div')
@@ -59,10 +57,8 @@ function bloquearUI() {
   bloqueio.style.cssText = [
     'position:fixed', 'inset:0', 'z-index:298',
     'background:transparent', 'cursor:not-allowed',
-    // Intercepta todos os eventos de ponteiro sem escurecer a tela
     'pointer-events:all',
   ].join(';')
-  // Bloqueia teclado e cliques que passem pelo overlay
   bloqueio.addEventListener('click', e => e.stopPropagation())
   bloqueio.addEventListener('keydown', e => e.preventDefault())
   document.body.appendChild(bloqueio)
@@ -96,13 +92,11 @@ export async function verificarContrato(userId, nomeAluno) {
     div.style.cssText = [
       'position:fixed', 'inset:0',
       'background:rgba(31,56,31,.82)',
-      // z-index acima do bloqueio (298) para o modal aparecer
       'z-index:299',
       'display:flex', 'align-items:center', 'justify-content:center',
       'padding:16px',
     ].join(';')
 
-    // Impede fechar clicando fora
     div.addEventListener('click', e => e.stopPropagation())
 
     div.innerHTML = `
@@ -142,7 +136,6 @@ export async function verificarContrato(userId, nomeAluno) {
     document.body.appendChild(div)
     window._resolveContrato = resolve
 
-    // Habilita botão ao marcar checkbox
     document.getElementById('check-contrato').addEventListener('change', function () {
       const btn = document.getElementById('btn-aceitar-contrato')
       btn.disabled         = !this.checked
@@ -162,7 +155,6 @@ async function _aceitarContrato(userId, resolve) {
   btn.textContent = 'Salvando...'
   btn.disabled = true
 
-  // LGPD Art. 8° §6 — registra prova de consentimento
   const { error } = await sb.from('contratos').insert({
     aluno_id:   userId,
     versao:     CONTRATO_VERSAO,
@@ -178,8 +170,79 @@ async function _aceitarContrato(userId, resolve) {
     return
   }
 
-  // Aceite gravado — remove modal e bloqueio
   document.getElementById('modal-contrato')?.remove()
   desbloquearUI()
   resolve(true)
+}
+
+/**
+ * Exibe o contrato já aceito em modo leitura (sem botão de aceite).
+ * Chamada pelo botão "Meu Contrato" na home do aluno.
+ */
+export async function verContratoAceito(userId, nomeAluno) {
+  const { data, error } = await sb
+    .from('contratos')
+    .select('versao, aceito_em, user_agent')
+    .eq('aluno_id', userId)
+    .order('aceito_em', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error || !data) {
+    toast('Nenhum contrato encontrado.')
+    return
+  }
+
+  const dtFormatada = new Date(data.aceito_em).toLocaleString('pt-BR', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  })
+
+  // Remove instância anterior se existir
+  document.getElementById('modal-ver-contrato')?.remove()
+
+  const div = document.createElement('div')
+  div.id = 'modal-ver-contrato'
+  div.style.cssText = [
+    'position:fixed', 'inset:0',
+    'background:rgba(31,56,31,.82)',
+    'z-index:299',
+    'display:flex', 'align-items:center', 'justify-content:center',
+    'padding:16px',
+  ].join(';')
+
+  div.innerHTML = `
+    <div style="background:#fff;border-radius:12px;width:600px;max-width:100%;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+      <div style="background:var(--verde);padding:18px 22px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--bege)">Contrato de Adesão</div>
+          <div style="font-size:11px;color:rgba(242,236,206,.7);margin-top:2px">Versão ${data.versao}</div>
+        </div>
+        <button onclick="document.getElementById('modal-ver-contrato').remove()"
+          style="background:rgba(242,236,206,.15);border:none;border-radius:6px;padding:6px 14px;font-size:13px;color:var(--bege);cursor:pointer;font-family:'DM Sans',sans-serif">
+          ✕ Fechar
+        </button>
+      </div>
+
+      <div style="background:#f0faf0;border-bottom:1px solid #b6ddb6;padding:10px 22px;display:flex;align-items:center;gap:10px;flex-shrink:0">
+        <span style="font-size:20px">✅</span>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:#2e7d32">Contrato aceito</div>
+          <div style="font-size:11px;color:#4a7a4a">Assinado em ${dtFormatada} · Registro LGPD Art. 8° §6</div>
+        </div>
+      </div>
+
+      <div style="overflow-y:auto;flex:1;padding:22px 24px">
+        ${CONTRATO_TEXTO.replace('[NOME]', nomeAluno)}
+      </div>
+
+      <div style="padding:14px 22px;border-top:1px solid var(--borda);background:#fafaf7;flex-shrink:0;text-align:center">
+        <div style="font-size:11px;color:var(--txt2)">
+          Este é o contrato que você assinou em ${dtFormatada}.
+          Para encerrar seu plano, envie uma mensagem formal pelo WhatsApp.
+        </div>
+      </div>
+    </div>`
+
+  document.body.appendChild(div)
 }
