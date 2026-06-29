@@ -83,7 +83,6 @@ A flexibilidade não é um desvio do caminho — ela é o caminho.`,
 
 // ── Dicionário de sistemas/elementos/chakras ──────────────────
 const DICIONARIO = {
-  // Sistemas corporais
   'Muscular':        'Fortalece e tona a musculatura, melhorando força, resistência e coordenação motora.',
   'Esquelético':     'Promove alinhamento ósseo, densidade e saúde articular, prevenindo desgastes.',
   'Cardiovascular':  'Estimula a circulação sanguínea, nutrindo órgãos e tecidos com oxigênio.',
@@ -94,17 +93,14 @@ const DICIONARIO = {
   'Reprodutivo':     'Equilibra a energia pélvica, hormônios e vitalidade relacionados à criatividade e reprodução.',
   'Linfático':       'Ativa a circulação linfática, fortalecendo a imunidade e drenando fluidos em excesso.',
   'Endócrino':       'Regula as glândulas e a produção hormonal, influenciando humor, energia e metabolismo.',
-  // Elementos (Tattvas)
   'Terra':           'Sustentação, estabilidade e enraizamento. Convida à presença, firmeza e solidez interior.',
   'Água':            'Fluidez, adaptabilidade e purificação. Conecta com as emoções e a capacidade de fluir.',
   'Fogo':            'Transformação, potência e ativação metabólica. Acende a vontade e dissolve resistências.',
   'Ar':              'Expansão, leveza e circulação energética. Nutre a mente e abre espaço para novos movimentos.',
   'Éter':            'Espaço, vazio fértil e consciência pura. O elemento que contém todos os outros.',
-  // Ayurveda — Doshas
   'Vata':            'Dosha do movimento e leveza. Equilibrado pela prática, traz estabilidade e calma ao sistema nervoso.',
   'Pitta':           'Dosha do fogo e transformação. A prática pode intensificá-lo; requer atenção ao esforço excessivo.',
   'Kapha':           'Dosha da terra e água. Reduzido pela ativação muscular, calor e movimento, trazendo mais leveza.',
-  // Chakras
   'Muladhara':       'Chakra raiz. Centro de segurança, sobrevivência e enraizamento. Localizado na base da coluna.',
   'Svadisthana':     'Chakra sacral. Centro de criatividade, prazer e emoções. Localizado abaixo do umbigo.',
   'Svādhiṣṭhāna':   'Chakra sacral. Centro de criatividade, prazer e emoções. Localizado abaixo do umbigo.',
@@ -118,7 +114,6 @@ const DICIONARIO = {
 }
 
 function descDicionario(termo) {
-  // Busca exata primeiro, depois parcial
   if (DICIONARIO[termo]) return DICIONARIO[termo]
   const key = Object.keys(DICIONARIO).find(k =>
     termo.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(termo.toLowerCase())
@@ -126,7 +121,7 @@ function descDicionario(termo) {
   return key ? DICIONARIO[key] : null
 }
 
-// ── Lightbox de imagem ────────────────────────────────────────
+// ── Lightbox ──────────────────────────────────────────────────
 function _abrirLightbox(src, alt) {
   document.getElementById('_ea-lightbox')?.remove()
   const lb = document.createElement('div')
@@ -147,28 +142,70 @@ function _abrirLightbox(src, alt) {
 }
 window._abrirLightbox = _abrirLightbox
 
-// ── Componente de imagem clicável ─────────────────────────────
-function _imgClicavel(src, alt, maxHeight = '240px') {
+// ── Botão salvar PDF ──────────────────────────────────────────
+function _btnSalvar(onclick) {
   return `
-    <div style="position:relative;border-radius:12px;overflow:hidden;
-                background:var(--verde);min-height:160px;cursor:zoom-in;
-                group"
-         onclick="_abrirLightbox('${src}','${alt}')"
-         title="Clique para ampliar">
-      <img src="${src}" alt="${alt}" referrerpolicy="no-referrer"
-        style="width:100%;max-height:${maxHeight};object-fit:cover;
-               object-position:center center;display:block;opacity:.9"
-        onerror="this.parentElement.style.display='none'">
-      <div style="position:absolute;bottom:0;left:0;right:0;padding:16px;
-                  background:linear-gradient(to top,rgba(31,56,31,.92) 0%,transparent 100%)">
-        <slot></slot>
-      </div>
-      <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);
-                  border-radius:20px;padding:3px 8px;font-size:10px;color:#fff;
-                  display:flex;align-items:center;gap:4px">
-        <i class="ti ti-zoom-in" style="font-size:12px"></i> ampliar
-      </div>
-    </div>`
+    <button onclick="${onclick}"
+      style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;
+             background:#fff;color:var(--verde);border:1px solid var(--borda);
+             border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
+             font-weight:500">
+      <i class="ti ti-download"></i> Salvar PDF
+    </button>`
+}
+
+// ── Utilitário de impressão ───────────────────────────────────
+function _imprimirHTML(titulo, html) {
+  const win = window.open('', '_blank')
+  win.document.write(`<!DOCTYPE html><html lang="pt-BR"><head>
+    <meta charset="UTF-8">
+    <title>${titulo} — Espaço Autonomia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
+      body { font-family: 'DM Sans', sans-serif; font-size: 12px; color: #1F381F;
+             background: #fff; padding: 32px; max-width: 700px; margin: 0 auto }
+      h1 { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 500;
+           color: #1F381F; margin-bottom: 4px }
+      h2 { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 500;
+           color: #1F381F; margin: 18px 0 8px; border-bottom: 1px solid #d4c89e; padding-bottom: 4px }
+      h3 { font-size: 12px; font-weight: 600; color: #1F381F; margin-bottom: 4px }
+      p  { line-height: 1.7; color: #444; margin-bottom: 8px }
+      .meta { font-size: 11px; color: #7a7a6a; margin-bottom: 20px; display: flex; gap: 12px; flex-wrap: wrap }
+      .meta span { background: #f0ede4; padding: 2px 8px; border-radius: 20px }
+      .secao { margin-bottom: 14px; padding: 12px 14px; background: #fafaf7;
+               border-left: 3px solid #1F381F; border-radius: 0 6px 6px 0 }
+      .item { display: flex; gap: 8px; padding: 5px 0;
+              border-bottom: 1px solid #e8e4d8; font-size: 12px; line-height: 1.5 }
+      .item:last-child { border-bottom: none }
+      .item-termo { font-weight: 500; min-width: 120px; flex-shrink: 0; color: #1F381F }
+      .item-desc  { color: #555 }
+      .citacao { border-left: 3px solid #e8bc4f; background: #fdf8ec;
+                 padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0;
+                 font-family: 'Cormorant Garamond', serif; font-size: 14px;
+                 font-style: italic; color: #1F381F; line-height: 1.6 }
+      .reflexao { background: #1F381F; color: #f2ecce; padding: 16px 18px;
+                  border-radius: 8px; margin-top: 20px; font-style: italic;
+                  font-family: 'Cormorant Garamond', serif; font-size: 14px; line-height: 1.7 }
+      .reflexao-label { font-size: 10px; text-transform: uppercase; letter-spacing: .8px;
+                        color: rgba(242,236,206,.55); margin-bottom: 6px; font-style: normal;
+                        font-family: 'DM Sans', sans-serif }
+      .rodape { margin-top: 28px; padding-top: 12px; border-top: 1px solid #d4c89e;
+                font-size: 10px; color: #aaa; text-align: center }
+      .tummee-link { background: #1F381F; color: #f2ecce; padding: 10px 16px;
+                     border-radius: 6px; margin: 12px 0; font-size: 12px; word-break: break-all }
+      img.postura { width: 100%; max-height: 240px; object-fit: cover;
+                    border-radius: 8px; margin-bottom: 14px }
+      @media print {
+        body { padding: 16px }
+        @page { margin: 1.5cm }
+      }
+    </style>
+  </head><body>${html}
+    <div class="rodape">Espaço Autonomia · Dharma Phala · gerado em ${new Date().toLocaleDateString('pt-BR')}</div>
+    <script>window.onload = function(){ window.print() }<\/script>
+  </body></html>`)
+  win.document.close()
 }
 
 // ── Render principal ──────────────────────────────────────────
@@ -208,7 +245,7 @@ export async function renderAlunosBeneficios(container, page) {
   _renderBeneficioGenerico(container, b, campo, temAcesso, planoTipo)
 }
 
-// ── Stepper genérico reutilizável ─────────────────────────────
+// ── Stepper ───────────────────────────────────────────────────
 function _stepper(secoes, prefixo) {
   let secaoAtiva = 0
 
@@ -275,7 +312,6 @@ function _stepper(secoes, prefixo) {
   return { renderStepper, containerId: `stepper-${prefixo}` }
 }
 
-// ── Injeta keyframe uma única vez ─────────────────────────────
 function _injetarAnimacao() {
   if (!document.getElementById('_ya-style')) {
     const s = document.createElement('style')
@@ -290,8 +326,8 @@ async function _renderYogaAdhyayana(container) {
   const { AULA_SEMANA: aula } = await import(`../../data/yoga_adhyayana.js?t=${Date.now()}`)
   _injetarAnimacao()
 
-  const nivelCor = { 'Iniciante': '#2d7a2d', 'Intermediário': '#c8a020', 'Avançado': '#8a1a1a' }[aula.nivel] || 'var(--verde)'
-  const nivelBg  = { 'Iniciante': 'rgba(45,122,45,.1)', 'Intermediário': 'rgba(200,160,32,.1)', 'Avançado': 'rgba(138,26,26,.1)' }[aula.nivel] || 'rgba(31,56,31,.08)'
+  const nivelCor = { 'Iniciante': '#2d7a2d', 'Intermediário': '#c8a020', 'Avançado': '#8a1a1a', 'Novato': '#2d7a2d' }[aula.nivel] || 'var(--verde)'
+  const nivelBg  = { 'Iniciante': 'rgba(45,122,45,.1)', 'Intermediário': 'rgba(200,160,32,.1)', 'Avançado': 'rgba(138,26,26,.1)', 'Novato': 'rgba(45,122,45,.1)' }[aula.nivel] || 'rgba(31,56,31,.08)'
 
   const { renderStepper, containerId } = _stepper(aula.secoes, 'ya')
 
@@ -316,12 +352,15 @@ async function _renderYogaAdhyayana(container) {
     </div>` : ''
 
   container.querySelector('.content').innerHTML = `
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-      <span style="font-size:26px">📖</span>
-      <div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">Yoga Adhyayana</div>
-        <div style="font-size:12px;color:var(--txt2)">Conteúdo da semana</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:26px">📖</span>
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">Yoga Adhyayana</div>
+          <div style="font-size:12px;color:var(--txt2)">Conteúdo da semana</div>
+        </div>
       </div>
+      ${_btnSalvar('window._salvarYA()')}
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
       <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">Aula ${aula.numero}</span>
@@ -343,6 +382,41 @@ async function _renderYogaAdhyayana(container) {
       <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--bege);line-height:1.7;margin:0;font-style:italic">${aula.reflexao}</p>
     </div>
   `
+
+  window._salvarYA = function() {
+    const secoesHtml = aula.secoes.map(s => `
+      <h2>${s.titulo}</h2>
+      <div class="secao">
+        ${s.itens.map(item => `
+          <div class="item">
+            <div class="item-termo">${item.termo}</div>
+            <div class="item-desc">${item.desc}</div>
+          </div>`).join('')}
+      </div>`).join('')
+
+    const imgTag = aula.imagem
+      ? `<img src="${aula.imagem}" alt="${aula.tema}" class="postura" referrerpolicy="no-referrer">`
+      : ''
+
+    _imprimirHTML(`Yoga Adhyayana — ${aula.tema}`, `
+      <h1>${aula.tema}</h1>
+      <div class="meta">
+        <span>Aula ${aula.numero}</span>
+        <span>${aula.data}</span>
+        <span>${aula.categoria}</span>
+        <span>${aula.nivel}</span>
+      </div>
+      ${imgTag}
+      <div class="citacao">"${aula.citacao}"</div>
+      <p style="font-size:11px;color:#888;margin-bottom:16px">${aula.nivel_descricao}</p>
+      ${secoesHtml}
+      <div class="reflexao">
+        <div class="reflexao-label">Reflexão da semana</div>
+        ${aula.reflexao}
+      </div>
+    `)
+  }
+
   uiAnimar(container)
 }
 
@@ -355,10 +429,10 @@ async function _renderAsanaMarga(container) {
   const nivelBg  = { 'Novatos': 'rgba(45,122,45,.1)', 'Intermediário': 'rgba(200,160,32,.1)', 'Avançado': 'rgba(138,26,26,.1)' }[aula.nivel] || 'rgba(31,56,31,.08)'
 
   const secoes = [
-    { id:'introducao', titulo:'Introdução',       icone:'ti-Om',         cor:'#7F77DD', itens: aula.introducao },
-    { id:'pranayama',  titulo:'Prāṇāyāma',        icone:'ti-wind',       cor:'#378ADD', itens: aula.pranayama  },
-    { id:'mantra',     titulo:'Mantra',            icone:'ti-music',      cor:'#BA7517', itens: aula.mantra     },
-    { id:'energetica', titulo:'Leitura Energética',icone:'ti-sparkles',   cor:'#639922', itens: [
+    { id:'introducao', titulo:'Introdução',        icone:'ti-Om',       cor:'#7F77DD', itens: aula.introducao },
+    { id:'pranayama',  titulo:'Prāṇāyāma',         icone:'ti-wind',     cor:'#378ADD', itens: aula.pranayama  },
+    { id:'mantra',     titulo:'Mantra',             icone:'ti-music',    cor:'#BA7517', itens: aula.mantra     },
+    { id:'energetica', titulo:'Leitura Energética', icone:'ti-sparkles', cor:'#639922', itens: [
       { termo: 'Koshas',  desc: aula.leitura_energetica.koshas.join(' · ') },
       { termo: 'Chakras', desc: aula.leitura_energetica.cakras.join(' · ')  },
       { termo: 'Gunas',   desc: aula.leitura_energetica.gunas.join(' · ')   },
@@ -369,12 +443,15 @@ async function _renderAsanaMarga(container) {
   let iframeAberto = false
 
   container.querySelector('.content').innerHTML = `
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-      <span style="font-size:26px">🧘</span>
-      <div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">Āsana Mārga</div>
-        <div style="font-size:12px;color:var(--txt2)">Aula prática da semana</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:26px">🧘</span>
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">Āsana Mārga</div>
+          <div style="font-size:12px;color:var(--txt2)">Aula prática da semana</div>
+        </div>
       </div>
+      ${_btnSalvar('window._salvarAM()')}
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
       <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">Aula ${aula.numero}</span>
@@ -421,6 +498,35 @@ async function _renderAsanaMarga(container) {
     btn.style.border     = iframeAberto ? '1px solid var(--borda)' : 'none'
   }
 
+  window._salvarAM = function() {
+    const estruturaHtml = secoes.map(s => `
+      <h2>${s.titulo}</h2>
+      <div class="secao">
+        ${s.itens.map(item => `
+          <div class="item">
+            <div class="item-termo">${item.termo}</div>
+            <div class="item-desc">${item.desc}</div>
+          </div>`).join('')}
+      </div>`).join('')
+
+    _imprimirHTML(`Āsana Mārga — Aula ${aula.numero}`, `
+      <h1>Āsana Mārga — Aula ${aula.numero}</h1>
+      <div class="meta">
+        <span>${aula.data}</span>
+        <span>${aula.modalidade}</span>
+        <span>${aula.duracao}</span>
+        <span>${aula.nivel}</span>
+      </div>
+      <div class="citacao">${aula.descricao}</div>
+      <h2>Sequência de Āsanas</h2>
+      <div class="tummee-link">
+        Acesse a sequência completa em: <strong>${aula.link_tummee}</strong>
+      </div>
+      <p style="font-size:11px;color:#888">Faça-os devagar, sem forçar — de 30s a 1min cada āsana.</p>
+      ${estruturaHtml}
+    `)
+  }
+
   uiAnimar(container)
 }
 
@@ -454,19 +560,14 @@ async function _renderJnanaMarga(container) {
   let posturaSel = hoje_postura
 
   function _secoesDicionario(p) {
-    // Sistemas
     const secSistemas = (p.sistemas||[]).length ? {
       id:'sist', titulo:'Sistemas equilibrados', icone:'ti-heart', cor:'#1D9E75',
       itens: (p.sistemas||[]).map(t => ({ termo: t, desc: descDicionario(t) || 'Equilibrado e fortalecido por esta postura.' }))
     } : null
-
-    // Elementos
     const secElementos = (p.elementos||[]).length ? {
       id:'elem', titulo:'Elementos (Tattvas)', icone:'ti-leaf', cor:'#639922',
       itens: (p.elementos||[]).map(t => ({ termo: t, desc: descDicionario(t) || 'Elemento ativado por esta postura.' }))
     } : null
-
-    // Ayurveda
     const secAyur = p.ayurveda ? {
       id:'ayur', titulo:'Ayurveda', icone:'ti-scale', cor:'#BA7517',
       itens: p.ayurveda.split(/[,;]/).map(s => s.trim()).filter(Boolean).map(t => {
@@ -474,51 +575,65 @@ async function _renderJnanaMarga(container) {
         return { termo: dosha || t, desc: descDicionario(dosha || t) || t }
       })
     } : null
-
-    // Chakras — extrai nomes conhecidos do texto e busca no dicionário
     const NOMES_CHAKRAS = ['Muladhara','Svadisthana','Svādhiṣṭhāna','Manipura','Maṇipūra','Anahata','Anāhata','Vishuddha','Ajna','Sahasrara']
     const secChakras = p.chakras ? {
       id:'chak', titulo:'Chakras', icone:'ti-rotate-clockwise', cor:'#7F77DD',
       itens: (() => {
         const encontrados = NOMES_CHAKRAS.filter(c => p.chakras.includes(c))
-        if (encontrados.length > 0) {
-          return encontrados.map(c => ({ termo: c, desc: descDicionario(c) || p.chakras }))
-        }
-        // Fallback: tenta separar por vírgula ou ponto
+        if (encontrados.length > 0) return encontrados.map(c => ({ termo: c, desc: descDicionario(c) || p.chakras }))
         const partes = p.chakras.split(/[,;.]/).map(s => s.trim()).filter(Boolean)
         return partes.length > 1
           ? partes.map(t => ({ termo: t, desc: descDicionario(t) || 'Chakra ativado por esta postura.' }))
           : [{ termo: 'Chakras ativados', desc: p.chakras }]
       })()
     } : null
-
     return [secSistemas, secElementos, secAyur, secChakras].filter(Boolean)
+  }
+
+  function _salvarPostura(p) {
+    const secoesBase = [
+      p.simbolismo ? [{ termo: 'Simbolismo', desc: p.simbolismo }] : null,
+      (p.instrucoes||[]).length ? p.instrucoes.map((inst, i) => ({ termo: `Passo ${i+1}`, desc: inst })) : null,
+      p.beneficios ? [{ termo: 'Benefícios', desc: p.beneficios }] : null,
+    ].filter(Boolean)
+
+    const energetica = []
+    if ((p.sistemas||[]).length) energetica.push({ termo: 'Sistemas', desc: p.sistemas.join(' · ') })
+    if ((p.elementos||[]).length) energetica.push({ termo: 'Elementos', desc: p.elementos.join(' · ') })
+    if (p.ayurveda) energetica.push({ termo: 'Ayurveda', desc: p.ayurveda })
+    if (p.chakras)  energetica.push({ termo: 'Chakras',  desc: p.chakras })
+
+    const dataFmt = new Date(p.publicada_em + 'T12:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })
+    const imgTag  = p.imagem ? `<img src="${p.imagem}" alt="${p.nome_popular}" class="postura" referrerpolicy="no-referrer">` : ''
+
+    const secoesHtml = [
+      secoesBase[0]?.length ? `<h2>Simbolismo</h2><div class="secao">${secoesBase[0].map(i=>`<div class="item"><div class="item-termo">${i.termo}</div><div class="item-desc">${i.desc}</div></div>`).join('')}</div>` : '',
+      secoesBase[1]?.length ? `<h2>Instruções</h2><div class="secao">${secoesBase[1].map(i=>`<div class="item"><div class="item-termo">${i.termo}</div><div class="item-desc">${i.desc}</div></div>`).join('')}</div>` : '',
+      secoesBase[2]?.length ? `<h2>Benefícios</h2><div class="secao">${secoesBase[2].map(i=>`<div class="item"><div class="item-termo">${i.termo}</div><div class="item-desc">${i.desc}</div></div>`).join('')}</div>` : '',
+      energetica.length ? `<h2>Sistemas & Energia</h2><div class="secao">${energetica.map(i=>`<div class="item"><div class="item-termo">${i.termo}</div><div class="item-desc">${i.desc}</div></div>`).join('')}</div>` : '',
+    ].join('')
+
+    _imprimirHTML(`Jñāna Mārga — ${p.nome_popular}`, `
+      ${imgTag}
+      <h1>${p.nome_popular}</h1>
+      <p style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:#5a7a5a;margin-bottom:4px">${p.nome_sanscrito}</p>
+      ${p.etimologia ? `<p style="font-size:11px;color:#888;margin-bottom:12px">${p.etimologia}</p>` : ''}
+      <div class="meta"><span>Jñāna Mārga · GUIPPY</span><span>${dataFmt}</span></div>
+      ${secoesHtml}
+    `)
   }
 
   function renderPostura(p) {
     const secoesBase = [
-      p.simbolismo ? {
-        id:'simb', titulo:'Simbolismo', icone:'ti-sun', cor:'#7F77DD',
-        itens: [{ termo: 'Simbolismo', desc: p.simbolismo }]
-      } : null,
-      (p.instrucoes||[]).length ? {
-        id:'inst', titulo:'Instruções', icone:'ti-list-check', cor:'#1D9E75',
-        itens: p.instrucoes.map((inst, i) => ({ termo: `Passo ${i+1}`, desc: inst }))
-      } : null,
-      p.beneficios ? {
-        id:'benef', titulo:'Benefícios', icone:'ti-heart-filled', cor:'#c0392b',
-        itens: [{ termo: 'Benefícios', desc: p.beneficios }]
-      } : null,
+      p.simbolismo ? { id:'simb', titulo:'Simbolismo', icone:'ti-sun', cor:'#7F77DD', itens: [{ termo: 'Simbolismo', desc: p.simbolismo }] } : null,
+      (p.instrucoes||[]).length ? { id:'inst', titulo:'Instruções', icone:'ti-list-check', cor:'#1D9E75', itens: p.instrucoes.map((inst, i) => ({ termo: `Passo ${i+1}`, desc: inst })) } : null,
+      p.beneficios ? { id:'benef', titulo:'Benefícios', icone:'ti-heart-filled', cor:'#c0392b', itens: [{ termo: 'Benefícios', desc: p.beneficios }] } : null,
     ].filter(Boolean)
-
     const secoesEnergia = _secoesDicionario(p)
     const todasSecoes = [...secoesBase, ...secoesEnergia]
-
     const { renderStepper, containerId } = _stepper(todasSecoes, 'jn_' + p.id.slice(0,8))
-
     const isHoje  = p.publicada_em === hoje
     const dataFmt = new Date(p.publicada_em + 'T12:00').toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long' })
-
     const imgHtml = p.imagem ? `
       <div style="position:relative;cursor:zoom-in"
            onclick="_abrirLightbox('${p.imagem}','${p.nome_popular}')" title="Clique para ampliar">
@@ -531,7 +646,6 @@ async function _renderJnanaMarga(container) {
           <i class="ti ti-zoom-in" style="font-size:12px"></i> ampliar
         </div>
       </div>` : ''
-
     return `
       <div style="background:var(--verde);border-radius:12px;overflow:hidden;margin-bottom:16px">
         ${imgHtml}
@@ -546,7 +660,14 @@ async function _renderJnanaMarga(container) {
       </div>
       <div id="${containerId}" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px 16px;margin-bottom:16px">
         ${renderStepper()}
-      </div>`
+      </div>
+      <button onclick="window._salvarJN()" id="btn-salvar-jn-postura"
+        style="width:100%;margin-bottom:16px;padding:10px;background:#fff;color:var(--verde);
+               border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;
+               font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+               font-weight:500">
+        <i class="ti ti-download"></i> Salvar esta postura em PDF
+      </button>`
   }
 
   const historicoHtml = posturas.length > 1 ? `
@@ -572,11 +693,13 @@ async function _renderJnanaMarga(container) {
     </div>` : ''
 
   container.querySelector('.content').innerHTML = `
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-      <span style="font-size:26px">📜</span>
-      <div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">Jñāna Mārga</div>
-        <div style="font-size:12px;color:var(--txt2)">GUIPPY · Estudo literário diário</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:26px">📜</span>
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">Jñāna Mārga</div>
+          <div style="font-size:12px;color:var(--txt2)">GUIPPY · Estudo literário diário</div>
+        </div>
       </div>
     </div>
     <div style="font-size:11px;color:var(--txt2);margin-bottom:16px">
@@ -585,6 +708,8 @@ async function _renderJnanaMarga(container) {
     <div id="jn-postura-view">${renderPostura(posturaSel)}</div>
     ${historicoHtml}
   `
+
+  window._salvarJN = function() { _salvarPostura(posturaSel) }
 
   window._jnSelPost = function(id) {
     const p = posturas.find(x => x.id === id)
@@ -655,4 +780,4 @@ function _renderBeneficioGenerico(container, b, campo, temAcesso, planoTipo) {
     ` : ''}
   `
   uiAnimar(container)
-}       
+}    
