@@ -5,7 +5,6 @@
 
 import { toast } from '../../modules/utils.js'
 import { renderHistoricoRepasse, abrirModalRegistrarRepasse } from './repasse-pago.js'
-
 import { uiAnimar } from '../../modules/ui.js'
 
 function fmtR(v) {
@@ -134,22 +133,23 @@ export async function renderPrevisaoProfessor(container, page) {
              </div>`
           : `
           ${Object.values(porProfAula).map(grupo => {
-            const ehProprio = grupo.professor_id === profIdEfetivo
+            // is_avulso vem da RPC — true significa aulas dadas para alunos de outro professor
+            const ehAvulso = !!grupo.alunos[0]?.is_avulso
             return `
             <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden;margin-bottom:14px">
-              <div style="padding:12px 18px;background:${ehProprio?'rgba(31,56,31,.06)':'rgba(232,188,79,.08)'};border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
+              <div style="padding:12px 18px;background:${!ehAvulso?'rgba(31,56,31,.06)':'rgba(232,188,79,.08)'};border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
                 <div>
                   <div style="font-size:13px;font-weight:500;color:var(--txt)">
-                    ${ehProprio
+                    ${!ehAvulso
                       ? `Aulas do próprio professor`
-                      : `Aulas de <strong>${grupo.professor_nome}</strong> frequentadas por alunos de ${profSelecionado?.nome||''}`
+                      : `Aulas ministradas por ${profSelecionado?.nome||''} para alunos de <strong>${grupo.professor_nome}</strong>`
                     }
                   </div>
                   <div style="font-size:11px;color:var(--txt2);margin-top:2px">${grupo.aulas} aula(s) · ${grupo.alunos.length} aluno(s)</div>
                 </div>
                 <div style="text-align:right">
                   <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--verde)">${fmtR(grupo.repasse)}</div>
-                  <div style="font-size:10px;color:var(--txt2)">repasse proporcional</div>
+                  <div style="font-size:10px;color:var(--txt2)">${ehAvulso ? 'R$ 12,50 por aula avulsa' : 'repasse proporcional'}</div>
                 </div>
               </div>
               <div style="padding:0 18px">
@@ -200,14 +200,12 @@ export async function renderPrevisaoProfessor(container, page) {
     </div>
   `
 
-  // Renderiza histórico de repasses abaixo do conteúdo principal
   if (profIdEfetivo) {
     const contentDiv = container.querySelector('.content')
     if (contentDiv) {
       await renderHistoricoRepasse(contentDiv, profIdEfetivo, true)
     }
   }
-uiAnimar(container)
-  // Expõe a função para o botão inline no HTML
+  uiAnimar(container)
   window.abrirModalRegistrarRepasse = abrirModalRegistrarRepasse
-}   
+}
