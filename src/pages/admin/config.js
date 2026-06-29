@@ -295,4 +295,4 @@ export async function renderConfig(container, page) {
       toast('Erro: ' + e.message)
     }
   }
-}   
+}    
