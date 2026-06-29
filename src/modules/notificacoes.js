@@ -5,6 +5,8 @@
  *   - Bug 1: admin_alunos_sumidos agora ignora alunos cadastrados há menos de 2 semanas
  *   - Queries de professor usam RPC SECURITY DEFINER para contornar RLS
  *   - carregarNotificacoes() recebe o perfil como argumento explícito
+ *   - Bug 2: aluno_pagamento_vencido agora filtra por vencimento passado real
+ *            evitando falso positivo quando cobrança futura tem status OVERDUE no Asaas
  */
 
 const TIPOS = {
@@ -151,11 +153,10 @@ const TIPOS = {
       const idsAtivos = new Set((recentes || []).map(c => c.aluno_id))
       const sumidos = comSaldo.filter(s => !idsAtivos.has(s.aluno_id))
       if (!sumidos.length) return []
-      // Busca nomes e data de criação em uma única query
       const { data: perfis } = await sb
         .from('perfis').select('id, nome, criado_em').in('id', sumidos.map(s => s.aluno_id))
       const nomeMap = Object.fromEntries((perfis || []).map(p => [p.id, p.nome]))
-      // BUG 1 CORRIGIDO: ignora alunos cadastrados há menos de 2 semanas
+      // Bug 1 corrigido: ignora alunos cadastrados há menos de 2 semanas
       const sumidosReais = sumidos.filter(s => {
         const p = perfis?.find(pf => pf.id === s.aluno_id)
         if (!p?.criado_em) return true
@@ -368,11 +369,18 @@ const TIPOS = {
     roles: ['aluno'],
     paginas: ['aluno-home', 'aluno-plano'],
     async checar(sb, perfil) {
-      const mesRef = new Date().toISOString().slice(0, 7)
-      const { data: pg } = await sb
+      const hoje = new Date().toISOString().slice(0, 10)
+      // Bug 2 corrigido: filtra por vencimento passado real (.lt) em vez de mes_ref do mês atual.
+      // Isso evita falso positivo quando uma cobrança futura (ex: vence dia 10/07)
+      // está com status OVERDUE no Asaas antes de vencer de fato.
+      const { data: pgs } = await sb
         .from('pagamentos').select('id, valor, vencimento')
-        .eq('aluno_id', perfil.id).eq('status', 'OVERDUE')
-        .like('mes_ref', mesRef + '%').maybeSingle()
+        .eq('aluno_id', perfil.id)
+        .eq('status', 'OVERDUE')
+        .lt('vencimento', hoje)
+        .order('vencimento', { ascending: false })
+        .limit(1)
+      const pg = pgs?.[0]
       if (!pg) return []
       return [{
         key: `aluno_pgto_vencido_${pg.id}`,
@@ -596,4 +604,4 @@ function _esc(str) {
 function _acaoOnclick(acao) {
   if (acao.ocId) return `window._ocPresencaId='${acao.ocId}';navigate('${acao.page}')`
   return `navigate('${acao.page}')`
-}
+}   
