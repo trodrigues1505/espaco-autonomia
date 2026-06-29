@@ -10,36 +10,31 @@
  * Quando o banco de dados estiver pronto, este arquivo será substituído
  * por uma query em `aulas_praticas` com a mesma estrutura de campos.
  */
-
 export const AULA_PRATICA = {
-  numero:      155,
-  data:        '22/06/2026',
+  numero:      156,
+  data:        '29/06/2026',
   modalidade:  'Hatha Yoga',
   duracao:     '60 minutos',
   nivel:       'Novatos',
-  link_tummee: 'https://www.tummee.com/yoga-sequence/dvF4b?lyid=JW5JB',
-
-  descricao: 'Aula de posturas predominantemente equilibradoras e energizantes, destinada a novatos, com foco principal em alongamento e flexão para frente com ênfase em trabalho de glúteos, costas (inferior) e pescoço.',
-
+  link_tummee: 'https://www.tummee.com/yoga-sequence/1Nxwv?lyid=JW5JB',
+  descricao: 'Aula de posturas predominantemente relaxantes e energizantes, destinada a novatos, com foco principal em alongamento e flexão para frente com ênfase em trabalho de quadríceps, inferior de costas, glúteo, músculos isquiotibiais e quadris.',
   introducao: [
     { termo: 'Dharana',          desc: 'Retenha os sentidos. Concentre-se na respiração, emoções e pensamentos.' },
     { termo: 'Sankalpa',         desc: 'Defina seu propósito. Planeje com Shiva. Fortaleça-se com Shakti.' },
-    { termo: 'Mantra',           desc: 'Entoe o mantra à Patañjali · 1 vez' },
+    { termo: 'Mantra',           desc: 'Entoe o mantra à Patanjali · 1 vez' },
     { termo: 'Satkarma (Kriya)', desc: 'Kapalrandha · 1 ciclo' },
     { termo: 'Aquecimento',      desc: 'Surya Namaskar · Saudação ao Sol · 3 repetições' },
   ],
-
   pranayama: [
-    { termo: 'Antar Trataka', desc: 'Sentado, feche os olhos, projete uma tela preta à sua frente. No centro dessa tela projete uma imagem de sua escolha e mantenha essa imagem nítida durante 2 a 5 minutos.' },
+    { termo: 'Antar Trataka', desc: 'Sentado, feche os olhos, projete uma tela preta à sua frente, no centro dessa tela projete uma imagem de sua escolha e mantenha essa imagem nítida durante 2 a 5 minutos.' },
   ],
-
   mantra: [
     { termo: 'Hari Om', desc: '1 vez' },
   ],
-
   leitura_energetica: {
     koshas:  ['Annamaya', 'Pranamaya', 'Manomaya', 'Vijnana', 'Anandamaya'],
     cakras:  ['Muladhara', 'Svadisthana', 'Manipura', 'Anahata', 'Vishuddha', 'Ajna', 'Sahasrara'],
     gunas:   ['Rajas', 'Sattva', 'Tamas'],
   },
 }
+
