@@ -175,7 +175,7 @@ window.impersonar = impersonar
 
 async function _abrirModalImpersonar(tipo) {
   const sb = window._sb
-  const tipoFiltro = tipo === 'professor' ? ['professor','admin'] : ['aluno','visitante']
+  const tipoFiltro = tipo === 'professor' ? ['professor','admin'] : ['aluno']
   const { data: pessoas } = await sb.from('perfis')
     .select('id,nome,email,tipo').in('tipo', tipoFiltro).eq('ativo', true).order('nome')
 
@@ -337,4 +337,4 @@ export function initMobileMenu() {
       if (bar && window.innerWidth <= 768) bar.style.display = 'none'
     }
   })
-}       
+}    
