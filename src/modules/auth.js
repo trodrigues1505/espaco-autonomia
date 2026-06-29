@@ -7,7 +7,7 @@ import { buildMenu, homePorPerfil, initMobileMenu } from './navigation.js'
 import { verificarContrato } from './contrato.js'
 import { initProfessorCancel } from './professor-cancel.js'
 import { toast, PLANO_NOMES } from './utils.js'
-   
+
 // ── Onboarding ───────────────────────────────────────────────
 export async function mostrarOnboarding(user, nomeGoogle) {
   const { data: planos } = await sb
@@ -89,7 +89,7 @@ window.finalizarOnboarding = async function (userId, email) {
     })
     if (errM) throw new Error('Erro na matrícula: ' + errM.message)
     document.getElementById('onboarding')?.remove()
-    await iniciarApp()
+    await iniciarApp(userId)
   } catch (e) {
     toast(e.message)
     if (btn) { btn.textContent = 'Começar →'; btn.disabled = false }
@@ -144,7 +144,7 @@ export async function iniciarApp(user) {
     document.getElementById('app-shell').style.display    = 'block'
     document.getElementById('sb-nome').textContent        = perfil.nome
     document.getElementById('sb-role-label').textContent  =
-      { admin: 'Admin', professor: 'Professor', aluno: 'Aluno' }[perfil.tipo] || perfil.tipo
+      { admin: 'Admin', professor: 'Professor', aluno: 'Aluno', visitante: 'Visitante' }[perfil.tipo] || perfil.tipo
 
     // Para alunos: busca matrícula + dados do plano para montar o menu de benefícios
     if (perfil.tipo === 'aluno') {
@@ -159,7 +159,6 @@ export async function iniciarApp(user) {
         document.getElementById('sb-plano').textContent = PLANO_NOMES[mat.plano_tipo] || ''
         window._plano = mat.plano_tipo
 
-        // Busca os booleans de benefício para o menu de Dharma Phala
         const { data: planoData } = await sb
           .from('planos')
           .select('sangha,kala_sadhya,asana_marga,yoga_adhyayana,jnana_marga,sadhana_purna,atma_vijnana,shruti,naada_mandir')
@@ -170,6 +169,13 @@ export async function iniciarApp(user) {
       } else {
         window._planoData = null
       }
+    }
+
+    // Para visitantes: sem matrícula, sem planoData — só Sangha e Āsana Mārga
+    if (perfil.tipo === 'visitante') {
+      window._plano     = null
+      window._planoData = null
+      document.getElementById('sb-plano').textContent = 'Visitante'
     }
 
     buildMenu(perfil.tipo)
@@ -237,4 +243,4 @@ document.getElementById('login-senha')
   ?.addEventListener('keydown', e => { if (e.key === 'Enter') window.fazerLogin() })
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-google')?.addEventListener('click', window.loginGoogle)
-})     
+})   
