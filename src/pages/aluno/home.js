@@ -10,6 +10,7 @@ import { getSaldoAluno, getGamificacao, getPagamentosAluno, verificarConquistas 
 import { carregarNotificacoes, renderPainelNotif, initNotifHandlers,
          calcularBadgesMenu, aplicarBadgesMenu } from '../../modules/notificacoes.js'
 import { uiAnimar } from '../../modules/ui.js'
+import { verContratoAceito } from '../../modules/contrato.js'
 
 export async function renderAlunoHome(container, page) {
   const sb = window._sb
@@ -116,10 +117,20 @@ export async function renderAlunoHome(container, page) {
           }).join('')
         }
       </div>
-      <button onclick="navigate('aluno-conquistas')" style="width:100%;padding:12px 16px;background:#fff;border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--verde);cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between">
+      <button onclick="navigate('aluno-conquistas')" style="width:100%;padding:12px 16px;background:#fff;border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--verde);cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <span>🏆 Minhas Conquistas · ${gam?.prana_points||0} pts</span>
         <span style="font-size:11px;color:var(--txt2)">Ver todas →</span>
       </button>
+
+      <!-- Botão Meu Contrato -->
+      <button id="btn-meu-contrato" style="width:100%;padding:12px 16px;background:#fff;border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--verde);cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="display:flex;align-items:center;gap:8px">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:#f0faf0;border-radius:50%;font-size:13px">✅</span>
+          Meu Contrato
+        </span>
+        <span style="font-size:11px;color:var(--txt2)">Ver →</span>
+      </button>
+
       ${!window.matchMedia('(display-mode: standalone)').matches && !localStorage.getItem('pwa-instalado') ? `
       <div data-pwa style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-top:4px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -145,8 +156,14 @@ export async function renderAlunoHome(container, page) {
       </div>` : ''}
     </div>
   `
-uiAnimar(container)
+
+  uiAnimar(container)
   initNotifHandlers(notifs, perfil.id)
+
+  // ── Meu Contrato ─────────────────────────────────────────────
+  document.getElementById('btn-meu-contrato').addEventListener('click', () => {
+    verContratoAceito(userId, perfil.nome)
+  })
 
   window.cancelarConfHome = async function(confId, ocId) {
     const {data,error} = await sb.rpc('cancelar_confirmacao',{p_aluno_id:userId,p_ocorrencia_id:ocId})
