@@ -4,9 +4,20 @@
 
 import { calcularBadgesMenu, aplicarBadgesMenu } from './notificacoes.js'
 
+// ── Descrições curtas dos benefícios (intro na primeira visita) ──
+export const BENEFICIO_INTRO = {
+  sangha:         { titulo: 'Sangha',         desc: 'Grupo exclusivo no WhatsApp da turma. Avisos do estúdio, trocas entre praticantes e suporte da comunidade.' },
+  kala_sadhya:    { titulo: 'Kāla Sādhyā',   desc: 'Agenda Flex. Cancelou com antecedência? Recupera em outra turma da grade sem custo.' },
+  asana_marga:    { titulo: 'Āsana Mārga',   desc: 'Aula prática semanal no app. Sequência de āsanas, pranayama e mantra com estrutura completa para praticar em casa.' },
+  yoga_adhyayana: { titulo: 'Yoga Adhyayana', desc: 'Estudo teórico semanal. Uma postura por semana com koshas, vāyus, chakras, doshas, elementos, origem e reflexão.' },
+  jnana_marga:    { titulo: 'Jñāna Mārga',   desc: 'Estudo literário diário. Uma postura publicada de segunda a sexta com simbolismo, instruções, benefícios e mapeamento energético.' },
+  sadhana_purna:  { titulo: 'Sādhanā Pūrṇā', desc: 'Avaliação periódica de progresso com o professor. Conversa estruturada para mapear evolução e ajustar a prática.' },
+  atma_vijnana:   { titulo: 'Ātma Vijñāna',  desc: 'Anamnese personalizada no início da jornada. Entrevista aprofundada com o professor sobre histórico, objetivos e limitações.' },
+  shruti:         { titulo: 'Śruti',          desc: 'Áudio diário. Mantras, pranayamas guiados ou reflexões para ouvir no dia a dia.' },
+  naada_mandir:   { titulo: 'Nāda Mandir',   desc: 'Biblioteca de mantras. Áudios com pronúncia correta, significado e contexto de uso dos principais mantras da tradição.' },
+}
+
 // ── Benefícios com ícone e campo do plano ────────────────────
-// Cada item de Dharma Phala vira um item de menu individual.
-// O campo `beneficio` é a chave boolean na tabela planos.
 const DHARMA_PHALA = [
   { id: 'aluno-beneficio-sangha',         label: 'Sangha',         icone: '🌸', beneficio: 'sangha'         },
   { id: 'aluno-beneficio-kala-sadhya',    label: 'Kāla Sādhyā',   icone: '🗓', beneficio: 'kala_sadhya'    },
@@ -19,7 +30,9 @@ const DHARMA_PHALA = [
   { id: 'aluno-beneficio-naada-mandir',   label: 'Nāda Mandir',   icone: '🕌', beneficio: 'naada_mandir'   },
 ]
 
-// Todos os IDs de benefício — usados pelo router para apontar para beneficios.js
+// Benefícios disponíveis para visitantes
+const DHARMA_VISITANTE = ['sangha', 'asana_marga']
+
 export const BENEFICIO_IDS = DHARMA_PHALA.map(b => b.id)
 
 const MENUS = {
@@ -52,14 +65,18 @@ const MENUS = {
     { id: 'aluno-grade',  label: 'Grade de Aulas', icon: 'ti-calendar' },
     { id: 'aluno-minhas', label: 'Minhas Aulas',   icon: 'ti-bookmark' },
     { id: 'aluno-plano',  label: 'Meu Plano',      icon: 'ti-award'    },
-    // Dharma Phala é injetado dinamicamente em buildMenu via _planoData
+  ],
+  visitante: [
+    { sec: 'Meu Espaço' },
+    { id: 'aluno-home', label: 'Início', icon: 'ti-home' },
   ],
 }
 
 const HOME_POR_PERFIL = {
-  admin:     'dashboard',
-  professor: 'prof-home',
-  aluno:     'aluno-home',
+  admin:      'dashboard',
+  professor:  'prof-home',
+  aluno:      'aluno-home',
+  visitante:  'aluno-home',
 }
 
 // ── Constrói sidebar conforme perfil ─────────────────────────
@@ -67,7 +84,7 @@ export function buildMenu(tipo, badges = {}) {
   const nav = document.getElementById('nav-menu')
   nav.innerHTML = ''
 
-  const itens = [...(MENUS[tipo] || [])]
+  const itens = [...(MENUS[tipo] || MENUS['aluno'])]
 
   // Para alunos: injeta seção Dharma Phala com os 9 benefícios
   if (tipo === 'aluno') {
@@ -75,6 +92,16 @@ export function buildMenu(tipo, badges = {}) {
     const planoData = window._planoData || null
     for (const b of DHARMA_PHALA) {
       itens.push({ ...b, _bloqueado: planoData ? !planoData[b.beneficio] : false })
+    }
+  }
+
+  // Para visitantes: injeta seção Dharma Phala com apenas Sangha e Āsana Mārga
+  if (tipo === 'visitante') {
+    itens.push({ sec: 'Dharma Phala' })
+    for (const b of DHARMA_PHALA) {
+      if (DHARMA_VISITANTE.includes(b.beneficio)) {
+        itens.push({ ...b, _bloqueado: false })
+      }
     }
   }
 
@@ -93,7 +120,6 @@ export function buildMenu(tipo, badges = {}) {
     d.style.display = 'flex'
     d.style.alignItems = 'center'
 
-    // Itens de benefício usam emoji como ícone; demais usam classe Tabler
     const iconHtml = item.icone
       ? `<span style="font-size:14px;flex-shrink:0;width:20px;text-align:center;${item._bloqueado ? 'filter:grayscale(1);opacity:.4' : ''}">${item.icone}</span>`
       : `<i class="ti ${item.icon}" style="flex-shrink:0"></i>`
@@ -104,7 +130,6 @@ export function buildMenu(tipo, badges = {}) {
 
     d.innerHTML = `${iconHtml}<span style="${labelStyle}">${item.label}</span>`
 
-    // Badge numérico
     const count = badges[item.id] || 0
     if (count > 0) {
       const badge = document.createElement('span')
@@ -122,7 +147,6 @@ export function buildMenu(tipo, badges = {}) {
     nav.appendChild(d)
   }
 
-  // Barra de impersonar: visível apenas para admin real
   const bar = document.getElementById('impersonate-bar')
   if (bar) bar.style.display = window._perfil?.tipo === 'admin' ? 'block' : 'none'
 }
@@ -151,7 +175,7 @@ window.impersonar = impersonar
 
 async function _abrirModalImpersonar(tipo) {
   const sb = window._sb
-  const tipoFiltro = tipo === 'professor' ? ['professor','admin'] : ['aluno']
+  const tipoFiltro = tipo === 'professor' ? ['professor','admin'] : ['aluno','visitante']
   const { data: pessoas } = await sb.from('perfis')
     .select('id,nome,email,tipo').in('tipo', tipoFiltro).eq('ativo', true).order('nome')
 
@@ -170,7 +194,7 @@ async function _abrirModalImpersonar(tipo) {
       </div>
       <div style="overflow-y:auto;flex:1;padding:12px">
         ${(pessoas||[]).length === 0
-          ? `<div style="padding:20px;text-align:center;font-size:13px;color:var(--txt2)">Nenhum ${tipo} encontrado.</div>`
+          ? `<div style="padding:20px;text-align:center;font-size:13px;color:var(--txt2)">Nenhum encontrado.</div>`
           : (pessoas||[]).map(p => `
             <div onclick="selecionarImpersonar('${p.id}','${tipo}')"
               style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;cursor:pointer;margin-bottom:4px;transition:background .15s"
@@ -181,7 +205,7 @@ async function _abrirModalImpersonar(tipo) {
               </div>
               <div>
                 <div style="font-size:13px;font-weight:500;color:var(--txt)">${p.nome}</div>
-                <div style="font-size:11px;color:var(--txt2)">${p.email}</div>
+                <div style="font-size:11px;color:var(--txt2)">${p.email}${p.tipo==='visitante'?' · Visitante':''}</div>
               </div>
             </div>`).join('')
         }
@@ -196,12 +220,13 @@ async function selecionarImpersonar(pessoaId, tipo) {
   document.getElementById('modal-impersonar')?.remove()
   const { data: pessoa } = await sb.from('perfis').select('*').eq('id', pessoaId).single()
   if (!pessoa) { window.toast?.('Perfil não encontrado'); return }
-  if (tipo === 'aluno') {
+
+  const tipoReal = pessoa.tipo // pode ser 'visitante'
+
+  if (tipoReal === 'aluno') {
     const { data: mats } = await sb.from('matriculas')
       .select('plano_tipo,opcao_aulas,ativa').eq('aluno_id', pessoaId)
     pessoa.matriculas = mats || []
-
-    // Carrega planoData para o aluno impersonado
     const mat = (mats||[]).find(m => m.ativa)
     if (mat?.plano_tipo) {
       const { data: planoData } = await sb
@@ -217,7 +242,7 @@ async function selecionarImpersonar(pessoaId, tipo) {
     pessoa.matriculas = []
     window._planoData = null
   }
-  _ativarImpersonar(tipo, pessoa)
+  _ativarImpersonar(tipoReal, pessoa)
 }
 window.selecionarImpersonar = selecionarImpersonar
 
@@ -258,8 +283,8 @@ function _ativarImpersonar(tipo, pessoa) {
 
   document.getElementById('sb-nome').textContent = pessoa.nome
   document.getElementById('sb-role-label').textContent = {
-    admin: 'Admin', professor: 'Modo Professor', aluno: 'Modo Aluno',
-  }[tipo]
+    admin: 'Admin', professor: 'Modo Professor', aluno: 'Modo Aluno', visitante: 'Modo Visitante',
+  }[tipo] || tipo
 
   ;['admin', 'prof', 'aluno'].forEach(t => {
     const btn = document.getElementById(`imp-${t}`)
@@ -285,7 +310,7 @@ function _ativarImpersonar(tipo, pessoa) {
   aviso.appendChild(voltar)
 
   buildMenu(tipo)
-  window.navigate(HOME_POR_PERFIL[tipo] || 'dashboard')
+  window.navigate(HOME_POR_PERFIL[tipo] || 'aluno-home')
 }
 
 // ── Mobile hamburger ─────────────────────────────────────────
@@ -299,7 +324,6 @@ export function initMobileMenu() {
     const rect = sbEl.getBoundingClientRect()
     if (e.clientX > rect.right - 50) {
       nav.classList.toggle('mobile-open')
-      // Mostra/esconde impersonate-bar junto com o nav
       const bar = document.getElementById('impersonate-bar')
       if (bar && (window._perfil?.tipo === 'admin' || window._perfilAdmin?.tipo === 'admin')) {
         bar.style.display = nav.classList.contains('mobile-open') ? 'block' : 'none'
@@ -313,4 +337,4 @@ export function initMobileMenu() {
       if (bar && window.innerWidth <= 768) bar.style.display = 'none'
     }
   })
-}   
+}       
