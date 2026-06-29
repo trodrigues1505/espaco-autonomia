@@ -245,4 +245,4 @@ export async function verContratoAceito(userId, nomeAluno) {
     </div>`
 
   document.body.appendChild(div)
-}
+}   
