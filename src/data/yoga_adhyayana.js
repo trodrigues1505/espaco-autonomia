@@ -7,19 +7,15 @@
  * 2. Faça commit e push no GitHub
  * 3. O conteúdo atualiza automaticamente para todos os alunos
  */
-
 export const AULA_SEMANA = {
-  numero:    155,
-  data:      '22/06/2026',
+  numero:    156,
+  data:      '29/06/2026',
   categoria: 'Estudo de Āsanas',
-  tema:      'Śalabhāsana — Postura do Gafanhoto',
-  nivel:     'Intermediário',
-  imagem:    'https://i.imgur.com/EZxD4lE.jpeg',
-
-  citacao: 'Śalabhāsana ensina a elevar sem romper a base. Esforço sem integração vira compressão; potência sem consciência vira desgaste.',
-
-  nivel_descricao: 'Exige força na cadeia posterior, consciência lombopélvica e capacidade de sustentar a elevação sem colapsar a coluna.',
-
+  tema:      'Makarāsana — Postura do Crocodilo',
+  nivel:     'Novato',
+  imagem:    'https://i.imgur.com/UOiQnEv.png',
+  citacao: 'Makarāsana ensina que o verdadeiro descanso nasce da presença consciente. Relaxamento sem atenção vira sonolência; atenção sem relaxamento vira tensão.',
+  nivel_descricao: 'Postura simples na execução, porém profunda em seus efeitos sobre a respiração, a coluna e o sistema nervoso. Frequentemente utilizada como postura restaurativa e de integração.',
   secoes: [
     {
       id:     'koshas',
@@ -27,10 +23,11 @@ export const AULA_SEMANA = {
       icone:  'ti-circle-dotted',
       cor:    '#1D9E75',
       itens: [
-        { termo: 'Annamaya',     desc: 'fortalecimento de lombar, glúteos, posteriores de coxa e musculatura paravertebral' },
-        { termo: 'Prāṇamaya',   desc: 'ativação do eixo posterior e intensificação da circulação energética no tronco' },
-        { termo: 'Manomaya',    desc: 'desenvolvimento de foco, persistência e presença sob esforço' },
-        { termo: 'Vijñānamaya', desc: 'refinamento da percepção entre sustentação, compressão e expansão' },
+        { termo: 'Annamaya',     desc: 'relaxamento da musculatura paravertebral, ombros e região lombar' },
+        { termo: 'Prāṇamaya',   desc: 'harmonização da respiração e do fluxo de prāṇa' },
+        { termo: 'Manomaya',    desc: 'redução da atividade mental e das tensões emocionais' },
+        { termo: 'Vijñānamaya', desc: 'desenvolvimento da atenção plena e da observação interior' },
+        { termo: 'Ānandamaya',  desc: 'favorece estados de profundo repouso e serenidade' },
       ],
     },
     {
@@ -39,9 +36,9 @@ export const AULA_SEMANA = {
       icone:  'ti-wind',
       cor:    '#378ADD',
       itens: [
-        { termo: 'Udāna Vāyu',  desc: 'elevação e sustentação do corpo contra a gravidade' },
-        { termo: 'Samāna Vāyu', desc: 'integração do centro abdominal para estabilizar a postura' },
-        { termo: 'Vyāna Vāyu',  desc: 'distribuição da força ao longo do eixo corporal' },
+        { termo: 'Prāṇa Vāyu',  desc: 'respiração mais ampla e consciente' },
+        { termo: 'Samāna Vāyu', desc: 'equilíbrio do centro energético' },
+        { termo: 'Vyāna Vāyu',  desc: 'distribuição harmoniosa da energia por todo o corpo' },
       ],
     },
     {
@@ -50,9 +47,9 @@ export const AULA_SEMANA = {
       icone:  'ti-rotate-clockwise',
       cor:    '#7F77DD',
       itens: [
-        { termo: 'Maṇipūra',      desc: 'ativação do centro de força e sustentação' },
-        { termo: 'Svādhiṣṭhāna', desc: 'mobilização da energia pélvica' },
-        { termo: 'Anāhata',       desc: 'expansão indireta da região torácica pela ação posterior' },
+        { termo: 'Maṇipūra', desc: 'relaxamento e reorganização do centro energético' },
+        { termo: 'Anāhata',  desc: 'expansão suave da respiração' },
+        { termo: 'Ājñā',     desc: 'favorece concentração e observação interior' },
       ],
     },
     {
@@ -61,9 +58,9 @@ export const AULA_SEMANA = {
       icone:  'ti-scale',
       cor:    '#BA7517',
       itens: [
-        { termo: 'Kapha', desc: 'reduzido pela ativação muscular e aumento de calor' },
-        { termo: 'Vāta',  desc: 'estabilizado quando a postura é sustentada com base abdominal' },
-        { termo: 'Pitta', desc: 'pode aumentar se houver excesso de intensidade ou tensão respiratória' },
+        { termo: 'Vāta',  desc: 'fortemente equilibrado pelo relaxamento e estabilidade' },
+        { termo: 'Pitta', desc: 'reduzido pela diminuição da tensão física e mental' },
+        { termo: 'Kapha', desc: 'equilibrado quando associado à respiração consciente' },
       ],
     },
     {
@@ -72,12 +69,49 @@ export const AULA_SEMANA = {
       icone:  'ti-leaf',
       cor:    '#639922',
       itens: [
-        { termo: 'Fogo',  desc: 'potência, transformação e ativação metabólica' },
-        { termo: 'Terra', desc: 'sustentação estrutural e firmeza' },
-        { termo: 'Ar',    desc: 'expansão do tórax e circulação energética' },
+        { termo: 'Água',  desc: 'calma, adaptação e fluidez' },
+        { termo: 'Terra', desc: 'sustentação e estabilidade' },
+        { termo: 'Éter',  desc: 'silêncio e expansão da consciência' },
+      ],
+    },
+    {
+      id:     'origem',
+      titulo: 'Origem',
+      icone:  'ti-book',
+      cor:    '#8B5E3C',
+      itens: [
+        { termo: 'Fonte clássica', desc: 'Descrita na Gheraṇḍa Saṁhitā (2.40) como uma das posturas do repertório clássico do Haṭha Yoga medieval.' },
+        { termo: 'Simbolismo',     desc: 'O makara é uma criatura mítica da tradição indiana, frequentemente representada como um crocodilo ou ser aquático híbrido, simbolizando força serena, adaptação e domínio das águas profundas.' },
+        { termo: 'Essência',       desc: 'Tradicionalmente, a postura representa a capacidade de permanecer completamente relaxado sem perder o estado de alerta.' },
+      ],
+    },
+    {
+      id:     'beneficios',
+      titulo: 'Benefícios',
+      icone:  'ti-heart-filled',
+      cor:    '#c0392b',
+      itens: [
+        { termo: 'Coluna',       desc: 'Alivia tensões na coluna, especialmente na região lombar.' },
+        { termo: 'Musculatura',  desc: 'Favorece o relaxamento da musculatura posterior.' },
+        { termo: 'Respiração',   desc: 'Melhora o padrão respiratório diafragmático.' },
+        { termo: 'Recuperação',  desc: 'Auxilia na recuperação após posturas intensas.' },
+        { termo: 'Energia',      desc: 'Dissolve tensões energéticas acumuladas.' },
+        { termo: 'Pratyāhāra',  desc: 'Favorece o recolhimento da atenção (pratyāhāra).' },
+        { termo: 'Estabilidade', desc: 'Desenvolve estabilidade emocional e serenidade.' },
+        { termo: 'Integração',   desc: 'Integra os efeitos das práticas anteriores.' },
+      ],
+    },
+    {
+      id:     'terapeutico',
+      titulo: 'Observações terapêuticas',
+      icone:  'ti-stethoscope',
+      cor:    '#5a7a5a',
+      itens: [
+        { termo: 'Indicação', desc: 'Uma das posturas mais indicadas para praticantes com tensão lombar, fadiga muscular ou excesso de estresse, desde que não haja dor aguda ou lesões recentes na coluna.' },
+        { termo: 'Adaptação', desc: 'Pode ser adaptada com apoio sob o peito ou a testa para maior conforto.' },
+        { termo: 'Sequência', desc: 'Excelente como postura de descanso entre retroflexões, permitindo que a musculatura posterior relaxe sem perder o alinhamento respiratório.' },
       ],
     },
   ],
-
-  reflexao: 'Como você sustenta o esforço sem perder a base? Onde na sua prática — e na sua vida — você tende a elevar sem antes enraizar?',
-}    
+  reflexao: 'Como você descansa sem perder a presença? Onde na sua prática — e na sua vida — você confunde relaxamento com ausência?',
+}
