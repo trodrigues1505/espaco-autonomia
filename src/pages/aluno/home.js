@@ -11,6 +11,7 @@ import { carregarNotificacoes, renderPainelNotif, initNotifHandlers,
          calcularBadgesMenu, aplicarBadgesMenu } from '../../modules/notificacoes.js'
 import { uiAnimar } from '../../modules/ui.js'
 import { verContratoAceito } from '../../modules/contrato.js'
+import { iniciarTourSeNecessario } from '../../modules/tour.js'
 
 // Bloco fixo de boas-vindas ao Dharma Phala
 function _blocoBoasVindas() {
@@ -29,7 +30,7 @@ function _blocoBoasVindas() {
         Parte desse conteúdo está disponível para qualquer pessoa. O restante acompanha as aulas presenciais — é lá que ele faz sentido.
       </p>
       <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:rgba(242,236,206,.85);line-height:1.6">
-        <div>Se é sua primeira vez aqui, comece por <a href="#" onclick="navigate('nossa-pratica');return false" style="color:var(--dourado);font-weight:500;text-decoration:underline">Nossa Prática</a> antes de acessar a grade de aulas.</div>
+        <div>Se é sua primeira vez aqui, comece por <a href="#" id="tour-link-nossa-pratica" onclick="navigate('nossa-pratica');return false" style="color:var(--dourado);font-weight:500;text-decoration:underline">Nossa Prática</a> antes de acessar a grade de aulas.</div>
         <div>Se você já pratica aqui, comece pelo <a href="#" onclick="navigate('aluno-beneficio-asana-marga');return false" style="color:var(--dourado);font-weight:500;text-decoration:underline">Āsana Mārga</a> da semana.</div>
         <div>Se ainda não é aluno e quer entender o que fazemos antes de se matricular, comece pela <a href="#" onclick="navigate('aluno-beneficio-sangha');return false" style="color:var(--dourado);font-weight:500;text-decoration:underline">Sangha</a>.</div>
       </div>
@@ -84,7 +85,7 @@ export async function renderAlunoHome(container, page) {
 
   container.innerHTML = `
     <div class="topbar">
-      <div class="topbar-t">Olá, ${perfil.nome.split(' ')[0]}!</div>
+      <div class="topbar-t" id="tour-saudacao">Olá, ${perfil.nome.split(' ')[0]}!</div>
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-size:18px">${nivelLabel?.split(' ')[0]||'🌱'}</span>
         <span style="font-size:12px;color:var(--txt2)">${gam?.prana_points||0} pts</span>
@@ -215,4 +216,7 @@ export async function renderAlunoHome(container, page) {
     const tip = document.getElementById('pwa-ios-tip')
     if (tip) tip.style.display = tip.style.display === 'none' ? 'block' : 'none'
   }
-}
+
+  // Tour guiado — roda uma única vez por aluno (localStorage cuida disso)
+  iniciarTourSeNecessario(perfil)
+}   
