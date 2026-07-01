@@ -1,7 +1,7 @@
 /**
  * src/pages/index.js
  */
-const V = '?v=7'
+const V = '?v=8'
 const rotaMap = {
   'dashboard':          () => import('./admin/dashboard.js'  + V).then(m => m.renderDashboard),
   'timeline':           () => import('./timeline.js'         + V).then(m => m.renderTimeline),
@@ -56,4 +56,4 @@ export async function navigate(page) {
     console.error(`navigate(${page}):`, e)
   }
 }
-window.navigate = navigate
+window.navigate = navigate       
