@@ -5,36 +5,37 @@
 
 let _emAndamento = false
 let _ultimaPagina = null
-
-// ── Definição dos passos ──────────────────────────────────────
-// selector: CSS selector do elemento a destacar
-// texto: conteúdo do balão
-// page: (opcional) página que precisa estar ativa para o elemento existir
-// sidebar: (opcional) true se o alvo está no menu lateral (cuida do menu mobile)
-const TOUR_STEPS = [
-  { page: 'aluno-home', selector: '#tour-saudacao', texto: 'Este é o seu espaço. Tudo aqui foi pensado para acompanhar sua prática.' },
-  { page: 'aluno-home', selector: '#tour-link-nossa-pratica', texto: 'Comece aqui. Antes de explorar o app, entenda o método.' },
-  { selector: '#ni-aluno-beneficio-sangha', texto: 'Entre na comunidade da sua turma. Avisos, trocas e suporte.', sidebar: true },
-  { selector: '#ni-aluno-beneficio-asana-marga', texto: 'A aula da semana está aqui. Sequência completa para consultar antes e depois de praticar.', sidebar: true },
-  { selector: '#ni-aluno-beneficio-yoga-adhyayana', texto: 'O estudo teórico da semana. Aprofunda o que você praticou em aula.', sidebar: true },
-  { selector: '#ni-aluno-beneficio-jnana-marga', texto: 'Estudo diário. Uma postura publicada de segunda a sexta.', sidebar: true },
-  { selector: '#ni-aluno-beneficio-shruti', texto: 'Um áudio por dia. Mantra, pranayama guiado ou reflexão.', sidebar: true },
-  { selector: '#ni-aluno-beneficio-naada-mandir', texto: 'Biblioteca de mantras com pronúncia e significado.', sidebar: true },
-  { selector: '#ni-aluno-beneficio-kala-sadhya', texto: 'Precisa remarcar uma aula? Aqui você gerencia sua agenda.', sidebar: true },
-  { page: 'aluno-grade', selector: '#tour-grade-table', texto: 'Escolha seu horário e confirme presença com até 24h de antecedência.' },
-]
+let _stepsAtual = []
 
 function _chave(perfilId) {
   return `ea_tour_v1_${perfilId}`
 }
 
+function _construirSteps(prazoMin) {
+  const prazoLabel = prazoMin >= 60 ? `${Math.round(prazoMin / 60)}h` : `${prazoMin}min`
+  return [
+    { page: 'aluno-home', selector: '#tour-saudacao', texto: 'Este é o seu espaço. Tudo aqui foi pensado para acompanhar sua prática.' },
+    { page: 'aluno-home', selector: '#tour-link-nossa-pratica', texto: 'Comece aqui. Antes de explorar o app, entenda o método.' },
+    { selector: '#ni-aluno-beneficio-sangha', texto: 'Entre na comunidade da sua turma. Avisos, trocas e suporte.', sidebar: true },
+    { selector: '#ni-aluno-beneficio-asana-marga', texto: 'A aula da semana está aqui. Sequência completa para consultar antes e depois de praticar.', sidebar: true },
+    { selector: '#ni-aluno-beneficio-yoga-adhyayana', texto: 'O estudo teórico da semana. Aprofunda o que você praticou em aula.', sidebar: true },
+    { selector: '#ni-aluno-beneficio-jnana-marga', texto: 'Estudo diário. Uma postura publicada de segunda a sexta.', sidebar: true },
+    { selector: '#ni-aluno-beneficio-shruti', texto: 'Um áudio por dia. Mantra, pranayama guiado ou reflexão.', sidebar: true },
+    { selector: '#ni-aluno-beneficio-naada-mandir', texto: 'Biblioteca de mantras com pronúncia e significado.', sidebar: true },
+    { selector: '#ni-aluno-beneficio-kala-sadhya', texto: 'Precisa remarcar uma aula? Aqui você gerencia sua agenda.', sidebar: true },
+    { page: 'aluno-grade', selector: '#tour-grade-table', texto: `Escolha seu horário e confirme presença com até ${prazoLabel} de antecedência.` },
+  ]
+}
+
 // ── Entrada pública ────────────────────────────────────────────
-export async function iniciarTourSeNecessario(perfil) {
+// prazoMin: valor de configuracoes.prazo_confirmacao_min (minutos). Se não vier, assume 60.
+export async function iniciarTourSeNecessario(perfil, prazoMin = 60) {
   if (!perfil || perfil.tipo !== 'aluno') return
   if (_emAndamento) return
   if (localStorage.getItem(_chave(perfil.id))) return
   _emAndamento = true
   _ultimaPagina = 'aluno-home'
+  _stepsAtual = _construirSteps(Number(prazoMin) || 60)
   try {
     await _rodarTour(perfil, 0)
   } catch (e) {
@@ -44,13 +45,13 @@ export async function iniciarTourSeNecessario(perfil) {
 }
 
 // Permite reiniciar manualmente (ex: link "rever tutorial" ou teste no console)
-export function reiniciarTour(perfil) {
+export function reiniciarTour(perfil, prazoMin = 60) {
   if (!perfil) return
   localStorage.removeItem(_chave(perfil.id))
   _emAndamento = false
-  iniciarTourSeNecessario(perfil)
+  iniciarTourSeNecessario(perfil, prazoMin)
 }
-window._reiniciarTourDharmaPhala = () => reiniciarTour(window._perfil)
+window._reiniciarTourDharmaPhala = (prazoMin) => reiniciarTour(window._perfil, prazoMin)
 
 // ── Motor ────────────────────────────────────────────────────
 function _injetarEstilo() {
@@ -79,8 +80,9 @@ async function _aguardarElemento(selector, tentativas = 30) {
 }
 
 async function _rodarTour(perfil, idx) {
-  if (idx >= TOUR_STEPS.length) { _finalizarTour(perfil); return }
-  const step = TOUR_STEPS[idx]
+  if (idx < 0) idx = 0
+  if (idx >= _stepsAtual.length) { _finalizarTour(perfil); return }
+  const step = _stepsAtual[idx]
   const isMobile = window.innerWidth <= 768
   const navMenu = document.getElementById('nav-menu')
 
@@ -104,15 +106,28 @@ async function _rodarTour(perfil, idx) {
   if (!el) { await _rodarTour(perfil, idx + 1); return } // pula passo se elemento não existir
 
   _injetarEstilo()
-  _mostrarPasso(el, step.texto, idx, TOUR_STEPS.length, () => {
-    _limparDOM()
-    _rodarTour(perfil, idx + 1)
-  }, () => _finalizarTour(perfil))
+  await _mostrarPasso(el, step.texto, idx, _stepsAtual.length,
+    () => { _limparDOM(); _rodarTour(perfil, idx + 1) },
+    () => { _limparDOM(); _rodarTour(perfil, idx - 1) },
+    () => _finalizarTour(perfil)
+  )
 }
 
-function _mostrarPasso(el, texto, idx, total, onProximo, onPular) {
+async function _mostrarPasso(el, texto, idx, total, onProximo, onVoltar, onPular) {
   _limparDOM()
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+  const jaVisivel = (() => {
+    const r = el.getBoundingClientRect()
+    return r.top >= 0 && r.bottom <= window.innerHeight && r.left >= 0 && r.right <= window.innerWidth
+  })()
+
+  if (!jaVisivel) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    // Espera a rolagem suave assentar antes de medir a posição do elemento.
+    // Sem essa espera, getBoundingClientRect() captura o elemento em pleno
+    // movimento e o spotlight/balão aparecem desalinhados do alvo real.
+    await new Promise(r => setTimeout(r, 380))
+  }
 
   const rect = el.getBoundingClientRect()
   const pad = 6
@@ -121,7 +136,7 @@ function _mostrarPasso(el, texto, idx, total, onProximo, onPular) {
   spot.id = '_tour-spot'
   spot.style.cssText = `
     position:fixed; pointer-events:none; z-index:601; border-radius:10px;
-    box-shadow:0 0 0 9999px rgba(20,25,20,.65);
+    box-shadow:0 0 0 9999px rgba(20,25,20,.65), 0 0 0 3px var(--dourado, #E8BC4F);
     top:${rect.top - pad}px; left:${rect.left - pad}px;
     width:${rect.width + pad*2}px; height:${rect.height + pad*2}px;
   `
@@ -136,12 +151,15 @@ function _mostrarPasso(el, texto, idx, total, onProximo, onPular) {
     animation:_tour-in .2s ease;
   `
   const isLast = idx === total - 1
+  const isFirst = idx === 0
   bubble.innerHTML = `
     <div style="font-size:13px;color:var(--txt);line-height:1.6;margin-bottom:14px">${texto}</div>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
       <button id="_tour-pular" style="background:none;border:none;font-size:11px;color:var(--txt2);
         cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:underline;padding:0">Pular tutorial</button>
-      <div style="display:flex;align-items:center;gap:10px">
+      <div style="display:flex;align-items:center;gap:8px">
+        ${!isFirst ? `<button id="_tour-voltar" style="padding:7px 12px;background:none;color:var(--verde);
+          border:1px solid var(--borda);border-radius:7px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">← Voltar</button>` : ''}
         <span style="font-size:11px;color:var(--txt2)">${idx + 1}/${total}</span>
         <button id="_tour-prox" style="padding:7px 16px;background:var(--verde);color:var(--bege);
           border:none;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif">
@@ -178,6 +196,7 @@ function _mostrarPasso(el, texto, idx, total, onProximo, onPular) {
   bubble.style.left = `${left}px`
 
   document.getElementById('_tour-prox')?.addEventListener('click', onProximo)
+  document.getElementById('_tour-voltar')?.addEventListener('click', onVoltar)
   document.getElementById('_tour-pular')?.addEventListener('click', onPular)
 }
 
