@@ -94,6 +94,12 @@ export async function renderAlunoHome(container, page) {
     <div class="content">
       ${renderPainelNotif(notifs)}
       ${_blocoBoasVindas()}
+      <button onclick="window._reiniciarTourDharmaPhala(${Number(cfg.prazo_confirmacao_min || 60)})"
+        style="width:100%;padding:8px 16px;background:none;border:none;font-family:'DM Sans',sans-serif;
+               font-size:11px;color:var(--txt2);cursor:pointer;text-align:left;margin:-6px 0 14px;
+               display:flex;align-items:center;gap:5px;text-decoration:underline">
+        🔁 Rever tutorial guiado
+      </button>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
         <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:12px 14px">
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Saldo total</div>
@@ -218,5 +224,5 @@ export async function renderAlunoHome(container, page) {
   }
 
   // Tour guiado — roda uma única vez por aluno (localStorage cuida disso)
-  iniciarTourSeNecessario(perfil)
+  iniciarTourSeNecessario(perfil, Number(cfg.prazo_confirmacao_min || 60))
 }   
