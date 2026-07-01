@@ -35,6 +35,13 @@ const DHARMA_VISITANTE = ['sangha', 'asana_marga']
 
 export const BENEFICIO_IDS = DHARMA_PHALA.map(b => b.id)
 
+// Itens institucionais — aparecem para todos os perfis
+const ITENS_SOBRE = [
+  { sec: 'Sobre' },
+  { id: 'espaco',        label: 'O Espaço',       icon: 'ti-building' },
+  { id: 'nossa-pratica', label: 'Nossa Prática',  icon: 'ti-compass' },
+]
+
 const MENUS = {
   admin: [
     { sec: 'Visão Geral' },
@@ -52,6 +59,7 @@ const MENUS = {
     { sec: 'Sistema' },
     { id: 'jnana-admin',        label: 'Jñāna Mārga',         icon: 'ti-book'             },
     { id: 'config',             label: 'Configurações',        icon: 'ti-settings'         },
+    ...ITENS_SOBRE,
   ],
   professor: [
     { sec: 'Minhas Aulas' },
@@ -60,6 +68,7 @@ const MENUS = {
     { id: 'prof-aulas',   label: 'Minhas Aulas', icon: 'ti-calendar'         },
     { id: 'prof-chamada', label: 'Chamada',      icon: 'ti-checkbox'         },
     { id: 'prof-repasse', label: 'Meu Repasse',  icon: 'ti-calculator'       },
+    ...ITENS_SOBRE,
   ],
   aluno: [
     { sec: 'Meu Espaço' },
@@ -68,11 +77,13 @@ const MENUS = {
     { id: 'aluno-grade',  label: 'Grade de Aulas', icon: 'ti-calendar' },
     { id: 'aluno-minhas', label: 'Minhas Aulas',   icon: 'ti-bookmark' },
     { id: 'aluno-plano',  label: 'Meu Plano',      icon: 'ti-award'    },
+    ...ITENS_SOBRE,
   ],
   visitante: [
     { sec: 'Meu Espaço' },
     { id: 'aluno-home', label: 'Início', icon: 'ti-home' },
     { id: 'timeline',   label: 'Timeline', icone: '💬'    },
+    ...ITENS_SOBRE,
   ],
 }
 
