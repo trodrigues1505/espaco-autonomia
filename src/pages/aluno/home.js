@@ -1,192 +1,832 @@
 /**
- * src/pages/aluno/home.js
+ * src/pages/aluno/beneficios.js
+ * Dharma Phala — detalhe de um benefício do plano.
  */
 
-import { sb }         from '../../lib/supabase.js'
-import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
-          PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
-          calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
-import { getSaldoAluno, getGamificacao, getPagamentosAluno, verificarConquistas } from '../../modules/gamificacao.js'
-import { carregarNotificacoes, renderPainelNotif, initNotifHandlers,
-         calcularBadgesMenu, aplicarBadgesMenu } from '../../modules/notificacoes.js'
 import { uiAnimar } from '../../modules/ui.js'
-import { verContratoAceito } from '../../modules/contrato.js'
+import { BENEFICIO_INTRO } from '../../modules/navigation.js'
 
-export async function renderAlunoHome(container, page) {
-  const sb = window._sb
-  const perfil = window._perfil
+// Chave localStorage para controlar quais intros já foram vistas
+const _introVista = campo => `ea_intro_${campo}_${window._perfil?.id || 'x'}`
 
-  const userId = perfil.id
-  const agora = new Date()
+const SANGHA_LINKS = {
+  brahma:       'https://chat.whatsapp.com/BWIMnUs5ijOAZmoBCEt9su',
+  shiva_1x:     'https://chat.whatsapp.com/ChO0Yyy1D3F7zFG43PYUIJ',
+  shiva_2x:     'https://chat.whatsapp.com/ChO0Yyy1D3F7zFG43PYUIJ',
+  vishnu_2x:    'https://chat.whatsapp.com/ChO0Yyy1D3F7zFG43PYUIJ',
+  vishnu_livre: 'https://chat.whatsapp.com/ChO0Yyy1D3F7zFG43PYUIJ',
+  visitante:    'https://chat.whatsapp.com/FyU5bisgUG1HB2rVUx4Ur2',
+}
 
-  const [confsRes, matRes, cfgRes, saldoRes, gamRes, pgRes, notifs] = await Promise.all([
-    sb.from('confirmacoes').select('*, ocorrencia:ocorrencias(id,data_hora,aula:aulas(modalidade))').eq('aluno_id', userId).eq('status','confirmado').order('criado_em',{ascending:false}),
-    sb.from('matriculas').select('*, plano:planos(*)').eq('aluno_id', userId).eq('ativa',true).single(),
-    sb.from('configuracoes').select('*'),
-    sb.from('saldo_disponivel').select('*').eq('aluno_id', userId).single(),
-    getGamificacao(userId),
-    getPagamentosAluno(userId),
-    carregarNotificacoes(perfil),
-  ])
+const ESTUDIO_WA = '5511444901620'
 
-  const mat = matRes.data
-  const cfg = Object.fromEntries((cfgRes.data||[]).map(c=>[c.chave,c.valor]))
-  const saldo = saldoRes.data
-  const gam = gamRes
-  const pagamentos = pgRes
-  const confs = (confsRes.data||[]).filter(c=>c.ocorrencia && new Date(c.ocorrencia.data_hora) >= agora).slice(0,5)
-  const saldoTotal = mat?.plano_tipo === 'vishnu_livre' ? '∞' : (saldo?.saldo_total ?? 0)
-  const confsFuturas = (confsRes.data||[]).filter(c => c.ocorrencia && new Date(c.ocorrencia.data_hora) >= agora && c.status === 'confirmado')
-  const ehLivre = mat?.plano_tipo === 'vishnu_livre' || mat?.opcao_aulas === 99
-  const saldoDisponivel = ehLivre ? Infinity : Math.max(0, (saldo?.saldo_total ?? 0) - confsFuturas.length)
-  const nivel = calcularNivel(gam?.prana_points||0)
-  const nivelLabel = NIVEL_LABELS[nivel]
+const PLANOS_COM_BENEFICIO = {
+  sangha:         ['brahma','shiva_1x','shiva_2x','vishnu_2x','vishnu_livre'],
+  kala_sadhya:    ['brahma','shiva_1x','shiva_2x','vishnu_2x','vishnu_livre'],
+  asana_marga:    ['brahma','shiva_1x','shiva_2x','vishnu_2x','vishnu_livre'],
+  yoga_adhyayana: ['shiva_1x','shiva_2x','vishnu_2x','vishnu_livre'],
+  jnana_marga:    ['shiva_1x','shiva_2x','vishnu_2x','vishnu_livre'],
+  sadhana_purna:  ['vishnu_2x','vishnu_livre'],
+  atma_vijnana:   ['vishnu_2x','vishnu_livre'],
+  shruti:         ['vishnu_2x','vishnu_livre'],
+  naada_mandir:   ['vishnu_2x','vishnu_livre'],
+}
 
-  const pgMes = pagamentos.find(p => p.mes_ref?.slice(0,7) === agora.toISOString().slice(0,7))
-  const pgOk = !pagamentos.length || pgMes?.status === 'RECEIVED' || pgMes?.status === 'CONFIRMED'
+// Benefícios disponíveis para visitantes (sem plano)
+const BENEFICIOS_VISITANTE = ['sangha', 'asana_marga']
 
-  const historico = gam?.historico_presencas || {}
-  const diasCalor = []
-  for (let i=29; i>=0; i--) {
-    const d = new Date(agora); d.setDate(agora.getDate()-i)
-    const k = d.toISOString().slice(0,10)
-    diasCalor.push({ data: k, presente: !!historico[k] })
-  }
+const PLANO_LABELS = {
+  brahma: 'Brahma', shiva_1x: 'Shiva 1×', shiva_2x: 'Shiva 2×',
+  vishnu_2x: 'Vishnu 2×', vishnu_livre: 'Vishnu Livre',
+}
 
-  // Badges no menu
-  const badges = calcularBadgesMenu(notifs)
-  aplicarBadgesMenu(badges)
+const SLUG_PARA_CAMPO = {
+  'sangha': 'sangha', 'kala-sadhya': 'kala_sadhya', 'asana-marga': 'asana_marga',
+  'yoga-adhyayana': 'yoga_adhyayana', 'jnana-marga': 'jnana_marga',
+  'sadhana-purna': 'sadhana_purna', 'atma-vijnana': 'atma_vijnana',
+  'shruti': 'shruti', 'naada-mandir': 'naada_mandir',
+}
 
-  container.innerHTML = `
-    <div class="topbar">
-      <div class="topbar-t">Olá, ${perfil.nome.split(' ')[0]}!</div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:18px">${nivelLabel?.split(' ')[0]||'🌱'}</span>
-        <span style="font-size:12px;color:var(--txt2)">${gam?.prana_points||0} pts</span>
-      </div>
-    </div>
-    <div class="content">
-      ${renderPainelNotif(notifs)}
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
-        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:12px 14px">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Saldo total</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--verde)">${saldoTotal}</div>
-          <div style="font-size:10px;color:var(--txt2)">aulas acumuladas</div>
-        </div>
-        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:12px 14px;border-left:3px solid ${saldoDisponivel>0||ehLivre?'var(--verde)':'#c0392b'}">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Disponíveis</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:${saldoDisponivel>0||ehLivre?'var(--verde)':'#c0392b'}">${ehLivre?'∞':saldoDisponivel}</div>
-          <div style="font-size:10px;color:var(--txt2)">para agendar agora</div>
-        </div>
-        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:12px 14px">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Sequência</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:${(gam?.streak_atual||0)>0?'#e67e22':'var(--txt2)'}">${gam?.streak_atual||0}🔥</div>
-          <div style="font-size:10px;color:var(--txt2)">semanas seguidas</div>
-        </div>
-        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:12px 14px">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Nível</div>
-          <div style="font-size:20px;margin-bottom:2px">${nivelLabel}</div>
-          <div style="font-size:10px;color:var(--txt2)">${gam?.prana_points||0} pts</div>
-        </div>
-      </div>
-      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-bottom:14px">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:8px">Últimos 30 dias</div>
-        <div style="display:flex;gap:3px;flex-wrap:wrap">
-          ${diasCalor.map(d=>`<div title="${d.data}" style="width:18px;height:18px;border-radius:3px;background:${d.presente?'var(--verde)':'#f0ede4'}"></div>`).join('')}
-        </div>
-      </div>
-      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden;margin-bottom:12px">
-        <div style="padding:12px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
-          <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">Próximas aulas</span>
-          <button onclick="navigate('aluno-grade')" style="font-size:11px;color:var(--verde);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif">Ver grade →</button>
-        </div>
-        ${confs.length===0?`<div style="padding:16px 18px;font-size:12px;color:var(--txt2)">Nenhuma aula confirmada. <a href="#" onclick="navigate('aluno-grade');return false" style="color:var(--verde)">Ver grade →</a></div>`:
-          confs.map(c=>{
-            const dt = new Date(c.ocorrencia.data_hora)
-            const prazo = Number(cfg.prazo_cancelamento_min||180)
-            const limiteCancel = new Date(dt.getTime()-prazo*60000)
-            const podeCancelar = new Date()<limiteCancel
-            return `<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid rgba(212,200,158,.3);gap:12px">
-              <div>
-                <div style="display:flex;align-items:center;gap:6px">${dot(c.ocorrencia.aula?.modalidade)}<strong style="font-size:13px">${NOMES[c.ocorrencia.aula?.modalidade]||'Aula'}</strong></div>
-                <div style="font-size:11px;color:var(--txt2);margin-top:2px">${dt.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'})} · ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
-                <div style="font-size:10px;color:${podeCancelar?'var(--verde-cl)':'#c0392b'};margin-top:2px">${podeCancelar?'✓ Cancelamento disponível':'⚠ Prazo encerrado — falta perde aula do saldo'}</div>
-              </div>
-              ${podeCancelar?`<button onclick="cancelarConfHome('${c.id}','${c.ocorrencia_id}')" style="padding:4px 10px;background:#fceaea;color:#8a1a1a;border:1px solid #f5c1c1;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Cancelar</button>`:''}
-            </div>`
-          }).join('')
-        }
-      </div>
-      <button onclick="navigate('aluno-conquistas')" style="width:100%;padding:12px 16px;background:#fff;border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--verde);cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <span>🏆 Minhas Conquistas · ${gam?.prana_points||0} pts</span>
-        <span style="font-size:11px;color:var(--txt2)">Ver todas →</span>
-      </button>
+const BENEFICIOS = {
+  sangha: {
+    nome: 'Sangha', subtitulo: 'Comunidade WhatsApp', icone: '🌸',
+    descricao: `O Sangha é mais do que um grupo — é o coração pulsante da nossa comunidade.
+Aqui você encontra avisos importantes do estúdio, trocas entre praticantes, reflexões sobre a prática e o suporte de quem caminha junto.
+No Yoga, a Sangha (comunidade) é um dos três pilares fundamentais ao lado do Dharma e do Buddha.
+Fazer parte deste grupo é dar um passo além da aula: é pertencer.`,
+    acaoAtivo(t) {
+      // Visitante usa link próprio
+      const link = SANGHA_LINKS[t] || SANGHA_LINKS[window._perfil?.tipo === 'visitante' ? 'visitante' : t]
+      if (!link) return ''
+      return `<a href="${link}" target="_blank" rel="noopener"
+        style="display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:11px 22px;
+               background:#25d366;color:#fff;border-radius:8px;text-decoration:none;
+               font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif">
+        <i class="ti ti-brand-whatsapp"></i> Entrar no grupo Sangha
+      </a>`
+    },
+  },
+  kala_sadhya: {
+    nome: 'Kāla Sādhyā', subtitulo: 'Agenda Flex', icone: '🗓',
+    descricao: `Kāla Sādhyā significa, em sânscrito, "o tempo como prática" — e é exatamente isso que este benefício representa.
+Com a Agenda Flex você tem autonomia para moldar o yoga ao seu ritmo de vida, não o contrário.
+Precisa faltar a uma aula? Cancele com antecedência e recupere em outra turma disponível na grade, sem custo adicional.
+A flexibilidade não é um desvio do caminho — ela é o caminho.`,
+    acaoAtivo() {
+      return `<button onclick="navigate('aluno-grade')"
+        style="display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:11px 22px;
+               background:var(--verde);color:var(--bege);border:none;border-radius:8px;
+               font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif">
+        <i class="ti ti-calendar"></i> Ver grade de aulas
+      </button>`
+    },
+  },
+  asana_marga:    { nome: 'Āsana Mārga',   subtitulo: 'App de Prática',         icone: '🧘', descricao: `Āsana Mārga — "o caminho das posturas" — leva a sua prática para onde você estiver.\nCom este benefício você acessa um aplicativo completo de prática guiada: sequências de āsanas, exercícios de prāṇāyāma e meditações conduzidas.\nO tapete pode ser em qualquer lugar — e o caminho também.`, acaoAtivo() { return '' } },
+  yoga_adhyayana: { nome: 'Yoga Adhyayana', subtitulo: 'Estudo Teórico',         icone: '📖', descricao: null, acaoAtivo() { return '' } },
+  jnana_marga:    { nome: 'Jñāna Mārga',   subtitulo: 'Estudo Literário',        icone: '📜', descricao: `Jñāna Mārga — "o caminho do conhecimento" — é para quem quer ir fundo.\nTextos clássicos como o Hatha Yoga Pradīpikā, os Yoga Sūtras de Patañjali e a Bhagavad Gītā carregam séculos de sabedoria destilada.\nA leitura contemplativa é, ela mesma, uma forma de meditação.`, acaoAtivo() { return '' } },
+  sadhana_purna:  { nome: 'Sādhanā Pūrṇā', subtitulo: 'Avaliação de Progresso', icone: '🌿', descricao: `Sādhanā Pūrṇā — "prática plena" — é o olhar atento sobre a sua jornada.\nPeriodicamente você terá uma conversa com o professor para mapear sua evolução.\nO progresso no Yoga não se mede em meses, mas em camadas de consciência.`, acaoAtivo() { return '' } },
+  atma_vijnana:   { nome: 'Ātma Vijñāna',  subtitulo: 'Anamnese Personalizada', icone: '🔍', descricao: `Ātma Vijñāna — "conhecimento do ser" — começa antes da primeira āsana.\nEste benefício garante uma conversa inicial aprofundada com o professor sobre histórico, objetivos e limitações.\nPorque a prática mais poderosa é aquela que parte de onde você realmente está.`, acaoAtivo() { return '' } },
+  shruti:         { nome: 'Śruti',          subtitulo: 'Áudio Diário',            icone: '🎵', descricao: `Śruti significa "o que foi ouvido" — e nas tradições do Yoga, o som é transmissão de sabedoria.\nDiariamente você recebe um áudio curto com mantras, prāṇāyāmas guiados ou reflexões.\nO som que você carrega dentro de você é o primeiro instrumento.`, acaoAtivo() { return '' } },
+  naada_mandir:   {
+    nome: 'Nāda Mandir', subtitulo: 'Biblioteca de Mantras', icone: '🕌',
+    descricao: `Nāda Mandir — "o templo do som" — reúne os mantras entoados em nossas aulas, com pronúncia correta, significado e contexto de uso.
 
-      <!-- Botão Meu Contrato -->
-      <button id="btn-meu-contrato" style="width:100%;padding:12px 16px;background:#fff;border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--verde);cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <span style="display:flex;align-items:center;gap:8px">
-          <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:#f0faf0;border-radius:50%;font-size:13px">✅</span>
-          Meu Contrato
-        </span>
-        <span style="font-size:11px;color:var(--txt2)">Ver →</span>
-      </button>
+Asato Mā Sad Gamaya — Bṛhadāraṇyaka Upaniṣad — oração pela passagem da ignorância para a verdade
+Pūrṇamadaḥ Pūrṇamidam — Īśa Upaniṣad — o todo não diminui quando dele se retira o todo
+Hari Om — Mantra de dissolução e presença
+Śrī Gurubhyo Namaḥ — Saudação ao guru e à linhagem
+Āditya Hṛdayam — Vālmīki Rāmāyaṇa — hino ao sol ensinado por Agastya a Rāma
+Om Gaṃ Gaṇapataye Namaḥ — Mantra a Gaṇeśa — remoção de obstáculos
+Om Klīm Kālikāyai Namaḥ — Mantra a Kālī — transformação e dissolução do ego
+Om Namaḥ Śivāya — Pañcākṣara — o mantra de cinco sílabas a Śiva`,
+    acaoAtivo() { return '' },
+  },
+}
 
-      ${!window.matchMedia('(display-mode: standalone)').matches && !localStorage.getItem('pwa-instalado') ? `
-      <div data-pwa style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-top:4px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:20px">📲</span>
-            <div>
-              <div style="font-size:13px;font-weight:500;color:var(--verde)">Instalar o app</div>
-              <div style="font-size:11px;color:var(--txt2)">Acesse mais rápido direto da tela inicial</div>
-            </div>
-          </div>
-          <button onclick="this.closest('[data-pwa]').style.display='none';localStorage.setItem('pwa-instalado','1')"
-            style="background:none;border:none;color:var(--txt2);font-size:16px;cursor:pointer;padding:4px">×</button>
-        </div>
-        <div id="pwa-ios-tip" style="display:none;background:rgba(242,236,206,.5);border-radius:6px;padding:10px 12px;font-size:12px;color:var(--txt);line-height:1.6;margin-bottom:8px">
-          No <strong>iPhone/iPad</strong>: toque em <strong>Compartilhar</strong> (ícone ↑ na barra do Safari) → <strong>"Adicionar à Tela de Início"</strong>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button id="btn-instalar-pwa" onclick="instalarAppAgora()"
-            style="flex:1;padding:9px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500">Instalar agora</button>
-          <button onclick="mostrarDicaIOS()"
-            style="padding:9px 12px;background:#fff;color:var(--verde);border:1px solid var(--borda);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer">iPhone/iPad</button>
-        </div>
-      </div>` : ''}
-    </div>
+// ── Dicionário ────────────────────────────────────────────────
+const DICIONARIO = {
+  'Muscular':        'Fortalece e tona a musculatura, melhorando força, resistência e coordenação motora.',
+  'Esquelético':     'Promove alinhamento ósseo, densidade e saúde articular, prevenindo desgastes.',
+  'Cardiovascular':  'Estimula a circulação sanguínea, nutrindo órgãos e tecidos com oxigênio.',
+  'Respiratório':    'Amplia a capacidade pulmonar e melhora a qualidade e profundidade da respiração.',
+  'Nervoso':         'Regula o sistema nervoso, reduzindo o estresse e promovendo equilíbrio entre ação e repouso.',
+  'Digestório':      'Estimula os órgãos digestivos, melhorando absorção de nutrientes e eliminação de toxinas.',
+  'Eliminatório':    'Apoia os rins, intestinos e pele na eliminação de resíduos e toxinas do organismo.',
+  'Reprodutivo':     'Equilibra a energia pélvica, hormônios e vitalidade relacionados à criatividade e reprodução.',
+  'Linfático':       'Ativa a circulação linfática, fortalecendo a imunidade e drenando fluidos em excesso.',
+  'Endócrino':       'Regula as glândulas e a produção hormonal, influenciando humor, energia e metabolismo.',
+  'Terra':           'Sustentação, estabilidade e enraizamento. Convida à presença, firmeza e solidez interior.',
+  'Água':            'Fluidez, adaptabilidade e purificação. Conecta com as emoções e a capacidade de fluir.',
+  'Fogo':            'Transformação, potência e ativação metabólica. Acende a vontade e dissolve resistências.',
+  'Ar':              'Expansão, leveza e circulação energética. Nutre a mente e abre espaço para novos movimentos.',
+  'Éter':            'Espaço, vazio fértil e consciência pura. O elemento que contém todos os outros.',
+  'Vata':            'Dosha do movimento e leveza. Equilibrado pela prática, traz estabilidade e calma ao sistema nervoso.',
+  'Pitta':           'Dosha do fogo e transformação. A prática pode intensificá-lo; requer atenção ao esforço excessivo.',
+  'Kapha':           'Dosha da terra e água. Reduzido pela ativação muscular, calor e movimento, trazendo mais leveza.',
+  'Muladhara':       'Chakra raiz. Centro de segurança, sobrevivência e enraizamento. Localizado na base da coluna.',
+  'Svadisthana':     'Chakra sacral. Centro de criatividade, prazer e emoções. Localizado abaixo do umbigo.',
+  'Svādhiṣṭhāna':   'Chakra sacral. Centro de criatividade, prazer e emoções. Localizado abaixo do umbigo.',
+  'Manipura':        'Chakra do plexo solar. Centro de poder pessoal, vontade e autoestima.',
+  'Maṇipūra':       'Chakra do plexo solar. Centro de poder pessoal, vontade e autoestima.',
+  'Anahata':         'Chakra do coração. Centro do amor, compaixão e equilíbrio entre mundo material e espiritual.',
+  'Anāhata':        'Chakra do coração. Centro do amor, compaixão e equilíbrio entre mundo material e espiritual.',
+  'Vishuddha':       'Chakra da garganta. Centro da expressão, comunicação e autenticidade.',
+  'Ajna':            'Chakra do terceiro olho. Centro da intuição, discernimento e visão interior.',
+  'Sahasrara':       'Chakra da coroa. Centro da consciência pura, conexão com o todo e transcendência.',
+}
+
+function descDicionario(termo) {
+  if (DICIONARIO[termo]) return DICIONARIO[termo]
+  const key = Object.keys(DICIONARIO).find(k =>
+    termo.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(termo.toLowerCase())
+  )
+  return key ? DICIONARIO[key] : null
+}
+
+// ── Lightbox ──────────────────────────────────────────────────
+function _abrirLightbox(src, alt) {
+  document.getElementById('_ea-lightbox')?.remove()
+  const lb = document.createElement('div')
+  lb.id = '_ea-lightbox'
+  lb.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;
+    display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out`
+  lb.innerHTML = `
+    <img src="${src}" alt="${alt}" referrerpolicy="no-referrer"
+      style="max-width:100%;max-height:90vh;border-radius:8px;object-fit:contain;
+             box-shadow:0 20px 60px rgba(0,0,0,.5)">
+    <button onclick="document.getElementById('_ea-lightbox').remove()"
+      style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);
+             border:none;border-radius:50%;width:36px;height:36px;color:#fff;
+             font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+             line-height:1">×</button>`
+  lb.addEventListener('click', e => { if (e.target === lb) lb.remove() })
+  document.body.appendChild(lb)
+}
+window._abrirLightbox = _abrirLightbox
+
+// ── Botão salvar PDF ──────────────────────────────────────────
+function _btnSalvar(onclick) {
+  return `
+    <button onclick="${onclick}"
+      style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;
+             background:#fff;color:var(--verde);border:1px solid var(--borda);
+             border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
+             font-weight:500">
+      <i class="ti ti-download"></i> Salvar PDF
+    </button>`
+}
+
+// ── Impressão ─────────────────────────────────────────────────
+function _imprimirHTML(titulo, html) {
+  const win = window.open('', '_blank')
+  win.document.write(`<!DOCTYPE html><html lang="pt-BR"><head>
+    <meta charset="UTF-8">
+    <title>${titulo} — Espaço Autonomia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
+      body { font-family: 'DM Sans', sans-serif; font-size: 11px; color: #1F381F;
+             background: #fff; padding: 20px 28px; max-width: 700px; margin: 0 auto }
+      h1 { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 500;
+           color: #1F381F; margin-bottom: 4px }
+      h2 { font-family: 'Cormorant Garamond', serif; font-size: 14px; font-weight: 500;
+           color: #1F381F; margin: 10px 0 5px; border-bottom: 1px solid #d4c89e; padding-bottom: 3px }
+      p  { line-height: 1.6; color: #444; margin-bottom: 6px; font-size: 11px }
+      .meta { font-size: 10px; color: #7a7a6a; margin-bottom: 12px; display: flex; gap: 8px; flex-wrap: wrap }
+      .meta span { background: #f0ede4; padding: 2px 7px; border-radius: 20px }
+      .secao { margin-bottom: 8px; padding: 8px 12px; background: #fafaf7;
+               border-left: 3px solid #1F381F; border-radius: 0 6px 6px 0 }
+      .item { display: flex; gap: 8px; padding: 3px 0;
+              border-bottom: 1px solid #e8e4d8; font-size: 11px; line-height: 1.4 }
+      .item:last-child { border-bottom: none }
+      .item-termo { font-weight: 500; min-width: 110px; flex-shrink: 0; color: #1F381F }
+      .item-desc  { color: #555 }
+      .citacao { border-left: 3px solid #e8bc4f; background: #fdf8ec;
+                 padding: 8px 12px; border-radius: 0 8px 8px 0; margin: 10px 0;
+                 font-family: 'Cormorant Garamond', serif; font-size: 13px;
+                 font-style: italic; color: #1F381F; line-height: 1.5 }
+      .reflexao { background: #1F381F; color: #f2ecce; padding: 12px 16px;
+                  border-radius: 8px; margin-top: 14px; font-style: italic;
+                  font-family: 'Cormorant Garamond', serif; font-size: 13px; line-height: 1.6 }
+      .reflexao-label { font-size: 9px; text-transform: uppercase; letter-spacing: .8px;
+                        color: rgba(242,236,206,.55); margin-bottom: 4px; font-style: normal;
+                        font-family: 'DM Sans', sans-serif }
+      .rodape { margin-top: 16px; padding-top: 8px; border-top: 1px solid #d4c89e;
+                font-size: 9px; color: #aaa; text-align: center }
+      .tummee-link { background: #1F381F; color: #f2ecce; padding: 8px 12px;
+                     border-radius: 6px; margin: 8px 0; font-size: 11px; word-break: break-all }
+      img.postura { width: 100%; max-height: 160px; object-fit: cover;
+                    object-position: center top; border-radius: 6px; margin-bottom: 10px;
+                    display: block; page-break-inside: avoid }
+      @media print {
+        @page { margin: 1cm; size: A4 }
+        body { padding: 0; font-size: 10px }
+        h1 { font-size: 20px }
+        h2 { font-size: 13px; margin: 8px 0 4px }
+        .secao { padding: 6px 10px; margin-bottom: 6px }
+        .item { padding: 2px 0 }
+        img.postura { max-height: 140px; page-break-inside: avoid; break-inside: avoid }
+        h2, .secao, .item { page-break-inside: avoid; break-inside: avoid }
+        html { zoom: 0.82 }
+      }
+    </style>
+  </head><body>${html}
+    <div class="rodape">Espaço Autonomia · Dharma Phala · gerado em ${new Date().toLocaleDateString('pt-BR')}</div>
+    <script>
+      window.onload = function() {
+        const imgs = document.querySelectorAll('img')
+        if (!imgs.length) { window.print(); return }
+        let loaded = 0
+        imgs.forEach(img => {
+          if (img.complete) { loaded++; if (loaded === imgs.length) window.print() }
+          else {
+            img.onload  = () => { loaded++; if (loaded === imgs.length) window.print() }
+            img.onerror = () => { img.style.display='none'; loaded++; if (loaded === imgs.length) window.print() }
+          }
+        })
+      }
+    <\/script>
+  </body></html>`)
+  win.document.close()
+}
+
+// ── Banner de introdução (primeira visita) ────────────────────
+function _renderIntro(campo, onContinuar) {
+  const intro = BENEFICIO_INTRO[campo]
+  if (!intro) { onContinuar(); return }
+
+  const chave = _introVista(campo)
+  if (localStorage.getItem(chave)) { onContinuar(); return }
+
+  const div = document.createElement('div')
+  div.id = '_ea-intro-banner'
+  div.style.cssText = `
+    background:var(--verde);border-radius:12px;padding:24px 20px;margin-bottom:16px;
+    animation:_ya-slide-in .3s ease
+  `
+  div.innerHTML = `
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;
+                color:rgba(242,236,206,.55);margin-bottom:8px;font-weight:500">O que é este benefício</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;
+                color:var(--bege);margin-bottom:10px">${intro.titulo}</div>
+    <p style="font-size:13px;color:rgba(242,236,206,.85);line-height:1.7;margin:0 0 18px">${intro.desc}</p>
+    <button id="btn-intro-continuar"
+      style="padding:10px 22px;background:var(--bege);color:var(--verde);border:none;
+             border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;
+             font-family:'DM Sans',sans-serif">
+      Continuar →
+    </button>
   `
 
-  uiAnimar(container)
-  initNotifHandlers(notifs, perfil.id)
+  // Injeta no topo do content, antes do conteúdo real
+  const content = document.querySelector('.content') || document.getElementById('main-area')
+  if (content) content.insertBefore(div, content.firstChild)
 
-  // ── Meu Contrato ─────────────────────────────────────────────
-  document.getElementById('btn-meu-contrato').addEventListener('click', () => {
-    verContratoAceito(userId, perfil.nome)
+  document.getElementById('btn-intro-continuar').addEventListener('click', () => {
+    localStorage.setItem(chave, '1')
+    div.style.opacity = '0'
+    div.style.transition = 'opacity .2s'
+    setTimeout(() => { div.remove(); onContinuar() }, 200)
   })
+}
 
-  window.cancelarConfHome = async function(confId, ocId) {
-    const {data,error} = await sb.rpc('cancelar_confirmacao',{p_aluno_id:userId,p_ocorrencia_id:ocId})
-    if (error||!data?.ok){toast('❌ '+(data?.motivo||error?.message));return}
-    toast(data.mensagem); navigate('aluno-home')
+// ── Render principal ──────────────────────────────────────────
+export async function renderAlunosBeneficios(container, page) {
+  const slug  = page.replace('aluno-beneficio-', '')
+  const campo = SLUG_PARA_CAMPO[slug]
+  const b     = campo ? BENEFICIOS[campo] : null
+
+  if (!b) {
+    container.innerHTML = `<div class="topbar"><div class="topbar-t">Dharma Phala</div></div>
+      <div class="content"><p style="color:#c0392b;font-size:13px">Benefício não encontrado: ${slug}</p></div>`
+    return
   }
 
-  window.instalarAppAgora = async function() {
-    if (window._deferredPrompt) {
-      window._deferredPrompt.prompt()
-      const { outcome } = await window._deferredPrompt.userChoice
-      if (outcome === 'accepted') { localStorage.setItem('pwa-instalado', '1'); toast('✓ App instalado!') }
-      window._deferredPrompt = null
-    } else {
-      document.getElementById('pwa-ios-tip').style.display = 'block'
-      document.getElementById('btn-instalar-pwa').textContent = 'Siga as instruções acima'
-      document.getElementById('btn-instalar-pwa').style.background = 'var(--borda)'
-      document.getElementById('btn-instalar-pwa').style.color = 'var(--txt2)'
+  container.innerHTML = `
+    <div class="topbar"><div class="topbar-t">Dharma Phala</div></div>
+    <div class="content"><div class="loading-page"><div class="spin-big"></div></div></div>`
+
+  const isVisitante = window._perfil?.tipo === 'visitante'
+
+  let planoData = window._planoData
+  const planoTipo = window._plano || null
+
+  if (isVisitante) {
+    // Visitante tem acesso apenas a sangha e asana_marga
+    planoData = null
+  } else if (planoData === undefined) {
+    if (planoTipo) {
+      const { data } = await window._sb.from('planos')
+        .select('sangha,kala_sadhya,asana_marga,yoga_adhyayana,jnana_marga,sadhana_purna,atma_vijnana,shruti,naada_mandir')
+        .eq('tipo', planoTipo).maybeSingle()
+      planoData = data || null
+      window._planoData = planoData
+    } else { planoData = null }
+  }
+
+  const temAcesso = isVisitante
+    ? BENEFICIOS_VISITANTE.includes(campo)
+    : !!(planoData && planoData[campo])
+
+  // Verifica se deve mostrar intro antes do conteúdo
+  const _renderConteudo = async () => {
+    if (campo === 'yoga_adhyayana' && temAcesso) { await _renderYogaAdhyayana(container); return }
+    if (campo === 'asana_marga'    && temAcesso) { await _renderAsanaMarga(container);    return }
+    if (campo === 'jnana_marga'    && temAcesso) { await _renderJnanaMarga(container);    return }
+    _renderBeneficioGenerico(container, b, campo, temAcesso, planoTipo, isVisitante)
+  }
+
+  // Para conteúdos com render próprio, mostra intro antes de renderizar
+  if (temAcesso && ['yoga_adhyayana','asana_marga','jnana_marga'].includes(campo)) {
+    const chave = _introVista(campo)
+    if (!localStorage.getItem(chave)) {
+      // Renderiza esqueleto limpo e mostra intro no topo
+      container.querySelector('.content').innerHTML = ''
+      _injetarAnimacao()
+      const intro = BENEFICIO_INTRO[campo]
+      const div = document.createElement('div')
+      div.style.cssText = 'padding:0'
+      div.innerHTML = `
+        <div style="background:var(--verde);border-radius:12px;padding:24px 20px;
+                    animation:_ya-slide-in .3s ease">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;
+                      color:rgba(242,236,206,.55);margin-bottom:8px;font-weight:500">O que é este benefício</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;
+                      color:var(--bege);margin-bottom:10px">${intro.titulo}</div>
+          <p style="font-size:13px;color:rgba(242,236,206,.85);line-height:1.7;margin:0 0 18px">${intro.desc}</p>
+          <button id="btn-intro-ok"
+            style="padding:10px 22px;background:var(--bege);color:var(--verde);border:none;
+                   border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;
+                   font-family:'DM Sans',sans-serif">
+            Continuar →
+          </button>
+        </div>`
+      container.querySelector('.content').appendChild(div)
+      document.getElementById('btn-intro-ok').addEventListener('click', () => {
+        localStorage.setItem(chave, '1')
+        container.querySelector('.content').innerHTML = '<div class="loading-page"><div class="spin-big"></div></div>'
+        _renderConteudo()
+      })
+      return
     }
   }
 
-  window.mostrarDicaIOS = function() {
-    const tip = document.getElementById('pwa-ios-tip')
-    if (tip) tip.style.display = tip.style.display === 'none' ? 'block' : 'none'
+  await _renderConteudo()
+}
+
+// ── Stepper ───────────────────────────────────────────────────
+function _stepper(secoes, prefixo) {
+  let secaoAtiva = 0
+  function renderStepper() {
+    return secoes.map((s, idx) => {
+      const aberta  = idx === secaoAtiva
+      const passada = idx < secaoAtiva
+      const linha   = idx < secoes.length - 1
+        ? `<div style="width:2px;min-height:12px;flex:1;background:${passada ? s.cor : 'rgba(212,200,158,.4)'};margin:2px auto;transition:background .3s"></div>`
+        : ''
+      return `
+        <div style="display:flex;gap:12px">
+          <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:32px">
+            <button onclick="window._step_${prefixo}(${idx})"
+              style="width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;
+                     display:flex;align-items:center;justify-content:center;flex-shrink:0;
+                     background:${aberta ? s.cor : passada ? s.cor : 'rgba(212,200,158,.4)'};
+                     transition:background .3s;padding:0">
+              <i class="ti ${s.icone}" style="font-size:14px;color:${aberta||passada?'#fff':'var(--txt2)'}"></i>
+            </button>
+            ${linha}
+          </div>
+          <div style="flex:1">
+            <div onclick="window._step_${prefixo}(${idx})" style="cursor:pointer;padding:5px 0 ${aberta?'12px':'16px'}">
+              <div style="font-size:13px;font-weight:500;color:${aberta?s.cor:passada?'var(--txt2)':'var(--txt)'};transition:color .3s">${s.titulo}</div>
+              ${!aberta ? `<div style="font-size:11px;color:var(--txt2);margin-top:2px">${s.itens.length} itens</div>` : ''}
+            </div>
+            ${aberta ? `
+              <div style="animation:_ya-slide-in .25s ease">
+                ${s.itens.map((item, i) => `
+                  <div style="display:flex;gap:10px;padding:9px 0;
+                              border-bottom:${i < s.itens.length-1 ? '1px solid rgba(212,200,158,.3)' : 'none'}">
+                    <div style="width:6px;height:6px;border-radius:50%;background:${s.cor};flex-shrink:0;margin-top:6px"></div>
+                    <div style="font-size:13px;line-height:1.6">
+                      <span style="font-weight:500;color:var(--txt)">${item.termo}</span>
+                      <span style="color:var(--txt2)">: ${item.desc}</span>
+                    </div>
+                  </div>`).join('')}
+                ${idx < secoes.length - 1
+                  ? `<button onclick="window._step_${prefixo}(${idx+1})"
+                       style="margin-top:14px;width:100%;padding:9px;background:${s.cor};color:#fff;
+                              border:none;border-radius:7px;font-size:12px;font-weight:500;
+                              cursor:pointer;font-family:'DM Sans',sans-serif">
+                       Próximo: ${secoes[idx+1].titulo} →
+                     </button>`
+                  : `<div style="margin-top:14px;padding:12px;background:rgba(31,56,31,.06);
+                                 border-radius:7px;text-align:center;font-size:12px;color:var(--txt2)">
+                       ✓ Completo
+                     </div>`
+                }
+              </div>` : ''}
+          </div>
+        </div>`
+    }).join('')
   }
+  window[`_step_${prefixo}`] = function(idx) {
+    secaoAtiva = idx
+    const el = document.getElementById(`stepper-${prefixo}`)
+    if (el) el.innerHTML = renderStepper()
+  }
+  return { renderStepper, containerId: `stepper-${prefixo}` }
+}
+
+function _injetarAnimacao() {
+  if (!document.getElementById('_ya-style')) {
+    const s = document.createElement('style')
+    s.id = '_ya-style'
+    s.textContent = `@keyframes _ya-slide-in { from { opacity:0; transform:translateY(-6px) } to { opacity:1; transform:translateY(0) } }`
+    document.head.appendChild(s)
+  }
+}
+
+// ── Yoga Adhyayana ────────────────────────────────────────────
+async function _renderYogaAdhyayana(container) {
+  const { AULA_SEMANA: aula } = await import(`../../data/yoga_adhyayana.js?t=${Date.now()}`)
+  _injetarAnimacao()
+  const nivelCor = { 'Iniciante': '#2d7a2d', 'Intermediário': '#c8a020', 'Avançado': '#8a1a1a', 'Novato': '#2d7a2d' }[aula.nivel] || 'var(--verde)'
+  const nivelBg  = { 'Iniciante': 'rgba(45,122,45,.1)', 'Intermediário': 'rgba(200,160,32,.1)', 'Avançado': 'rgba(138,26,26,.1)', 'Novato': 'rgba(45,122,45,.1)' }[aula.nivel] || 'rgba(31,56,31,.08)'
+  const { renderStepper, containerId } = _stepper(aula.secoes, 'ya')
+  const imgHtml = aula.imagem ? `
+    <div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:16px;
+                background:var(--verde);min-height:160px;cursor:zoom-in"
+         onclick="_abrirLightbox('${aula.imagem}','${aula.tema}')" title="Clique para ampliar">
+      <img src="${aula.imagem}" alt="${aula.tema}" referrerpolicy="no-referrer"
+        style="width:100%;max-height:240px;object-fit:cover;object-position:center center;
+               display:block;opacity:.9" onerror="this.parentElement.style.display='none'">
+      <div style="position:absolute;bottom:0;left:0;right:0;padding:16px;
+                  background:linear-gradient(to top,rgba(31,56,31,.92) 0%,transparent 100%)">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;
+                    color:var(--bege);line-height:1.2">${aula.tema}</div>
+        <div style="font-size:11px;color:rgba(242,236,206,.75);margin-top:3px">${aula.nivel_descricao}</div>
+      </div>
+      <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);
+                  border-radius:20px;padding:3px 8px;font-size:10px;color:#fff;
+                  display:flex;align-items:center;gap:4px">
+        <i class="ti ti-zoom-in" style="font-size:12px"></i> ampliar
+      </div>
+    </div>` : ''
+
+  container.querySelector('.content').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:26px">📖</span>
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">Yoga Adhyayana</div>
+          <div style="font-size:12px;color:var(--txt2)">Conteúdo da semana</div>
+        </div>
+      </div>
+      ${_btnSalvar('window._salvarYA()')}
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+      <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">Aula ${aula.numero}</span>
+      <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.data}</span>
+      <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.categoria}</span>
+      <span style="font-size:11px;background:${nivelBg};color:${nivelCor};padding:3px 10px;border-radius:20px;font-weight:500">${aula.nivel}</span>
+    </div>
+    ${imgHtml}
+    <div style="border-left:3px solid var(--dourado);background:rgba(232,188,79,.07);
+                border-radius:0 8px 8px 0;padding:13px 16px;margin-bottom:18px">
+      <p style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;
+                color:var(--verde);line-height:1.6;margin:0">"${aula.citacao}"</p>
+    </div>
+    <div id="${containerId}" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px 16px;margin-bottom:16px">
+      ${renderStepper()}
+    </div>
+    <div style="background:var(--verde);border-radius:12px;padding:20px">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.55);margin-bottom:8px;font-weight:500">Reflexão da semana</div>
+      <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--bege);line-height:1.7;margin:0;font-style:italic">${aula.reflexao}</p>
+    </div>
+  `
+  window._salvarYA = function() {
+    const secoesHtml = aula.secoes.map(s => `
+      <h2>${s.titulo}</h2>
+      <div class="secao">
+        ${s.itens.map(item => `
+          <div class="item"><div class="item-termo">${item.termo}</div><div class="item-desc">${item.desc}</div></div>`).join('')}
+      </div>`).join('')
+    const imgTag = aula.imagem ? `<img src="${aula.imagem}" alt="${aula.tema}" class="postura" referrerpolicy="no-referrer">` : ''
+    _imprimirHTML(`Yoga Adhyayana — ${aula.tema}`, `
+      <h1>${aula.tema}</h1>
+      <div class="meta"><span>Aula ${aula.numero}</span><span>${aula.data}</span><span>${aula.categoria}</span><span>${aula.nivel}</span></div>
+      ${imgTag}
+      <div class="citacao">"${aula.citacao}"</div>
+      <p style="font-size:11px;color:#888;margin-bottom:16px">${aula.nivel_descricao}</p>
+      ${secoesHtml}
+      <div class="reflexao"><div class="reflexao-label">Reflexão da semana</div>${aula.reflexao}</div>
+    `)
+  }
+  uiAnimar(container)
+}
+
+// ── Asana Marga ───────────────────────────────────────────────
+async function _renderAsanaMarga(container) {
+  const { AULA_PRATICA: aula } = await import(`../../data/asana_marga.js?t=${Date.now()}`)
+  _injetarAnimacao()
+  const nivelCor = { 'Novatos': '#2d7a2d', 'Intermediário': '#c8a020', 'Avançado': '#8a1a1a' }[aula.nivel] || 'var(--verde)'
+  const nivelBg  = { 'Novatos': 'rgba(45,122,45,.1)', 'Intermediário': 'rgba(200,160,32,.1)', 'Avançado': 'rgba(138,26,26,.1)' }[aula.nivel] || 'rgba(31,56,31,.08)'
+  const secoes = [
+    { id:'introducao', titulo:'Introdução',        icone:'ti-Om',       cor:'#7F77DD', itens: aula.introducao },
+    { id:'pranayama',  titulo:'Prāṇāyāma',         icone:'ti-wind',     cor:'#378ADD', itens: aula.pranayama  },
+    { id:'mantra',     titulo:'Mantra',             icone:'ti-music',    cor:'#BA7517', itens: aula.mantra     },
+    { id:'energetica', titulo:'Leitura Energética', icone:'ti-sparkles', cor:'#639922', itens: [
+      { termo: 'Koshas',  desc: aula.leitura_energetica.koshas.join(' · ') },
+      { termo: 'Chakras', desc: aula.leitura_energetica.cakras.join(' · ')  },
+      { termo: 'Gunas',   desc: aula.leitura_energetica.gunas.join(' · ')   },
+    ]},
+  ]
+  const { renderStepper, containerId } = _stepper(secoes, 'am')
+  let iframeAberto = false
+
+  container.querySelector('.content').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:26px">🧘</span>
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">Āsana Mārga</div>
+          <div style="font-size:12px;color:var(--txt2)">Aula prática da semana</div>
+        </div>
+      </div>
+      ${_btnSalvar('window._salvarAM()')}
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+      <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">Aula ${aula.numero}</span>
+      <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.data}</span>
+      <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.modalidade}</span>
+      <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.duracao}</span>
+      <span style="font-size:11px;background:${nivelBg};color:${nivelCor};padding:3px 10px;border-radius:20px;font-weight:500">${aula.nivel}</span>
+    </div>
+    <div style="border-left:3px solid var(--dourado);background:rgba(232,188,79,.07);
+                border-radius:0 8px 8px 0;padding:13px 16px;margin-bottom:18px">
+      <p style="font-size:14px;font-style:italic;color:var(--verde);line-height:1.6;margin:0;
+                font-family:'Cormorant Garamond',serif">${aula.descricao}</p>
+    </div>
+    <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:16px">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:4px">Sequência de Āsanas</div>
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">Faça-os devagar, sem forçar — de 30s a 1min cada āsana.</div>
+      <button onclick="window._amToggleIframe()" id="btn-am-iframe"
+        style="width:100%;padding:11px;background:var(--verde);color:var(--bege);border:none;
+               border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;
+               font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px">
+        <i class="ti ti-eye"></i> Ver sequência completa
+      </button>
+      <div id="am-iframe-wrap" style="display:none;margin-top:12px;border-radius:8px;overflow:hidden;border:1px solid var(--borda)">
+        <iframe src="${aula.link_tummee}"
+          style="width:100%;height:600px;border:none;display:block" loading="lazy"
+          title="Sequência de āsanas"></iframe>
+      </div>
+    </div>
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:10px">Estrutura da aula</div>
+    <div id="${containerId}" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px 16px">
+      ${renderStepper()}
+    </div>
+  `
+  window._amToggleIframe = function() {
+    iframeAberto = !iframeAberto
+    const wrap = document.getElementById('am-iframe-wrap')
+    const btn  = document.getElementById('btn-am-iframe')
+    if (!wrap || !btn) return
+    wrap.style.display = iframeAberto ? 'block' : 'none'
+    btn.innerHTML = iframeAberto ? '<i class="ti ti-eye-off"></i> Fechar sequência' : '<i class="ti ti-eye"></i> Ver sequência completa'
+    btn.style.background = iframeAberto ? 'rgba(31,56,31,.15)' : 'var(--verde)'
+    btn.style.color      = iframeAberto ? 'var(--verde)' : 'var(--bege)'
+    btn.style.border     = iframeAberto ? '1px solid var(--borda)' : 'none'
+  }
+  window._salvarAM = function() {
+    const estruturaHtml = secoes.map(s => `
+      <h2>${s.titulo}</h2>
+      <div class="secao">
+        ${s.itens.map(item => `<div class="item"><div class="item-termo">${item.termo}</div><div class="item-desc">${item.desc}</div></div>`).join('')}
+      </div>`).join('')
+    _imprimirHTML(`Āsana Mārga — Aula ${aula.numero}`, `
+      <h1>Āsana Mārga — Aula ${aula.numero}</h1>
+      <div class="meta"><span>${aula.data}</span><span>${aula.modalidade}</span><span>${aula.duracao}</span><span>${aula.nivel}</span></div>
+      <div class="citacao">${aula.descricao}</div>
+      <h2>Sequência de Āsanas</h2>
+      <div class="tummee-link">Acesse a sequência completa em: <strong>${aula.link_tummee}</strong></div>
+      <p style="font-size:11px;color:#888">Faça-os devagar, sem forçar — de 30s a 1min cada āsana.</p>
+      ${estruturaHtml}
+    `)
+  }
+  uiAnimar(container)
+}
+
+// ── Jñāna Mārga ───────────────────────────────────────────────
+async function _renderJnanaMarga(container) {
+  _injetarAnimacao()
+  const sb   = window._sb
+  const hoje = new Date().toISOString().slice(0, 10)
+  const { data: posturas, error } = await sb
+    .from('jnana_posturas').select('*')
+    .lte('publicada_em', hoje)
+    .order('publicada_em', { ascending: false })
+  if (error) {
+    container.querySelector('.content').innerHTML = `<p style="color:#c0392b;font-size:13px">Erro: ${error.message}</p>`
+    return
+  }
+  if (!posturas || posturas.length === 0) {
+    container.querySelector('.content').innerHTML = `
+      <div style="text-align:center;padding:48px 24px">
+        <div style="font-size:40px;margin-bottom:12px">📜</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--verde);margin-bottom:8px">Em breve</div>
+        <div style="font-size:13px;color:var(--txt2)">O conteúdo do Jñāna Mārga chegará em breve.</div>
+      </div>`
+    return
+  }
+  const hoje_postura = posturas.find(p => p.publicada_em === hoje) || posturas[0]
+  let posturaSel = hoje_postura
+
+  function _secoesDicionario(p) {
+    const secSistemas = (p.sistemas||[]).length ? { id:'sist', titulo:'Sistemas equilibrados', icone:'ti-heart', cor:'#1D9E75', itens: (p.sistemas||[]).map(t => ({ termo: t, desc: descDicionario(t) || 'Equilibrado e fortalecido por esta postura.' })) } : null
+    const secElementos = (p.elementos||[]).length ? { id:'elem', titulo:'Elementos (Tattvas)', icone:'ti-leaf', cor:'#639922', itens: (p.elementos||[]).map(t => ({ termo: t, desc: descDicionario(t) || 'Elemento ativado por esta postura.' })) } : null
+    const secAyur = p.ayurveda ? { id:'ayur', titulo:'Ayurveda', icone:'ti-scale', cor:'#BA7517', itens: p.ayurveda.split(/[,;]/).map(s => s.trim()).filter(Boolean).map(t => { const dosha = ['Vata','Pitta','Kapha'].find(d => t.includes(d)); return { termo: dosha || t, desc: descDicionario(dosha || t) || t } }) } : null
+    const NOMES_CHAKRAS = ['Muladhara','Svadisthana','Svādhiṣṭhāna','Manipura','Maṇipūra','Anahata','Anāhata','Vishuddha','Ajna','Sahasrara']
+    const secChakras = p.chakras ? { id:'chak', titulo:'Chakras', icone:'ti-rotate-clockwise', cor:'#7F77DD', itens: (() => { const encontrados = NOMES_CHAKRAS.filter(c => p.chakras.includes(c)); if (encontrados.length > 0) return encontrados.map(c => ({ termo: c, desc: descDicionario(c) || p.chakras })); const partes = p.chakras.split(/[,;.]/).map(s => s.trim()).filter(Boolean); return partes.length > 1 ? partes.map(t => ({ termo: t, desc: descDicionario(t) || 'Chakra ativado por esta postura.' })) : [{ termo: 'Chakras ativados', desc: p.chakras }] })() } : null
+    return [secSistemas, secElementos, secAyur, secChakras].filter(Boolean)
+  }
+
+  function _salvarPostura(p) {
+    const secoesBase = [
+      p.simbolismo ? [{ termo: 'Simbolismo', desc: p.simbolismo }] : null,
+      (p.instrucoes||[]).length ? p.instrucoes.map((inst, i) => ({ termo: `Passo ${i+1}`, desc: inst })) : null,
+      p.beneficios ? [{ termo: 'Benefícios', desc: p.beneficios }] : null,
+    ].filter(Boolean)
+    const energetica = []
+    if ((p.sistemas||[]).length) energetica.push({ termo: 'Sistemas', desc: p.sistemas.join(' · ') })
+    if ((p.elementos||[]).length) energetica.push({ termo: 'Elementos', desc: p.elementos.join(' · ') })
+    if (p.ayurveda) energetica.push({ termo: 'Ayurveda', desc: p.ayurveda })
+    if (p.chakras)  energetica.push({ termo: 'Chakras',  desc: p.chakras })
+    const dataFmt = new Date(p.publicada_em + 'T12:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })
+    const imgTag  = p.imagem ? `<img src="${p.imagem}" alt="${p.nome_popular}" class="postura" referrerpolicy="no-referrer">` : ''
+    const secoesHtml = [
+      secoesBase[0]?.length ? `<h2>Simbolismo</h2><div class="secao">${secoesBase[0].map(i=>`<div class="item"><div class="item-termo">${i.termo}</div><div class="item-desc">${i.desc}</div></div>`).join('')}</div>` : '',
+      secoesBase[1]?.length ? `<h2>Instruções</h2><div class="secao">${secoesBase[1].map(i=>`<div class="item"><div class="item-termo">${i.termo}</div><div class="item-desc">${i.desc}</div></div>`).join('')}</div>` : '',
+      secoesBase[2]?.length ? `<h2>Benefícios</h2><div class="secao">${secoesBase[2].map(i=>`<div class="item"><div class="item-termo">${i.termo}</div><div class="item-desc">${i.desc}</div></div>`).join('')}</div>` : '',
+      energetica.length ? `<h2>Sistemas & Energia</h2><div class="secao">${energetica.map(i=>`<div class="item"><div class="item-termo">${i.termo}</div><div class="item-desc">${i.desc}</div></div>`).join('')}</div>` : '',
+    ].join('')
+    _imprimirHTML(`Jñāna Mārga — ${p.nome_popular}`, `
+      ${imgTag}
+      <h1>${p.nome_popular}</h1>
+      <p style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:#5a7a5a;margin-bottom:4px">${p.nome_sanscrito}</p>
+      ${p.etimologia ? `<p style="font-size:11px;color:#888;margin-bottom:12px">${p.etimologia}</p>` : ''}
+      <div class="meta"><span>Jñāna Mārga · GUIPPY</span><span>${dataFmt}</span></div>
+      ${secoesHtml}
+    `)
+  }
+
+  function renderPostura(p) {
+    const secoesBase = [
+      p.simbolismo ? { id:'simb', titulo:'Simbolismo', icone:'ti-sun', cor:'#7F77DD', itens: [{ termo: 'Simbolismo', desc: p.simbolismo }] } : null,
+      (p.instrucoes||[]).length ? { id:'inst', titulo:'Instruções', icone:'ti-list-check', cor:'#1D9E75', itens: p.instrucoes.map((inst, i) => ({ termo: `Passo ${i+1}`, desc: inst })) } : null,
+      p.beneficios ? { id:'benef', titulo:'Benefícios', icone:'ti-heart-filled', cor:'#c0392b', itens: [{ termo: 'Benefícios', desc: p.beneficios }] } : null,
+    ].filter(Boolean)
+    const todasSecoes = [...secoesBase, ..._secoesDicionario(p)]
+    const { renderStepper, containerId } = _stepper(todasSecoes, 'jn_' + p.id.slice(0,8))
+    const isHoje  = p.publicada_em === hoje
+    const dataFmt = new Date(p.publicada_em + 'T12:00').toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long' })
+    const imgHtml = p.imagem ? `
+      <div style="position:relative;cursor:zoom-in" onclick="_abrirLightbox('${p.imagem}','${p.nome_popular}')" title="Clique para ampliar">
+        <img src="${p.imagem}" alt="${p.nome_popular}" referrerpolicy="no-referrer"
+          style="width:100%;max-height:220px;object-fit:cover;object-position:center center;display:block;opacity:.9" onerror="this.style.display='none'">
+        <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);border-radius:20px;padding:3px 8px;font-size:10px;color:#fff;display:flex;align-items:center;gap:4px">
+          <i class="ti ti-zoom-in" style="font-size:12px"></i> ampliar
+        </div>
+      </div>` : ''
+    return `
+      <div style="background:var(--verde);border-radius:12px;overflow:hidden;margin-bottom:16px">
+        ${imgHtml}
+        <div style="padding:${p.imagem ? '10px 16px 14px' : '20px'}">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.55);margin-bottom:6px">${isHoje ? '✦ Postura de hoje' : dataFmt}</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--bege);line-height:1.1">${p.nome_popular}</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-style:italic;color:rgba(242,236,206,.8);margin-top:4px">${p.nome_sanscrito}</div>
+          ${p.etimologia ? `<div style="font-size:11px;color:rgba(242,236,206,.55);margin-top:8px">${p.etimologia}</div>` : ''}
+        </div>
+      </div>
+      <div id="${containerId}" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px 16px;margin-bottom:16px">
+        ${renderStepper()}
+      </div>
+      <button onclick="window._salvarJN()" style="width:100%;margin-bottom:16px;padding:10px;background:#fff;color:var(--verde);border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:500">
+        <i class="ti ti-download"></i> Salvar esta postura em PDF
+      </button>`
+  }
+
+  const historicoHtml = posturas.length > 1 ? `
+    <div style="margin-top:6px">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:10px">Posturas anteriores (${posturas.length - 1})</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${posturas.filter(p => p.publicada_em !== hoje_postura.publicada_em).map(p => `
+          <button onclick="window._jnSelPost('${p.id}')" id="jn-hist-${p.id}"
+            style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:#fff;border:1px solid var(--borda);border-radius:8px;cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif">
+            <div>
+              <div style="font-size:13px;font-weight:500;color:var(--txt)">${p.nome_popular}</div>
+              <div style="font-size:11px;color:var(--txt2);font-style:italic">${p.nome_sanscrito}</div>
+            </div>
+            <div style="font-size:11px;color:var(--txt2);flex-shrink:0;margin-left:12px">${new Date(p.publicada_em + 'T12:00').toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})}</div>
+          </button>`).join('')}
+      </div>
+    </div>` : ''
+
+  container.querySelector('.content').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:26px">📜</span>
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">Jñāna Mārga</div>
+          <div style="font-size:12px;color:var(--txt2)">GUIPPY · Estudo literário diário</div>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--txt2);margin-bottom:16px">
+      <strong style="color:var(--verde)">${posturas.length}</strong> postura${posturas.length !== 1 ? 's' : ''} publicada${posturas.length !== 1 ? 's' : ''} até hoje
+    </div>
+    <div id="jn-postura-view">${renderPostura(posturaSel)}</div>
+    ${historicoHtml}
+  `
+  window._salvarJN = function() { _salvarPostura(posturaSel) }
+  window._jnSelPost = function(id) {
+    const p = posturas.find(x => x.id === id)
+    if (!p) return
+    posturaSel = p
+    document.querySelectorAll('[id^="jn-hist-"]').forEach(b => {
+      b.style.borderColor = b.id === `jn-hist-${id}` ? 'var(--verde)' : 'var(--borda)'
+      b.style.background  = b.id === `jn-hist-${id}` ? 'rgba(31,56,31,.04)' : '#fff'
+    })
+    const view = document.getElementById('jn-postura-view')
+    if (view) { view.innerHTML = renderPostura(p); view.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
+  }
+  uiAnimar(container)
+}
+
+// ── Benefício genérico ────────────────────────────────────────
+function _renderBeneficioGenerico(container, b, campo, temAcesso, planoTipo, isVisitante) {
+  const ORDEM = ['brahma','shiva_1x','shiva_2x','vishnu_2x','vishnu_livre']
+  const idxAtual = ORDEM.indexOf(planoTipo)
+  const planosComAcesso = PLANOS_COM_BENEFICIO[campo] || []
+  const planosUpgrade   = isVisitante ? planosComAcesso : planosComAcesso.filter(p => ORDEM.indexOf(p) > idxAtual)
+
+  const botoesUpgrade = planosUpgrade.map(p => {
+    const label = PLANO_LABELS[p] || p
+    const msg   = encodeURIComponent(`Olá! Sou aluno(a) do Espaço Autonomia e gostaria de mudar para o plano ${label}.`)
+    return `<a href="https://wa.me/${ESTUDIO_WA}?text=${msg}" target="_blank" rel="noopener"
+      style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;
+             background:var(--verde);color:var(--bege);border-radius:7px;text-decoration:none;
+             font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;white-space:nowrap">
+      <i class="ti ti-brand-whatsapp"></i> Mudar para ${label}
+    </a>`
+  }).join('')
+
+  const listaPlanos = planosComAcesso.map(p =>
+    `<span style="font-size:11px;background:rgba(232,188,79,.15);color:#7a6010;
+      padding:2px 8px;border-radius:20px;white-space:nowrap">${PLANO_LABELS[p]||p}</span>`
+  ).join(' ')
+
+  // Para sangha de visitante, usa link próprio
+  const acaoHtml = temAcesso
+    ? (campo === 'sangha' && isVisitante
+        ? `<a href="${SANGHA_LINKS.visitante}" target="_blank" rel="noopener"
+            style="display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:11px 22px;
+                   background:#25d366;color:#fff;border-radius:8px;text-decoration:none;
+                   font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif">
+            <i class="ti ti-brand-whatsapp"></i> Entrar no grupo Sangha
+          </a>`
+        : b.acaoAtivo(planoTipo))
+    : ''
+
+  container.querySelector('.content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+      <span style="font-size:36px;line-height:1;${temAcesso?'':'filter:grayscale(1);opacity:.4'}">${b.icone}</span>
+      <div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;
+                    color:${temAcesso?'var(--verde)':'var(--txt2)'};line-height:1.2">${b.nome}</div>
+        <div style="font-size:12px;color:var(--txt2);margin-top:3px">${b.subtitulo}</div>
+        ${temAcesso
+          ? `<span style="font-size:10px;background:rgba(31,56,31,.08);color:var(--verde);padding:2px 8px;border-radius:20px;font-weight:500;margin-top:4px;display:inline-block">Incluso no seu plano</span>`
+          : `<span style="font-size:10px;background:rgba(0,0,0,.06);color:var(--txt2);padding:2px 8px;border-radius:20px;margin-top:4px;display:inline-block">Não incluso no seu plano</span>`
+        }
+      </div>
+    </div>
+    <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px 20px;margin-bottom:16px">
+      <p style="font-size:14px;color:var(--txt);line-height:1.8;margin:0;white-space:pre-line">${(b.descricao||'').trim()}</p>
+      ${acaoHtml}
+    </div>
+    ${!temAcesso ? `
+      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:12px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);margin-bottom:8px">Disponível nos planos</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">${listaPlanos}</div>
+      </div>
+      ${planosUpgrade.length > 0 ? `
+        <div style="background:rgba(232,188,79,.06);border:1px solid rgba(232,188,79,.25);border-radius:var(--r);padding:16px 18px">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:4px">Quero ter acesso</div>
+          <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">Escolha o plano e enviaremos as informações pelo WhatsApp.</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">${botoesUpgrade}</div>
+        </div>` : ''}
+    ` : ''}
+  `
+  uiAnimar(container)
 }   
