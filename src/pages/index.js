@@ -1,11 +1,11 @@
 /**
  * src/pages/index.js
  */
-const V = '?v=5'
+const V = '?v=6'
 const rotaMap = {
   'dashboard':          () => import('./admin/dashboard.js'  + V).then(m => m.renderDashboard),
   'config':             () => import('./admin/config.js'     + V).then(m => m.renderConfig),
-  'grade':              () => import('./admin/grade.js'      + V).then(m => m.renderGrade),
+  'grade':              () => import('./admin/grade.js' + V).then(m => m.renderAlunoGrade),
   'criar-aulas':        () => import('./admin/criar_aulas.js'+ V).then(m => m.renderCriarAulas),
   'alunos':             () => import('./admin/alunos.js'     + V).then(m => m.renderAlunos),
   'presencas':          () => import('./admin/presencas.js'  + V).then(m => m.renderPresencas),
