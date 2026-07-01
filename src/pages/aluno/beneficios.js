@@ -23,7 +23,7 @@ const ESTUDIO_WA = '5511444901620'
 const PLANOS_COM_BENEFICIO = {
   sangha:         ['brahma','shiva_1x','shiva_2x','vishnu_2x','vishnu_livre'],
   kala_sadhya:    ['brahma','shiva_1x','shiva_2x','vishnu_2x','vishnu_livre'],
-  asana_marga:    ['shiva_1x','shiva_2x','vishnu_2x','vishnu_livre'],
+  asana_marga:    ['brahma','shiva_1x','shiva_2x','vishnu_2x','vishnu_livre'],
   yoga_adhyayana: ['shiva_1x','shiva_2x','vishnu_2x','vishnu_livre'],
   jnana_marga:    ['shiva_1x','shiva_2x','vishnu_2x','vishnu_livre'],
   sadhana_purna:  ['vishnu_2x','vishnu_livre'],
@@ -87,7 +87,20 @@ A flexibilidade não é um desvio do caminho — ela é o caminho.`,
   sadhana_purna:  { nome: 'Sādhanā Pūrṇā', subtitulo: 'Avaliação de Progresso', icone: '🌿', descricao: `Sādhanā Pūrṇā — "prática plena" — é o olhar atento sobre a sua jornada.\nPeriodicamente você terá uma conversa com o professor para mapear sua evolução.\nO progresso no Yoga não se mede em meses, mas em camadas de consciência.`, acaoAtivo() { return '' } },
   atma_vijnana:   { nome: 'Ātma Vijñāna',  subtitulo: 'Anamnese Personalizada', icone: '🔍', descricao: `Ātma Vijñāna — "conhecimento do ser" — começa antes da primeira āsana.\nEste benefício garante uma conversa inicial aprofundada com o professor sobre histórico, objetivos e limitações.\nPorque a prática mais poderosa é aquela que parte de onde você realmente está.`, acaoAtivo() { return '' } },
   shruti:         { nome: 'Śruti',          subtitulo: 'Áudio Diário',            icone: '🎵', descricao: `Śruti significa "o que foi ouvido" — e nas tradições do Yoga, o som é transmissão de sabedoria.\nDiariamente você recebe um áudio curto com mantras, prāṇāyāmas guiados ou reflexões.\nO som que você carrega dentro de você é o primeiro instrumento.`, acaoAtivo() { return '' } },
-  naada_mandir:   { nome: 'Nāda Mandir',   subtitulo: 'Biblioteca de Mantras',  icone: '🕌', descricao: `Nāda Mandir — "o templo do som" — é a nossa biblioteca de mantras sagrados.\nDo Oṃ ao Gāyatrī, do Mrityuñjaya ao Śānti Pāṭha: áudios com pronúncia correta, significado e contexto de uso.\nCom este benefício você leva o templo com você.`, acaoAtivo() { return '' } },
+  naada_mandir:   {
+    nome: 'Nāda Mandir', subtitulo: 'Biblioteca de Mantras', icone: '🕌',
+    descricao: `Nāda Mandir — "o templo do som" — reúne os mantras entoados em nossas aulas, com pronúncia correta, significado e contexto de uso.
+
+Asato Mā Sad Gamaya — Bṛhadāraṇyaka Upaniṣad — oração pela passagem da ignorância para a verdade
+Pūrṇamadaḥ Pūrṇamidam — Īśa Upaniṣad — o todo não diminui quando dele se retira o todo
+Hari Om — Mantra de dissolução e presença
+Śrī Gurubhyo Namaḥ — Saudação ao guru e à linhagem
+Āditya Hṛdayam — Vālmīki Rāmāyaṇa — hino ao sol ensinado por Agastya a Rāma
+Om Gaṃ Gaṇapataye Namaḥ — Mantra a Gaṇeśa — remoção de obstáculos
+Om Klīm Kālikāyai Namaḥ — Mantra a Kālī — transformação e dissolução do ego
+Om Namaḥ Śivāya — Pañcākṣara — o mantra de cinco sílabas a Śiva`,
+    acaoAtivo() { return '' },
+  },
 }
 
 // ── Dicionário ────────────────────────────────────────────────
