@@ -39,6 +39,7 @@ const MENUS = {
   admin: [
     { sec: 'Visão Geral' },
     { id: 'dashboard',          label: 'Dashboard',           icon: 'ti-layout-dashboard' },
+    { id: 'timeline',           label: 'Timeline',            icone: '💬'                  },
     { id: 'grade',              label: 'Grade de Aulas',      icon: 'ti-calendar'         },
     { sec: 'Gestão' },
     { id: 'criar-aulas',        label: 'Criar Aulas',         icon: 'ti-circle-plus'      },
@@ -55,6 +56,7 @@ const MENUS = {
   professor: [
     { sec: 'Minhas Aulas' },
     { id: 'prof-home',    label: 'Dashboard',    icon: 'ti-layout-dashboard' },
+    { id: 'timeline',     label: 'Timeline',     icone: '💬'                  },
     { id: 'prof-aulas',   label: 'Minhas Aulas', icon: 'ti-calendar'         },
     { id: 'prof-chamada', label: 'Chamada',      icon: 'ti-checkbox'         },
     { id: 'prof-repasse', label: 'Meu Repasse',  icon: 'ti-calculator'       },
@@ -62,6 +64,7 @@ const MENUS = {
   aluno: [
     { sec: 'Meu Espaço' },
     { id: 'aluno-home',   label: 'Início',         icon: 'ti-home'     },
+    { id: 'timeline',     label: 'Timeline',       icone: '💬'          },
     { id: 'aluno-grade',  label: 'Grade de Aulas', icon: 'ti-calendar' },
     { id: 'aluno-minhas', label: 'Minhas Aulas',   icon: 'ti-bookmark' },
     { id: 'aluno-plano',  label: 'Meu Plano',      icon: 'ti-award'    },
@@ -69,6 +72,7 @@ const MENUS = {
   visitante: [
     { sec: 'Meu Espaço' },
     { id: 'aluno-home', label: 'Início', icon: 'ti-home' },
+    { id: 'timeline',   label: 'Timeline', icone: '💬'    },
   ],
 }
 
@@ -337,4 +341,4 @@ export function initMobileMenu() {
       if (bar && window.innerWidth <= 768) bar.style.display = 'none'
     }
   })
-}    
+}   
