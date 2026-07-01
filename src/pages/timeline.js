@@ -5,20 +5,15 @@
 import { toast } from '../modules/utils.js'
 import { uiAnimar } from '../modules/ui.js'
 
-// ── Regras de permissão por plano_tipo ────────────────────────
-const PODE_POSTAR_DIRETO = ['admin', 'professor']
 const PLANOS_POSTAR_PENDENTE = ['vishnu_2x', 'vishnu_livre']
 const PLANOS_COMENTAR        = ['vishnu_2x', 'vishnu_livre', 'shiva_1x', 'shiva_2x']
-// Curtir: qualquer perfil logado, incluindo sem matrícula (brahma já cobre o resto)
-// Salvar: qualquer aluno com matrícula ativa + admin/professor (não visitante)
-
 const PAGE_SIZE = 10
 
 export async function renderTimeline(container, page) {
-  const sb = window._sb
+  const sb     = window._sb
   const perfil = window._perfil
 
-  // ── Descobre plano ativo do aluno (se for aluno) ────────────
+  // ── Descobre plano ativo do aluno ────────────────────────────
   let planoTipo = null
   if (perfil.tipo === 'aluno') {
     const { data: mat } = await sb
@@ -30,13 +25,12 @@ export async function renderTimeline(container, page) {
     planoTipo = mat?.plano_tipo || null
   }
 
-  const isAdmin = perfil.tipo === 'admin'
-  const isProf  = perfil.tipo === 'professor'
-
-  const podePostar   = isAdmin || isProf || PLANOS_POSTAR_PENDENTE.includes(planoTipo)
-  const podeComentar = isAdmin || isProf || PLANOS_COMENTAR.includes(planoTipo)
-  const podeSalvar   = isAdmin || isProf || !!planoTipo // qualquer plano (inclui brahma), exclui visitante
-  const podeCurtir   = true // qualquer perfil logado, incluindo visitante
+  const isAdmin  = perfil.tipo === 'admin'
+  const isProf   = perfil.tipo === 'professor'
+  const podePostar    = isAdmin || isProf || PLANOS_POSTAR_PENDENTE.includes(planoTipo)
+  const podeComentar  = isAdmin || isProf || PLANOS_COMENTAR.includes(planoTipo)
+  const podeSalvar    = isAdmin || isProf || !!planoTipo
+  const podeExcluir   = isAdmin || isProf
 
   container.innerHTML = `
     <div class="topbar">
@@ -60,27 +54,23 @@ export async function renderTimeline(container, page) {
 
   uiAnimar(container)
 
-  // ── Estado local ──
-  let feedOffset = 0
+  let feedOffset    = 0
   let modoModeracao = false
 
-  // ── Compose handlers ──
   if (podePostar) {
     document.getElementById('btn-tl-postar')?.addEventListener('click', () => publicarPost())
     document.getElementById('btn-tl-cancelar')?.addEventListener('click', () => limparCompose())
   }
-
   if (isAdmin) {
     document.getElementById('btn-moderacao')?.addEventListener('click', () => toggleModeracao())
     atualizarContadorPendentes()
   }
-
   document.getElementById('btn-carregar-mais')?.addEventListener('click', () => carregarFeed(true))
 
   await carregarFeed(false)
 
   // ════════════════════════════════════════════════════════════
-  // Funções internas
+  // Feed
   // ════════════════════════════════════════════════════════════
 
   async function carregarFeed(append) {
@@ -88,11 +78,9 @@ export async function renderTimeline(container, page) {
     modoModeracao = false
 
     const { data, error } = await sb.rpc('get_timeline_feed', {
-      p_limit: PAGE_SIZE,
-      p_offset: feedOffset,
+      p_limit: PAGE_SIZE, p_offset: feedOffset,
     })
 
-    // Guard: usuário pode ter navegado para outra página durante o await
     const feedEl = document.getElementById('tl-feed-container')
     if (!feedEl) return
 
@@ -112,18 +100,42 @@ export async function renderTimeline(container, page) {
       return
     }
 
-    data.forEach(post => feedEl.insertAdjacentHTML('beforeend', renderPostCard(post, false)))
-    ligarEventosPosts(data.map(p => p.id))
+    // RPC retorna colunas prefixadas: post_id, post_conteudo, post_status, etc.
+    // Normaliza para objeto uniforme usado pelo renderPostCard
+    const posts = (data || []).map(r => ({
+      id:         r.post_id,
+      autor_id:   r.post_autor_id,
+      autor_nome: r.autor_nome,
+      autor_foto: r.autor_foto,
+      autor_tipo: r.autor_tipo,
+      conteudo:   r.post_conteudo,
+      midia_url:  r.post_midia_url,
+      midia_tipo: r.post_midia_tipo,
+      status:     r.post_status,
+      criado_em:  r.post_criado_em,
+      total_curtidas:    r.total_curtidas,
+      total_comentarios: r.total_comentarios,
+      eu_curti:   r.eu_curti,
+      eu_salvei:  r.eu_salvei,
+    }))
 
-    feedOffset += data.length
-    document.getElementById('tl-load-more').style.display = data.length < PAGE_SIZE ? 'none' : 'block'
+    posts.forEach(post => feedEl.insertAdjacentHTML('beforeend', renderPostCard(post, false)))
+    ligarEventosPosts(posts.map(p => p.id))
+
+    feedOffset += posts.length
+    document.getElementById('tl-load-more').style.display = posts.length < PAGE_SIZE ? 'none' : 'block'
   }
+
+  // ════════════════════════════════════════════════════════════
+  // Moderação
+  // ════════════════════════════════════════════════════════════
 
   async function toggleModeracao() {
     const { data, error } = await sb.rpc('get_posts_pendentes')
     if (error) { toast('Erro: ' + error.message); return }
 
     const feedEl = document.getElementById('tl-feed-container')
+    if (!feedEl) return
     document.getElementById('tl-load-more').style.display = 'none'
     modoModeracao = true
 
@@ -135,7 +147,7 @@ export async function renderTimeline(container, page) {
     feedEl.innerHTML = `<div style="font-size:12px;font-weight:600;color:#e67e22;margin-bottom:10px">📋 ${data.length} post(s) pendente(s)</div>`
     data.forEach(p => {
       const post = {
-        id: p.id, autor_nome: p.autor_nome, autor_tipo: 'aluno', autor_foto: null,
+        id: p.id, autor_id: null, autor_nome: p.autor_nome, autor_tipo: 'aluno', autor_foto: null,
         conteudo: p.conteudo, midia_url: p.midia_url, midia_tipo: p.midia_tipo,
         status: 'pendente', criado_em: p.criado_em,
         total_curtidas: 0, total_comentarios: 0, eu_curti: false, eu_salvei: false,
@@ -151,18 +163,24 @@ export async function renderTimeline(container, page) {
     if (el) el.textContent = data?.length ?? 0
   }
 
+  // ════════════════════════════════════════════════════════════
+  // Render card
+  // ════════════════════════════════════════════════════════════
+
   function renderPostCard(post, emModeracao) {
     const fotoHtml = post.autor_foto
       ? `<img src="${post.autor_foto}" style="width:38px;height:38px;border-radius:50%;object-fit:cover">`
       : `<div style="width:38px;height:38px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--verde)">${(post.autor_nome || '?')[0].toUpperCase()}</div>`
 
     const roleBadgeMap = {
-      admin: { bg: 'var(--verde)', cor: 'var(--bege)', label: 'Admin' },
-      professor: { bg: 'var(--dourado)', cor: 'var(--verde)', label: 'Professor' },
-      aluno: { bg: 'rgba(31,56,31,.08)', cor: 'var(--verde)', label: 'Aluno' },
+      admin:     { bg: 'var(--verde)',          cor: 'var(--bege)',    label: 'Admin'     },
+      professor: { bg: 'var(--dourado)',         cor: 'var(--verde)',   label: 'Professor' },
+      aluno:     { bg: 'rgba(31,56,31,.08)',     cor: 'var(--verde)',   label: 'Aluno'     },
     }
     const rb = roleBadgeMap[post.autor_tipo]
-    const roleBadge = rb ? `<span style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;padding:2px 7px;border-radius:10px;background:${rb.bg};color:${rb.cor};margin-left:6px">${rb.label}</span>` : ''
+    const roleBadge = rb
+      ? `<span style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;padding:2px 7px;border-radius:10px;background:${rb.bg};color:${rb.cor};margin-left:6px">${rb.label}</span>`
+      : ''
 
     const pendBadge = post.status === 'pendente'
       ? `<div style="font-size:11px;color:#e67e22;margin:6px 18px 0;display:flex;align-items:center;gap:5px">⏳ Aguardando aprovação</div>` : ''
@@ -172,20 +190,36 @@ export async function renderTimeline(container, page) {
 
     const mediaHtml = renderMedia(post.midia_url, post.midia_tipo)
 
-    const curtidoColor = post.eu_curti ? '#e74c3c' : 'var(--txt2)'
+    const curtidoColor = post.eu_curti  ? '#e74c3c'        : 'var(--txt2)'
     const salvoColor   = post.eu_salvei ? 'var(--dourado)' : 'var(--txt2)'
 
-    const btnCurtir = podeCurtir
-      ? `<button class="tl-btn-curtir" data-post="${post.id}" data-curtido="${post.eu_curti}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;color:${curtidoColor}">❤️ ${post.total_curtidas ?? 0}</button>`
-      : `<button disabled style="flex:1;padding:8px;border:none;background:none;font-size:12px;color:var(--txt2);opacity:.4">❤️ ${post.total_curtidas ?? 0}</button>`
+    const btnCurtir = `<button class="tl-btn-curtir" data-post="${post.id}" data-curtido="${post.eu_curti}"
+      style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;color:${curtidoColor}">
+      ❤️ ${post.total_curtidas ?? 0}</button>`
 
     const btnComentar = podeComentar
-      ? `<button class="tl-btn-comentar" data-post="${post.id}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--txt2)">💬 ${post.total_comentarios ?? 0}</button>`
-      : `<button disabled title="Disponível a partir do plano Shiva" style="flex:1;padding:8px;border:none;background:none;font-size:12px;color:var(--txt2);opacity:.4">💬 ${post.total_comentarios ?? 0}</button>`
+      ? `<button class="tl-btn-comentar" data-post="${post.id}"
+          style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--txt2)">
+          💬 ${post.total_comentarios ?? 0}</button>`
+      : `<button disabled title="Disponível a partir do plano Shiva"
+          style="flex:1;padding:8px;border:none;background:none;font-size:12px;color:var(--txt2);opacity:.4">
+          💬 ${post.total_comentarios ?? 0}</button>`
 
     const btnSalvar = podeSalvar
-      ? `<button class="tl-btn-salvar" data-post="${post.id}" data-salvo="${post.eu_salvei}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;color:${salvoColor}">🔖 ${post.eu_salvei ? 'Salvo' : 'Salvar'}</button>`
-      : `<button disabled title="Disponível a partir do plano Brahma" style="flex:1;padding:8px;border:none;background:none;font-size:12px;color:var(--txt2);opacity:.4">🔖 Salvar</button>`
+      ? `<button class="tl-btn-salvar" data-post="${post.id}" data-salvo="${post.eu_salvei}"
+          style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;color:${salvoColor}">
+          🔖 ${post.eu_salvei ? 'Salvo' : 'Salvar'}</button>`
+      : `<button disabled title="Disponível a partir do plano Brahma"
+          style="flex:1;padding:8px;border:none;background:none;font-size:12px;color:var(--txt2);opacity:.4">
+          🔖 Salvar</button>`
+
+    // Botão excluir: admin/prof sempre; autor do próprio post também pode
+    const ehAutor = post.autor_id === perfil.id
+    const btnExcluir = (podeExcluir || ehAutor)
+      ? `<button class="tl-btn-excluir-post" data-post="${post.id}"
+          style="padding:4px 8px;border:none;background:none;cursor:pointer;font-size:11px;color:var(--txt2);border-radius:4px"
+          title="Excluir post">🗑</button>`
+      : ''
 
     const modBar = emModeracao ? `
       <div style="display:flex;gap:8px;padding:10px 18px;border-top:1px solid var(--borda);background:#fff8f0">
@@ -200,18 +234,21 @@ export async function renderTimeline(container, page) {
         <div style="display:flex;gap:8px;align-items:flex-end;margin-top:8px">
           <textarea id="tl-comment-input-${post.id}" rows="1" placeholder="Escreva um comentário..."
             style="flex:1;border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:12px;font-family:'DM Sans',sans-serif;resize:none;min-height:34px"></textarea>
-          <button class="tl-btn-enviar-comentario" data-post="${post.id}" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer">Enviar</button>
+          <button class="tl-btn-enviar-comentario" data-post="${post.id}"
+            style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer">Enviar</button>
         </div>
       </div>` : ''
 
     return `
-      <div class="tl-post-card" id="tl-post-${post.id}" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);margin-bottom:14px;overflow:hidden;${post.status === 'pendente' ? 'border-left:3px solid #e67e22' : ''}">
+      <div class="tl-post-card" id="tl-post-${post.id}"
+        style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);margin-bottom:14px;overflow:hidden;${post.status === 'pendente' ? 'border-left:3px solid #e67e22' : ''}">
         <div style="display:flex;align-items:center;gap:10px;padding:14px 18px 0">
           ${fotoHtml}
           <div style="flex:1">
             <div><span style="font-size:13px;font-weight:600;color:var(--txt)">${escapeHtml(post.autor_nome || 'Usuário')}</span>${roleBadge}</div>
             <div style="font-size:11px;color:var(--txt2);margin-top:1px">${formatarData(post.criado_em)}</div>
           </div>
+          ${btnExcluir}
         </div>
         ${pendBadge}
         ${conteudoHtml}
@@ -227,10 +264,13 @@ export async function renderTimeline(container, page) {
     `
   }
 
+  // ════════════════════════════════════════════════════════════
+  // Mídia
+  // ════════════════════════════════════════════════════════════
+
   function renderMedia(url, tipo) {
     if (!url) return ''
     if (!tipo) tipo = detectarTipoMidia(url)
-
     if (tipo === 'imagem') {
       return `<div style="margin-top:12px"><img src="${url}" style="width:100%;max-height:420px;object-fit:cover;display:block" loading="lazy" onerror="this.parentElement.remove()"></div>`
     }
@@ -239,7 +279,8 @@ export async function renderTimeline(container, page) {
       return `<div style="margin-top:12px"><iframe src="${embed}" style="width:100%;aspect-ratio:16/9;border:none;display:block" allowfullscreen loading="lazy"></iframe></div>`
     }
     return `<div style="margin:12px 18px 0">
-      <a href="${url}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(31,56,31,.04);border:1px solid var(--borda);border-radius:6px;text-decoration:none;color:var(--txt);font-size:12px">
+      <a href="${url}" target="_blank" rel="noopener"
+        style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(31,56,31,.04);border:1px solid var(--borda);border-radius:6px;text-decoration:none;color:var(--txt);font-size:12px">
         <span>🔗</span><span style="word-break:break-all">${url}</span>
       </a>
     </div>`
@@ -258,7 +299,10 @@ export async function renderTimeline(container, page) {
     return m ? `https://www.youtube.com/embed/${m[1]}` : null
   }
 
-  // ── Ligação de eventos por post (delegação simples, re-bind a cada render) ──
+  // ════════════════════════════════════════════════════════════
+  // Event binding
+  // ════════════════════════════════════════════════════════════
+
   function ligarEventosPosts(ids) {
     ids.forEach(id => {
       document.querySelector(`.tl-btn-curtir[data-post="${id}"]`)
@@ -269,6 +313,8 @@ export async function renderTimeline(container, page) {
         ?.addEventListener('click', () => toggleComentarios(id))
       document.querySelector(`.tl-btn-enviar-comentario[data-post="${id}"]`)
         ?.addEventListener('click', () => enviarComentario(id))
+      document.querySelector(`.tl-btn-excluir-post[data-post="${id}"]`)
+        ?.addEventListener('click', () => excluirPost(id))
     })
   }
 
@@ -278,22 +324,25 @@ export async function renderTimeline(container, page) {
         ?.addEventListener('click', () => moderarPost(id, 'aprovar'))
       document.querySelector(`.tl-btn-rejeitar[data-post="${id}"]`)
         ?.addEventListener('click', () => moderarPost(id, 'rejeitar'))
+      document.querySelector(`.tl-btn-excluir-post[data-post="${id}"]`)
+        ?.addEventListener('click', () => excluirPost(id))
     })
   }
+
+  // ════════════════════════════════════════════════════════════
+  // Ações
+  // ════════════════════════════════════════════════════════════
 
   async function toggleCurtir(postId, btn) {
     const curtido = btn.dataset.curtido === 'true'
     btn.disabled = true
-
     if (curtido) {
       await sb.from('timeline_curtidas').delete().eq('post_id', postId).eq('perfil_id', perfil.id)
     } else {
       await sb.from('timeline_curtidas').insert({ post_id: postId, perfil_id: perfil.id })
     }
-
     const { count } = await sb.from('timeline_curtidas')
       .select('id', { count: 'exact', head: true }).eq('post_id', postId)
-
     btn.dataset.curtido = (!curtido).toString()
     btn.style.color = !curtido ? '#e74c3c' : 'var(--txt2)'
     btn.innerHTML = `❤️ ${count ?? 0}`
@@ -303,13 +352,11 @@ export async function renderTimeline(container, page) {
   async function toggleSalvar(postId, btn) {
     const salvo = btn.dataset.salvo === 'true'
     btn.disabled = true
-
     if (salvo) {
       await sb.from('timeline_salvos').delete().eq('post_id', postId).eq('perfil_id', perfil.id)
     } else {
       await sb.from('timeline_salvos').insert({ post_id: postId, perfil_id: perfil.id })
     }
-
     btn.dataset.salvo = (!salvo).toString()
     btn.style.color = !salvo ? 'var(--dourado)' : 'var(--txt2)'
     btn.innerHTML = `🔖 ${!salvo ? 'Salvo' : 'Salvar'}`
@@ -332,7 +379,6 @@ export async function renderTimeline(container, page) {
 
     const { data, error } = await sb.rpc('get_comentarios_post', { p_post_id: postId })
 
-    // Guard pós-await
     const listAfter = document.getElementById(`tl-comments-list-${postId}`)
     if (!listAfter) return
 
@@ -341,16 +387,34 @@ export async function renderTimeline(container, page) {
       return
     }
 
-    listAfter.innerHTML = data.map(c => `
-      <div style="display:flex;gap:8px;margin-bottom:10px">
-        <div style="width:26px;height:26px;border-radius:50%;background:rgba(31,56,31,.08);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--verde);flex-shrink:0">${(c.autor_nome || '?')[0].toUpperCase()}</div>
-        <div style="flex:1;background:rgba(31,56,31,.03);border-radius:6px;padding:7px 10px">
-          <div style="font-size:11px;font-weight:600;color:var(--verde)">${escapeHtml(c.autor_nome)}</div>
-          <div style="font-size:12px;color:var(--txt);margin-top:2px;line-height:1.5">${escapeHtml(c.conteudo)}</div>
-          <div style="font-size:10px;color:var(--txt2);margin-top:3px">${formatarData(c.criado_em)}</div>
-        </div>
-      </div>
-    `).join('')
+    // RPC retorna: comentario_id, autor_nome, autor_tipo, comentario_text, comentario_em
+    listAfter.innerHTML = data.map(c => {
+      const btnExcluirComentario = podeExcluir
+        ? `<button class="tl-btn-excluir-comentario" data-comentario="${c.comentario_id}"
+            style="background:none;border:none;cursor:pointer;font-size:10px;color:var(--txt2);padding:0 0 0 6px"
+            title="Excluir comentário">🗑</button>`
+        : ''
+      return `
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <div style="width:26px;height:26px;border-radius:50%;background:rgba(31,56,31,.08);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--verde);flex-shrink:0">
+            ${(c.autor_nome || '?')[0].toUpperCase()}
+          </div>
+          <div style="flex:1;background:rgba(31,56,31,.03);border-radius:6px;padding:7px 10px">
+            <div style="display:flex;align-items:center;gap:4px">
+              <span style="font-size:11px;font-weight:600;color:var(--verde)">${escapeHtml(c.autor_nome)}</span>
+              ${btnExcluirComentario}
+            </div>
+            <div style="font-size:12px;color:var(--txt);margin-top:2px;line-height:1.5">${escapeHtml(c.comentario_text)}</div>
+            <div style="font-size:10px;color:var(--txt2);margin-top:3px">${formatarData(c.comentario_em)}</div>
+          </div>
+        </div>`
+    }).join('')
+
+    // Liga botões de exclusão de comentário
+    data.forEach(c => {
+      document.querySelector(`.tl-btn-excluir-comentario[data-comentario="${c.comentario_id}"]`)
+        ?.addEventListener('click', () => excluirComentario(c.comentario_id, postId))
+    })
   }
 
   async function enviarComentario(postId) {
@@ -361,25 +425,43 @@ export async function renderTimeline(container, page) {
     const { error } = await sb.from('timeline_comentarios').insert({
       post_id: postId, autor_id: perfil.id, conteudo: texto,
     })
-
     if (error) { toast('Erro ao comentar: ' + error.message); return }
 
     input.value = ''
     await carregarComentarios(postId)
 
-    // atualiza contador no botão
     const { count } = await sb.from('timeline_comentarios')
       .select('id', { count: 'exact', head: true }).eq('post_id', postId)
     const btn = document.querySelector(`.tl-btn-comentar[data-post="${postId}"]`)
     if (btn) btn.innerHTML = `💬 ${count ?? 0}`
-
     toast('Comentário enviado 💬')
+  }
+
+  async function excluirPost(postId) {
+    if (!confirm('Excluir este post? Esta ação não pode ser desfeita.')) return
+    const { error } = await sb.rpc('excluir_post_timeline', { p_post_id: postId })
+    if (error) { toast('Erro ao excluir: ' + error.message); return }
+    document.getElementById(`tl-post-${postId}`)?.remove()
+    toast('Post excluído')
+    if (isAdmin) await atualizarContadorPendentes()
+  }
+
+  async function excluirComentario(comentarioId, postId) {
+    if (!confirm('Excluir este comentário?')) return
+    const { error } = await sb.rpc('excluir_comentario_timeline', { p_comentario_id: comentarioId })
+    if (error) { toast('Erro ao excluir: ' + error.message); return }
+    await carregarComentarios(postId)
+
+    const { count } = await sb.from('timeline_comentarios')
+      .select('id', { count: 'exact', head: true }).eq('post_id', postId)
+    const btn = document.querySelector(`.tl-btn-comentar[data-post="${postId}"]`)
+    if (btn) btn.innerHTML = `💬 ${count ?? 0}`
+    toast('Comentário excluído')
   }
 
   async function moderarPost(postId, acao) {
     const { error } = await sb.rpc('moderar_post_timeline', { p_post_id: postId, p_acao: acao })
     if (error) { toast('Erro: ' + error.message); return }
-
     toast(acao === 'aprovar' ? 'Post aprovado ✓' : 'Post rejeitado')
     document.getElementById(`tl-post-${postId}`)?.remove()
     await atualizarContadorPendentes()
@@ -388,9 +470,8 @@ export async function renderTimeline(container, page) {
   async function publicarPost() {
     const textoEl = document.getElementById('tl-compose-texto')
     const midiaEl = document.getElementById('tl-compose-midia')
-    const texto = textoEl.value.trim()
-    const midia = midiaEl.value.trim()
-
+    const texto   = textoEl.value.trim()
+    const midia   = midiaEl.value.trim()
     if (!texto && !midia) { toast('Escreva algo ou adicione um link'); return }
 
     const btn = document.getElementById('btn-tl-postar')
@@ -398,11 +479,8 @@ export async function renderTimeline(container, page) {
     btn.textContent = 'Publicando...'
 
     const tipo = midia ? detectarTipoMidia(midia) : null
-
     const { error } = await sb.rpc('criar_post_timeline', {
-      p_conteudo: texto || null,
-      p_midia_url: midia || null,
-      p_midia_tipo: tipo,
+      p_conteudo: texto || null, p_midia_url: midia || null, p_midia_tipo: tipo,
     })
 
     btn.disabled = false
@@ -411,7 +489,6 @@ export async function renderTimeline(container, page) {
     if (error) { toast('Erro ao publicar: ' + error.message); return }
 
     limparCompose()
-
     if (isAdmin || isProf) {
       toast('Post publicado 🌿')
       await carregarFeed(false)
@@ -427,14 +504,18 @@ export async function renderTimeline(container, page) {
     if (m) m.value = ''
   }
 
+  // ════════════════════════════════════════════════════════════
+  // Helpers
+  // ════════════════════════════════════════════════════════════
+
   function formatarData(iso) {
     if (!iso) return ''
-    const d = new Date(iso)
+    const d   = new Date(iso)
     const min = Math.floor((Date.now() - d.getTime()) / 60000)
-    if (min < 1) return 'agora mesmo'
+    if (min < 1)  return 'agora mesmo'
     if (min < 60) return `há ${min} min`
     const h = Math.floor(min / 60)
-    if (h < 24) return `há ${h}h`
+    if (h < 24)   return `há ${h}h`
     const dias = Math.floor(h / 24)
     if (dias < 7) return `há ${dias} dia${dias > 1 ? 's' : ''}`
     return d.toLocaleDateString('pt-BR')
@@ -445,6 +526,10 @@ export async function renderTimeline(container, page) {
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
   }
 }
+
+// ════════════════════════════════════════════════════════════
+// Compose box (fora do closure, sem estado)
+// ════════════════════════════════════════════════════════════
 
 function renderComposeBox(perfil, isAdmin, isProf) {
   const fotoHtml = perfil.foto_url
@@ -463,7 +548,7 @@ function renderComposeBox(perfil, isAdmin, isProf) {
           style="flex:1;border:1px solid var(--borda);border-radius:6px;padding:10px;font-size:13px;font-family:'DM Sans',sans-serif;resize:none;min-height:70px"></textarea>
       </div>
       <input id="tl-compose-midia" type="url" placeholder="Link de imagem (Imgur), vídeo (YouTube) ou outro URL..."
-        style="width:100%;margin-top:10px;border:1px solid var(--borda);border-radius:6px;padding:8px 10px;font-size:12px;font-family:'DM Sans',sans-serif">
+        style="width:100%;margin-top:10px;border:1px solid var(--borda);border-radius:6px;padding:8px 10px;font-size:12px;font-family:'DM Sans',sans-serif;box-sizing:border-box">
       ${noticeHtml}
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px">
         <button id="btn-tl-cancelar" style="padding:7px 16px;background:#fff;border:1px solid var(--borda);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--txt2);cursor:pointer">Cancelar</button>
@@ -471,4 +556,4 @@ function renderComposeBox(perfil, isAdmin, isProf) {
       </div>
     </div>
   `
-} 
+}   
