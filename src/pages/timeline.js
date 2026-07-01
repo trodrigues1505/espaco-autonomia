@@ -59,16 +59,50 @@ export async function renderTimeline(container, page) {
     </div>
     <div class="content">
       ${podePostar ? renderComposeBox(perfil, isAdmin, isProf) : ''}
+      ${(isAdmin || isProf) ? `
+        <button id="btn-criar-enquete" style="width:100%;padding:10px 14px;background:#fff;border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12px;color:var(--verde);cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;margin-bottom:14px">
+          📊 Criar enquete
+        </button>` : ''}
       ${isAdmin ? `
         <button id="btn-moderacao" style="width:100%;padding:10px 14px;background:#fff8f0;border:1px solid #f0d9b5;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12px;color:#e67e22;cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
           <span>📋 Posts aguardando moderação</span>
           <span id="mod-count" style="background:#e67e22;color:#fff;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:600">0</span>
         </button>` : ''}
+      <div id="tl-enquetes-container"></div>
       <div id="tl-feed-container">
         <div class="loading-page" style="padding:40px 0"><div class="spin-big"></div></div>
       </div>
       <div id="tl-load-more" style="text-align:center;margin-top:14px;display:none">
         <button id="btn-carregar-mais" style="padding:8px 18px;background:#fff;border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12px;color:var(--txt2);cursor:pointer">Carregar mais</button>
+      </div>
+    </div>
+    <div id="modal-criar-enquete" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.7);z-index:400;align-items:center;justify-content:center;padding:16px">
+      <div style="background:#fff;border-radius:12px;width:460px;max-width:100%;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">
+        <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)">Nova enquete</div>
+          <button onclick="document.getElementById('modal-criar-enquete').style.display='none'" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
+        </div>
+        <div style="overflow-y:auto;flex:1;padding:18px 20px">
+          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Pergunta</label>
+          <textarea id="enq-pergunta" rows="2" placeholder="Ex: Qual horário vocês preferem para a aula extra de sábado?"
+            style="width:100%;margin-top:5px;margin-bottom:14px;border:1px solid var(--borda);border-radius:6px;padding:9px 11px;font-size:13px;font-family:'DM Sans',sans-serif;resize:none"></textarea>
+          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Opções</label>
+          <div id="enq-opcoes-lista" style="display:flex;flex-direction:column;gap:6px;margin-top:5px"></div>
+          <button id="btn-enq-add-opcao" style="margin-top:8px;padding:7px 12px;background:rgba(31,56,31,.06);color:var(--verde);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">+ Adicionar opção</button>
+        </div>
+        <div style="padding:14px 20px;border-top:1px solid var(--borda);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0">
+          <button onclick="document.getElementById('modal-criar-enquete').style.display='none'" style="padding:8px 16px;background:#fff;border:1px solid var(--borda);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;color:var(--txt2)">Cancelar</button>
+          <button id="btn-enq-publicar" style="padding:8px 18px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500">Publicar enquete</button>
+        </div>
+      </div>
+    </div>
+    <div id="modal-votos-enquete" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.7);z-index:400;align-items:center;justify-content:center;padding:16px">
+      <div style="background:#fff;border-radius:12px;width:440px;max-width:100%;max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
+        <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)">Votos individuais</div>
+          <button onclick="document.getElementById('modal-votos-enquete').style.display='none'" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
+        </div>
+        <div id="votos-enquete-body" style="overflow-y:auto;flex:1;padding:12px 20px">Carregando...</div>
       </div>
     </div>
   `
@@ -86,9 +120,213 @@ export async function renderTimeline(container, page) {
     document.getElementById('btn-moderacao')?.addEventListener('click', () => toggleModeracao())
     atualizarContadorPendentes()
   }
+  if (isAdmin || isProf) {
+    document.getElementById('btn-criar-enquete')?.addEventListener('click', () => abrirModalCriarEnquete())
+    document.getElementById('btn-enq-add-opcao')?.addEventListener('click', () => _enqAdicionarOpcao())
+    document.getElementById('btn-enq-publicar')?.addEventListener('click', () => publicarEnquete())
+  }
   document.getElementById('btn-carregar-mais')?.addEventListener('click', () => carregarFeed(true))
 
-  await carregarFeed(false)
+  await Promise.all([carregarFeed(false), carregarEnquetes()])
+
+  // ════════════════════════════════════════════════════════════
+  // Enquetes (múltipla escolha)
+  // ════════════════════════════════════════════════════════════
+
+  function _enqAdicionarOpcao(valor = '') {
+    const lista = document.getElementById('enq-opcoes-lista')
+    if (!lista) return
+    const idx = lista.children.length
+    const row = document.createElement('div')
+    row.style.cssText = 'display:flex;gap:6px;align-items:center'
+    row.innerHTML = `
+      <input type="text" class="enq-opcao-input" placeholder="Opção ${idx + 1}" value="${valor}"
+        style="flex:1;border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:12px;font-family:'DM Sans',sans-serif">
+      <button type="button" class="enq-opcao-remover" style="background:none;border:none;color:var(--txt2);font-size:16px;cursor:pointer;padding:2px 6px" title="Remover">×</button>
+    `
+    row.querySelector('.enq-opcao-remover').addEventListener('click', () => row.remove())
+    lista.appendChild(row)
+  }
+
+  function abrirModalCriarEnquete() {
+    const modal = document.getElementById('modal-criar-enquete')
+    const lista = document.getElementById('enq-opcoes-lista')
+    document.getElementById('enq-pergunta').value = ''
+    lista.innerHTML = ''
+    _enqAdicionarOpcao()
+    _enqAdicionarOpcao()
+    modal.style.display = 'flex'
+  }
+
+  async function publicarEnquete() {
+    const pergunta = document.getElementById('enq-pergunta').value.trim()
+    const opcoes = [...document.querySelectorAll('.enq-opcao-input')]
+      .map(i => i.value.trim()).filter(Boolean)
+    if (!pergunta) { toast('Escreva a pergunta da enquete'); return }
+    if (opcoes.length < 2) { toast('Adicione pelo menos 2 opções'); return }
+
+    const btn = document.getElementById('btn-enq-publicar')
+    btn.disabled = true; btn.textContent = 'Publicando...'
+    const { error } = await sb.rpc('criar_enquete_timeline', { p_pergunta: pergunta, p_opcoes: opcoes })
+    btn.disabled = false; btn.textContent = 'Publicar enquete'
+
+    if (error) { toast('Erro: ' + error.message); return }
+    document.getElementById('modal-criar-enquete').style.display = 'none'
+    toast('✓ Enquete publicada')
+    await carregarEnquetes()
+  }
+
+  async function carregarEnquetes() {
+    const { data, error } = await sb.rpc('get_enquetes_timeline')
+    const cont = document.getElementById('tl-enquetes-container')
+    if (!cont) return
+    if (error) { console.warn('get_enquetes_timeline:', error.message); cont.innerHTML = ''; return }
+    if (!data?.length) { cont.innerHTML = ''; return }
+
+    // Agrupa linhas (uma por opção) em enquetes
+    const mapa = new Map()
+    for (const r of data) {
+      if (!mapa.has(r.enquete_id)) {
+        mapa.set(r.enquete_id, {
+          id: r.enquete_id, pergunta: r.pergunta, criadoPorNome: r.criado_por_nome,
+          criadoEm: r.criado_em, encerrada: r.encerrada,
+          totalParticipantes: Number(r.total_participantes) || 0,
+          minhasOpcoesIds: r.minhas_opcoes_ids || [],
+          opcoes: [],
+        })
+      }
+      mapa.get(r.enquete_id).opcoes.push({
+        id: r.opcao_id, texto: r.opcao_texto, ordem: r.opcao_ordem,
+        votos: Number(r.total_votos_opcao) || 0,
+      })
+    }
+    const enquetes = [...mapa.values()]
+    cont.innerHTML = enquetes.map(renderEnqueteCard).join('')
+
+    enquetes.forEach(enq => {
+      document.getElementById(`btn-enq-votar-${enq.id}`)
+        ?.addEventListener('click', () => confirmarVoto(enq.id))
+      document.getElementById(`btn-enq-encerrar-${enq.id}`)
+        ?.addEventListener('click', () => encerrarEnquete(enq.id))
+      document.getElementById(`btn-enq-excluir-${enq.id}`)
+        ?.addEventListener('click', () => excluirEnquete(enq.id))
+      document.getElementById(`btn-enq-votos-${enq.id}`)
+        ?.addEventListener('click', () => abrirVotosIndividuais(enq.id, enq.pergunta))
+    })
+  }
+
+  function renderEnqueteCard(enq) {
+    const jaVotou = enq.minhasOpcoesIds.length > 0
+    const mostrarResultado = enq.encerrada || jaVotou
+    const podeGerenciar = isAdmin || isProf
+
+    const opcoesHtml = enq.opcoes.map(o => {
+      const pct = enq.totalParticipantes > 0 ? Math.round((o.votos / enq.totalParticipantes) * 100) : 0
+      const marcada = enq.minhasOpcoesIds.includes(o.id)
+      if (mostrarResultado) {
+        return `
+          <div style="margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+              <span style="color:${marcada ? 'var(--verde)' : 'var(--txt)'};font-weight:${marcada ? '600' : '400'}">${marcada ? '✓ ' : ''}${escapeHtml(o.texto)}</span>
+              <span style="color:var(--txt2)">${pct}% · ${o.votos}</span>
+            </div>
+            <div style="height:8px;background:rgba(31,56,31,.07);border-radius:99px;overflow:hidden">
+              <div style="height:100%;width:${pct}%;background:${marcada ? 'var(--dourado)' : 'var(--verde-cl, #4a8a4a)'};border-radius:99px"></div>
+            </div>
+          </div>`
+      }
+      return `
+        <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--borda);border-radius:6px;margin-bottom:6px;cursor:pointer">
+          <input type="checkbox" class="enq-voto-check-${enq.id}" value="${o.id}" style="accent-color:var(--verde)">
+          <span style="font-size:13px">${escapeHtml(o.texto)}</span>
+        </label>`
+    }).join('')
+
+    const acaoVotar = (!enq.encerrada && !jaVotou) ? `
+      <button id="btn-enq-votar-${enq.id}" style="width:100%;margin-top:6px;padding:9px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500">Confirmar voto</button>
+    ` : (!enq.encerrada && jaVotou) ? `
+      <button id="btn-enq-votar-${enq.id}" style="width:100%;margin-top:6px;padding:8px;background:none;color:var(--txt2);border:1px solid var(--borda);border-radius:6px;font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer">Alterar meu voto</button>
+    ` : ''
+
+    const rodapeGestao = podeGerenciar ? `
+      <div style="display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--borda);flex-wrap:wrap">
+        <button id="btn-enq-votos-${enq.id}" style="padding:5px 10px;background:rgba(31,56,31,.06);color:var(--verde);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">🔍 Ver votos individuais</button>
+        ${!enq.encerrada ? `<button id="btn-enq-encerrar-${enq.id}" style="padding:5px 10px;background:none;color:var(--txt2);border:1px solid var(--borda);border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">Encerrar</button>` : ''}
+        ${isAdmin ? `<button id="btn-enq-excluir-${enq.id}" style="padding:5px 10px;background:none;color:#c0392b;border:1px solid #f0c0c0;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">Excluir</button>` : ''}
+      </div>` : ''
+
+    return `
+      <div class="tl-enquete-card" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">
+          <div>
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);margin-bottom:3px">📊 Enquete · ${escapeHtml(enq.criadoPorNome)}${enq.encerrada ? ' · encerrada' : ''}</div>
+            <div style="font-size:14px;font-weight:600;color:var(--verde);line-height:1.4">${escapeHtml(enq.pergunta)}</div>
+          </div>
+        </div>
+        ${opcoesHtml}
+        ${acaoVotar}
+        <div style="font-size:10px;color:var(--txt2);margin-top:8px">${enq.totalParticipantes} pessoa(s) votaram · pode marcar mais de uma opção</div>
+        ${rodapeGestao}
+      </div>`
+  }
+
+  async function confirmarVoto(enqId) {
+    const checks = [...document.querySelectorAll(`.enq-voto-check-${enqId}:checked`)].map(c => c.value)
+    if (!checks.length) { toast('Marque pelo menos uma opção'); return }
+    const { data, error } = await sb.rpc('votar_enquete_multipla', { p_enquete_id: enqId, p_opcoes_ids: checks })
+    if (error || !data?.ok) { toast('❌ ' + (data?.motivo || error?.message)); return }
+    toast('✓ Voto registrado')
+    await carregarEnquetes()
+  }
+
+  async function encerrarEnquete(enqId) {
+    if (!confirm('Encerrar esta enquete? Ninguém mais poderá votar.')) return
+    const { error } = await sb.rpc('encerrar_enquete', { p_enquete_id: enqId })
+    if (error) { toast('Erro: ' + error.message); return }
+    toast('Enquete encerrada')
+    await carregarEnquetes()
+  }
+
+  async function excluirEnquete(enqId) {
+    if (!confirm('Excluir esta enquete e todos os votos? Não pode ser desfeito.')) return
+    const { error } = await sb.rpc('excluir_enquete', { p_enquete_id: enqId })
+    if (error) { toast('Erro: ' + error.message); return }
+    toast('Enquete excluída')
+    await carregarEnquetes()
+  }
+
+  async function abrirVotosIndividuais(enqId, pergunta) {
+    const modal = document.getElementById('modal-votos-enquete')
+    const body = document.getElementById('votos-enquete-body')
+    modal.style.display = 'flex'
+    body.innerHTML = 'Carregando...'
+
+    const { data, error } = await sb
+      .from('timeline_enquete_votos')
+      .select('votado_em, aluno:perfis!aluno_id(nome), opcao:timeline_enquete_opcoes!opcao_id(texto)')
+      .eq('enquete_id', enqId)
+      .order('votado_em', { ascending: true })
+
+    if (error) { body.innerHTML = `<p style="color:#c0392b;font-size:12px">Erro: ${error.message}</p>`; return }
+    if (!data?.length) { body.innerHTML = `<p style="font-size:12px;color:var(--txt2)">Ninguém votou ainda.</p>`; return }
+
+    // Agrupa por aluno (múltipla escolha = várias linhas por pessoa)
+    const porAluno = new Map()
+    for (const v of data) {
+      const nome = v.aluno?.nome || '—'
+      if (!porAluno.has(nome)) porAluno.set(nome, [])
+      porAluno.get(nome).push(v.opcao?.texto || '—')
+    }
+
+    body.innerHTML = `
+      <div style="font-size:11px;color:var(--txt2);margin-bottom:12px">${escapeHtml(pergunta)}</div>
+      ${[...porAluno.entries()].map(([nome, opcoes]) => `
+        <div style="padding:9px 12px;background:rgba(31,56,31,.03);border-radius:6px;margin-bottom:6px">
+          <div style="font-size:12px;font-weight:600;color:var(--verde)">${escapeHtml(nome)}</div>
+          <div style="font-size:11px;color:var(--txt2);margin-top:2px">${opcoes.map(escapeHtml).join(' · ')}</div>
+        </div>`).join('')}
+    `
+  }
 
   // ════════════════════════════════════════════════════════════
   // Feed
@@ -592,4 +830,4 @@ function renderComposeBox(perfil, isAdmin, isProf) {
       </div>
     </div>
   `
-}    
+}  
