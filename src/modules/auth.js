@@ -9,7 +9,7 @@ import { initProfessorCancel } from './professor-cancel.js'
 import { toast, PLANO_NOMES } from './utils.js'
 
 // ── Onboarding ───────────────────────────────────────────────
-export async function mostrarOnboarding(user, nomeGoogle) {
+export async function mostrarOnboarding(user, nomeGoogle, fotoGoogle) {
   const { data: planos } = await sb
     .from('planos')
     .select('*, modalidades:plano_modalidades(modalidade)')
@@ -33,6 +33,7 @@ export async function mostrarOnboarding(user, nomeGoogle) {
         <div style="font-size:12px;color:rgba(242,236,206,.7);margin-top:4px">Complete seus dados para começar</div>
       </div>
       <div style="padding:24px">
+        <input type="hidden" id="onb-foto" value="${fotoGoogle || ''}">
         <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
           <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Nome completo</label>
           <input id="onb-nome" value="${nomeGoogle}" style="border:1px solid var(--borda);border-radius:6px;padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">
@@ -75,13 +76,17 @@ window.highlightPlano = function (key) {
 window.finalizarOnboarding = async function (userId, email) {
   const nome     = document.getElementById('onb-nome').value.trim()
   const tel      = document.getElementById('onb-tel').value.trim()
+  const foto     = document.getElementById('onb-foto')?.value.trim() || null
   const planoSel = document.querySelector('input[name="onb-plano"]:checked')
   if (!nome)     { toast('Informe seu nome');   return }
   if (!planoSel) { toast('Selecione um plano'); return }
   const btn = document.querySelector('#onboarding button')
   if (btn) { btn.textContent = 'Salvando...'; btn.disabled = true }
   try {
-    const { error: errP } = await sb.from('perfis').upsert({ id: userId, nome, email, telefone: tel || null, tipo: 'aluno', ativo: true })
+    const { error: errP } = await sb.from('perfis').upsert({
+      id: userId, nome, email, telefone: tel || null, tipo: 'aluno', ativo: true,
+      foto_url: foto || null,
+    })
     if (errP) throw new Error('Erro no perfil: ' + errP.message)
     const { error: errM } = await sb.from('matriculas').insert({
       aluno_id: userId, plano_tipo: planoSel.dataset.plano,
@@ -133,10 +138,23 @@ export async function iniciarApp(user) {
 
     if (!perfil || errPerfil?.code === 'PGRST116') {
       document.getElementById('login-screen').style.display = 'none'
-      await mostrarOnboarding(user, user.user_metadata?.full_name || '')
+      const fotoGoogle = user.user_metadata?.avatar_url || user.user_metadata?.picture || null
+      await mostrarOnboarding(user, user.user_metadata?.full_name || '', fotoGoogle)
       return
     }
     if (errPerfil) throw new Error(errPerfil.message)
+
+    // Backfill: contas criadas antes da captura de foto do Google ficaram com foto_url nulo.
+    // Se ainda estiver vazio e o provider tiver avatar, preenche silenciosamente agora.
+    if (!perfil.foto_url) {
+      const fotoGoogle = user.user_metadata?.avatar_url || user.user_metadata?.picture || null
+      if (fotoGoogle) {
+        const { data: atualizado } = await sb
+          .from('perfis').update({ foto_url: fotoGoogle }).eq('id', perfil.id)
+          .select().maybeSingle()
+        if (atualizado) perfil.foto_url = atualizado.foto_url
+      }
+    }
 
     window._perfil = perfil
 
@@ -243,4 +261,4 @@ document.getElementById('login-senha')
   ?.addEventListener('keydown', e => { if (e.key === 'Enter') window.fazerLogin() })
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-google')?.addEventListener('click', window.loginGoogle)
-})   
+})
