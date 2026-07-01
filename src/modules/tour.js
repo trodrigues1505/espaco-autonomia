@@ -21,7 +21,7 @@ const TOUR_STEPS = [
   { selector: '#ni-aluno-beneficio-shruti', texto: 'Um áudio por dia. Mantra, pranayama guiado ou reflexão.', sidebar: true },
   { selector: '#ni-aluno-beneficio-naada-mandir', texto: 'Biblioteca de mantras com pronúncia e significado.', sidebar: true },
   { selector: '#ni-aluno-beneficio-kala-sadhya', texto: 'Precisa remarcar uma aula? Aqui você gerencia sua agenda.', sidebar: true },
-  { page: 'aluno-grade', selector: '.content', texto: 'Escolha seu horário e confirme presença com até 24h de antecedência.', fallback: true },
+  { page: 'aluno-grade', selector: '#tour-grade-table', texto: 'Escolha seu horário e confirme presença com até 24h de antecedência.' },
 ]
 
 function _chave(perfilId) {
@@ -187,4 +187,4 @@ function _finalizarTour(perfil) {
   _emAndamento = false
   if (perfil?.id) localStorage.setItem(_chave(perfil.id), '1')
   if (_ultimaPagina !== 'aluno-home') window.navigate('aluno-home')
-}
+}   
