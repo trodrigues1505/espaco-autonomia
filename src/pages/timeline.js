@@ -9,6 +9,27 @@ const PLANOS_POSTAR_PENDENTE = ['vishnu_2x', 'vishnu_livre']
 const PLANOS_COMENTAR        = ['vishnu_2x', 'vishnu_livre', 'shiva_1x', 'shiva_2x']
 const PAGE_SIZE = 10
 
+// ── Lightbox de imagem (clique para ampliar) ─────────────────
+function _tlAbrirLightbox(src) {
+  document.getElementById('_tl-lightbox')?.remove()
+  const lb = document.createElement('div')
+  lb.id = '_tl-lightbox'
+  lb.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;
+    display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out`
+  lb.innerHTML = `
+    <img src="${src}" alt="" referrerpolicy="no-referrer"
+      style="max-width:100%;max-height:90vh;border-radius:8px;object-fit:contain;
+             box-shadow:0 20px 60px rgba(0,0,0,.5)">
+    <button onclick="document.getElementById('_tl-lightbox').remove()"
+      style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);
+             border:none;border-radius:50%;width:36px;height:36px;color:#fff;
+             font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+             line-height:1">×</button>`
+  lb.addEventListener('click', e => { if (e.target === lb) lb.remove() })
+  document.body.appendChild(lb)
+}
+window._tlAbrirLightbox = _tlAbrirLightbox
+
 export async function renderTimeline(container, page) {
   const sb     = window._sb
   const perfil = window._perfil
@@ -169,7 +190,7 @@ export async function renderTimeline(container, page) {
 
   function renderPostCard(post, emModeracao) {
     const fotoHtml = post.autor_foto
-      ? `<img src="${post.autor_foto}" style="width:38px;height:38px;border-radius:50%;object-fit:cover">`
+      ? `<img src="${post.autor_foto}" referrerpolicy="no-referrer" style="width:38px;height:38px;border-radius:50%;object-fit:cover">`
       : `<div style="width:38px;height:38px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--verde)">${(post.autor_nome || '?')[0].toUpperCase()}</div>`
 
     const roleBadgeMap = {
@@ -272,7 +293,12 @@ export async function renderTimeline(container, page) {
     if (!url) return ''
     if (!tipo) tipo = detectarTipoMidia(url)
     if (tipo === 'imagem') {
-      return `<div style="margin-top:12px"><img src="${url}" style="width:100%;max-height:420px;object-fit:cover;display:block" loading="lazy" onerror="this.parentElement.remove()"></div>`
+      return `<div style="margin-top:12px;cursor:zoom-in;position:relative" onclick="window._tlAbrirLightbox('${url}')" title="Clique para ampliar">
+        <img src="${url}" referrerpolicy="no-referrer" style="width:100%;max-height:420px;object-fit:cover;display:block" loading="lazy" onerror="this.parentElement.remove()">
+        <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);border-radius:20px;padding:3px 8px;font-size:10px;color:#fff;display:flex;align-items:center;gap:4px;pointer-events:none">
+          <i class="ti ti-zoom-in" style="font-size:12px"></i> ampliar
+        </div>
+      </div>`
     }
     if (tipo === 'video') {
       const embed = youtubeEmbed(url) || url
@@ -543,7 +569,7 @@ export async function renderTimeline(container, page) {
 
 function renderComposeBox(perfil, isAdmin, isProf) {
   const fotoHtml = perfil.foto_url
-    ? `<img src="${perfil.foto_url}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`
+    ? `<img src="${perfil.foto_url}" referrerpolicy="no-referrer" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`
     : `<div style="width:36px;height:36px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--verde)">${perfil.nome[0].toUpperCase()}</div>`
 
   const noticeHtml = (!isAdmin && !isProf)
@@ -566,4 +592,4 @@ function renderComposeBox(perfil, isAdmin, isProf) {
       </div>
     </div>
   `
-}  
+}    
