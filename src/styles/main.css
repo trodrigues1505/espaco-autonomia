@@ -425,7 +425,7 @@ button:active:not(:disabled) { transform: scale(.97); opacity: .85; }
   .sb-bottom { padding: 8px 14px; border-top: none; margin-left: auto; }
   #impersonate-bar { display: none !important; }
   .main { overflow: auto; min-height: 0; flex: 1; }
-  .topbar { padding: 0 14px; height: 48px; }
+  .topbar { padding: 0 14px; height: 48px; z-index: 60; } /* acima do .sb (z-index:50) — evita ficar escondido ao rolar (ambos sticky/top:0) */
   .topbar-t { font-size: 16px; }
   .content { padding: 14px; }
 
@@ -461,4 +461,4 @@ button:active:not(:disabled) { transform: scale(.97); opacity: .85; }
 
   /* Desativa hover lift em mobile (sem cursor) */
   .card-hover:hover { box-shadow: none; transform: none; }
-}    
+}   
