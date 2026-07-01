@@ -92,7 +92,9 @@ export async function renderTimeline(container, page) {
       p_offset: feedOffset,
     })
 
+    // Guard: usuário pode ter navegado para outra página durante o await
     const feedEl = document.getElementById('tl-feed-container')
+    if (!feedEl) return
 
     if (error) {
       feedEl.innerHTML = `<div style="padding:24px;text-align:center;font-size:12px;color:#c0392b">Erro ao carregar feed: ${error.message}</div>`
@@ -325,16 +327,21 @@ export async function renderTimeline(container, page) {
 
   async function carregarComentarios(postId) {
     const list = document.getElementById(`tl-comments-list-${postId}`)
+    if (!list) return
     list.innerHTML = `<div style="font-size:11px;color:var(--txt2)">Carregando...</div>`
 
     const { data, error } = await sb.rpc('get_comentarios_post', { p_post_id: postId })
 
+    // Guard pós-await
+    const listAfter = document.getElementById(`tl-comments-list-${postId}`)
+    if (!listAfter) return
+
     if (error || !data?.length) {
-      list.innerHTML = `<div style="font-size:12px;color:var(--txt2);padding:4px 0">Nenhum comentário ainda.</div>`
+      listAfter.innerHTML = `<div style="font-size:12px;color:var(--txt2);padding:4px 0">Nenhum comentário ainda.</div>`
       return
     }
 
-    list.innerHTML = data.map(c => `
+    listAfter.innerHTML = data.map(c => `
       <div style="display:flex;gap:8px;margin-bottom:10px">
         <div style="width:26px;height:26px;border-radius:50%;background:rgba(31,56,31,.08);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--verde);flex-shrink:0">${(c.autor_nome || '?')[0].toUpperCase()}</div>
         <div style="flex:1;background:rgba(31,56,31,.03);border-radius:6px;padding:7px 10px">
@@ -464,4 +471,4 @@ function renderComposeBox(perfil, isAdmin, isProf) {
       </div>
     </div>
   `
-}
+} 
