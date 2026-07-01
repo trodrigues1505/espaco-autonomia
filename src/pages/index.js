@@ -4,6 +4,7 @@
 const V = '?v=6'
 const rotaMap = {
   'dashboard':          () => import('./admin/dashboard.js'  + V).then(m => m.renderDashboard),
+  'timeline':           () => import('./timeline.js'         + V).then(m => m.renderTimeline),
   'config':             () => import('./admin/config.js'     + V).then(m => m.renderConfig),
   'grade':              () => import('./admin/grade.js' + V).then(m => m.renderAlunoGrade),
   'criar-aulas':        () => import('./admin/criar_aulas.js'+ V).then(m => m.renderCriarAulas),
@@ -34,7 +35,6 @@ const rotaMap = {
   'aluno-beneficio-shruti':         () => import('./aluno/beneficios.js' + V).then(m => m.renderAlunosBeneficios),
   'aluno-beneficio-naada-mandir':   () => import('./aluno/beneficios.js' + V).then(m => m.renderAlunosBeneficios),
 }
-
 export async function navigate(page) {
   document.querySelectorAll('.ni').forEach(n => n.classList.remove('on'))
   document.getElementById(`ni-${page}`)?.classList.add('on')
