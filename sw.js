@@ -1,5 +1,5 @@
-// ── Espaço Autonomia — Service Worker v3 ─────────────────────
-const CACHE = 'ea-v3'
+// ── Espaço Autonomia — Service Worker v4 ─────────────────────
+const CACHE = 'ea-v4'
 const ASSETS = [
   './',
   './index.html',
@@ -15,6 +15,8 @@ const ASSETS = [
   './src/modules/professor-cancel.js',
   './src/modules/pwa.js',
   './src/pages/index.js',
+  './src/pages/institucional.js',
+  './src/pages/timeline.js',
   './src/pages/admin/dashboard.js',
   './src/pages/admin/config.js',
   './src/pages/admin/criar_aulas.js',
@@ -24,20 +26,33 @@ const ASSETS = [
   './src/pages/admin/planos.js',
   './src/pages/admin/pagamentos.js',
   './src/pages/admin/grade.js',
+  './src/pages/admin/previsao-professor.js',
+  './src/pages/admin/jnana.js',
   './src/pages/professor/home.js',
   './src/pages/professor/aulas.js',
+  './src/pages/professor/repasse.js',
   './src/pages/aluno/home.js',
   './src/pages/aluno/grade.js',
   './src/pages/aluno/minhas.js',
   './src/pages/aluno/plano.js',
   './src/pages/aluno/conquistas.js',
+  './src/pages/aluno/beneficios.js',
 ]
 
+// Precache resiliente: um asset com 404/erro não derruba a instalação inteira.
+// Sem isso, cache.addAll() falha tudo-ou-nada e o SW novo nunca ativa,
+// deixando um SW antigo (com outra lógica de cache) no controle da aba.
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE)
-      .then(cache => cache.addAll(ASSETS))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE).then(async cache => {
+      const resultados = await Promise.allSettled(ASSETS.map(url => cache.add(url)))
+      resultados.forEach((r, i) => {
+        if (r.status === 'rejected') {
+          console.warn('[SW] Falha ao pré-cachear:', ASSETS[i], r.reason)
+        }
+      })
+      return self.skipWaiting()
+    })
   )
 })
 
@@ -59,7 +74,6 @@ self.addEventListener('fetch', e => {
     e.request.url.includes('fonts.googleapis.com') ||
     e.request.url.includes('cdn.jsdelivr.net')
   ) return
-
   e.respondWith(
     fetch(e.request)
       .then(res => {
@@ -89,4 +103,4 @@ self.addEventListener('push', e => {
 self.addEventListener('notificationclick', e => {
   e.notification.close()
   e.waitUntil(clients.openWindow(e.notification.data?.url || './'))
-})
+})      
