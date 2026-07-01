@@ -87,7 +87,8 @@ export async function renderAlunoGrade(container, page) {
     const prazoMin = Number(cfg.prazo_confirmacao_min||60)
 
     // Construir grade HTML
-    let gradeHTML = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:600px">`
+    // id="tour-grade-table": alvo do tour guiado (aponta a tabela inteira da semana)
+    let gradeHTML = `<div id="tour-grade-table" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:600px">`
     // Cabeçalho
     gradeHTML += `<tr><th style="background:var(--verde);color:var(--bege);padding:8px;font-size:11px;font-weight:500;width:60px">Hora</th>`
     diasDaSemana.forEach(d => {
@@ -301,4 +302,4 @@ export async function renderAlunoGrade(container, page) {
       `
       window._ocAtual = ocId
     }
-}
+}  
