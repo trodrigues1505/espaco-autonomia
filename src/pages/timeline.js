@@ -113,10 +113,10 @@ export async function renderTimeline(container, page) {
       midia_tipo: r.post_midia_tipo,
       status:     r.post_status,
       criado_em:  r.post_criado_em,
-      total_curtidas:    r.total_curtidas,
-      total_comentarios: r.total_comentarios,
-      eu_curti:   r.eu_curti,
-      eu_salvei:  r.eu_salvei,
+      total_curtidas:    r.total_curtidas    ?? 0,
+      total_comentarios: r.total_comentarios ?? 0,
+      eu_curti:   r.eu_curti  === true,
+      eu_salvei:  r.eu_salvei === true,
     }))
 
     posts.forEach(post => feedEl.insertAdjacentHTML('beforeend', renderPostCard(post, false)))
@@ -229,9 +229,9 @@ export async function renderTimeline(container, page) {
       </div>` : ''
 
     const comentariosSection = podeComentar ? `
-      <div id="tl-comments-${post.id}" style="display:none;border-top:1px solid var(--borda);padding:10px 18px">
+      <div id="tl-comments-${post.id}" data-aberto="0" style="max-height:0;overflow:hidden;border-top:0 solid var(--borda);padding:0 18px;transition:max-height .2s ease">
         <div id="tl-comments-list-${post.id}"></div>
-        <div style="display:flex;gap:8px;align-items:flex-end;margin-top:8px">
+        <div style="display:flex;gap:8px;align-items:flex-end;margin-top:8px;padding-bottom:10px">
           <textarea id="tl-comment-input-${post.id}" rows="1" placeholder="Escreva um comentário..."
             style="flex:1;border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:12px;font-family:'DM Sans',sans-serif;resize:none;min-height:34px"></textarea>
           <button class="tl-btn-enviar-comentario" data-post="${post.id}"
@@ -367,9 +367,19 @@ export async function renderTimeline(container, page) {
   async function toggleComentarios(postId) {
     const sec = document.getElementById(`tl-comments-${postId}`)
     if (!sec) return
-    const abrir = sec.style.display === 'none'
-    sec.style.display = abrir ? 'block' : 'none'
-    if (abrir) await carregarComentarios(postId)
+    const aberto = sec.dataset.aberto === '1'
+    if (aberto) {
+      sec.style.maxHeight = '0'
+      sec.style.borderTopWidth = '0'
+      sec.style.padding = '0 18px'
+      sec.dataset.aberto = '0'
+    } else {
+      sec.style.maxHeight = '600px'
+      sec.style.borderTopWidth = '1px'
+      sec.style.padding = '10px 18px'
+      sec.dataset.aberto = '1'
+      await carregarComentarios(postId)
+    }
   }
 
   async function carregarComentarios(postId) {
@@ -556,4 +566,4 @@ function renderComposeBox(perfil, isAdmin, isProf) {
       </div>
     </div>
   `
-}   
+}  
