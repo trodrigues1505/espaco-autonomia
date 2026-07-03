@@ -9,6 +9,53 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
 import { carregarNotificacoes, renderPainelNotif, initNotifHandlers } from '../../modules/notificacoes.js'
 import { uiAnimar } from '../../modules/ui.js'
 
+let _buscaAlunoTimer = null
+
+function montarListaAlunosHTML(alunos, saldoPorAluno) {
+  return card('Lista de Alunos ('+alunos.length+')', '',
+    `<div style="display:grid;grid-template-columns:1fr 80px 60px 60px 80px 160px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
+      <span>Aluno</span><span>Plano</span><span>Freq.</span><span>Saldo</span><span>Validade</span><span></span>
+    </div>
+    ${alunos.length===0?'<div style="padding:18px;font-size:12px;color:var(--txt2)">Nenhum aluno encontrado.</div>':
+      alunos.map(a => {
+        const mat = (a.matriculas||[]).find(m=>m.ativa)
+        const initials = a.nome.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()
+        const opcaoLabel = mat?.opcao_aulas===99?'Livre':mat?.opcao_aulas===2?'2×/sem':mat?.opcao_aulas===1?'1×/sem':'—'
+        const vencida = mat?.fim && new Date(mat.fim) < new Date()
+        const saldo = saldoPorAluno[a.id] ?? null
+        const ehLivre = mat?.plano_tipo === 'vishnu_livre' || mat?.opcao_aulas === 99
+        const saldoLabel = ehLivre ? '∞' : saldo !== null ? String(saldo) : '—'
+        const saldoCor = ehLivre ? 'var(--verde)' : saldo === 0 ? '#c0392b' : (saldo !== null && saldo <= 1) ? '#e67e22' : 'var(--verde)'
+        const temDesconto = mat && ((mat.desconto_fixo||0) > 0 || (mat.desconto_avulso_meses > mat.desconto_avulso_usado && (mat.desconto_avulso_valor||0) > 0))
+        return `<div style="display:grid;grid-template-columns:1fr 80px 60px 60px 80px 160px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:var(--verde);flex-shrink:0">${initials}</div>
+            <div>
+              <div style="font-weight:500">${a.nome}</div>
+              <div style="font-size:10px;color:var(--txt2)">${a.email}</div>
+              ${temDesconto?`<div style="font-size:10px;color:#e67e22">🏷 com desconto</div>`:''}
+            </div>
+          </div>
+          <span>${mat?PLANO_BADGES[mat?.plano_tipo]||mat?.plano_tipo||'—':badge('Sem plano','#fceaea','#8a1a1a')}</span>
+          <span style="font-size:11px;color:var(--txt2)">${opcaoLabel}</span>
+          <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:${saldoCor}">${saldoLabel}</span>
+          <span style="font-size:11px;color:${vencida?'#c0392b':'var(--txt2)'}">${mat?.fim?new Date(mat.fim+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):vencida?'Vencida':'—'}</span>
+          <div style="display:flex;gap:4px">
+            <button onclick="editarAluno('${a.id}')" style="padding:3px 10px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:11px;cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif">Editar</button>
+            <button onclick="confirmarExcluirAluno('${a.id}','${a.nome.replace(/'/g,"\\'")}')" style="padding:3px 8px;background:transparent;border:1px solid #f5c1c1;border-radius:5px;font-size:11px;cursor:pointer;color:#c0392b;font-family:'DM Sans',sans-serif" title="Excluir aluno">✕</button>
+          </div>
+        </div>`
+      }).join('')
+    }`
+  )
+}
+
+function filtrarAlunosLista(todos, busca, filtroPlanok) {
+  return todos
+    .filter(a => !busca || a.nome.toLowerCase().includes(busca.toLowerCase()) || a.email.toLowerCase().includes(busca.toLowerCase()))
+    .filter(a => !filtroPlanok || (a.matriculas||[]).some(m=>m.ativa && m.plano_tipo===filtroPlanok))
+}
+
 export async function renderAlunos(container, page) {
   const _sb = window._sb || sb
   const perfil = window._perfil
@@ -30,9 +77,12 @@ export async function renderAlunos(container, page) {
     (saldoRes.data || []).map(s => [s.aluno_id, s.saldo_total ?? 0])
   )
 
-  let alunos = todos
-    .filter(a => !busca || a.nome.toLowerCase().includes(busca.toLowerCase()) || a.email.toLowerCase().includes(busca.toLowerCase()))
-    .filter(a => !filtroPlanok || (a.matriculas||[]).some(m=>m.ativa && m.plano_tipo===filtroPlanok))
+  // Cache em memória: usado pelo filtro local (aplicarFiltroAlunos), evita
+  // refetch + re-render de tela inteira a cada tecla digitada na busca.
+  window._alunosTodosCache = todos
+  window._saldoPorAlunoCache = saldoPorAluno
+
+  let alunos = filtrarAlunosLista(todos, busca, filtroPlanok)
 
   const modalCadastro = modal('modal-cad-aluno', 'Cadastrar Aluno',
     `${fi('','Nome completo',`<input type="text" id="ca-nome" ${inputStyle} placeholder="Nome do aluno">`)}
@@ -75,8 +125,8 @@ export async function renderAlunos(container, page) {
     <div class="topbar">
       <div class="topbar-t">Alunos</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <input id="input-busca-aluno" placeholder="Buscar..." value="${busca}" oninput="window._buscaAlunos=this.value;navigate('alunos')" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;width:140px;font-family:'DM Sans',sans-serif;outline:none">
-        <select onchange="window._filtroPlanoAlunos=this.value;navigate('alunos')" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;background:#fff;color:var(--txt)">
+        <input id="input-busca-aluno" placeholder="Buscar..." value="${busca}" oninput="window.filtrarAlunosDebounced(this.value)" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;width:140px;font-family:'DM Sans',sans-serif;outline:none">
+        <select onchange="window._filtroPlanoAlunos=this.value;window.aplicarFiltroAlunos()" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;background:#fff;color:var(--txt)">
           <option value="" ${!filtroPlanok?'selected':''}>Todos os planos</option>
           <option value="brahma"       ${filtroPlanok==='brahma'      ?'selected':''}>Brahma</option>
           <option value="shiva_1x"     ${filtroPlanok==='shiva_1x'    ?'selected':''}>Shiva 1x</option>
@@ -136,42 +186,9 @@ export async function renderAlunos(container, page) {
           </div>`
         }).join('')}
       </div>
-      ${card('Lista de Alunos ('+alunos.length+')', '',
-        `<div style="display:grid;grid-template-columns:1fr 80px 60px 60px 80px 160px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
-          <span>Aluno</span><span>Plano</span><span>Freq.</span><span>Saldo</span><span>Validade</span><span></span>
-        </div>
-        ${alunos.length===0?'<div style="padding:18px;font-size:12px;color:var(--txt2)">Nenhum aluno encontrado.</div>':
-          alunos.map(a => {
-            const mat = (a.matriculas||[]).find(m=>m.ativa)
-            const initials = a.nome.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()
-            const opcaoLabel = mat?.opcao_aulas===99?'Livre':mat?.opcao_aulas===2?'2×/sem':mat?.opcao_aulas===1?'1×/sem':'—'
-            const vencida = mat?.fim && new Date(mat.fim) < new Date()
-            const saldo = saldoPorAluno[a.id] ?? null
-            const ehLivre = mat?.plano_tipo === 'vishnu_livre' || mat?.opcao_aulas === 99
-            const saldoLabel = ehLivre ? '∞' : saldo !== null ? String(saldo) : '—'
-            const saldoCor = ehLivre ? 'var(--verde)' : saldo === 0 ? '#c0392b' : (saldo !== null && saldo <= 1) ? '#e67e22' : 'var(--verde)'
-            const temDesconto = mat && ((mat.desconto_fixo||0) > 0 || (mat.desconto_avulso_meses > mat.desconto_avulso_usado && (mat.desconto_avulso_valor||0) > 0))
-            return `<div style="display:grid;grid-template-columns:1fr 80px 60px 60px 80px 160px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
-              <div style="display:flex;align-items:center;gap:8px">
-                <div style="width:28px;height:28px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:var(--verde);flex-shrink:0">${initials}</div>
-                <div>
-                  <div style="font-weight:500">${a.nome}</div>
-                  <div style="font-size:10px;color:var(--txt2)">${a.email}</div>
-                  ${temDesconto?`<div style="font-size:10px;color:#e67e22">🏷 com desconto</div>`:''}
-                </div>
-              </div>
-              <span>${mat?PLANO_BADGES[mat?.plano_tipo]||mat?.plano_tipo||'—':badge('Sem plano','#fceaea','#8a1a1a')}</span>
-              <span style="font-size:11px;color:var(--txt2)">${opcaoLabel}</span>
-              <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:${saldoCor}">${saldoLabel}</span>
-              <span style="font-size:11px;color:${vencida?'#c0392b':'var(--txt2)'}">${mat?.fim?new Date(mat.fim+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):vencida?'Vencida':'—'}</span>
-              <div style="display:flex;gap:4px">
-                <button onclick="editarAluno('${a.id}')" style="padding:3px 10px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:11px;cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif">Editar</button>
-                <button onclick="confirmarExcluirAluno('${a.id}','${a.nome.replace(/'/g,"\\'")}')" style="padding:3px 8px;background:transparent;border:1px solid #f5c1c1;border-radius:5px;font-size:11px;cursor:pointer;color:#c0392b;font-family:'DM Sans',sans-serif" title="Excluir aluno">✕</button>
-              </div>
-            </div>`
-          }).join('')
-        }`
-      )}
+      <div id="lista-alunos-container">
+        ${montarListaAlunosHTML(alunos, saldoPorAluno)}
+      </div>
     </div>
     ${modalCadastro}
     ${modalEditar}
@@ -202,6 +219,24 @@ export async function renderAlunos(container, page) {
   }
 
   initNotifHandlers(notifs, perfil.id)
+
+  // Filtro local: só refiltra o cache em memória e substitui o container da
+  // lista. Não refaz fetch ao Supabase nem re-renderiza a tela inteira.
+  window.filtrarAlunosDebounced = function(valor) {
+    window._buscaAlunos = valor
+    clearTimeout(_buscaAlunoTimer)
+    _buscaAlunoTimer = setTimeout(() => window.aplicarFiltroAlunos(), 180)
+  }
+
+  window.aplicarFiltroAlunos = function() {
+    const todosCache = window._alunosTodosCache || []
+    const saldoCache = window._saldoPorAlunoCache || {}
+    const buscaAtual = window._buscaAlunos || ''
+    const filtroAtual = window._filtroPlanoAlunos || ''
+    const alunosFiltrados = filtrarAlunosLista(todosCache, buscaAtual, filtroAtual)
+    const wrap = document.getElementById('lista-alunos-container')
+    if (wrap) wrap.innerHTML = montarListaAlunosHTML(alunosFiltrados, saldoCache)
+  }
 
   window.updateValorPlano = function() {
     const p = document.getElementById('ca-plano')?.value
@@ -377,4 +412,4 @@ export async function renderAlunos(container, page) {
     window._pendingEditAluno = null
     setTimeout(() => window.editarAluno && window.editarAluno(idParaEditar), 50)
   }
-}   
+}       
