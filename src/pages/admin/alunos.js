@@ -433,8 +433,11 @@ export async function renderAlunos(container, page) {
       await _sb.from('presencas').delete().eq('aluno_id', alunoId)
       await _sb.from('saldo_aulas').delete().eq('aluno_id', alunoId)
       await _sb.from('matriculas').delete().eq('aluno_id', alunoId)
-      const { error } = await _sb.from('perfis').delete().eq('id', alunoId)
+      const { data: linhasApagadas, error } = await _sb.from('perfis').delete().eq('id', alunoId).select('id')
       if (error) throw new Error(error.message)
+      if (!linhasApagadas || linhasApagadas.length === 0) {
+        throw new Error('Nenhuma linha foi removida em perfis. Provável bloqueio de RLS (falta policy de DELETE para o admin nessa tabela) — verifique pg_policies.')
+      }
       document.getElementById('modal-excluir-aluno').style.display = 'none'
       toast('✓ Aluno excluído.')
       navigate('alunos')
@@ -446,4 +449,4 @@ export async function renderAlunos(container, page) {
     window._pendingEditAluno = null
     setTimeout(() => window.editarAluno && window.editarAluno(idParaEditar), 50)
   }
-}   
+}  
