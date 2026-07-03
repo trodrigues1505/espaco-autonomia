@@ -50,10 +50,11 @@ function montarListaAlunosHTML(alunos, saldoPorAluno) {
   )
 }
 
-function filtrarAlunosLista(todos, busca, filtroPlanok) {
+function filtrarAlunosLista(todos, busca, filtroPlanok, semAsaas) {
   return todos
     .filter(a => !busca || a.nome.toLowerCase().includes(busca.toLowerCase()) || a.email.toLowerCase().includes(busca.toLowerCase()))
     .filter(a => !filtroPlanok || (a.matriculas||[]).some(m=>m.ativa && m.plano_tipo===filtroPlanok))
+    .filter(a => !semAsaas || !a.asaas_customer_id)
 }
 
 export async function renderAlunos(container, page) {
@@ -62,6 +63,8 @@ export async function renderAlunos(container, page) {
 
   const busca = window._buscaAlunos || ''
   const filtroPlanok = window._filtroPlanoAlunos || ''
+  const filtroSemAsaas = window._filtroSemAsaasAlunos || false
+  const distribAberta = window._mostrarDistribPlano || false
 
   const [perfisRes, saldoRes, professoresRes, notifs] = await Promise.all([
     _sb.from('perfis').select('*, matriculas!matriculas_aluno_id_fkey(plano_tipo,opcao_aulas,valor_mensal,desconto_fixo,desconto_avulso_valor,desconto_avulso_meses,desconto_avulso_usado,ativa,fim,professor_id)').eq('tipo','aluno').order('nome'),
@@ -82,7 +85,7 @@ export async function renderAlunos(container, page) {
   window._alunosTodosCache = todos
   window._saldoPorAlunoCache = saldoPorAluno
 
-  let alunos = filtrarAlunosLista(todos, busca, filtroPlanok)
+  let alunos = filtrarAlunosLista(todos, busca, filtroPlanok, filtroSemAsaas)
 
   const modalCadastro = modal('modal-cad-aluno', 'Cadastrar Aluno',
     `${fi('','Nome completo',`<input type="text" id="ca-nome" ${inputStyle} placeholder="Nome do aluno">`)}
@@ -150,10 +153,10 @@ export async function renderAlunos(container, page) {
           <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:#1a5a1a">R$${(todos||[]).reduce((s,a)=>{const m=(a.matriculas||[]).find(m=>m.ativa);if(!m) return s; const desc = (m.desconto_fixo||0) + (m.desconto_avulso_meses>m.desconto_avulso_usado ? (m.desconto_avulso_valor||0) : 0); return s+Math.max(0,(m.valor_mensal||0)-desc)},0).toFixed(0)}</div>
           <div style="font-size:10px;color:var(--txt2);margin-top:2px">soma das mensalidades líquidas</div>
         </div>
-        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
+        <div id="card-sem-asaas" onclick="window.toggleFiltroSemAsaas()" title="Clique para filtrar a lista pelos alunos sem Asaas vinculado" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:box-shadow .15s;box-shadow:${filtroSemAsaas?'0 0 0 2px #e67e22 inset':'none'}">
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Sem Asaas</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;color:#e67e22">${(todos||[]).filter(a=>!a.asaas_customer_id).length}</div>
-          <div style="font-size:10px;color:var(--txt2);margin-top:2px">não vinculados</div>
+          <div style="font-size:10px;color:var(--txt2);margin-top:2px">não vinculados · clique p/ filtrar</div>
         </div>
         <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Vencendo em 7d</div>
@@ -163,28 +166,34 @@ export async function renderAlunos(container, page) {
           <div style="font-size:10px;color:var(--txt2);margin-top:2px">planos vencendo</div>
         </div>
       </div>
-      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 18px;margin-bottom:14px">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:12px;font-weight:500">Distribuição por Plano</div>
-        ${[
-          {k:'brahma',l:'Brahma',c:'#8a9a7a'},
-          {k:'shiva_1x',l:'Shiva 1x',c:'#5a8a5a'},
-          {k:'shiva_2x',l:'Shiva 2x',c:'#2d7a2d'},
-          {k:'vishnu_2x',l:'Vishnu 2x',c:'#c8a020'},
-          {k:'vishnu_livre',l:'Vishnu Livre',c:'#e8bc4f'},
-        ].map(({k,l,c})=>{
-          const n=(todos||[]).filter(a=>a.matriculas?.some(m=>m.ativa&&m.plano_tipo===k)).length
-          const pct=todos?.length?Math.round(n/todos.length*100):0
-          const recMes=(todos||[]).filter(a=>a.matriculas?.some(m=>m.ativa&&m.plano_tipo===k)).reduce((s,a)=>{const m=(a.matriculas||[]).find(m=>m.ativa);if(!m) return s; const desc=(m.desconto_fixo||0)+(m.desconto_avulso_meses>m.desconto_avulso_usado?(m.desconto_avulso_valor||0):0); return s+Math.max(0,(m.valor_mensal||0)-desc)},0)
-          return `<div style="margin-bottom:10px">
-            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-              <span style="font-weight:500">${l}</span>
-              <span style="color:var(--txt2)">${n} aluno${n!==1?'s':''} · R$${recMes}/mês · ${pct}%</span>
-            </div>
-            <div style="height:6px;background:#f0ede4;border-radius:4px;overflow:hidden">
-              <div style="height:6px;background:${c};border-radius:4px;width:${pct}%;transition:width .5s"></div>
-            </div>
-          </div>`
-        }).join('')}
+      <div style="margin-bottom:14px">
+        <button onclick="window.toggleDistribPlano()" style="width:100%;text-align:left;background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:10px 18px;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px">
+          <i id="icon-toggle-distrib" class="ti ti-chevron-${distribAberta?'down':'right'}" style="font-size:13px"></i> Distribuição por Plano
+        </button>
+        <div id="distribuicao-plano-wrap" data-aberto="${distribAberta?'true':'false'}" style="max-height:${distribAberta?'2000px':'0px'};overflow:hidden;transition:max-height .3s ease">
+          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 18px;margin-top:8px">
+            ${[
+              {k:'brahma',l:'Brahma',c:'#8a9a7a'},
+              {k:'shiva_1x',l:'Shiva 1x',c:'#5a8a5a'},
+              {k:'shiva_2x',l:'Shiva 2x',c:'#2d7a2d'},
+              {k:'vishnu_2x',l:'Vishnu 2x',c:'#c8a020'},
+              {k:'vishnu_livre',l:'Vishnu Livre',c:'#e8bc4f'},
+            ].map(({k,l,c})=>{
+              const n=(todos||[]).filter(a=>a.matriculas?.some(m=>m.ativa&&m.plano_tipo===k)).length
+              const pct=todos?.length?Math.round(n/todos.length*100):0
+              const recMes=(todos||[]).filter(a=>a.matriculas?.some(m=>m.ativa&&m.plano_tipo===k)).reduce((s,a)=>{const m=(a.matriculas||[]).find(m=>m.ativa);if(!m) return s; const desc=(m.desconto_fixo||0)+(m.desconto_avulso_meses>m.desconto_avulso_usado?(m.desconto_avulso_valor||0):0); return s+Math.max(0,(m.valor_mensal||0)-desc)},0)
+              return `<div style="margin-bottom:10px">
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                  <span style="font-weight:500">${l}</span>
+                  <span style="color:var(--txt2)">${n} aluno${n!==1?'s':''} · R$${recMes}/mês · ${pct}%</span>
+                </div>
+                <div style="height:6px;background:#f0ede4;border-radius:4px;overflow:hidden">
+                  <div style="height:6px;background:${c};border-radius:4px;width:${pct}%;transition:width .5s"></div>
+                </div>
+              </div>`
+            }).join('')}
+          </div>
+        </div>
       </div>
       <div id="lista-alunos-container">
         ${montarListaAlunosHTML(alunos, saldoPorAluno)}
@@ -233,9 +242,34 @@ export async function renderAlunos(container, page) {
     const saldoCache = window._saldoPorAlunoCache || {}
     const buscaAtual = window._buscaAlunos || ''
     const filtroAtual = window._filtroPlanoAlunos || ''
-    const alunosFiltrados = filtrarAlunosLista(todosCache, buscaAtual, filtroAtual)
+    const semAsaasAtual = window._filtroSemAsaasAlunos || false
+    const alunosFiltrados = filtrarAlunosLista(todosCache, buscaAtual, filtroAtual, semAsaasAtual)
     const wrap = document.getElementById('lista-alunos-container')
     if (wrap) wrap.innerHTML = montarListaAlunosHTML(alunosFiltrados, saldoCache)
+  }
+
+  window.toggleFiltroSemAsaas = function() {
+    window._filtroSemAsaasAlunos = !window._filtroSemAsaasAlunos
+    const cardEl = document.getElementById('card-sem-asaas')
+    if (cardEl) cardEl.style.boxShadow = window._filtroSemAsaasAlunos ? '0 0 0 2px #e67e22 inset' : 'none'
+    window.aplicarFiltroAlunos()
+  }
+
+  window.toggleDistribPlano = function() {
+    const wrap = document.getElementById('distribuicao-plano-wrap')
+    const icon = document.getElementById('icon-toggle-distrib')
+    if (!wrap) return
+    const aberto = wrap.getAttribute('data-aberto') === 'true'
+    if (aberto) {
+      wrap.style.maxHeight = '0px'
+      wrap.setAttribute('data-aberto', 'false')
+      if (icon) icon.className = 'ti ti-chevron-right'
+    } else {
+      wrap.style.maxHeight = wrap.scrollHeight + 'px'
+      wrap.setAttribute('data-aberto', 'true')
+      if (icon) icon.className = 'ti ti-chevron-down'
+    }
+    window._mostrarDistribPlano = !aberto
   }
 
   window.updateValorPlano = function() {
@@ -412,4 +446,4 @@ export async function renderAlunos(container, page) {
     window._pendingEditAluno = null
     setTimeout(() => window.editarAluno && window.editarAluno(idParaEditar), 50)
   }
-}       
+}   
