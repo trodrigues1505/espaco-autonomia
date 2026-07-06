@@ -1,19 +1,27 @@
 /**
  * src/pages/admin/jnana.js
- * Gestão das posturas do Jñāna Mārga (GUIPPY)
- * Cadastro via IA: cola o texto bruto → API Anthropic interpreta → campos preenchidos
+ * Gestão do estudo dos Yoga Sutras no Jñāna Mārga.
+ * Cadastro via IA: cola o texto bruto (ONDE ESTAMOS / sânscrito / COMENTÁRIO / NA PRÁTICA)
+ * → API Anthropic interpreta os blocos de texto → admin confirma capítulo/número/data → salva.
  */
 
 import { toast } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 
+const CAPITULOS = [
+  { nome: 'Samādhipāda',  ordem: 1 },
+  { nome: 'Sādhanapāda',  ordem: 2 },
+  { nome: 'Vibhūtipāda',  ordem: 3 },
+  { nome: 'Kaivalyapāda', ordem: 4 },
+]
+
 export async function renderJnanaAdmin(container, page) {
   const sb   = window._sb
   const hoje = new Date().toISOString().slice(0, 10)
 
-  const { data: posturas, error } = await sb
-    .from('jnana_posturas')
-    .select('id,nome_popular,nome_sanscrito,publicada_em,etimologia')
+  const { data: sutras, error } = await sb
+    .from('jnana_sutras')
+    .select('id,capitulo,capitulo_ordem,numero_sutra,transliteracao,traducao,publicada_em')
     .order('publicada_em', { ascending: true })
 
   if (error) {
@@ -22,12 +30,12 @@ export async function renderJnanaAdmin(container, page) {
     return
   }
 
-  const hojePublicada = (posturas||[]).find(p => p.publicada_em === hoje)
-  const futuras       = (posturas||[]).filter(p => p.publicada_em > hoje)
-  const publicadas    = (posturas||[]).filter(p => p.publicada_em <= hoje)
+  const hojePublicado = (sutras||[]).find(s => s.publicada_em === hoje)
+  const futuros       = (sutras||[]).filter(s => s.publicada_em > hoje)
+  const publicados     = (sutras||[]).filter(s => s.publicada_em <= hoje)
 
-  // Dias da semana úteis nas próximas 2 semanas sem postura agendada
-  const diasOcupados = new Set((posturas||[]).map(p => p.publicada_em))
+  // Sugestão de dias úteis (seg-sex) livres nas próximas semanas
+  const diasOcupados = new Set((sutras||[]).map(s => s.publicada_em))
   const sugestoesDias = []
   const d = new Date()
   d.setDate(d.getDate() + 1)
@@ -39,6 +47,11 @@ export async function renderJnanaAdmin(container, page) {
   }
   const proximoLivre = sugestoesDias[0] || hoje
 
+  // Próximo número de sutra sugerido: continua o último capítulo cadastrado (por data), senão começa Samādhipāda #1
+  const ultimoCadastrado = (sutras||[]).slice().sort((a,b) => a.publicada_em < b.publicada_em ? 1 : -1)[0]
+  const capituloSugerido = ultimoCadastrado ? ultimoCadastrado.capitulo_ordem : 1
+  const numeroSugerido   = ultimoCadastrado ? ultimoCadastrado.numero_sutra + 1 : 1
+
   function fmtDia(iso) {
     const dt = new Date(iso + 'T12:00')
     return dt.toLocaleDateString('pt-BR', { weekday:'short', day:'2-digit', month:'2-digit' })
@@ -47,128 +60,136 @@ export async function renderJnanaAdmin(container, page) {
   function badgeStatus(iso) {
     if (iso === hoje) return `<span style="background:#e8f4e8;color:#1a5a1a;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600">✓ Hoje</span>`
     if (iso > hoje)  return `<span style="background:rgba(232,188,79,.15);color:#7a5a10;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500">⏳ Agendada</span>`
-    return `<span style="background:rgba(31,56,31,.07);color:var(--txt2);padding:2px 8px;border-radius:20px;font-size:10px">Publicada</span>`
+    return `<span style="background:rgba(31,56,31,.07);color:var(--txt2);padding:2px 8px;border-radius:20px;font-size:10px">Publicado</span>`
+  }
+
+  function selectCapitulo(id, ordemSelecionada) {
+    return `<select id="${id}"
+      style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
+             font-family:'DM Sans',sans-serif;outline:none;width:100%">
+      ${CAPITULOS.map(c => `<option value="${c.ordem}" ${c.ordem === ordemSelecionada ? 'selected' : ''}>${c.nome}</option>`).join('')}
+    </select>`
   }
 
   container.innerHTML = `
     <div class="topbar">
-      <div class="topbar-t">Jñāna Mārga — GUIPPY</div>
+      <div class="topbar-t">Jñāna Mārga — Yoga Sutras</div>
       <button onclick="abrirFormJnana()"
         style="padding:6px 14px;background:var(--verde);color:var(--bege);border:none;
                border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
                display:flex;align-items:center;gap:5px">
-        <i class="ti ti-sparkles"></i> Nova postura
+        <i class="ti ti-sparkles"></i> Novo sutra
       </button>
     </div>
     <div class="content">
 
-      ${!hojePublicada
+      ${!hojePublicado
         ? `<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);
                       border-radius:8px;padding:12px 16px;margin-bottom:16px;
                       display:flex;align-items:center;gap:10px;font-size:13px;color:#7a5a10">
              <i class="ti ti-alert-triangle" style="color:var(--dourado);font-size:18px"></i>
-             <span>Nenhuma postura publicada hoje. <strong>Cadastre a postura do dia.</strong></span>
+             <span>Nenhum sutra publicado hoje. <strong>Cadastre o sutra do dia.</strong></span>
            </div>`
         : `<div style="background:#e8f4e8;border:1px solid #b8ddb8;border-radius:8px;
                       padding:12px 16px;margin-bottom:16px;font-size:13px;color:#1a5a1a;
                       display:flex;align-items:center;gap:10px">
              <i class="ti ti-check" style="font-size:18px"></i>
-             <span>Postura de hoje: <strong>${hojePublicada.nome_popular} — ${hojePublicada.nome_sanscrito}</strong></span>
+             <span>Sutra de hoje: <strong>${hojePublicado.capitulo} ${hojePublicado.numero_sutra} — ${hojePublicado.transliteracao}</strong></span>
            </div>`
       }
 
       <!-- Stats -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">
         <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Total publicadas</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--verde)">${publicadas.length}</div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Total publicados</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--verde)">${publicados.length}</div>
         </div>
         <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Agendadas (futuras)</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:${futuras.length > 0 ? '#BA7517' : 'var(--txt2)'}">
-            ${futuras.length}
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Agendados (futuros)</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:${futuros.length > 0 ? '#BA7517' : 'var(--txt2)'}">
+            ${futuros.length}
           </div>
-          ${futuras.length > 0
-            ? `<div style="font-size:10px;color:#BA7517;margin-top:2px">próxima: ${fmtDia(futuras[0].publicada_em)}</div>`
-            : `<div style="font-size:10px;color:var(--txt2);margin-top:2px">nenhuma no fila</div>`}
+          ${futuros.length > 0
+            ? `<div style="font-size:10px;color:#BA7517;margin-top:2px">próximo: ${fmtDia(futuros[0].publicada_em)}</div>`
+            : `<div style="font-size:10px;color:var(--txt2);margin-top:2px">nenhum na fila</div>`}
         </div>
         <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Próx. dia livre</div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Próx. dia útil livre</div>
           <div style="font-size:13px;font-weight:500;color:var(--verde);margin-top:4px">${fmtDia(proximoLivre)}</div>
           <div style="font-size:10px;color:var(--txt2);margin-top:2px">${proximoLivre}</div>
         </div>
       </div>
 
       <!-- Lista agrupada -->
-      ${futuras.length > 0 ? `
+      ${futuros.length > 0 ? `
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#BA7517;font-weight:500;margin-bottom:8px">
-          ⏳ Agendadas — visíveis somente na data
+          ⏳ Agendados — visíveis somente na data
         </div>
         <div style="background:#fff;border:1px solid rgba(232,188,79,.4);border-radius:var(--r);overflow:hidden;margin-bottom:18px">
           <div style="display:grid;grid-template-columns:1fr 150px 130px 110px;padding:8px 18px;
                       background:rgba(232,188,79,.08);font-size:10px;text-transform:uppercase;
                       letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
-            <span>Postura</span><span>Sânscrito</span><span>Data agendada</span><span>Ação</span>
+            <span>Sutra</span><span>Capítulo</span><span>Data agendada</span><span>Ação</span>
           </div>
-          ${futuras.map(p => `
+          ${futuros.map(s => `
             <div style="display:grid;grid-template-columns:1fr 150px 130px 110px;
                         align-items:center;gap:10px;padding:11px 18px;
                         border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
               <div>
-                <div style="font-weight:500;color:var(--txt)">${p.nome_popular}</div>
-                <div style="font-size:10px;color:var(--txt2);margin-top:1px">${p.etimologia||''}</div>
+                <div style="font-weight:500;color:var(--txt)">${s.capitulo} ${s.numero_sutra}</div>
+                <div style="font-size:10px;color:var(--txt2);margin-top:1px;font-style:italic">${s.transliteracao}</div>
               </div>
-              <span style="color:var(--txt2);font-style:italic;font-size:11px">${p.nome_sanscrito}</span>
+              <span style="color:var(--txt2);font-size:11px">${s.capitulo}</span>
               <div style="display:flex;flex-direction:column;gap:3px">
-                <input type="date" value="${p.publicada_em}" id="data-${p.id}"
+                <input type="date" value="${s.publicada_em}" id="data-${s.id}"
                   style="border:1px solid var(--borda);border-radius:5px;padding:4px 8px;
                          font-size:11px;font-family:'DM Sans',sans-serif;color:var(--txt);
                          width:130px">
-                <button onclick="reagendarPostura('${p.id}')"
+                <button onclick="reagendarSutra('${s.id}')"
                   style="padding:2px 8px;background:rgba(232,188,79,.15);color:#7a5a10;
                          border:1px solid rgba(232,188,79,.4);border-radius:4px;font-size:10px;
                          cursor:pointer;font-family:'DM Sans',sans-serif">Reagendar</button>
               </div>
               <div style="display:flex;gap:4px">
-                <button onclick="previaPosura('${p.id}')"
+                <button onclick="previaSutra('${s.id}')"
                   style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--verde);border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Prévia">👁</button>
-                <button onclick="editarPostura('${p.id}')"
+                <button onclick="editarSutra('${s.id}')"
                   style="padding:3px 8px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✎</button>
-                <button onclick="excluirPostura('${p.id}','${p.nome_popular.replace(/'/g,"\\'")}')"
+                <button onclick="excluirSutra('${s.id}','${s.capitulo} ${s.numero_sutra}')"
                   style="padding:3px 8px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✕</button>
               </div>
             </div>`).join('')}
         </div>` : ''}
 
       <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:8px">
-        Publicadas (${publicadas.length})
+        Publicados (${publicados.length})
       </div>
       <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden">
         <div style="display:grid;grid-template-columns:1fr 150px 130px 80px;padding:8px 18px;
                     background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;
                     letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
-          <span>Postura</span><span>Sânscrito</span><span>Publicada em</span><span>Ação</span>
+          <span>Sutra</span><span>Capítulo</span><span>Publicado em</span><span>Ação</span>
         </div>
-        ${publicadas.length === 0
-          ? '<div style="padding:24px 18px;font-size:13px;color:var(--txt2)">Nenhuma postura publicada ainda.</div>'
-          : [...publicadas].reverse().map(p => {
-              const isHoje = p.publicada_em === hoje
+        ${publicados.length === 0
+          ? '<div style="padding:24px 18px;font-size:13px;color:var(--txt2)">Nenhum sutra publicado ainda.</div>'
+          : [...publicados].reverse().map(s => {
+              const isHoje = s.publicada_em === hoje
               return `<div style="display:grid;grid-template-columns:1fr 150px 130px 80px;
                         align-items:center;gap:10px;padding:11px 18px;
                         border-bottom:1px solid rgba(212,200,158,.3);font-size:12px;
                         background:${isHoje ? 'rgba(232,188,79,.05)' : 'transparent'}">
                 <div>
-                  <div style="font-weight:500;color:var(--txt)">${p.nome_popular}</div>
-                  <div style="font-size:10px;color:var(--txt2);margin-top:1px">${p.etimologia||''}</div>
+                  <div style="font-weight:500;color:var(--txt)">${s.capitulo} ${s.numero_sutra}</div>
+                  <div style="font-size:10px;color:var(--txt2);margin-top:1px;font-style:italic">${s.transliteracao}</div>
                 </div>
-                <span style="color:var(--txt2);font-style:italic;font-size:11px">${p.nome_sanscrito}</span>
-                <div>${badgeStatus(p.publicada_em)}<div style="font-size:10px;color:var(--txt2);margin-top:2px">${fmtDia(p.publicada_em)}</div></div>
+                <span style="color:var(--txt2);font-size:11px">${s.capitulo}</span>
+                <div>${badgeStatus(s.publicada_em)}<div style="font-size:10px;color:var(--txt2);margin-top:2px">${fmtDia(s.publicada_em)}</div></div>
                 <div style="display:flex;gap:4px">
-                  <button onclick="previaPosura('${p.id}')"
+                  <button onclick="previaSutra('${s.id}')"
                     style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--verde);border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Prévia">👁</button>
-                  <button onclick="editarPostura('${p.id}')"
+                  <button onclick="editarSutra('${s.id}')"
                     style="padding:3px 8px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✎</button>
-                  <button onclick="excluirPostura('${p.id}','${p.nome_popular.replace(/'/g,"\\'")}')"
+                  <button onclick="excluirSutra('${s.id}','${s.capitulo} ${s.numero_sutra}')"
                     style="padding:3px 8px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✕</button>
                 </div>
               </div>`
@@ -188,9 +209,9 @@ export async function renderJnanaAdmin(container, page) {
                     position:sticky;top:0;z-index:1">
           <div>
             <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;
-                        color:var(--bege)" id="jnana-modal-titulo">Nova Postura</div>
+                        color:var(--bege)" id="jnana-modal-titulo">Novo Sutra</div>
             <div style="font-size:11px;color:rgba(242,236,206,.6);margin-top:2px">
-              Cole o texto do GUIPPY e a IA extrai os campos automaticamente
+              Cole o texto (ONDE ESTAMOS / sânscrito / COMENTÁRIO / NA PRÁTICA) e a IA extrai os campos
             </div>
           </div>
           <button onclick="fecharFormJnana()"
@@ -199,10 +220,24 @@ export async function renderJnanaAdmin(container, page) {
 
         <div style="padding:20px" id="jnana-modal-body">
           <div id="jn-etapa-1">
+            <div style="display:grid;grid-template-columns:1fr 100px;gap:12px;margin-bottom:12px">
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;
+                               color:var(--txt2);font-weight:500">Capítulo</label>
+                ${selectCapitulo('jn-capitulo', capituloSugerido)}
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;
+                               color:var(--txt2);font-weight:500">Nº sutra</label>
+                <input type="number" id="jn-numero" min="1" value="${numeroSugerido}"
+                  style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
+                         font-family:'DM Sans',sans-serif;outline:none;width:100%">
+              </div>
+            </div>
             <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
               <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;
-                             color:var(--txt2);font-weight:500">Cole o texto da postura</label>
-              <textarea id="jn-texto-bruto" rows="12" placeholder="Cole aqui o texto completo da postura do GUIPPY..."
+                             color:var(--txt2);font-weight:500">Cole o texto completo do sutra</label>
+              <textarea id="jn-texto-bruto" rows="14" placeholder="Cole aqui: ONDE ESTAMOS / sânscrito+transliteração+tradução / COMENTÁRIO / NA PRÁTICA..."
                 style="border:1px solid var(--borda);border-radius:6px;padding:10px 12px;font-size:13px;
                        font-family:'DM Sans',sans-serif;outline:none;width:100%;resize:vertical;
                        line-height:1.6"></textarea>
@@ -215,7 +250,7 @@ export async function renderJnanaAdmin(container, page) {
                        font-family:'DM Sans',sans-serif;outline:none;width:200px">
               <div style="font-size:10px;color:var(--txt2)">
                 Próximo dia útil livre: <strong>${fmtDia(proximoLivre)}</strong>.
-                Posturas com data futura ficam invisíveis para alunos até lá.
+                Sutras com data futura ficam invisíveis para alunos até lá.
               </div>
             </div>
             <button onclick="interpretarComIA()"
@@ -242,41 +277,25 @@ export async function renderJnanaAdmin(container, page) {
   uiAnimar(container)
 
   // ── Reagendar rápido ──────────────────────────────────────
-  window.reagendarPostura = async function(id) {
+  window.reagendarSutra = async function(id) {
     const novaData = document.getElementById('data-' + id)?.value
     if (!novaData) { toast('Selecione uma data'); return }
-    const { error: err } = await sb.from('jnana_posturas').update({ publicada_em: novaData }).eq('id', id)
+    const { error: err } = await sb.from('jnana_sutras').update({ publicada_em: novaData }).eq('id', id)
     if (err) { toast('Erro: ' + err.message); return }
     toast('✓ Data atualizada para ' + fmtDia(novaData))
     navigate('jnana-admin')
   }
 
-  window._abrirLightbox = function(src, alt) {
-    document.getElementById('_ea-lightbox')?.remove()
-    const lb = document.createElement('div')
-    lb.id = '_ea-lightbox'
-    lb.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:600;
-      display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out`
-    lb.innerHTML = `
-      <img src="${src}" alt="${alt}" referrerpolicy="no-referrer"
-        style="max-width:100%;max-height:90vh;border-radius:8px;object-fit:contain;
-               box-shadow:0 20px 60px rgba(0,0,0,.5)">
-      <button onclick="document.getElementById('_ea-lightbox').remove()"
-        style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);
-               border:none;border-radius:50%;width:36px;height:36px;color:#fff;
-               font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>`
-    lb.addEventListener('click', e => { if (e.target === lb) lb.remove() })
-    document.body.appendChild(lb)
-  }
-
   window.abrirFormJnana = function() {
     window._editJnanaId = null
-    document.getElementById('jnana-modal-titulo').textContent = 'Nova Postura'
+    document.getElementById('jnana-modal-titulo').textContent = 'Novo Sutra'
     document.getElementById('jn-etapa-1').style.display = 'block'
     document.getElementById('jn-etapa-2').style.display = 'none'
     document.getElementById('jn-etapa-2').innerHTML = ''
     document.getElementById('jn-texto-bruto').value = ''
     document.getElementById('jn-data-pub').value = proximoLivre
+    document.getElementById('jn-capitulo').value = String(capituloSugerido)
+    document.getElementById('jn-numero').value = numeroSugerido
     document.getElementById('jnana-modal-footer').innerHTML = `
       <button onclick="fecharFormJnana()"
         style="padding:8px 16px;background:transparent;border:1px solid var(--borda);
@@ -284,22 +303,14 @@ export async function renderJnanaAdmin(container, page) {
     document.getElementById('modal-jnana').style.display = 'flex'
   }
 
-  window.previaPosura = async function(id) {
-    const { data: p } = await sb.from('jnana_posturas').select('*').eq('id', id).single()
-    if (!p) { toast('Postura não encontrada'); return }
+  window.previaSutra = async function(id) {
+    const { data: s } = await sb.from('jnana_sutras').select('*').eq('id', id).single()
+    if (!s) { toast('Sutra não encontrado'); return }
     document.getElementById('modal-previa-jnana')?.remove()
     const div = document.createElement('div')
     div.id = 'modal-previa-jnana'
     div.style.cssText = 'position:fixed;inset:0;background:rgba(31,56,31,.7);z-index:300;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto'
-    const imgHtml = p.imagem ? `
-      <div style="position:relative;cursor:zoom-in" onclick="_abrirLightbox('${p.imagem}','${p.nome_popular}')" title="Clique para ampliar">
-        <img src="${p.imagem}" referrerpolicy="no-referrer"
-          style="width:100%;max-height:200px;object-fit:cover;object-position:center;display:block;opacity:.9"
-          onerror="this.style.display='none'">
-        <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);border-radius:20px;padding:3px 8px;font-size:10px;color:#fff;display:flex;align-items:center;gap:4px">
-          <i class="ti ti-zoom-in" style="font-size:12px"></i> ampliar
-        </div>
-      </div>` : ''
+    const comentarioHtml = (s.comentario||'').split(/\n\s*\n/).map(p => `<p style="margin:0 0 10px">${p}</p>`).join('')
     div.innerHTML = `
       <div style="background:#fff;border-radius:12px;width:560px;max-width:100%;margin:auto;overflow:hidden">
         <div style="background:var(--verde);padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
@@ -308,41 +319,22 @@ export async function renderJnanaAdmin(container, page) {
             style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
         </div>
         <div style="padding:18px">
-          <div style="background:var(--verde);border-radius:10px;overflow:hidden;margin-bottom:14px">
-            ${imgHtml}
-            <div style="padding:${p.imagem ? '10px 14px 14px' : '16px'}">
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:rgba(242,236,206,.55);margin-bottom:4px">✦ Prévia admin · ${fmtDia(p.publicada_em)}</div>
-              <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--bege)">${p.nome_popular}</div>
-              <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:rgba(242,236,206,.8);margin-top:3px">${p.nome_sanscrito}</div>
-              ${p.etimologia ? `<div style="font-size:11px;color:rgba(242,236,206,.5);margin-top:6px">${p.etimologia}</div>` : ''}
-            </div>
+          <div style="background:var(--verde);border-radius:10px;padding:16px;margin-bottom:14px">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:rgba(242,236,206,.55);margin-bottom:8px">✦ ${s.capitulo} · sutra ${s.numero_sutra} · ${fmtDia(s.publicada_em)}</div>
+            ${s.contexto_capitulo ? `<div style="font-size:12px;color:rgba(242,236,206,.75);line-height:1.6;margin-bottom:12px;font-style:italic">${s.contexto_capitulo}</div>` : ''}
+            <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--bege);direction:ltr">${s.texto_devanagari}</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:rgba(242,236,206,.8);margin-top:4px">${s.transliteracao}</div>
+            <div style="font-size:13px;color:rgba(242,236,206,.9);margin-top:8px">${s.traducao}</div>
           </div>
-          ${p.simbolismo ? `
+          ${s.comentario ? `
             <div style="margin-bottom:12px;background:#f9f7f0;border-radius:8px;padding:12px 14px">
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Simbolismo</div>
-              <p style="font-size:13px;color:var(--txt);line-height:1.7;margin:0;font-style:italic">${p.simbolismo}</p>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Comentário</div>
+              <div style="font-size:13px;color:var(--txt);line-height:1.7">${comentarioHtml}</div>
             </div>` : ''}
-          ${(p.instrucoes||[]).length ? `
-            <div style="margin-bottom:12px;background:#f9f7f0;border-radius:8px;padding:12px 14px">
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:8px">Instruções (${p.instrucoes.length} passos)</div>
-              ${p.instrucoes.map((inst, i) => `
-                <div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid rgba(212,200,158,.25);font-size:12px">
-                  <span style="color:var(--verde);font-weight:600;flex-shrink:0">${i+1}.</span>
-                  <span style="color:var(--txt)">${inst}</span>
-                </div>`).join('')}
-            </div>` : ''}
-          ${p.beneficios ? `
-            <div style="margin-bottom:12px;background:#f9f7f0;border-radius:8px;padding:12px 14px">
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Benefícios</div>
-              <p style="font-size:13px;color:var(--txt);line-height:1.7;margin:0">${p.beneficios}</p>
-            </div>` : ''}
-          ${(p.sistemas||[]).length || (p.elementos||[]).length || p.ayurveda || p.chakras ? `
+          ${s.pratica ? `
             <div style="background:#f9f7f0;border-radius:8px;padding:12px 14px">
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:8px">Sistemas & Energia</div>
-              ${(p.sistemas||[]).length ? `<div style="margin-bottom:6px;font-size:12px"><strong>Sistemas:</strong> ${p.sistemas.join(' · ')}</div>` : ''}
-              ${(p.elementos||[]).length ? `<div style="margin-bottom:6px;font-size:12px"><strong>Elementos:</strong> ${p.elementos.join(' · ')}</div>` : ''}
-              ${p.ayurveda ? `<div style="margin-bottom:6px;font-size:12px"><strong>Ayurveda:</strong> ${p.ayurveda}</div>` : ''}
-              ${p.chakras  ? `<div style="font-size:12px"><strong>Chakras:</strong> ${p.chakras}</div>` : ''}
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Na prática</div>
+              <p style="font-size:13px;color:var(--txt);line-height:1.7;margin:0">${s.pratica}</p>
             </div>` : ''}
         </div>
       </div>`
@@ -350,13 +342,13 @@ export async function renderJnanaAdmin(container, page) {
     div.addEventListener('click', e => { if (e.target === div) div.remove() })
   }
 
-  window.editarPostura = async function(id) {
-    const { data: p } = await sb.from('jnana_posturas').select('*').eq('id', id).single()
-    if (!p) { toast('Postura não encontrada'); return }
+  window.editarSutra = async function(id) {
+    const { data: s } = await sb.from('jnana_sutras').select('*').eq('id', id).single()
+    if (!s) { toast('Sutra não encontrado'); return }
     window._editJnanaId = id
-    document.getElementById('jnana-modal-titulo').textContent = `Editar — ${p.nome_popular}`
+    document.getElementById('jnana-modal-titulo').textContent = `Editar — ${s.capitulo} ${s.numero_sutra}`
     document.getElementById('jn-etapa-1').style.display = 'none'
-    _montarCamposRevisao(p)
+    _montarCamposRevisao(s)
     document.getElementById('jn-etapa-2').style.display = 'block'
     _mostrarBotaoSalvar()
     document.getElementById('modal-jnana').style.display = 'flex'
@@ -369,7 +361,9 @@ export async function renderJnanaAdmin(container, page) {
 
   window.interpretarComIA = async function() {
     const texto = document.getElementById('jn-texto-bruto').value.trim()
-    if (!texto) { toast('Cole o texto da postura primeiro'); return }
+    if (!texto) { toast('Cole o texto do sutra primeiro'); return }
+    const capituloOrdem = parseInt(document.getElementById('jn-capitulo').value, 10)
+    const numeroSutra   = parseInt(document.getElementById('jn-numero').value, 10) || 1
     const btn = document.getElementById('btn-interpretar')
     btn.disabled = true
     btn.innerHTML = '<span class="spinner"></span> Interpretando...'
@@ -383,25 +377,30 @@ export async function renderJnanaAdmin(container, page) {
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
         body: JSON.stringify({
           model: 'claude-sonnet-4-6',
-          max_tokens: 1000,
-          system: `Você é um extrator de dados de textos sobre posturas de yoga.
-Extraia as informações do texto e retorne APENAS um JSON válido, sem markdown, sem explicações.
+          max_tokens: 1500,
+          system: `Você é um extrator de dados de textos sobre o estudo dos Yoga Sutras de Patañjali.
+O texto colado tem tipicamente estas seções, separadas por linhas de "---":
+- ONDE ESTAMOS: contexto do capítulo/pāda em estudo
+- Um bloco com o texto em devanāgarī, sua transliteração (IAST) e a tradução em português
+- COMENTÁRIO: texto explicativo, pode ter vários parágrafos
+- NA PRÁTICA: aplicação prática sugerida
+
+Extraia as informações e retorne APENAS um JSON válido, sem markdown, sem explicações.
 Formato exato:
 {
-  "nome_popular": "string",
-  "nome_sanscrito": "string",
-  "etimologia": "string ou null",
-  "simbolismo": "string ou null",
-  "instrucoes": ["string", "string", ...],
-  "beneficios": "string ou null",
-  "sistemas": ["string", ...],
-  "elementos": ["string", ...],
-  "ayurveda": "string ou null",
-  "chakras": "string ou null"
+  "contexto_capitulo": "string ou null",
+  "texto_devanagari": "string",
+  "transliteracao": "string",
+  "traducao": "string",
+  "comentario": "string ou null",
+  "pratica": "string ou null"
 }
-instrucoes: cada item é um passo separado (sem numeração).
-sistemas/elementos: array de strings simples.
-Se um campo não existir no texto, use null ou array vazio.`,
+Regras:
+- texto_devanagari: copie exatamente o texto em escrita devanāgarī (script indiano), sem alterar caracteres.
+- transliteracao: a versão em caracteres latinos com diacríticos (IAST), ex: "atha yogānuśāsanam".
+- traducao: a tradução curta em português.
+- comentario: preserve parágrafos separando-os com uma linha em branco (\\n\\n) entre eles.
+- Se um campo não existir no texto, use null.`,
           messages: [{ role: 'user', content: texto }],
         }),
       })
@@ -417,7 +416,10 @@ Se um campo não existir no texto, use null ou array vazio.`,
       } catch {
         throw new Error('IA retornou formato inesperado. Tente novamente.')
       }
-      parsed.publicada_em = document.getElementById('jn-data-pub').value || proximoLivre
+      parsed.capitulo_ordem = capituloOrdem
+      parsed.capitulo       = (CAPITULOS.find(c => c.ordem === capituloOrdem) || CAPITULOS[0]).nome
+      parsed.numero_sutra   = numeroSutra
+      parsed.publicada_em   = document.getElementById('jn-data-pub').value || proximoLivre
       _montarCamposRevisao(parsed)
       document.getElementById('jn-etapa-1').style.display = 'none'
       document.getElementById('jn-etapa-2').style.display = 'block'
@@ -430,8 +432,8 @@ Se um campo não existir no texto, use null ou array vazio.`,
     }
   }
 
-  function _montarCamposRevisao(p) {
-    const f = (label, id, el, dica = '') => `
+  function _montarCamposRevisao(s) {
+    const f = (label, el, dica = '') => `
       <div style="display:flex;flex-direction:column;gap:4px">
         <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;
                        color:var(--txt2);font-weight:500">${label}</label>
@@ -455,31 +457,21 @@ Se um campo não existir no texto, use null ou array vazio.`,
         <span>Campos extraídos pela IA. Revise e corrija se necessário antes de salvar.</span>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          ${f('Nome popular',   'jn-popular',  inp('jn-popular',  p.nome_popular,  'ex: Cadeira'))}
-          ${f('Nome sânscrito', 'jn-sanscrito', inp('jn-sanscrito', p.nome_sanscrito, 'ex: Utkaṭāsana'))}
+        <div style="display:grid;grid-template-columns:1fr 100px 150px;gap:12px">
+          ${f('Capítulo', selectCapitulo('jn-r-capitulo', s.capitulo_ordem))}
+          ${f('Nº sutra', `<input type="number" id="jn-r-numero" min="1" value="${s.numero_sutra}"
+              style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
+                     font-family:'DM Sans',sans-serif;outline:none;width:100%">`)}
+          ${f('Data de publicação', `<input type="date" id="jn-data" value="${s.publicada_em || proximoLivre}"
+              style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
+                     font-family:'DM Sans',sans-serif;outline:none;width:100%">`)}
         </div>
-        ${f('Etimologia', 'jn-etim', inp('jn-etim', p.etimologia, 'ex: Utka = feroz + Asana = postura'))}
-        ${f('URL da imagem', 'jn-imagem',
-          inp('jn-imagem', p.imagem, 'https://i.imgur.com/...'),
-          'Link direto da imagem (Imgur recomendado). Opcional.'
-        )}
-        ${f('Data de publicação', 'jn-data',
-          `<input type="date" id="jn-data" value="${p.publicada_em || proximoLivre}"
-            style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
-                   font-family:'DM Sans',sans-serif;outline:none;width:200px">`,
-          'Posturas com data futura ficam invisíveis para alunos até lá. Próximo livre: ' + fmtDia(proximoLivre)
-        )}
-        ${f('Simbolismo', 'jn-simb', ta('jn-simb', p.simbolismo, 4))}
-        ${f('Instruções', 'jn-inst',
-          ta('jn-inst', (p.instrucoes||[]).join('\n'), 8),
-          'Uma linha = um passo.'
-        )}
-        ${f('Benefícios', 'jn-benef', ta('jn-benef', p.beneficios, 3))}
-        ${f('Sistemas equilibrados', 'jn-sist', inp('jn-sist', (p.sistemas||[]).join(', ')), 'Separados por vírgula.')}
-        ${f('Elementos',             'jn-elem', inp('jn-elem', (p.elementos||[]).join(', ')), 'Separados por vírgula.')}
-        ${f('Ayurveda', 'jn-ayur', inp('jn-ayur', p.ayurveda))}
-        ${f('Chakras',  'jn-chak', inp('jn-chak', p.chakras))}
+        ${f('Onde estamos (contexto do capítulo)', ta('jn-contexto', s.contexto_capitulo, 3))}
+        ${f('Texto em devanāgarī', inp('jn-devanagari', s.texto_devanagari, 'ex: अथ योगानुशासनम्'))}
+        ${f('Transliteração', inp('jn-translit', s.transliteracao, 'ex: atha yogānuśāsanam'))}
+        ${f('Tradução', inp('jn-traducao', s.traducao))}
+        ${f('Comentário', ta('jn-comentario', s.comentario, 8), 'Parágrafos separados por linha em branco.')}
+        ${f('Na prática', ta('jn-pratica', s.pratica, 4))}
       </div>
     `
   }
@@ -494,11 +486,11 @@ Se um campo não existir no texto, use null ou array vazio.`,
       <button onclick="fecharFormJnana()"
         style="padding:8px 16px;background:transparent;border:1px solid var(--borda);
                border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
-      <button onclick="salvarPostura()"
+      <button onclick="salvarSutra()"
         style="padding:8px 16px;background:var(--verde);color:var(--bege);border:none;
                border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
                font-weight:500">
-        <i class="ti ti-check"></i> Salvar postura
+        <i class="ti ti-check"></i> Salvar sutra
       </button>`
   }
 
@@ -513,44 +505,47 @@ Se um campo não existir no texto, use null ou array vazio.`,
                border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>`
   }
 
-  window.salvarPostura = async function() {
-    const get    = id => document.getElementById(id)?.value?.trim() || ''
-    const getArr = id => get(id).split(',').map(s => s.trim()).filter(Boolean)
-    const getLin = id => get(id).split('\n').map(s => s.trim()).filter(Boolean)
-    const nome_popular   = get('jn-popular')
-    const nome_sanscrito = get('jn-sanscrito')
-    if (!nome_popular || !nome_sanscrito) { toast('Preencha nome popular e sânscrito'); return }
+  window.salvarSutra = async function() {
+    const get = id => document.getElementById(id)?.value?.trim() || ''
+    const capitulo_ordem = parseInt(get('jn-r-capitulo'), 10)
+    const numero_sutra   = parseInt(get('jn-r-numero'), 10)
+    const capitulo       = (CAPITULOS.find(c => c.ordem === capitulo_ordem) || CAPITULOS[0]).nome
+    const texto_devanagari = get('jn-devanagari')
+    const transliteracao   = get('jn-translit')
+    const traducao         = get('jn-traducao')
+    if (!texto_devanagari || !transliteracao || !traducao) {
+      toast('Preencha devanāgarī, transliteração e tradução'); return
+    }
+    if (!numero_sutra) { toast('Informe o número do sutra'); return }
     const payload = {
-      nome_popular,
-      nome_sanscrito,
-      etimologia:   get('jn-etim')  || null,
-      imagem:       get('jn-imagem')|| null,
-      publicada_em: get('jn-data')  || proximoLivre,
-      simbolismo:   get('jn-simb')  || null,
-      instrucoes:   getLin('jn-inst'),
-      beneficios:   get('jn-benef') || null,
-      sistemas:     getArr('jn-sist'),
-      elementos:    getArr('jn-elem'),
-      ayurveda:     get('jn-ayur')  || null,
-      chakras:      get('jn-chak')  || null,
+      capitulo,
+      capitulo_ordem,
+      numero_sutra,
+      contexto_capitulo: get('jn-contexto') || null,
+      texto_devanagari,
+      transliteracao,
+      traducao,
+      comentario:   get('jn-comentario') || null,
+      pratica:      get('jn-pratica')    || null,
+      publicada_em: get('jn-data') || proximoLivre,
     }
     let err
     if (window._editJnanaId) {
-      ;({ error: err } = await sb.from('jnana_posturas').update(payload).eq('id', window._editJnanaId))
+      ;({ error: err } = await sb.from('jnana_sutras').update(payload).eq('id', window._editJnanaId))
     } else {
-      ;({ error: err } = await sb.from('jnana_posturas').insert(payload))
+      ;({ error: err } = await sb.from('jnana_sutras').insert(payload))
     }
     if (err) { toast('Erro: ' + err.message); return }
-    toast('✓ Postura salva!')
+    toast('✓ Sutra salvo!')
     fecharFormJnana()
     navigate('jnana-admin')
   }
 
-  window.excluirPostura = async function(id, nome) {
+  window.excluirSutra = async function(id, nome) {
     if (!confirm(`Excluir "${nome}"? Esta ação não pode ser desfeita.`)) return
-    const { error: err } = await sb.from('jnana_posturas').delete().eq('id', id)
+    const { error: err } = await sb.from('jnana_sutras').delete().eq('id', id)
     if (err) { toast('Erro: ' + err.message); return }
-    toast('✓ Postura excluída.')
+    toast('✓ Sutra excluído.')
     navigate('jnana-admin')
   }
 }
