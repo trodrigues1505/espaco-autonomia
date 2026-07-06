@@ -1,7 +1,7 @@
 /**
  * src/pages/index.js
  */
-const V = '?v=12'
+const V = '?v=13'
 const rotaMap = {
   'dashboard':          () => import('./admin/dashboard.js'  + V).then(m => m.renderDashboard),
   'timeline':           () => import('./timeline.js'         + V).then(m => m.renderTimeline),
@@ -24,6 +24,7 @@ const rotaMap = {
   'aluno-plano':        () => import('./aluno/plano.js'      + V).then(m => m.renderAlunoPlano),
   'previsao-professor': () => import('./admin/previsao-professor.js' + V).then(m => m.renderPrevisaoProfessor),
   'jnana-admin':        () => import('./admin/jnana.js'             + V).then(m => m.renderJnanaAdmin),
+  'asana-admin':        () => import('./admin/asana.js'             + V).then(m => m.renderAsanaAdmin),
   // Institucional
   'espaco':             () => import('./institucional.js' + V).then(m => m.renderEspaco),
   'nossa-pratica':       () => import('./institucional.js' + V).then(m => m.renderNossaPratica),
@@ -56,4 +57,4 @@ export async function navigate(page) {
     console.error(`navigate(${page}):`, e)
   }
 }
-window.navigate = navigate   
+window.navigate = navigate
