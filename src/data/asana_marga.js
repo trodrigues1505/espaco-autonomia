@@ -3,8 +3,9 @@
  * Conteúdo semanal do Asana Marga — Aula Prática.
  *
  * COMO ATUALIZAR SEMANALMENTE:
- * 1. Edite os campos abaixo com o conteúdo da nova aula
- * 2. Faça commit e push no GitHub
+ * 1. Edite AULA_PRATICA (aula 1, livre para todos) com o conteúdo da semana
+ * 2. Edite AULA_PRATICA_2 (aula 2, restrita a shiva_1x/shiva_2x/vishnu_2x/vishnu_livre)
+ * 3. Faça commit e push no GitHub
  *
  * MIGRAÇÃO FUTURA:
  * Quando o banco de dados estiver pronto, este arquivo será substituído
@@ -38,3 +39,28 @@ export const AULA_PRATICA = {
   },
 }
 
+// ── Aula 2 — restrita a shiva_1x, shiva_2x, vishnu_2x, vishnu_livre ──
+// PREENCHA com o conteúdo real da segunda aula. Estrutura idêntica à AULA_PRATICA.
+export const AULA_PRATICA_2 = {
+  numero:      156,
+  data:        '29/06/2026',
+  modalidade:  'Hatha Yoga',
+  duracao:     '60 minutos',
+  nivel:       'Intermediário',
+  link_tummee: 'https://www.tummee.com/yoga-sequence/SUBSTITUA',
+  descricao: 'PREENCHA — descrição da segunda aula.',
+  introducao: [
+    { termo: 'Dharana', desc: 'PREENCHA' },
+  ],
+  pranayama: [
+    { termo: 'PREENCHA', desc: 'PREENCHA' },
+  ],
+  mantra: [
+    { termo: 'PREENCHA', desc: 'PREENCHA' },
+  ],
+  leitura_energetica: {
+    koshas:  ['Annamaya', 'Pranamaya', 'Manomaya', 'Vijnana', 'Anandamaya'],
+    cakras:  ['Muladhara', 'Svadisthana', 'Manipura', 'Anahata', 'Vishuddha', 'Ajna', 'Sahasrara'],
+    gunas:   ['Rajas', 'Sattva', 'Tamas'],
+  },
+}
