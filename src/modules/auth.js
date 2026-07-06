@@ -9,25 +9,15 @@ import { initProfessorCancel } from './professor-cancel.js'
 import { toast, PLANO_NOMES } from './utils.js'
 
 // ── Onboarding ───────────────────────────────────────────────
+// Todo login novo pelo Google entra como 'visitante'. Não há mais escolha
+// de plano aqui — a promoção para aluno/professor (com plano/matrícula)
+// é feita pelo admin depois, manualmente.
 export async function mostrarOnboarding(user, nomeGoogle, fotoGoogle) {
-  const { data: planos } = await sb
-    .from('planos')
-    .select('*, modalidades:plano_modalidades(modalidade)')
-    .order('preco_1x')
-
-  const NOMES = { hatha: 'Hatha Yoga', acro: 'Acro Yoga', raja: 'Raja Yoga' }
-  const opcoes = []
-  for (const p of (planos || [])) {
-    if (p.preco_1x)    opcoes.push({ plano: p, opcao: 1,  label: '1× por semana', preco: p.preco_1x,    key: p.tipo + '_1x'    })
-    if (p.preco_2x)    opcoes.push({ plano: p, opcao: 2,  label: '2× por semana', preco: p.preco_2x,    key: p.tipo + '_2x'    })
-    if (p.preco_livre) opcoes.push({ plano: p, opcao: 99, label: 'Uso livre',      preco: p.preco_livre, key: p.tipo + '_livre'  })
-  }
-
   const onbDiv = document.createElement('div')
   onbDiv.id = 'onboarding'
   onbDiv.style.cssText = 'position:fixed;inset:0;background:var(--verde);display:flex;align-items:center;justify-content:center;z-index:200;overflow-y:auto;padding:20px'
   onbDiv.innerHTML = `
-    <div style="background:#fff;border-radius:16px;width:500px;max-width:95vw;overflow:hidden">
+    <div style="background:#fff;border-radius:16px;width:440px;max-width:95vw;overflow:hidden">
       <div style="background:var(--verde);padding:28px 24px;text-align:center">
         <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:var(--bege)">Espaço Autonomia</div>
         <div style="font-size:12px;color:rgba(242,236,206,.7);margin-top:4px">Complete seus dados para começar</div>
@@ -38,28 +28,15 @@ export async function mostrarOnboarding(user, nomeGoogle, fotoGoogle) {
           <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Nome completo</label>
           <input id="onb-nome" value="${nomeGoogle}" style="border:1px solid var(--borda);border-radius:6px;padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">
         </div>
-        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:16px">
+        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:20px">
           <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Telefone / WhatsApp</label>
           <input id="onb-tel" placeholder="(11) 99999-9999" style="border:1px solid var(--borda);border-radius:6px;padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">
         </div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--verde);margin-bottom:10px">Escolha seu plano</div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          ${opcoes.map(o => `
-            <label style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border:2px solid var(--borda);border-radius:8px;cursor:pointer" id="label-${o.key}">
-              <div style="display:flex;align-items:center;gap:10px">
-                <input type="radio" name="onb-plano" value="${o.key}"
-                  data-plano="${o.plano.tipo}" data-opcao="${o.opcao}" data-preco="${o.preco}"
-                  style="accent-color:var(--verde)" onchange="highlightPlano('${o.key}')">
-                <div>
-                  <div style="font-weight:500;font-size:13px">${o.plano.nome} · ${o.label}</div>
-                  <div style="font-size:11px;color:var(--txt2)">${(o.plano.modalidades||[]).map(m=>NOMES[m.modalidade]||m.modalidade).join(' · ')}</div>
-                </div>
-              </div>
-              <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--verde)">R$${o.preco}<span style="font-size:11px;font-weight:400;color:var(--txt2)">/mês</span></div>
-            </label>`).join('')}
-        </div>
+        <p style="font-size:12px;color:var(--txt2);line-height:1.6;margin:0 0 20px">
+          Você começa como visitante, com acesso ao Sangha e ao Āsana Mārga. Para liberar os demais benefícios, fale com a equipe do estúdio sobre os planos disponíveis.
+        </p>
         <button onclick="finalizarOnboarding('${user.id}','${user.email}')"
-          style="width:100%;padding:12px;background:var(--verde);color:var(--bege);border:none;border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:20px;font-weight:500">
+          style="width:100%;padding:12px;background:var(--verde);color:var(--bege);border:none;border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500">
           Começar →
         </button>
       </div>
@@ -67,32 +44,19 @@ export async function mostrarOnboarding(user, nomeGoogle, fotoGoogle) {
   document.body.appendChild(onbDiv)
 }
 
-window.highlightPlano = function (key) {
-  document.querySelectorAll('[id^="label-"]').forEach(el => { el.style.borderColor = 'var(--borda)'; el.style.background = '#fff' })
-  const lbl = document.getElementById('label-' + key)
-  if (lbl) { lbl.style.borderColor = 'var(--verde)'; lbl.style.background = 'rgba(31,56,31,.04)' }
-}
-
 window.finalizarOnboarding = async function (userId, email) {
-  const nome     = document.getElementById('onb-nome').value.trim()
-  const tel      = document.getElementById('onb-tel').value.trim()
-  const foto     = document.getElementById('onb-foto')?.value.trim() || null
-  const planoSel = document.querySelector('input[name="onb-plano"]:checked')
-  if (!nome)     { toast('Informe seu nome');   return }
-  if (!planoSel) { toast('Selecione um plano'); return }
+  const nome = document.getElementById('onb-nome').value.trim()
+  const tel  = document.getElementById('onb-tel').value.trim()
+  const foto = document.getElementById('onb-foto')?.value.trim() || null
+  if (!nome) { toast('Informe seu nome'); return }
   const btn = document.querySelector('#onboarding button')
   if (btn) { btn.textContent = 'Salvando...'; btn.disabled = true }
   try {
     const { error: errP } = await sb.from('perfis').upsert({
-      id: userId, nome, email, telefone: tel || null, tipo: 'aluno', ativo: true,
+      id: userId, nome, email, telefone: tel || null, tipo: 'visitante', ativo: true,
       foto_url: foto || null,
     })
     if (errP) throw new Error('Erro no perfil: ' + errP.message)
-    const { error: errM } = await sb.from('matriculas').insert({
-      aluno_id: userId, plano_tipo: planoSel.dataset.plano,
-      opcao_aulas: Number(planoSel.dataset.opcao), valor_mensal: Number(planoSel.dataset.preco),
-    })
-    if (errM) throw new Error('Erro na matrícula: ' + errM.message)
     document.getElementById('onboarding')?.remove()
     await iniciarApp(userId)
   } catch (e) {
@@ -262,3 +226,4 @@ document.getElementById('login-senha')
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-google')?.addEventListener('click', window.loginGoogle)
 })
+
