@@ -2,8 +2,9 @@
  * src/pages/admin/asana.js
  * Gestão do Āsana Mārga — Aula 1 (livre) e Aula 2 (Shiva/Vishnu).
  * SEM histórico: cada slot é uma linha fixa (upsert) na tabela asana_praticas.
- * Cadastro: upload de PDF do Tummee (estatísticas da sequência) → texto extraído
- * no navegador via pdf.js → IA (Groq, via anthropic-proxy) interpreta e estrutura.
+ * Cadastro: upload de PDF do Tummee → texto extraído no navegador (pdf.js)
+ * → IA (Groq, via anthropic-proxy) extrai estatísticas cruas → admin revisa,
+ * completa os campos manuais (abertura, kriya, aquecimento, pranayama) → salva.
  */
 
 import { toast } from '../../modules/utils.js'
@@ -12,6 +13,69 @@ import { uiAnimar } from '../../modules/ui.js'
 const PDFJS_VERSION = '4.7.76'
 const PDFJS_URL     = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.min.mjs`
 const PDFJS_WORKER  = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.worker.min.mjs`
+
+// ── Normalizações e traduções ───────────────────────────────
+const TIPOS_ASANA_LABELS = {
+  'Esticar': 'Alongamento',
+}
+const GUNA_ADJETIVOS = {
+  'Sattva': 'equilibrantes',
+  'Rajas':  'energizantes',
+  'Tamas':  'relaxantes',
+}
+const CHAKRA_CANONICOS = [
+  { chave: 'Muladhara',   nome: 'Muladhara'   },
+  { chave: 'Swadisthana', nome: 'Svadisthana' },
+  { chave: 'Manipura',    nome: 'Manipura'    },
+  { chave: 'Anahata',     nome: 'Anahata'     },
+  { chave: 'Vishuddha',   nome: 'Vishuddha'   },
+  { chave: 'Ajna',        nome: 'Ajna'        },
+  { chave: 'Sahasrara',   nome: 'Sahasrara'   },
+]
+
+function normalizarKosha(termo) {
+  return (termo || '').replace(/\s*Kosha$/i, '').trim()
+}
+function normalizarChakra(termo) {
+  const t = termo || ''
+  const achado = CHAKRA_CANONICOS.find(c => t.toLowerCase().includes(c.chave.toLowerCase()))
+  return achado ? achado.nome : t
+}
+function traduzirTipo(termo) {
+  return TIPOS_ASANA_LABELS[termo] || termo
+}
+function acimaDe50(lista) {
+  return (lista || []).filter(i => (i.percentual || 0) > 50)
+}
+function juntarComE(lista) {
+  if (lista.length === 0) return ''
+  if (lista.length === 1) return lista[0]
+  return lista.slice(0, -1).join(', ') + ' e ' + lista[lista.length - 1]
+}
+function gerarDescricao(dados) {
+  const gunas = acimaDe50(dados.gunas).map(g => GUNA_ADJETIVOS[g.termo] || g.termo.toLowerCase())
+  const tipos = acimaDe50(dados.tipos_yoga).map(t => traduzirTipo(t.termo).toLowerCase())
+  const musculos = acimaDe50(dados.musculos).map(m => m.termo.toLowerCase())
+
+  let texto = gunas.length ? `Aula de posturas predominantemente ${juntarComE(gunas)}` : 'Aula de posturas'
+  if (tipos.length) texto += `, com foco principal em ${juntarComE(tipos)}`
+  if (musculos.length) texto += ` com ênfase em trabalho de ${juntarComE(musculos)}`
+  return texto + '.'
+}
+
+const INTRODUCAO_PADRAO =
+`Dharana: Retenha os sentidos. Concentre-se na respiração, emoções e pensamentos.
+Sankalpa: Defina seu propósito. Planeje com Shiva. Fortaleça-se com Shakti.
+Mantra: Entoe o mantra à Patanjali · 1 vez
+Satkarma (Kriya): 
+Aquecimento: `
+
+// ── Linkify (item 17: qualquer campo de texto aceita links) ──
+function linkify(texto) {
+  if (!texto) return texto
+  return texto.replace(/(https?:\/\/[^\s<]+)/g, url =>
+    `<a href="${url}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">${url}</a>`)
+}
 
 async function _carregarPdfjs() {
   if (window._pdfjsLib) return window._pdfjsLib
@@ -61,6 +125,55 @@ const SLOT_INFO = {
   2: { label: 'Aula 2', sub: 'Restrita — Shiva e Vishnu' },
 }
 
+// ── Renderização de prévia (mesma lógica de filtro/tradução do lado do aluno,
+//    duplicada intencionalmente aqui — mesmo padrão usado em jnana.js) ──────
+function _renderPreviaHTML(a) {
+  const dados = {
+    gunas: a.gunas || [], tipos_yoga: a.tipos_yoga || [], musculos: a.musculos || [],
+  }
+  const descricao = gerarDescricao(dados)
+  const introItens = a.introducao || []
+  const koshas   = acimaDe50(a.koshas || []).map(k => ({ ...k, termo: normalizarKosha(k.termo) }))
+  const chakras  = acimaDe50(a.chakras || []).map(k => ({ ...k, termo: normalizarChakra(k.termo) }))
+  const gunasF   = acimaDe50(a.gunas || [])
+  const musculosF = acimaDe50(a.musculos || [])
+  const tiposF   = acimaDe50(a.tipos_yoga || []).map(t => ({ ...t, termo: traduzirTipo(t.termo) }))
+
+  return `
+    <div style="background:#fff;border-radius:12px;overflow:hidden">
+      <div style="background:var(--verde);padding:16px 18px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+          ${a.numero ? `<span style="font-size:10px;background:rgba(242,236,206,.15);color:var(--bege);padding:2px 8px;border-radius:20px">Aula ${a.numero}</span>` : ''}
+          ${a.data_aula ? `<span style="font-size:10px;background:rgba(242,236,206,.15);color:var(--bege);padding:2px 8px;border-radius:20px">${new Date(a.data_aula+'T12:00').toLocaleDateString('pt-BR')}</span>` : ''}
+          ${a.modalidade ? `<span style="font-size:10px;background:rgba(242,236,206,.15);color:var(--bege);padding:2px 8px;border-radius:20px">${a.modalidade}</span>` : ''}
+          ${a.duracao ? `<span style="font-size:10px;background:rgba(242,236,206,.15);color:var(--bege);padding:2px 8px;border-radius:20px">${a.duracao}</span>` : ''}
+        </div>
+        <p style="font-size:13px;color:var(--bege);font-style:italic;margin:0;font-family:'Cormorant Garamond',serif">${descricao}</p>
+      </div>
+      <div style="padding:16px 18px">
+        ${introItens.length ? `
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:8px">Abertura da prática</div>
+          <div style="margin-bottom:16px">
+            ${introItens.map((it,i) => `<div style="display:flex;gap:8px;padding:6px 0;border-bottom:${i<introItens.length-1?'1px solid rgba(212,200,158,.3)':'none'};font-size:12px">
+              <span style="font-weight:500;min-width:110px;flex-shrink:0">${it.termo}</span><span>${linkify(it.desc)}</span>
+            </div>`).join('')}
+          </div>` : ''}
+        ${a.link_tummee ? `<div style="background:#f9f7f0;border-radius:8px;padding:10px 12px;margin-bottom:16px;font-size:11px;word-break:break-all">🔗 ${linkify(a.link_tummee)}</div>` : ''}
+        ${(a.pranayama||[]).length ? `
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:8px">Prāṇāyāma</div>
+          <div style="margin-bottom:16px">${a.pranayama.map(it=>`<div style="font-size:12px;padding:4px 0"><strong>${it.termo}</strong>: ${linkify(it.desc)}</div>`).join('')}</div>` : ''}
+        ${(a.mantra||[]).length ? `
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:8px">Mantra</div>
+          <div style="margin-bottom:16px">${a.mantra.map(it=>`<div style="font-size:12px;padding:4px 0"><strong>${it.termo}</strong>: ${linkify(it.desc)}</div>`).join('')}</div>` : ''}
+        ${musculosF.length ? `<div style="font-size:11px;margin-bottom:6px"><strong>Músculos Principais:</strong> ${musculosF.map(m=>`${m.termo} (${m.percentual}%)`).join(' · ')}</div>` : ''}
+        ${tiposF.length ? `<div style="font-size:11px;margin-bottom:6px"><strong>Tipos de Āsana:</strong> ${tiposF.map(t=>`${t.termo} (${t.percentual}%)`).join(' · ')}</div>` : ''}
+        ${koshas.length ? `<div style="font-size:11px;margin-bottom:6px"><strong>Koshas Principais:</strong> ${koshas.map(k=>`${k.termo} (${k.percentual}%)`).join(' · ')}</div>` : ''}
+        ${chakras.length ? `<div style="font-size:11px;margin-bottom:6px"><strong>Chakras Principais:</strong> ${chakras.map(k=>`${k.termo} (${k.percentual}%)`).join(' · ')}</div>` : ''}
+        ${gunasF.length ? `<div style="font-size:11px"><strong>Gunas:</strong> ${gunasF.map(k=>`${k.termo} (${k.percentual}%)`).join(' · ')}</div>` : ''}
+      </div>
+    </div>`
+}
+
 export async function renderAsanaAdmin(container, page) {
   const sb = window._sb
 
@@ -87,21 +200,26 @@ export async function renderAsanaAdmin(container, page) {
             <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${SLOT_INFO[slot].label}</div>
             <div style="font-size:11px;color:var(--txt2)">${SLOT_INFO[slot].sub}</div>
           </div>
-          <button onclick="abrirFormAsana(${slot})"
-            style="padding:6px 14px;background:var(--verde);color:var(--bege);border:none;
-                   border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
-                   display:flex;align-items:center;gap:5px">
-            <i class="ti ti-sparkles"></i> ${vazio ? 'Cadastrar' : 'Recadastrar'}
-          </button>
+          <div style="display:flex;gap:6px">
+            ${!vazio ? `<button onclick="previaAsana(${slot})"
+              style="padding:6px 12px;background:rgba(31,56,31,.08);color:var(--verde);border:none;
+                     border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Ver como o aluno vê">👁 Prévia</button>` : ''}
+            <button onclick="abrirFormAsana(${slot})"
+              style="padding:6px 14px;background:var(--verde);color:var(--bege);border:none;
+                     border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
+                     display:flex;align-items:center;gap:5px">
+              <i class="ti ti-sparkles"></i> ${vazio ? 'Cadastrar' : 'Recadastrar'}
+            </button>
+          </div>
         </div>
         ${vazio
           ? `<div style="font-size:13px;color:var(--txt2)">Nenhum conteúdo cadastrado ainda.</div>`
           : `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-               <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${a.modalidade || '—'}</span>
+               <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">Aula ${a.numero || '—'}</span>
                ${a.data_aula ? `<span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${new Date(a.data_aula+'T12:00').toLocaleDateString('pt-BR')}</span>` : ''}
-               ${a.duracao ? `<span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${a.duracao}</span>` : ''}
+               ${a.modalidade ? `<span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${a.modalidade}</span>` : ''}
              </div>
-             <div style="font-size:12px;color:var(--txt2);line-height:1.6">${a.nivel || ''}</div>`
+             <div style="font-size:12px;color:var(--txt2);line-height:1.6">${gerarDescricao(a)}</div>`
         }
       </div>`
   }
@@ -113,7 +231,20 @@ export async function renderAsanaAdmin(container, page) {
       ${cardResumo(2)}
     </div>
 
-    <!-- ── Modal ─────────────────────────────────────────────── -->
+    <!-- ── Modal de prévia ───────────────────────────────────── -->
+    <div id="modal-previa-asana" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.7);
+                                          z-index:300;align-items:flex-start;justify-content:center;
+                                          padding:16px;overflow-y:auto">
+      <div style="width:560px;max-width:100%;margin:auto">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+          <button onclick="document.getElementById('modal-previa-asana').style.display='none'"
+            style="background:#fff;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:18px">×</button>
+        </div>
+        <div id="previa-asana-body"></div>
+      </div>
+    </div>
+
+    <!-- ── Modal de cadastro ─────────────────────────────────── -->
     <div id="modal-asana" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.6);
                                    z-index:200;align-items:flex-start;justify-content:center;
                                    padding:16px;overflow-y:auto">
@@ -190,14 +321,24 @@ export async function renderAsanaAdmin(container, page) {
 
   window._asanaSlotAtual = null
 
+  window.previaAsana = function(slot) {
+    const a = porSlot[slot]
+    if (!a) return
+    document.getElementById('previa-asana-body').innerHTML = _renderPreviaHTML(a)
+    document.getElementById('modal-previa-asana').style.display = 'flex'
+  }
+
   window.abrirFormAsana = function(slot) {
     window._asanaSlotAtual = slot
     const a = porSlot[slot] || {}
+    // Item 2: numeração autopreenchida — sempre sugere a próxima (número atual + 1),
+    // já que não há histórico e cada cadastro novo é a próxima semana.
+    const numeroSugerido = (a.numero || 156) + 1
     document.getElementById('asana-modal-titulo').textContent = `${SLOT_INFO[slot].label} — ${SLOT_INFO[slot].sub}`
     document.getElementById('am-etapa-1').style.display = 'block'
     document.getElementById('am-etapa-2').style.display = 'none'
     document.getElementById('am-etapa-2').innerHTML = ''
-    document.getElementById('am-numero').value = a.numero || ''
+    document.getElementById('am-numero').value = numeroSugerido
     document.getElementById('am-duracao').value = a.duracao || ''
     document.getElementById('am-link').value = a.link_tummee || ''
     document.getElementById('am-texto-bruto').value = ''
@@ -243,7 +384,7 @@ export async function renderAsanaAdmin(container, page) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
         body: JSON.stringify({
-          max_tokens: 2000,
+          max_tokens: 1500,
           system: `Você é um extrator de dados de páginas de estatísticas de sequências de yoga exportadas do Tummee.
 O texto colado é a página de análise agregada de uma sequência (não lista as posturas uma a uma, só estatísticas).
 
@@ -251,23 +392,16 @@ Extraia e retorne APENAS um JSON válido, sem markdown, sem explicações. Forma
 {
   "data_aula": "YYYY-MM-DD ou null",
   "modalidade": "string ou null (ex: Hatha)",
-  "nivel": "string — síntese em texto corrido da distribuição de dificuldade. Exemplo: se o texto mostrar 'Intermediário 51% / Novato 48%', escreva algo como 'Aula com equilíbrio entre praticantes novatos e intermediários, leve predominância intermediária.' Se for algo como 'Novato 80%+', escreva 'Aula orientada para iniciantes, com foco em posturas acessíveis.'",
-  "descricao": "string — síntese em texto corrido combinando os grupos musculares mais trabalhados e os tipos de yoga predominantes. 2-3 frases.",
-  "total_poses": number ou null,
-  "poses_unicas": number ou null,
-  "poses_base": number ou null,
   "musculos": [{"termo": "string", "percentual": number}],
   "tipos_yoga": [{"termo": "string", "percentual": number}],
-  "posicoes_corpo": [{"termo": "string", "percentual": number}],
   "koshas": [{"termo": "string", "percentual": number}],
   "chakras": [{"termo": "string", "percentual": number}],
-  "gunas": [{"termo": "string", "percentual": number}],
-  "meridianos": [{"termo": "string", "percentual": number}],
-  "mudras_pranayama_percentual": number ou null
+  "gunas": [{"termo": "string", "percentual": number}]
 }
 Regras:
-- Os campos de lista (musculos, tipos_yoga, etc.) devem conter TODOS os itens que aparecerem no texto para aquela categoria, com o percentual exatamente como aparece.
-- Ignore o texto "Mais (N)" — ele só indica que há mais itens não detalhados, não é um item em si.
+- Os campos de lista devem conter TODOS os itens que aparecerem no texto para aquela categoria, com o percentual exatamente como aparece.
+- Ignore "Mais (N)" — só indica itens não detalhados, não é um item.
+- Ignore seções de posições do corpo, meridianos e contagem de poses — não fazem parte do formato pedido.
 - Se uma categoria inteira não aparecer no texto, retorne array vazio [].
 - Não invente dados que não estão no texto.`,
           messages: [{ role: 'user', content: texto }],
@@ -288,7 +422,7 @@ Regras:
       _montarCamposRevisao(parsed)
       document.getElementById('am-etapa-1').style.display = 'none'
       document.getElementById('am-etapa-2').style.display = 'block'
-      _mostrarBotaoSalvarAsana()
+      _mostrarBotaoSalvar()
       toast('✓ Campos extraídos — revise e salve')
     } catch(e) {
       toast('Erro: ' + e.message)
@@ -311,51 +445,57 @@ Regras:
       `<textarea id="${id}" rows="${rows}" placeholder="${ph}"
         style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:12px;font-family:monospace;outline:none;width:100%;resize:vertical">${val||''}</textarea>`
 
+    const dadosPreview = { gunas: p.gunas||[], tipos_yoga: p.tipos_yoga||[], musculos: p.musculos||[] }
+    const introducaoAtual = porSlot[window._asanaSlotAtual]?.introducao
+    const introducaoTexto = (introducaoAtual && introducaoAtual.length)
+      ? _fmtListaTermoDesc(introducaoAtual)
+      : INTRODUCAO_PADRAO // item 13/14: template padrão pré-preenchido
+
     document.getElementById('am-etapa-2').innerHTML = `
       <div style="background:rgba(31,56,31,.04);border-radius:8px;padding:10px 14px;margin-bottom:16px;
-                  font-size:12px;color:var(--verde);display:flex;align-items:center;gap:8px">
-        <i class="ti ti-sparkles"></i>
-        <span>Campos extraídos pela IA. Revise e corrija se necessário. Campos que a IA não consegue extrair (introdução, prāṇāyāma guiado, mantra) precisam ser preenchidos manualmente.</span>
+                  font-size:12px;color:var(--verde)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <i class="ti ti-sparkles"></i>
+          <span>Estatísticas extraídas. Descrição gerada automaticamente a partir delas (abaixo).</span>
+        </div>
+        <p style="margin:0;font-style:italic;color:var(--verde)">${gerarDescricao(dadosPreview)}</p>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           ${f('Data da aula', `<input type="date" id="am-data" value="${p.data_aula || ''}" style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">`)}
           ${f('Modalidade', inp('am-modalidade', p.modalidade))}
         </div>
-        ${f('Nível (síntese)', ta('am-nivel', p.nivel, 2))}
-        ${f('Descrição (síntese)', ta('am-descricao', p.descricao, 3))}
 
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-          ${f('Total de poses', inp('am-total-poses', p.total_poses))}
-          ${f('Poses únicas', inp('am-poses-unicas', p.poses_unicas))}
-          ${f('Poses base', inp('am-poses-base', p.poses_base))}
+        <div style="border-top:1px solid var(--borda);padding-top:14px">
+          <div style="font-size:11px;font-weight:500;color:var(--verde);margin-bottom:10px">Abertura da prática · Kriya · Aquecimento (itens 13/14)</div>
+          ${f('Uma linha por item — "Termo: descrição"', ta('am-introducao', introducaoTexto, 6), 'Pré-preenchido com o padrão semanal. Ajuste o Kriya e o Aquecimento conforme a aula.')}
         </div>
 
-        <div style="border-top:1px solid var(--borda);padding-top:14px;margin-top:4px">
-          <div style="font-size:11px;font-weight:500;color:var(--verde);margin-bottom:10px">Estatísticas extraídas do PDF (uma linha = termo: percentual)</div>
+        <div style="border-top:1px solid var(--borda);padding-top:14px">
+          <div style="font-size:11px;font-weight:500;color:var(--verde);margin-bottom:10px">Prāṇāyāma (item 16)</div>
+          ${f('', ta('am-pranayama', _fmtListaTermoDesc(porSlot[window._asanaSlotAtual]?.pranayama), 3))}
+        </div>
+
+        <div style="border-top:1px solid var(--borda);padding-top:14px">
+          <div style="font-size:11px;font-weight:500;color:var(--verde);margin-bottom:10px">Mantra adicional (opcional)</div>
+          ${f('', ta('am-mantra', _fmtListaTermoDesc(porSlot[window._asanaSlotAtual]?.mantra), 2))}
+        </div>
+
+        <div style="border-top:1px solid var(--borda);padding-top:14px">
+          <div style="font-size:11px;font-weight:500;color:var(--verde);margin-bottom:10px">Estatísticas extraídas do PDF (uma linha = termo: percentual). Só as acima de 50% aparecem para o aluno.</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             ${f('Músculos', ta('am-musculos', _fmtListaPercentual(p.musculos), 6))}
-            ${f('Tipos de Yoga', ta('am-tipos-yoga', _fmtListaPercentual(p.tipos_yoga), 6))}
-            ${f('Posições do corpo', ta('am-posicoes', _fmtListaPercentual(p.posicoes_corpo), 5))}
-            ${f('Meridianos', ta('am-meridianos', _fmtListaPercentual(p.meridianos), 3))}
+            ${f('Tipos de Āsana', ta('am-tipos-yoga', _fmtListaPercentual(p.tipos_yoga), 5))}
             ${f('Koshas', ta('am-koshas', _fmtListaPercentual(p.koshas), 5))}
             ${f('Chakras', ta('am-chakras', _fmtListaPercentual(p.chakras), 6))}
             ${f('Gunas', ta('am-gunas', _fmtListaPercentual(p.gunas), 3))}
-            ${f('% Mudras e Prāṇāyāma', inp('am-mudras-pct', p.mudras_pranayama_percentual))}
           </div>
-        </div>
-
-        <div style="border-top:1px solid var(--borda);padding-top:14px;margin-top:4px">
-          <div style="font-size:11px;font-weight:500;color:var(--verde);margin-bottom:10px">Campos manuais (não vêm do PDF — uma linha = termo: descrição)</div>
-          ${f('Introdução', ta('am-introducao', _fmtListaTermoDesc(porSlot[window._asanaSlotAtual]?.introducao), 5), 'ex: Dharana: Retenha os sentidos...')}
-          ${f('Prāṇāyāma (prática guiada)', ta('am-pranayama', _fmtListaTermoDesc(porSlot[window._asanaSlotAtual]?.pranayama), 3))}
-          ${f('Mantra', ta('am-mantra', _fmtListaTermoDesc(porSlot[window._asanaSlotAtual]?.mantra), 2))}
         </div>
       </div>
     `
   }
 
-  function _mostrarBotaoSalvarAsana() {
+  function _mostrarBotaoSalvar() {
     document.getElementById('asana-modal-footer').innerHTML = `
       <button onclick="voltarEtapa1Asana()"
         style="padding:8px 16px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer;margin-right:auto">
@@ -384,11 +524,10 @@ Regras:
     const slot = window._asanaSlotAtual
     if (!slot) { toast('Erro: slot não identificado'); return }
     const get = id => document.getElementById(id)?.value?.trim() || ''
-    const getNum = id => { const v = get(id); return v === '' ? null : parseFloat(v) }
 
     const payload = {
       slot,
-      numero:       getNum('am-numero'),
+      numero:       parseInt(document.getElementById('am-numero')?.value, 10) || null,
       duracao:      get('am-duracao') || null,
       link_tummee:  get('am-link') || null,
       introducao:   _parseListaTermoDesc(get('am-introducao')),
@@ -396,19 +535,11 @@ Regras:
       mantra:       _parseListaTermoDesc(get('am-mantra')),
       data_aula:    get('am-data') || null,
       modalidade:   get('am-modalidade') || null,
-      nivel:        get('am-nivel') || null,
-      descricao:    get('am-descricao') || null,
-      total_poses:  getNum('am-total-poses'),
-      poses_unicas: getNum('am-poses-unicas'),
-      poses_base:   getNum('am-poses-base'),
       musculos:       _parseListaPercentual(get('am-musculos')),
       tipos_yoga:     _parseListaPercentual(get('am-tipos-yoga')),
-      posicoes_corpo: _parseListaPercentual(get('am-posicoes')),
       koshas:         _parseListaPercentual(get('am-koshas')),
       chakras:        _parseListaPercentual(get('am-chakras')),
       gunas:          _parseListaPercentual(get('am-gunas')),
-      meridianos:     _parseListaPercentual(get('am-meridianos')),
-      mudras_pranayama_percentual: getNum('am-mudras-pct'),
       atualizado_em: new Date().toISOString(),
     }
 
@@ -418,4 +549,4 @@ Regras:
     fecharFormAsana()
     navigate('asana-admin')
   }
-}
+}  
