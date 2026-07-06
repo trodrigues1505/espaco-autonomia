@@ -21,7 +21,6 @@ const SANGHA_LINKS = {
 const ESTUDIO_WA = '5511444901620'
 
 // Planos com acesso à Aula 2 (restrita) do Āsana Mārga.
-// Confirmado: shiva_1x, shiva_2x, vishnu_2x, vishnu_livre. brahma NÃO tem acesso à aula 2.
 const PLANOS_AULA2_ASANA = ['shiva_1x', 'shiva_2x', 'vishnu_2x', 'vishnu_livre']
 
 const PLANOS_COM_BENEFICIO = {
@@ -36,7 +35,6 @@ const PLANOS_COM_BENEFICIO = {
   naada_mandir:   ['vishnu_2x','vishnu_livre'],
 }
 
-// Benefícios disponíveis para visitantes (sem plano)
 const BENEFICIOS_VISITANTE = ['sangha', 'asana_marga']
 
 const PLANO_LABELS = {
@@ -59,7 +57,6 @@ Aqui você encontra avisos importantes do estúdio, trocas entre praticantes, re
 No Yoga, a Sangha (comunidade) é um dos três pilares fundamentais ao lado do Dharma e do Buddha.
 Fazer parte deste grupo é dar um passo além da aula: é pertencer.`,
     acaoAtivo(t) {
-      // Visitante usa link próprio
       const link = SANGHA_LINKS[t] || SANGHA_LINKS[window._perfil?.tipo === 'visitante' ? 'visitante' : t]
       if (!link) return ''
       return `<a href="${link}" target="_blank" rel="noopener"
@@ -218,10 +215,8 @@ function _imprimirHTML(titulo, html) {
 function _renderIntro(campo, onContinuar) {
   const intro = BENEFICIO_INTRO[campo]
   if (!intro) { onContinuar(); return }
-
   const chave = _introVista(campo)
   if (localStorage.getItem(chave)) { onContinuar(); return }
-
   const div = document.createElement('div')
   div.id = '_ea-intro-banner'
   div.style.cssText = `
@@ -241,11 +236,8 @@ function _renderIntro(campo, onContinuar) {
       Continuar →
     </button>
   `
-
-  // Injeta no topo do content, antes do conteúdo real
   const content = document.querySelector('.content') || document.getElementById('main-area')
   if (content) content.insertBefore(div, content.firstChild)
-
   document.getElementById('btn-intro-continuar').addEventListener('click', () => {
     localStorage.setItem(chave, '1')
     div.style.opacity = '0'
@@ -271,12 +263,10 @@ export async function renderAlunosBeneficios(container, page) {
     <div class="content"><div class="loading-page"><div class="spin-big"></div></div></div>`
 
   const isVisitante = window._perfil?.tipo === 'visitante'
-
   let planoData = window._planoData
   const planoTipo = window._plano || null
 
   if (isVisitante) {
-    // Visitante tem acesso apenas a sangha e asana_marga
     planoData = null
   } else if (planoData === undefined) {
     if (planoTipo) {
@@ -292,7 +282,6 @@ export async function renderAlunosBeneficios(container, page) {
     ? BENEFICIOS_VISITANTE.includes(campo)
     : !!(planoData && planoData[campo])
 
-  // Verifica se deve mostrar intro antes do conteúdo
   const _renderConteudo = async () => {
     if (campo === 'yoga_adhyayana' && temAcesso) { await _renderYogaAdhyayana(container); return }
     if (campo === 'asana_marga'    && temAcesso) { await _renderAsanaMarga(container);    return }
@@ -300,11 +289,9 @@ export async function renderAlunosBeneficios(container, page) {
     _renderBeneficioGenerico(container, b, campo, temAcesso, planoTipo, isVisitante)
   }
 
-  // Para conteúdos com render próprio, mostra intro antes de renderizar
   if (temAcesso && ['yoga_adhyayana','asana_marga','jnana_marga'].includes(campo)) {
     const chave = _introVista(campo)
     if (!localStorage.getItem(chave)) {
-      // Renderiza esqueleto limpo e mostra intro no topo
       container.querySelector('.content').innerHTML = ''
       _injetarAnimacao()
       const intro = BENEFICIO_INTRO[campo]
@@ -489,37 +476,51 @@ async function _renderYogaAdhyayana(container) {
   uiAnimar(container)
 }
 
-// ── Āsana Mārga ───────────────────────────────────────────────
+// ── Āsana Mārga — lido de asana_praticas (Supabase), sem histórico ──
 function _secoesAsana(aula) {
-  return [
-    { id:'introducao', titulo:'Introdução',        icone:'ti-Om',       cor:'#7F77DD', itens: aula.introducao },
-    { id:'pranayama',  titulo:'Prāṇāyāma',         icone:'ti-wind',     cor:'#378ADD', itens: aula.pranayama  },
-    { id:'mantra',     titulo:'Mantra',             icone:'ti-music',    cor:'#BA7517', itens: aula.mantra     },
-    { id:'energetica', titulo:'Leitura Energética', icone:'ti-sparkles', cor:'#639922', itens: [
-      { termo: 'Koshas',  desc: aula.leitura_energetica.koshas.join(' · ') },
-      { termo: 'Chakras', desc: aula.leitura_energetica.cakras.join(' · ')  },
-      { termo: 'Gunas',   desc: aula.leitura_energetica.gunas.join(' · ')   },
-    ]},
-  ]
+  const secoes = []
+  if ((aula.introducao||[]).length) secoes.push({ id:'introducao', titulo:'Introdução', icone:'ti-Om', cor:'#7F77DD', itens: aula.introducao })
+  if ((aula.pranayama||[]).length)  secoes.push({ id:'pranayama',  titulo:'Prāṇāyāma', icone:'ti-wind', cor:'#378ADD', itens: aula.pranayama })
+  if ((aula.mantra||[]).length)     secoes.push({ id:'mantra',     titulo:'Mantra', icone:'ti-music', cor:'#BA7517', itens: aula.mantra })
+
+  const energItens = []
+  if ((aula.koshas||[]).length)  energItens.push({ termo:'Koshas',  desc: aula.koshas.map(k=>`${k.termo} (${k.percentual}%)`).join(' · ') })
+  if ((aula.chakras||[]).length) energItens.push({ termo:'Chakras', desc: aula.chakras.map(k=>`${k.termo} (${k.percentual}%)`).join(' · ') })
+  if ((aula.gunas||[]).length)   energItens.push({ termo:'Gunas',   desc: aula.gunas.map(k=>`${k.termo} (${k.percentual}%)`).join(' · ') })
+  if (energItens.length) secoes.push({ id:'energetica', titulo:'Leitura Energética', icone:'ti-sparkles', cor:'#639922', itens: energItens })
+
+  if ((aula.musculos||[]).length)
+    secoes.push({ id:'musculos', titulo:'Músculos trabalhados', icone:'ti-heart-filled', cor:'#c0392b',
+      itens: aula.musculos.map(m => ({ termo: m.termo, desc: `${m.percentual}% das posturas` })) })
+  if ((aula.tipos_yoga||[]).length)
+    secoes.push({ id:'tipos', titulo:'Tipos de prática', icone:'ti-yoga', cor:'#1D9E75',
+      itens: aula.tipos_yoga.map(m => ({ termo: m.termo, desc: `${m.percentual}% das posturas` })) })
+  if ((aula.posicoes_corpo||[]).length)
+    secoes.push({ id:'posicoes', titulo:'Posições do corpo', icone:'ti-accessible', cor:'#8B5E3C',
+      itens: aula.posicoes_corpo.map(m => ({ termo: m.termo, desc: `${m.percentual}%` })) })
+  if ((aula.meridianos||[]).length)
+    secoes.push({ id:'meridianos', titulo:'Meridianos', icone:'ti-route', cor:'#7a5a10',
+      itens: aula.meridianos.map(m => ({ termo: m.termo, desc: `${m.percentual}%` })) })
+
+  return secoes
 }
 
 function _blocoAulaPratica(aula, secoes, sufixo) {
-  const nivelCor = { 'Novatos': '#2d7a2d', 'Intermediário': '#c8a020', 'Avançado': '#8a1a1a' }[aula.nivel] || 'var(--verde)'
-  const nivelBg  = { 'Novatos': 'rgba(45,122,45,.1)', 'Intermediário': 'rgba(200,160,32,.1)', 'Avançado': 'rgba(138,26,26,.1)' }[aula.nivel] || 'rgba(31,56,31,.08)'
   const { renderStepper, containerId } = _stepper(secoes, 'am' + sufixo)
-  return `
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
-      <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">Aula ${aula.numero}</span>
-      <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.data}</span>
-      <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.modalidade}</span>
-      <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.duracao}</span>
-      <span style="font-size:11px;background:${nivelBg};color:${nivelCor};padding:3px 10px;border-radius:20px;font-weight:500">${aula.nivel}</span>
-    </div>
-    <div style="border-left:3px solid var(--dourado);background:rgba(232,188,79,.07);
-                border-radius:0 8px 8px 0;padding:13px 16px;margin-bottom:18px">
-      <p style="font-size:14px;font-style:italic;color:var(--verde);line-height:1.6;margin:0;
-                font-family:'Cormorant Garamond',serif">${aula.descricao}</p>
-    </div>
+  const badges = [
+    aula.numero      ? `<span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">Aula ${aula.numero}</span>` : '',
+    aula.data_aula   ? `<span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${new Date(aula.data_aula+'T12:00').toLocaleDateString('pt-BR')}</span>` : '',
+    aula.modalidade  ? `<span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.modalidade}</span>` : '',
+    aula.duracao     ? `<span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.duracao}</span>` : '',
+  ].filter(Boolean).join('')
+
+  const statsLine = [
+    aula.total_poses    ? `${aula.total_poses} poses` : '',
+    aula.poses_unicas   ? `${aula.poses_unicas} únicas` : '',
+    aula.poses_base     ? `${aula.poses_base} base` : '',
+  ].filter(Boolean).join(' · ')
+
+  const iframeHtml = aula.link_tummee ? `
     <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:16px">
       <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:4px">Sequência de Āsanas</div>
       <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">Faça-os devagar, sem forçar — de 30s a 1min cada āsana.</div>
@@ -534,11 +535,25 @@ function _blocoAulaPratica(aula, secoes, sufixo) {
           style="width:100%;height:600px;border:none;display:block" loading="lazy"
           title="Sequência de āsanas"></iframe>
       </div>
-    </div>
-    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:10px">Estrutura da aula</div>
-    <div id="${containerId}" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px 16px">
-      ${renderStepper()}
-    </div>`
+    </div>` : ''
+
+  return `
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">${badges}</div>
+    ${statsLine ? `<div style="font-size:11px;color:var(--txt2);margin-bottom:12px">${statsLine}</div>` : ''}
+    ${aula.descricao ? `
+      <div style="border-left:3px solid var(--dourado);background:rgba(232,188,79,.07);
+                  border-radius:0 8px 8px 0;padding:13px 16px;margin-bottom:12px">
+        <p style="font-size:14px;font-style:italic;color:var(--verde);line-height:1.6;margin:0;
+                  font-family:'Cormorant Garamond',serif">${aula.descricao}</p>
+      </div>` : ''}
+    ${aula.nivel ? `<p style="font-size:12px;color:var(--txt2);line-height:1.6;margin:0 0 18px">${aula.nivel}</p>` : ''}
+    ${iframeHtml}
+    ${secoes.length ? `
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:10px">Estrutura da aula</div>
+      <div id="${containerId}" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px 16px">
+        ${renderStepper()}
+      </div>` : ''}
+  `
 }
 
 function _bloqueadaAula2Html() {
@@ -557,15 +572,33 @@ function _bloqueadaAula2Html() {
     </div>`
 }
 
+function _emBreveAsanaHtml() {
+  return `
+    <div style="text-align:center;padding:32px 24px;background:#fff;border:1px solid var(--borda);border-radius:var(--r)">
+      <div style="font-size:32px;margin-bottom:10px">🧘</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--verde);margin-bottom:6px">Em breve</div>
+      <div style="font-size:13px;color:var(--txt2)">Esta aula ainda não foi cadastrada.</div>
+    </div>`
+}
+
 async function _renderAsanaMarga(container) {
-  const { AULA_PRATICA: aula1, AULA_PRATICA_2: aula2 } = await import(`../../data/asana_marga.js?t=${Date.now()}`)
   _injetarAnimacao()
+  const sb = window._sb
+  const { data: linhas, error } = await sb.from('asana_praticas').select('*').order('slot', { ascending: true })
+  if (error) {
+    container.querySelector('.content').innerHTML = `<p style="color:#c0392b;font-size:13px">Erro: ${error.message}</p>`
+    return
+  }
+  const aula1 = linhas?.find(l => l.slot === 1)
+  const aula2 = linhas?.find(l => l.slot === 2)
 
   const planoAtual = window._plano || null
   const temAula2 = PLANOS_AULA2_ASANA.includes(planoAtual)
 
-  const secoes1 = _secoesAsana(aula1)
-  const secoes2 = temAula2 ? _secoesAsana(aula2) : null
+  const temConteudo1 = aula1 && aula1.modalidade
+  const temConteudo2 = aula2 && aula2.modalidade
+  const secoes1 = temConteudo1 ? _secoesAsana(aula1) : []
+  const secoes2 = (temAula2 && temConteudo2) ? _secoesAsana(aula2) : []
 
   container.querySelector('.content').innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px">
@@ -576,28 +609,30 @@ async function _renderAsanaMarga(container) {
           <div style="font-size:12px;color:var(--txt2)">Aulas práticas da semana</div>
         </div>
       </div>
-      ${_btnSalvar('window._salvarAM1()')}
+      ${temConteudo1 ? _btnSalvar('window._salvarAM1()') : ''}
     </div>
 
     <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:10px">Aula 1 · livre para todos os planos</div>
-    ${_blocoAulaPratica(aula1, secoes1, '1')}
+    ${temConteudo1 ? _blocoAulaPratica(aula1, secoes1, '1') : _emBreveAsanaHtml()}
 
     <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin:24px 0 10px">Aula 2 · Shiva e Vishnu</div>
-    ${temAula2 ? _blocoAulaPratica(aula2, secoes2, '2') : _bloqueadaAula2Html()}
+    ${!temAula2 ? _bloqueadaAula2Html() : (temConteudo2 ? _blocoAulaPratica(aula2, secoes2, '2') : _emBreveAsanaHtml())}
   `
 
-  window._amToggleIframe1 = function() {
-    const wrap = document.getElementById('am-iframe-wrap1')
-    const btn  = document.getElementById('btn-am-iframe1')
-    if (!wrap || !btn) return
-    const abrindo = wrap.style.display !== 'block'
-    wrap.style.display = abrindo ? 'block' : 'none'
-    btn.innerHTML = abrindo ? '<i class="ti ti-eye-off"></i> Fechar sequência' : '<i class="ti ti-eye"></i> Ver sequência completa'
-    btn.style.background = abrindo ? 'rgba(31,56,31,.15)' : 'var(--verde)'
-    btn.style.color      = abrindo ? 'var(--verde)' : 'var(--bege)'
-    btn.style.border     = abrindo ? '1px solid var(--borda)' : 'none'
+  if (temConteudo1) {
+    window._amToggleIframe1 = function() {
+      const wrap = document.getElementById('am-iframe-wrap1')
+      const btn  = document.getElementById('btn-am-iframe1')
+      if (!wrap || !btn) return
+      const abrindo = wrap.style.display !== 'block'
+      wrap.style.display = abrindo ? 'block' : 'none'
+      btn.innerHTML = abrindo ? '<i class="ti ti-eye-off"></i> Fechar sequência' : '<i class="ti ti-eye"></i> Ver sequência completa'
+      btn.style.background = abrindo ? 'rgba(31,56,31,.15)' : 'var(--verde)'
+      btn.style.color      = abrindo ? 'var(--verde)' : 'var(--bege)'
+      btn.style.border     = abrindo ? '1px solid var(--borda)' : 'none'
+    }
   }
-  if (temAula2) {
+  if (temAula2 && temConteudo2) {
     window._amToggleIframe2 = function() {
       const wrap = document.getElementById('am-iframe-wrap2')
       const btn  = document.getElementById('btn-am-iframe2')
@@ -619,16 +654,15 @@ async function _renderAsanaMarga(container) {
       </div>`).join('')
     _imprimirHTML(`Āsana Mārga — ${titulo}`, `
       <h1>Āsana Mārga — ${titulo}</h1>
-      <div class="meta"><span>${aula.data}</span><span>${aula.modalidade}</span><span>${aula.duracao}</span><span>${aula.nivel}</span></div>
-      <div class="citacao">${aula.descricao}</div>
-      <h2>Sequência de Āsanas</h2>
-      <div class="tummee-link">Acesse a sequência completa em: <strong>${aula.link_tummee}</strong></div>
-      <p style="font-size:11px;color:#888">Faça-os devagar, sem forçar — de 30s a 1min cada āsana.</p>
+      <div class="meta">${aula.data_aula ? `<span>${new Date(aula.data_aula+'T12:00').toLocaleDateString('pt-BR')}</span>` : ''}<span>${aula.modalidade||''}</span><span>${aula.duracao||''}</span></div>
+      ${aula.descricao ? `<div class="citacao">${aula.descricao}</div>` : ''}
+      ${aula.nivel ? `<p style="font-size:11px;color:#888;margin-bottom:12px">${aula.nivel}</p>` : ''}
+      ${aula.link_tummee ? `<h2>Sequência de Āsanas</h2><div class="tummee-link">Acesse a sequência completa em: <strong>${aula.link_tummee}</strong></div>` : ''}
       ${estruturaHtml}
     `)
   }
-  window._salvarAM1 = function() { _salvarAula(aula1, secoes1, `Aula ${aula1.numero} (livre)`) }
-  if (temAula2) window._salvarAM2 = function() { _salvarAula(aula2, secoes2, `Aula ${aula2.numero} (Shiva/Vishnu)`) }
+  if (temConteudo1) window._salvarAM1 = function() { _salvarAula(aula1, secoes1, `Aula ${aula1.numero || ''} (livre)`) }
+  if (temAula2 && temConteudo2) window._salvarAM2 = function() { _salvarAula(aula2, secoes2, `Aula ${aula2.numero || ''} (Shiva/Vishnu)`) }
 
   uiAnimar(container)
 }
@@ -776,7 +810,6 @@ function _renderBeneficioGenerico(container, b, campo, temAcesso, planoTipo, isV
       padding:2px 8px;border-radius:20px;white-space:nowrap">${PLANO_LABELS[p]||p}</span>`
   ).join(' ')
 
-  // Para sangha de visitante, usa link próprio
   const acaoHtml = temAcesso
     ? (campo === 'sangha' && isVisitante
         ? `<a href="${SANGHA_LINKS.visitante}" target="_blank" rel="noopener"
