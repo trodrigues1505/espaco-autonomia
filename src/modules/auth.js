@@ -9,9 +9,9 @@ import { initProfessorCancel } from './professor-cancel.js'
 import { toast, PLANO_NOMES } from './utils.js'
 
 // ── Onboarding ───────────────────────────────────────────────
-// Todo login novo pelo Google entra como 'visitante'. Não há mais escolha
-// de plano aqui — a promoção para aluno/professor (com plano/matrícula)
-// é feita pelo admin depois, manualmente.
+// Todo login novo pelo Google entra como 'visitante'. A promoção para
+// aluno/professor (com plano/matrícula) é feita pelo admin depois,
+// usando o e-mail da pessoa (que já existe em perfis com o UID real).
 export async function mostrarOnboarding(user, nomeGoogle, fotoGoogle) {
   const onbDiv = document.createElement('div')
   onbDiv.id = 'onboarding'
@@ -226,4 +226,3 @@ document.getElementById('login-senha')
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-google')?.addEventListener('click', window.loginGoogle)
 })
-
