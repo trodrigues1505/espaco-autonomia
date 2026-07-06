@@ -477,30 +477,90 @@ async function _renderYogaAdhyayana(container) {
 }
 
 // ── Āsana Mārga — lido de asana_praticas (Supabase), sem histórico ──
+
+// Normalizações/traduções (mesma lógica duplicada em asana.js admin, de propósito)
+const TIPOS_ASANA_LABELS = { 'Esticar': 'Alongamento' }
+const GUNA_ADJETIVOS = { 'Sattva': 'equilibrantes', 'Rajas': 'energizantes', 'Tamas': 'relaxantes' }
+const CHAKRA_CANONICOS = [
+  { chave: 'Muladhara',   nome: 'Muladhara'   },
+  { chave: 'Swadisthana', nome: 'Svadisthana' },
+  { chave: 'Manipura',    nome: 'Manipura'    },
+  { chave: 'Anahata',     nome: 'Anahata'     },
+  { chave: 'Vishuddha',   nome: 'Vishuddha'   },
+  { chave: 'Ajna',        nome: 'Ajna'        },
+  { chave: 'Sahasrara',   nome: 'Sahasrara'   },
+]
+function _normalizarKosha(termo) { return (termo || '').replace(/\s*Kosha$/i, '').trim() }
+function _normalizarChakra(termo) {
+  const t = termo || ''
+  const achado = CHAKRA_CANONICOS.find(c => t.toLowerCase().includes(c.chave.toLowerCase()))
+  return achado ? achado.nome : t
+}
+function _traduzirTipoAsana(termo) { return TIPOS_ASANA_LABELS[termo] || termo }
+function _acimaDe50(lista) { return (lista || []).filter(i => (i.percentual || 0) > 50) }
+function _juntarComE(lista) {
+  if (lista.length === 0) return ''
+  if (lista.length === 1) return lista[0]
+  return lista.slice(0, -1).join(', ') + ' e ' + lista[lista.length - 1]
+}
+function _gerarDescricaoAsana(aula) {
+  const gunas = _acimaDe50(aula.gunas).map(g => GUNA_ADJETIVOS[g.termo] || g.termo.toLowerCase())
+  const tipos = _acimaDe50(aula.tipos_yoga).map(t => _traduzirTipoAsana(t.termo).toLowerCase())
+  const musculos = _acimaDe50(aula.musculos).map(m => m.termo.toLowerCase())
+  let texto = gunas.length ? `Aula de posturas predominantemente ${_juntarComE(gunas)}` : 'Aula de posturas'
+  if (tipos.length) texto += `, com foco principal em ${_juntarComE(tipos)}`
+  if (musculos.length) texto += ` com ênfase em trabalho de ${_juntarComE(musculos)}`
+  return texto + '.'
+}
+// Item 17: qualquer campo de texto preenchível pelo admin aceita links
+function _linkify(texto) {
+  if (!texto) return texto
+  return String(texto).replace(/(https?:\/\/[^\s<]+)/g, url =>
+    `<a href="${url}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">${url}</a>`)
+}
+
+function _blocoIntroducao(itens) {
+  if (!itens || !itens.length) return ''
+  return `
+    <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:16px">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:10px">Abertura da prática</div>
+      ${itens.map((it,i) => `
+        <div style="display:flex;gap:10px;padding:8px 0;border-bottom:${i<itens.length-1?'1px solid rgba(212,200,158,.3)':'none'}">
+          <span style="font-weight:500;color:var(--txt);min-width:120px;flex-shrink:0;font-size:13px">${it.termo}</span>
+          <span style="color:var(--txt2);font-size:13px;line-height:1.6">${_linkify(it.desc)}</span>
+        </div>`).join('')}
+    </div>`
+}
+
+// Seções depois do link (item 15/16): pranayama, mantra adicional, leitura energética, músculos, tipos —
+// todas já filtradas para >50% e com termos traduzidos/normalizados.
 function _secoesAsana(aula) {
   const secoes = []
-  if ((aula.introducao||[]).length) secoes.push({ id:'introducao', titulo:'Introdução', icone:'ti-Om', cor:'#7F77DD', itens: aula.introducao })
-  if ((aula.pranayama||[]).length)  secoes.push({ id:'pranayama',  titulo:'Prāṇāyāma', icone:'ti-wind', cor:'#378ADD', itens: aula.pranayama })
-  if ((aula.mantra||[]).length)     secoes.push({ id:'mantra',     titulo:'Mantra', icone:'ti-music', cor:'#BA7517', itens: aula.mantra })
+  if ((aula.pranayama||[]).length)
+    secoes.push({ id:'pranayama', titulo:'Prāṇāyāma', icone:'ti-wind', cor:'#378ADD',
+      itens: aula.pranayama.map(i => ({ termo: i.termo, desc: _linkify(i.desc) })) })
+  if ((aula.mantra||[]).length)
+    secoes.push({ id:'mantra', titulo:'Mantra', icone:'ti-music', cor:'#BA7517',
+      itens: aula.mantra.map(i => ({ termo: i.termo, desc: _linkify(i.desc) })) })
 
+  const koshas   = _acimaDe50(aula.koshas).map(k => ({ ...k, termo: _normalizarKosha(k.termo) }))
+  const chakras  = _acimaDe50(aula.chakras).map(k => ({ ...k, termo: _normalizarChakra(k.termo) }))
+  const gunas    = _acimaDe50(aula.gunas)
   const energItens = []
-  if ((aula.koshas||[]).length)  energItens.push({ termo:'Koshas',  desc: aula.koshas.map(k=>`${k.termo} (${k.percentual}%)`).join(' · ') })
-  if ((aula.chakras||[]).length) energItens.push({ termo:'Chakras', desc: aula.chakras.map(k=>`${k.termo} (${k.percentual}%)`).join(' · ') })
-  if ((aula.gunas||[]).length)   energItens.push({ termo:'Gunas',   desc: aula.gunas.map(k=>`${k.termo} (${k.percentual}%)`).join(' · ') })
+  if (koshas.length)  energItens.push({ termo:'Koshas Principais',  desc: koshas.map(k=>`${k.termo} (${k.percentual}%)`).join(' · ') })
+  if (chakras.length) energItens.push({ termo:'Chakras Principais', desc: chakras.map(k=>`${k.termo} (${k.percentual}%)`).join(' · ') })
+  if (gunas.length)   energItens.push({ termo:'Gunas',   desc: gunas.map(k=>`${k.termo} (${k.percentual}%)`).join(' · ') })
   if (energItens.length) secoes.push({ id:'energetica', titulo:'Leitura Energética', icone:'ti-sparkles', cor:'#639922', itens: energItens })
 
-  if ((aula.musculos||[]).length)
-    secoes.push({ id:'musculos', titulo:'Músculos trabalhados', icone:'ti-heart-filled', cor:'#c0392b',
-      itens: aula.musculos.map(m => ({ termo: m.termo, desc: `${m.percentual}% das posturas` })) })
-  if ((aula.tipos_yoga||[]).length)
-    secoes.push({ id:'tipos', titulo:'Tipos de prática', icone:'ti-yoga', cor:'#1D9E75',
-      itens: aula.tipos_yoga.map(m => ({ termo: m.termo, desc: `${m.percentual}% das posturas` })) })
-  if ((aula.posicoes_corpo||[]).length)
-    secoes.push({ id:'posicoes', titulo:'Posições do corpo', icone:'ti-accessible', cor:'#8B5E3C',
-      itens: aula.posicoes_corpo.map(m => ({ termo: m.termo, desc: `${m.percentual}%` })) })
-  if ((aula.meridianos||[]).length)
-    secoes.push({ id:'meridianos', titulo:'Meridianos', icone:'ti-route', cor:'#7a5a10',
-      itens: aula.meridianos.map(m => ({ termo: m.termo, desc: `${m.percentual}%` })) })
+  const musculos = _acimaDe50(aula.musculos)
+  if (musculos.length)
+    secoes.push({ id:'musculos', titulo:'Músculos Principais', icone:'ti-heart-filled', cor:'#c0392b',
+      itens: musculos.map(m => ({ termo: m.termo, desc: `${m.percentual}%` })) })
+
+  const tipos = _acimaDe50(aula.tipos_yoga).map(t => ({ ...t, termo: _traduzirTipoAsana(t.termo) }))
+  if (tipos.length)
+    secoes.push({ id:'tipos', titulo:'Tipos de Āsana', icone:'ti-yoga', cor:'#1D9E75',
+      itens: tipos.map(t => ({ termo: t.termo, desc: `${t.percentual}%` })) })
 
   return secoes
 }
@@ -514,11 +574,7 @@ function _blocoAulaPratica(aula, secoes, sufixo) {
     aula.duracao     ? `<span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.duracao}</span>` : '',
   ].filter(Boolean).join('')
 
-  const statsLine = [
-    aula.total_poses    ? `${aula.total_poses} poses` : '',
-    aula.poses_unicas   ? `${aula.poses_unicas} únicas` : '',
-    aula.poses_base     ? `${aula.poses_base} base` : '',
-  ].filter(Boolean).join(' · ')
+  const descricaoGerada = _gerarDescricaoAsana(aula)
 
   const iframeHtml = aula.link_tummee ? `
     <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:16px">
@@ -539,17 +595,14 @@ function _blocoAulaPratica(aula, secoes, sufixo) {
 
   return `
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">${badges}</div>
-    ${statsLine ? `<div style="font-size:11px;color:var(--txt2);margin-bottom:12px">${statsLine}</div>` : ''}
-    ${aula.descricao ? `
-      <div style="border-left:3px solid var(--dourado);background:rgba(232,188,79,.07);
-                  border-radius:0 8px 8px 0;padding:13px 16px;margin-bottom:12px">
-        <p style="font-size:14px;font-style:italic;color:var(--verde);line-height:1.6;margin:0;
-                  font-family:'Cormorant Garamond',serif">${aula.descricao}</p>
-      </div>` : ''}
-    ${aula.nivel ? `<p style="font-size:12px;color:var(--txt2);line-height:1.6;margin:0 0 18px">${aula.nivel}</p>` : ''}
+    <div style="border-left:3px solid var(--dourado);background:rgba(232,188,79,.07);
+                border-radius:0 8px 8px 0;padding:13px 16px;margin-bottom:16px">
+      <p style="font-size:14px;font-style:italic;color:var(--verde);line-height:1.6;margin:0;
+                font-family:'Cormorant Garamond',serif">${descricaoGerada}</p>
+    </div>
+    ${_blocoIntroducao(aula.introducao)}
     ${iframeHtml}
     ${secoes.length ? `
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:10px">Estrutura da aula</div>
       <div id="${containerId}" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px 16px">
         ${renderStepper()}
       </div>` : ''}
@@ -647,6 +700,11 @@ async function _renderAsanaMarga(container) {
   }
 
   function _salvarAula(aula, secoes, titulo) {
+    const introHtml = (aula.introducao||[]).length ? `
+      <h2>Abertura da prática</h2>
+      <div class="secao">
+        ${aula.introducao.map(item => `<div class="item"><div class="item-termo">${item.termo}</div><div class="item-desc">${item.desc}</div></div>`).join('')}
+      </div>` : ''
     const estruturaHtml = secoes.map(s => `
       <h2>${s.titulo}</h2>
       <div class="secao">
@@ -655,8 +713,8 @@ async function _renderAsanaMarga(container) {
     _imprimirHTML(`Āsana Mārga — ${titulo}`, `
       <h1>Āsana Mārga — ${titulo}</h1>
       <div class="meta">${aula.data_aula ? `<span>${new Date(aula.data_aula+'T12:00').toLocaleDateString('pt-BR')}</span>` : ''}<span>${aula.modalidade||''}</span><span>${aula.duracao||''}</span></div>
-      ${aula.descricao ? `<div class="citacao">${aula.descricao}</div>` : ''}
-      ${aula.nivel ? `<p style="font-size:11px;color:#888;margin-bottom:12px">${aula.nivel}</p>` : ''}
+      <div class="citacao">${_gerarDescricaoAsana(aula)}</div>
+      ${introHtml}
       ${aula.link_tummee ? `<h2>Sequência de Āsanas</h2><div class="tummee-link">Acesse a sequência completa em: <strong>${aula.link_tummee}</strong></div>` : ''}
       ${estruturaHtml}
     `)
@@ -852,4 +910,4 @@ function _renderBeneficioGenerico(container, b, campo, temAcesso, planoTipo, isV
     ` : ''}
   `
   uiAnimar(container)
-}
+}  
