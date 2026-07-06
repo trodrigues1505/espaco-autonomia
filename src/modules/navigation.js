@@ -58,6 +58,7 @@ const MENUS = {
     { id: 'previsao-professor', label: 'Repasse Professor',   icon: 'ti-calculator'       },
     { sec: 'Sistema' },
     { id: 'jnana-admin',        label: 'Jñāna Mārga',         icon: 'ti-book'             },
+    { id: 'asana-admin',        label: 'Āsana Mārga',         icon: 'ti-yoga'             },
     { id: 'config',             label: 'Configurações',        icon: 'ti-settings'         },
     ...ITENS_SOBRE,
   ],
@@ -352,4 +353,4 @@ export function initMobileMenu() {
       if (bar && window.innerWidth <= 768) bar.style.display = 'none'
     }
   })
-}   
+}
