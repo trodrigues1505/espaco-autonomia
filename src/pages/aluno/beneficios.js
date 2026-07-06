@@ -20,6 +20,10 @@ const SANGHA_LINKS = {
 
 const ESTUDIO_WA = '5511444901620'
 
+// Planos com acesso à Aula 2 (restrita) do Āsana Mārga.
+// Confirmado: shiva_1x, shiva_2x, vishnu_2x, vishnu_livre. brahma NÃO tem acesso à aula 2.
+const PLANOS_AULA2_ASANA = ['shiva_1x', 'shiva_2x', 'vishnu_2x', 'vishnu_livre']
+
 const PLANOS_COM_BENEFICIO = {
   sangha:         ['brahma','shiva_1x','shiva_2x','vishnu_2x','vishnu_livre'],
   kala_sadhya:    ['brahma','shiva_1x','shiva_2x','vishnu_2x','vishnu_livre'],
@@ -83,7 +87,7 @@ A flexibilidade não é um desvio do caminho — ela é o caminho.`,
   },
   asana_marga:    { nome: 'Āsana Mārga',   subtitulo: 'App de Prática',         icone: '🧘', descricao: `Āsana Mārga — "o caminho das posturas" — leva a sua prática para onde você estiver.\nCom este benefício você acessa um aplicativo completo de prática guiada: sequências de āsanas, exercícios de prāṇāyāma e meditações conduzidas.\nO tapete pode ser em qualquer lugar — e o caminho também.`, acaoAtivo() { return '' } },
   yoga_adhyayana: { nome: 'Yoga Adhyayana', subtitulo: 'Estudo Teórico',         icone: '📖', descricao: null, acaoAtivo() { return '' } },
-  jnana_marga:    { nome: 'Jñāna Mārga',   subtitulo: 'Estudo Literário',        icone: '📜', descricao: `Jñāna Mārga — "o caminho do conhecimento" — é para quem quer ir fundo.\nTextos clássicos como o Hatha Yoga Pradīpikā, os Yoga Sūtras de Patañjali e a Bhagavad Gītā carregam séculos de sabedoria destilada.\nA leitura contemplativa é, ela mesma, uma forma de meditação.`, acaoAtivo() { return '' } },
+  jnana_marga:    { nome: 'Jñāna Mārga',   subtitulo: 'Estudo dos Yoga Sūtras',  icone: '📜', descricao: `Jñāna Mārga — "o caminho do conhecimento" — é para quem quer ir fundo.\nA cada dia útil, um sutra dos Yoga Sūtras de Patañjali é apresentado com texto original, tradução e comentário.\nA leitura contemplativa é, ela mesma, uma forma de meditação.`, acaoAtivo() { return '' } },
   sadhana_purna:  { nome: 'Sādhanā Pūrṇā', subtitulo: 'Avaliação de Progresso', icone: '🌿', descricao: `Sādhanā Pūrṇā — "prática plena" — é o olhar atento sobre a sua jornada.\nPeriodicamente você terá uma conversa com o professor para mapear sua evolução.\nO progresso no Yoga não se mede em meses, mas em camadas de consciência.`, acaoAtivo() { return '' } },
   atma_vijnana:   { nome: 'Ātma Vijñāna',  subtitulo: 'Anamnese Personalizada', icone: '🔍', descricao: `Ātma Vijñāna — "conhecimento do ser" — começa antes da primeira āsana.\nEste benefício garante uma conversa inicial aprofundada com o professor sobre histórico, objetivos e limitações.\nPorque a prática mais poderosa é aquela que parte de onde você realmente está.`, acaoAtivo() { return '' } },
   shruti:         { nome: 'Śruti',          subtitulo: 'Áudio Diário',            icone: '🎵', descricao: `Śruti significa "o que foi ouvido" — e nas tradições do Yoga, o som é transmissão de sabedoria.\nDiariamente você recebe um áudio curto com mantras, prāṇāyāmas guiados ou reflexões.\nO som que você carrega dentro de você é o primeiro instrumento.`, acaoAtivo() { return '' } },
@@ -101,46 +105,6 @@ Om Klīm Kālikāyai Namaḥ — Mantra a Kālī — transformação e dissoluç
 Om Namaḥ Śivāya — Pañcākṣara — o mantra de cinco sílabas a Śiva`,
     acaoAtivo() { return '' },
   },
-}
-
-// ── Dicionário ────────────────────────────────────────────────
-const DICIONARIO = {
-  'Muscular':        'Fortalece e tona a musculatura, melhorando força, resistência e coordenação motora.',
-  'Esquelético':     'Promove alinhamento ósseo, densidade e saúde articular, prevenindo desgastes.',
-  'Cardiovascular':  'Estimula a circulação sanguínea, nutrindo órgãos e tecidos com oxigênio.',
-  'Respiratório':    'Amplia a capacidade pulmonar e melhora a qualidade e profundidade da respiração.',
-  'Nervoso':         'Regula o sistema nervoso, reduzindo o estresse e promovendo equilíbrio entre ação e repouso.',
-  'Digestório':      'Estimula os órgãos digestivos, melhorando absorção de nutrientes e eliminação de toxinas.',
-  'Eliminatório':    'Apoia os rins, intestinos e pele na eliminação de resíduos e toxinas do organismo.',
-  'Reprodutivo':     'Equilibra a energia pélvica, hormônios e vitalidade relacionados à criatividade e reprodução.',
-  'Linfático':       'Ativa a circulação linfática, fortalecendo a imunidade e drenando fluidos em excesso.',
-  'Endócrino':       'Regula as glândulas e a produção hormonal, influenciando humor, energia e metabolismo.',
-  'Terra':           'Sustentação, estabilidade e enraizamento. Convida à presença, firmeza e solidez interior.',
-  'Água':            'Fluidez, adaptabilidade e purificação. Conecta com as emoções e a capacidade de fluir.',
-  'Fogo':            'Transformação, potência e ativação metabólica. Acende a vontade e dissolve resistências.',
-  'Ar':              'Expansão, leveza e circulação energética. Nutre a mente e abre espaço para novos movimentos.',
-  'Éter':            'Espaço, vazio fértil e consciência pura. O elemento que contém todos os outros.',
-  'Vata':            'Dosha do movimento e leveza. Equilibrado pela prática, traz estabilidade e calma ao sistema nervoso.',
-  'Pitta':           'Dosha do fogo e transformação. A prática pode intensificá-lo; requer atenção ao esforço excessivo.',
-  'Kapha':           'Dosha da terra e água. Reduzido pela ativação muscular, calor e movimento, trazendo mais leveza.',
-  'Muladhara':       'Chakra raiz. Centro de segurança, sobrevivência e enraizamento. Localizado na base da coluna.',
-  'Svadisthana':     'Chakra sacral. Centro de criatividade, prazer e emoções. Localizado abaixo do umbigo.',
-  'Svādhiṣṭhāna':   'Chakra sacral. Centro de criatividade, prazer e emoções. Localizado abaixo do umbigo.',
-  'Manipura':        'Chakra do plexo solar. Centro de poder pessoal, vontade e autoestima.',
-  'Maṇipūra':       'Chakra do plexo solar. Centro de poder pessoal, vontade e autoestima.',
-  'Anahata':         'Chakra do coração. Centro do amor, compaixão e equilíbrio entre mundo material e espiritual.',
-  'Anāhata':        'Chakra do coração. Centro do amor, compaixão e equilíbrio entre mundo material e espiritual.',
-  'Vishuddha':       'Chakra da garganta. Centro da expressão, comunicação e autenticidade.',
-  'Ajna':            'Chakra do terceiro olho. Centro da intuição, discernimento e visão interior.',
-  'Sahasrara':       'Chakra da coroa. Centro da consciência pura, conexão com o todo e transcendência.',
-}
-
-function descDicionario(termo) {
-  if (DICIONARIO[termo]) return DICIONARIO[termo]
-  const key = Object.keys(DICIONARIO).find(k =>
-    termo.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(termo.toLowerCase())
-  )
-  return key ? DICIONARIO[key] : null
 }
 
 // ── Lightbox ──────────────────────────────────────────────────
@@ -525,13 +489,9 @@ async function _renderYogaAdhyayana(container) {
   uiAnimar(container)
 }
 
-// ── Asana Marga ───────────────────────────────────────────────
-async function _renderAsanaMarga(container) {
-  const { AULA_PRATICA: aula } = await import(`../../data/asana_marga.js?t=${Date.now()}`)
-  _injetarAnimacao()
-  const nivelCor = { 'Novatos': '#2d7a2d', 'Intermediário': '#c8a020', 'Avançado': '#8a1a1a' }[aula.nivel] || 'var(--verde)'
-  const nivelBg  = { 'Novatos': 'rgba(45,122,45,.1)', 'Intermediário': 'rgba(200,160,32,.1)', 'Avançado': 'rgba(138,26,26,.1)' }[aula.nivel] || 'rgba(31,56,31,.08)'
-  const secoes = [
+// ── Āsana Mārga ───────────────────────────────────────────────
+function _secoesAsana(aula) {
+  return [
     { id:'introducao', titulo:'Introdução',        icone:'ti-Om',       cor:'#7F77DD', itens: aula.introducao },
     { id:'pranayama',  titulo:'Prāṇāyāma',         icone:'ti-wind',     cor:'#378ADD', itens: aula.pranayama  },
     { id:'mantra',     titulo:'Mantra',             icone:'ti-music',    cor:'#BA7517', itens: aula.mantra     },
@@ -541,20 +501,13 @@ async function _renderAsanaMarga(container) {
       { termo: 'Gunas',   desc: aula.leitura_energetica.gunas.join(' · ')   },
     ]},
   ]
-  const { renderStepper, containerId } = _stepper(secoes, 'am')
-  let iframeAberto = false
+}
 
-  container.querySelector('.content').innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:26px">🧘</span>
-        <div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">Āsana Mārga</div>
-          <div style="font-size:12px;color:var(--txt2)">Aula prática da semana</div>
-        </div>
-      </div>
-      ${_btnSalvar('window._salvarAM()')}
-    </div>
+function _blocoAulaPratica(aula, secoes, sufixo) {
+  const nivelCor = { 'Novatos': '#2d7a2d', 'Intermediário': '#c8a020', 'Avançado': '#8a1a1a' }[aula.nivel] || 'var(--verde)'
+  const nivelBg  = { 'Novatos': 'rgba(45,122,45,.1)', 'Intermediário': 'rgba(200,160,32,.1)', 'Avançado': 'rgba(138,26,26,.1)' }[aula.nivel] || 'rgba(31,56,31,.08)'
+  const { renderStepper, containerId } = _stepper(secoes, 'am' + sufixo)
+  return `
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
       <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">Aula ${aula.numero}</span>
       <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.data}</span>
@@ -570,13 +523,13 @@ async function _renderAsanaMarga(container) {
     <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:16px">
       <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:4px">Sequência de Āsanas</div>
       <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">Faça-os devagar, sem forçar — de 30s a 1min cada āsana.</div>
-      <button onclick="window._amToggleIframe()" id="btn-am-iframe"
+      <button onclick="window._amToggleIframe${sufixo}()" id="btn-am-iframe${sufixo}"
         style="width:100%;padding:11px;background:var(--verde);color:var(--bege);border:none;
                border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;
                font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px">
         <i class="ti ti-eye"></i> Ver sequência completa
       </button>
-      <div id="am-iframe-wrap" style="display:none;margin-top:12px;border-radius:8px;overflow:hidden;border:1px solid var(--borda)">
+      <div id="am-iframe-wrap${sufixo}" style="display:none;margin-top:12px;border-radius:8px;overflow:hidden;border:1px solid var(--borda)">
         <iframe src="${aula.link_tummee}"
           style="width:100%;height:600px;border:none;display:block" loading="lazy"
           title="Sequência de āsanas"></iframe>
@@ -585,27 +538,87 @@ async function _renderAsanaMarga(container) {
     <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:10px">Estrutura da aula</div>
     <div id="${containerId}" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px 16px">
       ${renderStepper()}
+    </div>`
+}
+
+function _bloqueadaAula2Html() {
+  const msg = encodeURIComponent('Olá! Sou aluno(a) do Espaço Autonomia e gostaria de saber mais sobre os planos Shiva/Vishnu para desbloquear a segunda aula do Āsana Mārga.')
+  return `
+    <div style="background:rgba(232,188,79,.06);border:1px solid rgba(232,188,79,.25);border-radius:var(--r);padding:20px;text-align:center">
+      <div style="font-size:28px;margin-bottom:8px">🔒</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--verde);margin-bottom:6px">Segunda aula exclusiva</div>
+      <p style="font-size:13px;color:var(--txt2);line-height:1.6;margin:0 0 14px">Disponível nos planos Shiva e Vishnu.</p>
+      <a href="https://wa.me/${ESTUDIO_WA}?text=${msg}" target="_blank" rel="noopener"
+        style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;
+               background:var(--verde);color:var(--bege);border-radius:8px;text-decoration:none;
+               font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif">
+        <i class="ti ti-brand-whatsapp"></i> Saber mais sobre os planos
+      </a>
+    </div>`
+}
+
+async function _renderAsanaMarga(container) {
+  const { AULA_PRATICA: aula1, AULA_PRATICA_2: aula2 } = await import(`../../data/asana_marga.js?t=${Date.now()}`)
+  _injetarAnimacao()
+
+  const planoAtual = window._plano || null
+  const temAula2 = PLANOS_AULA2_ASANA.includes(planoAtual)
+
+  const secoes1 = _secoesAsana(aula1)
+  const secoes2 = temAula2 ? _secoesAsana(aula2) : null
+
+  container.querySelector('.content').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:26px">🧘</span>
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">Āsana Mārga</div>
+          <div style="font-size:12px;color:var(--txt2)">Aulas práticas da semana</div>
+        </div>
+      </div>
+      ${_btnSalvar('window._salvarAM1()')}
     </div>
+
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:10px">Aula 1 · livre para todos os planos</div>
+    ${_blocoAulaPratica(aula1, secoes1, '1')}
+
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin:24px 0 10px">Aula 2 · Shiva e Vishnu</div>
+    ${temAula2 ? _blocoAulaPratica(aula2, secoes2, '2') : _bloqueadaAula2Html()}
   `
-  window._amToggleIframe = function() {
-    iframeAberto = !iframeAberto
-    const wrap = document.getElementById('am-iframe-wrap')
-    const btn  = document.getElementById('btn-am-iframe')
+
+  window._amToggleIframe1 = function() {
+    const wrap = document.getElementById('am-iframe-wrap1')
+    const btn  = document.getElementById('btn-am-iframe1')
     if (!wrap || !btn) return
-    wrap.style.display = iframeAberto ? 'block' : 'none'
-    btn.innerHTML = iframeAberto ? '<i class="ti ti-eye-off"></i> Fechar sequência' : '<i class="ti ti-eye"></i> Ver sequência completa'
-    btn.style.background = iframeAberto ? 'rgba(31,56,31,.15)' : 'var(--verde)'
-    btn.style.color      = iframeAberto ? 'var(--verde)' : 'var(--bege)'
-    btn.style.border     = iframeAberto ? '1px solid var(--borda)' : 'none'
+    const abrindo = wrap.style.display !== 'block'
+    wrap.style.display = abrindo ? 'block' : 'none'
+    btn.innerHTML = abrindo ? '<i class="ti ti-eye-off"></i> Fechar sequência' : '<i class="ti ti-eye"></i> Ver sequência completa'
+    btn.style.background = abrindo ? 'rgba(31,56,31,.15)' : 'var(--verde)'
+    btn.style.color      = abrindo ? 'var(--verde)' : 'var(--bege)'
+    btn.style.border     = abrindo ? '1px solid var(--borda)' : 'none'
   }
-  window._salvarAM = function() {
+  if (temAula2) {
+    window._amToggleIframe2 = function() {
+      const wrap = document.getElementById('am-iframe-wrap2')
+      const btn  = document.getElementById('btn-am-iframe2')
+      if (!wrap || !btn) return
+      const abrindo = wrap.style.display !== 'block'
+      wrap.style.display = abrindo ? 'block' : 'none'
+      btn.innerHTML = abrindo ? '<i class="ti ti-eye-off"></i> Fechar sequência' : '<i class="ti ti-eye"></i> Ver sequência completa'
+      btn.style.background = abrindo ? 'rgba(31,56,31,.15)' : 'var(--verde)'
+      btn.style.color      = abrindo ? 'var(--verde)' : 'var(--bege)'
+      btn.style.border     = abrindo ? '1px solid var(--borda)' : 'none'
+    }
+  }
+
+  function _salvarAula(aula, secoes, titulo) {
     const estruturaHtml = secoes.map(s => `
       <h2>${s.titulo}</h2>
       <div class="secao">
         ${s.itens.map(item => `<div class="item"><div class="item-termo">${item.termo}</div><div class="item-desc">${item.desc}</div></div>`).join('')}
       </div>`).join('')
-    _imprimirHTML(`Āsana Mārga — Aula ${aula.numero}`, `
-      <h1>Āsana Mārga — Aula ${aula.numero}</h1>
+    _imprimirHTML(`Āsana Mārga — ${titulo}`, `
+      <h1>Āsana Mārga — ${titulo}</h1>
       <div class="meta"><span>${aula.data}</span><span>${aula.modalidade}</span><span>${aula.duracao}</span><span>${aula.nivel}</span></div>
       <div class="citacao">${aula.descricao}</div>
       <h2>Sequência de Āsanas</h2>
@@ -614,120 +627,97 @@ async function _renderAsanaMarga(container) {
       ${estruturaHtml}
     `)
   }
+  window._salvarAM1 = function() { _salvarAula(aula1, secoes1, `Aula ${aula1.numero} (livre)`) }
+  if (temAula2) window._salvarAM2 = function() { _salvarAula(aula2, secoes2, `Aula ${aula2.numero} (Shiva/Vishnu)`) }
+
   uiAnimar(container)
 }
 
-// ── Jñāna Mārga ───────────────────────────────────────────────
+// ── Jñāna Mārga — Estudo dos Yoga Sutras ───────────────────────
 async function _renderJnanaMarga(container) {
   _injetarAnimacao()
   const sb   = window._sb
   const hoje = new Date().toISOString().slice(0, 10)
-  const { data: posturas, error } = await sb
-    .from('jnana_posturas').select('*')
+  const { data: sutras, error } = await sb
+    .from('jnana_sutras').select('*')
     .lte('publicada_em', hoje)
     .order('publicada_em', { ascending: false })
   if (error) {
     container.querySelector('.content').innerHTML = `<p style="color:#c0392b;font-size:13px">Erro: ${error.message}</p>`
     return
   }
-  if (!posturas || posturas.length === 0) {
+  if (!sutras || sutras.length === 0) {
     container.querySelector('.content').innerHTML = `
       <div style="text-align:center;padding:48px 24px">
         <div style="font-size:40px;margin-bottom:12px">📜</div>
         <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--verde);margin-bottom:8px">Em breve</div>
-        <div style="font-size:13px;color:var(--txt2)">O conteúdo do Jñāna Mārga chegará em breve.</div>
+        <div style="font-size:13px;color:var(--txt2)">O estudo dos Yoga Sūtras chegará em breve.</div>
       </div>`
     return
   }
-  const hoje_postura = posturas.find(p => p.publicada_em === hoje) || posturas[0]
-  let posturaSel = hoje_postura
+  const sutra_hoje = sutras.find(s => s.publicada_em === hoje) || sutras[0]
+  let sutraSel = sutra_hoje
 
-  function _secoesDicionario(p) {
-    const secSistemas = (p.sistemas||[]).length ? { id:'sist', titulo:'Sistemas equilibrados', icone:'ti-heart', cor:'#1D9E75', itens: (p.sistemas||[]).map(t => ({ termo: t, desc: descDicionario(t) || 'Equilibrado e fortalecido por esta postura.' })) } : null
-    const secElementos = (p.elementos||[]).length ? { id:'elem', titulo:'Elementos (Tattvas)', icone:'ti-leaf', cor:'#639922', itens: (p.elementos||[]).map(t => ({ termo: t, desc: descDicionario(t) || 'Elemento ativado por esta postura.' })) } : null
-    const secAyur = p.ayurveda ? { id:'ayur', titulo:'Ayurveda', icone:'ti-scale', cor:'#BA7517', itens: p.ayurveda.split(/[,;]/).map(s => s.trim()).filter(Boolean).map(t => { const dosha = ['Vata','Pitta','Kapha'].find(d => t.includes(d)); return { termo: dosha || t, desc: descDicionario(dosha || t) || t } }) } : null
-    const NOMES_CHAKRAS = ['Muladhara','Svadisthana','Svādhiṣṭhāna','Manipura','Maṇipūra','Anahata','Anāhata','Vishuddha','Ajna','Sahasrara']
-    const secChakras = p.chakras ? { id:'chak', titulo:'Chakras', icone:'ti-rotate-clockwise', cor:'#7F77DD', itens: (() => { const encontrados = NOMES_CHAKRAS.filter(c => p.chakras.includes(c)); if (encontrados.length > 0) return encontrados.map(c => ({ termo: c, desc: descDicionario(c) || p.chakras })); const partes = p.chakras.split(/[,;.]/).map(s => s.trim()).filter(Boolean); return partes.length > 1 ? partes.map(t => ({ termo: t, desc: descDicionario(t) || 'Chakra ativado por esta postura.' })) : [{ termo: 'Chakras ativados', desc: p.chakras }] })() } : null
-    return [secSistemas, secElementos, secAyur, secChakras].filter(Boolean)
-  }
-
-  function _salvarPostura(p) {
-    const secoesBase = [
-      p.simbolismo ? [{ termo: 'Simbolismo', desc: p.simbolismo }] : null,
-      (p.instrucoes||[]).length ? p.instrucoes.map((inst, i) => ({ termo: `Passo ${i+1}`, desc: inst })) : null,
-      p.beneficios ? [{ termo: 'Benefícios', desc: p.beneficios }] : null,
-    ].filter(Boolean)
-    const energetica = []
-    if ((p.sistemas||[]).length) energetica.push({ termo: 'Sistemas', desc: p.sistemas.join(' · ') })
-    if ((p.elementos||[]).length) energetica.push({ termo: 'Elementos', desc: p.elementos.join(' · ') })
-    if (p.ayurveda) energetica.push({ termo: 'Ayurveda', desc: p.ayurveda })
-    if (p.chakras)  energetica.push({ termo: 'Chakras',  desc: p.chakras })
-    const dataFmt = new Date(p.publicada_em + 'T12:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })
-    const imgTag  = p.imagem ? `<img src="${p.imagem}" alt="${p.nome_popular}" class="postura" referrerpolicy="no-referrer">` : ''
-    const secoesHtml = [
-      secoesBase[0]?.length ? `<h2>Simbolismo</h2><div class="secao">${secoesBase[0].map(i=>`<div class="item"><div class="item-termo">${i.termo}</div><div class="item-desc">${i.desc}</div></div>`).join('')}</div>` : '',
-      secoesBase[1]?.length ? `<h2>Instruções</h2><div class="secao">${secoesBase[1].map(i=>`<div class="item"><div class="item-termo">${i.termo}</div><div class="item-desc">${i.desc}</div></div>`).join('')}</div>` : '',
-      secoesBase[2]?.length ? `<h2>Benefícios</h2><div class="secao">${secoesBase[2].map(i=>`<div class="item"><div class="item-termo">${i.termo}</div><div class="item-desc">${i.desc}</div></div>`).join('')}</div>` : '',
-      energetica.length ? `<h2>Sistemas & Energia</h2><div class="secao">${energetica.map(i=>`<div class="item"><div class="item-termo">${i.termo}</div><div class="item-desc">${i.desc}</div></div>`).join('')}</div>` : '',
-    ].join('')
-    _imprimirHTML(`Jñāna Mārga — ${p.nome_popular}`, `
-      ${imgTag}
-      <h1>${p.nome_popular}</h1>
-      <p style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:#5a7a5a;margin-bottom:4px">${p.nome_sanscrito}</p>
-      ${p.etimologia ? `<p style="font-size:11px;color:#888;margin-bottom:12px">${p.etimologia}</p>` : ''}
-      <div class="meta"><span>Jñāna Mārga · GUIPPY</span><span>${dataFmt}</span></div>
-      ${secoesHtml}
+  function _salvarSutra(s) {
+    const dataFmt = new Date(s.publicada_em + 'T12:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })
+    const comentarioHtml = (s.comentario||'').split(/\n\s*\n/).map(p => `<p>${p}</p>`).join('')
+    _imprimirHTML(`Jñāna Mārga — ${s.capitulo} ${s.numero_sutra}`, `
+      <h1>${s.capitulo} — Sutra ${s.numero_sutra}</h1>
+      <p style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:#5a7a5a;margin-bottom:4px">${s.transliteracao}</p>
+      <div class="meta"><span>Jñāna Mārga · Yoga Sūtras</span><span>${dataFmt}</span></div>
+      ${s.contexto_capitulo ? `<div class="citacao">${s.contexto_capitulo}</div>` : ''}
+      <h2>Texto</h2>
+      <div class="secao">
+        <p style="font-family:'Cormorant Garamond',serif;font-size:14px">${s.texto_devanagari}</p>
+        <p style="font-style:italic">${s.transliteracao}</p>
+        <p>${s.traducao}</p>
+      </div>
+      ${s.comentario ? `<h2>Comentário</h2><div class="secao">${comentarioHtml}</div>` : ''}
+      ${s.pratica ? `<h2>Na prática</h2><div class="secao"><p>${s.pratica}</p></div>` : ''}
     `)
   }
 
-  function renderPostura(p) {
-    const secoesBase = [
-      p.simbolismo ? { id:'simb', titulo:'Simbolismo', icone:'ti-sun', cor:'#7F77DD', itens: [{ termo: 'Simbolismo', desc: p.simbolismo }] } : null,
-      (p.instrucoes||[]).length ? { id:'inst', titulo:'Instruções', icone:'ti-list-check', cor:'#1D9E75', itens: p.instrucoes.map((inst, i) => ({ termo: `Passo ${i+1}`, desc: inst })) } : null,
-      p.beneficios ? { id:'benef', titulo:'Benefícios', icone:'ti-heart-filled', cor:'#c0392b', itens: [{ termo: 'Benefícios', desc: p.beneficios }] } : null,
-    ].filter(Boolean)
-    const todasSecoes = [...secoesBase, ..._secoesDicionario(p)]
-    const { renderStepper, containerId } = _stepper(todasSecoes, 'jn_' + p.id.slice(0,8))
-    const isHoje  = p.publicada_em === hoje
-    const dataFmt = new Date(p.publicada_em + 'T12:00').toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long' })
-    const imgHtml = p.imagem ? `
-      <div style="position:relative;cursor:zoom-in" onclick="_abrirLightbox('${p.imagem}','${p.nome_popular}')" title="Clique para ampliar">
-        <img src="${p.imagem}" alt="${p.nome_popular}" referrerpolicy="no-referrer"
-          style="width:100%;max-height:220px;object-fit:cover;object-position:center center;display:block;opacity:.9" onerror="this.style.display='none'">
-        <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);border-radius:20px;padding:3px 8px;font-size:10px;color:#fff;display:flex;align-items:center;gap:4px">
-          <i class="ti ti-zoom-in" style="font-size:12px"></i> ampliar
-        </div>
-      </div>` : ''
+  function renderSutra(s) {
+    const isHoje  = s.publicada_em === hoje
+    const dataFmt = new Date(s.publicada_em + 'T12:00').toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long' })
+    const comentarioHtml = (s.comentario||'').split(/\n\s*\n/).map(p => `<p style="margin:0 0 12px;line-height:1.8">${p}</p>`).join('')
     return `
-      <div style="background:var(--verde);border-radius:12px;overflow:hidden;margin-bottom:16px">
-        ${imgHtml}
-        <div style="padding:${p.imagem ? '10px 16px 14px' : '20px'}">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.55);margin-bottom:6px">${isHoje ? '✦ Postura de hoje' : dataFmt}</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--bege);line-height:1.1">${p.nome_popular}</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-style:italic;color:rgba(242,236,206,.8);margin-top:4px">${p.nome_sanscrito}</div>
-          ${p.etimologia ? `<div style="font-size:11px;color:rgba(242,236,206,.55);margin-top:8px">${p.etimologia}</div>` : ''}
+      <div style="background:var(--verde);border-radius:12px;padding:20px;margin-bottom:16px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.55);margin-bottom:8px">
+          ${isHoje ? '✦ Sutra de hoje' : dataFmt} · ${s.capitulo} ${s.numero_sutra}
         </div>
+        ${s.contexto_capitulo ? `<p style="font-size:12px;color:rgba(242,236,206,.75);line-height:1.6;margin-bottom:14px;font-style:italic">${s.contexto_capitulo}</p>` : ''}
+        <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:var(--bege);line-height:1.3">${s.texto_devanagari}</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;color:rgba(242,236,206,.8);margin-top:6px">${s.transliteracao}</div>
+        <div style="font-size:14px;color:rgba(242,236,206,.92);margin-top:10px">${s.traducao}</div>
       </div>
-      <div id="${containerId}" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px 16px;margin-bottom:16px">
-        ${renderStepper()}
-      </div>
+      ${s.comentario ? `
+        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px;margin-bottom:16px">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:10px">Comentário</div>
+          <div style="font-size:13px;color:var(--txt)">${comentarioHtml}</div>
+        </div>` : ''}
+      ${s.pratica ? `
+        <div style="background:rgba(232,188,79,.07);border-left:3px solid var(--dourado);border-radius:0 8px 8px 0;padding:14px 16px;margin-bottom:16px">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#7a5a10;font-weight:500;margin-bottom:6px">Na prática</div>
+          <p style="font-size:13px;color:var(--txt);line-height:1.7;margin:0">${s.pratica}</p>
+        </div>` : ''}
       <button onclick="window._salvarJN()" style="width:100%;margin-bottom:16px;padding:10px;background:#fff;color:var(--verde);border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:500">
-        <i class="ti ti-download"></i> Salvar esta postura em PDF
+        <i class="ti ti-download"></i> Salvar este sutra em PDF
       </button>`
   }
 
-  const historicoHtml = posturas.length > 1 ? `
+  const historicoHtml = sutras.length > 1 ? `
     <div style="margin-top:6px">
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:10px">Posturas anteriores (${posturas.length - 1})</div>
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:10px">Sutras anteriores (${sutras.length - 1})</div>
       <div style="display:flex;flex-direction:column;gap:6px">
-        ${posturas.filter(p => p.publicada_em !== hoje_postura.publicada_em).map(p => `
-          <button onclick="window._jnSelPost('${p.id}')" id="jn-hist-${p.id}"
+        ${sutras.filter(s => s.id !== sutra_hoje.id).map(s => `
+          <button onclick="window._jnSelSutra('${s.id}')" id="jn-hist-${s.id}"
             style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:#fff;border:1px solid var(--borda);border-radius:8px;cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif">
             <div>
-              <div style="font-size:13px;font-weight:500;color:var(--txt)">${p.nome_popular}</div>
-              <div style="font-size:11px;color:var(--txt2);font-style:italic">${p.nome_sanscrito}</div>
+              <div style="font-size:13px;font-weight:500;color:var(--txt)">${s.capitulo} ${s.numero_sutra}</div>
+              <div style="font-size:11px;color:var(--txt2);font-style:italic">${s.transliteracao}</div>
             </div>
-            <div style="font-size:11px;color:var(--txt2);flex-shrink:0;margin-left:12px">${new Date(p.publicada_em + 'T12:00').toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})}</div>
+            <div style="font-size:11px;color:var(--txt2);flex-shrink:0;margin-left:12px">${new Date(s.publicada_em + 'T12:00').toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})}</div>
           </button>`).join('')}
       </div>
     </div>` : ''
@@ -738,27 +728,27 @@ async function _renderJnanaMarga(container) {
         <span style="font-size:26px">📜</span>
         <div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">Jñāna Mārga</div>
-          <div style="font-size:12px;color:var(--txt2)">GUIPPY · Estudo literário diário</div>
+          <div style="font-size:12px;color:var(--txt2)">Estudo dos Yoga Sūtras · diário</div>
         </div>
       </div>
     </div>
     <div style="font-size:11px;color:var(--txt2);margin-bottom:16px">
-      <strong style="color:var(--verde)">${posturas.length}</strong> postura${posturas.length !== 1 ? 's' : ''} publicada${posturas.length !== 1 ? 's' : ''} até hoje
+      <strong style="color:var(--verde)">${sutras.length}</strong> sutra${sutras.length !== 1 ? 's' : ''} publicado${sutras.length !== 1 ? 's' : ''} até hoje
     </div>
-    <div id="jn-postura-view">${renderPostura(posturaSel)}</div>
+    <div id="jn-sutra-view">${renderSutra(sutraSel)}</div>
     ${historicoHtml}
   `
-  window._salvarJN = function() { _salvarPostura(posturaSel) }
-  window._jnSelPost = function(id) {
-    const p = posturas.find(x => x.id === id)
-    if (!p) return
-    posturaSel = p
-    document.querySelectorAll('[id^="jn-hist-"]').forEach(b => {
-      b.style.borderColor = b.id === `jn-hist-${id}` ? 'var(--verde)' : 'var(--borda)'
-      b.style.background  = b.id === `jn-hist-${id}` ? 'rgba(31,56,31,.04)' : '#fff'
+  window._salvarJN = function() { _salvarSutra(sutraSel) }
+  window._jnSelSutra = function(id) {
+    const s = sutras.find(x => x.id === id)
+    if (!s) return
+    sutraSel = s
+    document.querySelectorAll('[id^="jn-hist-"]').forEach(btn => {
+      btn.style.borderColor = btn.id === `jn-hist-${id}` ? 'var(--verde)' : 'var(--borda)'
+      btn.style.background  = btn.id === `jn-hist-${id}` ? 'rgba(31,56,31,.04)' : '#fff'
     })
-    const view = document.getElementById('jn-postura-view')
-    if (view) { view.innerHTML = renderPostura(p); view.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
+    const view = document.getElementById('jn-sutra-view')
+    if (view) { view.innerHTML = renderSutra(s); view.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
   }
   uiAnimar(container)
 }
@@ -829,4 +819,4 @@ function _renderBeneficioGenerico(container, b, campo, temAcesso, planoTipo, isV
     ` : ''}
   `
   uiAnimar(container)
-}   
+}
