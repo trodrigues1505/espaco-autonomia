@@ -204,6 +204,9 @@ export async function renderAsanaAdmin(container, page) {
             ${!vazio ? `<button onclick="previaAsana(${slot})"
               style="padding:6px 12px;background:rgba(31,56,31,.08);color:var(--verde);border:none;
                      border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Ver como o aluno vê">👁 Prévia</button>` : ''}
+            ${!vazio ? `<button onclick="abrirEdicaoAsana(${slot})"
+              style="padding:6px 12px;background:#e8f4e8;color:#1a5a1a;border:none;
+                     border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Editar os dados já salvos, sem novo PDF">✎ Editar</button>` : ''}
             <button onclick="abrirFormAsana(${slot})"
               style="padding:6px 14px;background:var(--verde);color:var(--bege);border:none;
                      border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
@@ -367,6 +370,26 @@ export async function renderAsanaAdmin(container, page) {
   window.fecharFormAsana = function() {
     document.getElementById('modal-asana').style.display = 'none'
     window._asanaSlotAtual = null
+  }
+
+  window.abrirEdicaoAsana = function(slot) {
+    const a = porSlot[slot]
+    if (!a || !a.modalidade) { toast('Nada salvo ainda para editar'); return }
+    window._asanaSlotAtual = slot
+    document.getElementById('asana-modal-titulo').textContent = `Editar — ${SLOT_INFO[slot].label}`
+    document.getElementById('am-etapa-1').style.display = 'none'
+    document.getElementById('am-etapa-2').style.display = 'block'
+    document.getElementById('modal-asana').style.display = 'flex'
+    // salvarAsana() lê am-numero/am-duracao/am-link direto do DOM, independente
+    // de qual etapa está visível — precisam ser preenchidos aqui, senão salvar
+    // sobrescreve esses três campos com vazio.
+    document.getElementById('am-numero').value = a.numero || ''
+    document.getElementById('am-duracao').value = a.duracao || ''
+    document.getElementById('am-link').value = a.link_tummee || ''
+    // Reusa os mesmos dados já salvos como se fossem "extraídos pela IA" —
+    // não passa por interpretarComIAAsana(), então nenhum PDF/texto é exigido.
+    _montarCamposRevisao(a)
+    _mostrarBotaoSalvar()
   }
 
   window.interpretarComIAAsana = async function() {
@@ -549,4 +572,4 @@ Regras:
     fecharFormAsana()
     navigate('asana-admin')
   }
-}  
+}
