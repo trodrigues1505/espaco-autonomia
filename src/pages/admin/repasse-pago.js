@@ -105,7 +105,11 @@ export async function renderHistoricoRepasse(container, professorId, isAdmin) {
                       ${diff > 0 ? '+' : ''}${fmtR(diff)}
                     </span>`
                  : ''
-               const obsEsc = (r.observacao || '').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+               // Escapa <, >, " (contra quebra de HTML) e ' (contra quebra do onclick,
+               // já que o atributo onclick concatena essa string dentro de aspas simples
+               // no JS gerado). Faltava o escape de ' aqui — era a causa do botão
+               // "Editar" quebrar (SyntaxError) sempre que a observação tinha apóstrofo.
+               const obsEsc = (r.observacao || '').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"\\'")
                const nomeEsc = (r.professor?.nome || '').replace(/'/g,"\\'")
                return `
                  <div style="display:grid;
@@ -281,9 +285,9 @@ export async function renderHistoricoRepasse(container, professorId, isAdmin) {
     document.getElementById('rp-professor-nome').textContent = profNome
     document.getElementById('rp-mes').value            = mesRef.slice(0, 7)
     document.getElementById('rp-valor-previsto').value = valorPrevisto || ''
-    document.getElementById('rp-valor-pago').value     = valorPago
-    document.getElementById('rp-obs').value            = obs || ''
-    document.getElementById('rp-diff').textContent     = ''
+    document.getElementById('rp-valor-pago').value      = valorPago
+    document.getElementById('rp-obs').value             = obs || ''
+    document.getElementById('rp-diff').textContent      = ''
     document.getElementById('modal-repasse-pago').style.display = 'flex'
   }
 
@@ -313,8 +317,8 @@ export function abrirModalRegistrarRepasse(professorId, nomeProfessor, valorPrev
   document.getElementById('rp-professor-nome').textContent     = nomeProfessor
   document.getElementById('rp-mes').value                      = mesRef
   document.getElementById('rp-valor-previsto').value           = valorPrevisto ? valorPrevisto.toFixed(2) : ''
-  document.getElementById('rp-valor-pago').value               = valorPrevisto ? valorPrevisto.toFixed(2) : ''
-  document.getElementById('rp-obs').value                      = ''
-  document.getElementById('rp-diff').textContent               = ''
+  document.getElementById('rp-valor-pago').value                = valorPrevisto ? valorPrevisto.toFixed(2) : ''
+  document.getElementById('rp-obs').value                       = ''
+  document.getElementById('rp-diff').textContent                = ''
   modalEl.style.display = 'flex'
 }
