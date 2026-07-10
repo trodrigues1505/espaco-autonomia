@@ -1,7 +1,7 @@
 /**
  * src/pages/index.js
  */
-const V = '?v=13'
+const V = '?v=14'
 const rotaMap = {
   'dashboard':          () => import('./admin/dashboard.js'  + V).then(m => m.renderDashboard),
   'timeline':           () => import('./timeline.js'         + V).then(m => m.renderTimeline),
