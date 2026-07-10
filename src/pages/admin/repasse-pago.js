@@ -109,7 +109,10 @@ export async function renderHistoricoRepasse(container, professorId, isAdmin) {
                // já que o atributo onclick concatena essa string dentro de aspas simples
                // no JS gerado). Faltava o escape de ' aqui — era a causa do botão
                // "Editar" quebrar (SyntaxError) sempre que a observação tinha apóstrofo.
-               const obsEsc = (r.observacao || '').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"\\'")
+               const obsEsc = (r.observacao || '')
+                 .replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+                 .replace(/'/g,"\\'")
+                 .replace(/\r\n|\r|\n/g, '\\n')
                const nomeEsc = (r.professor?.nome || '').replace(/'/g,"\\'")
                return `
                  <div style="display:grid;
@@ -321,4 +324,4 @@ export function abrirModalRegistrarRepasse(professorId, nomeProfessor, valorPrev
   document.getElementById('rp-obs').value                       = ''
   document.getElementById('rp-diff').textContent                = ''
   modalEl.style.display = 'flex'
-}
+}   
