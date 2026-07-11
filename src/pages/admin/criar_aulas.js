@@ -281,7 +281,8 @@ uiAnimar(container)
         const { data: fer } = await sb.from('feriados').select('nome').eq('data', data)
         await sb.from('ocorrencias').insert({
           aula_id: novaAula.id, data_hora: dtOc.toISOString(),
-          eh_feriado: !!(fer&&fer.length), nome_feriado: fer?.[0]?.nome||null
+          eh_feriado: !!(fer&&fer.length), nome_feriado: fer?.[0]?.nome||null,
+          cancelada: !!(fer&&fer.length)
         })
         document.getElementById('modal-criar-aula').style.display = 'none'
         toast('✓ Aula avulsa criada!')
@@ -332,7 +333,14 @@ uiAnimar(container)
               const dStr = cursor.toISOString().slice(0,10)
               const dtISO = dStr + 'T' + String(hora).padStart(2,'0') + ':' + String(min).padStart(2,'0') + ':00-03:00'
               const feriadoNome = feriadosDatas.has(dStr) ? (feriados||[]).find(f=>f.data===dStr)?.nome : null
-              ocorrencias.push({ aula_id: aula.id, data_hora: dtISO, eh_feriado:!!feriadoNome, nome_feriado:feriadoNome||null })
+              // Ocorrência já nasce cancelada se a data já é feriado conhecido
+              // no momento da geração (não precisa esperar o cancelamento
+              // retroativo, que só roda quando um feriado NOVO é sincronizado).
+              ocorrencias.push({
+                aula_id: aula.id, data_hora: dtISO,
+                eh_feriado: !!feriadoNome, nome_feriado: feriadoNome||null,
+                cancelada: !!feriadoNome,
+              })
             }
           }
           cursor.setDate(cursor.getDate()+1)
