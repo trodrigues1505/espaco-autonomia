@@ -1,7 +1,7 @@
 /**
  * src/pages/index.js
  */
-const V = '?v=15'
+const V = '?v=16'
 const rotaMap = {
   'dashboard':          () => import('./admin/dashboard.js'  + V).then(m => m.renderDashboard),
   'timeline':           () => import('./timeline.js'         + V).then(m => m.renderTimeline),
@@ -23,6 +23,7 @@ const rotaMap = {
   'aluno-minhas':       () => import('./aluno/minhas.js'     + V).then(m => m.renderAlunoMinhas),
   'aluno-plano':        () => import('./aluno/plano.js'      + V).then(m => m.renderAlunoPlano),
   'previsao-professor': () => import('./admin/previsao-professor.js' + V).then(m => m.renderPrevisaoProfessor),
+  'vinculos':            () => import('./admin/vinculos.js'          + V).then(m => m.renderVinculos),
   'jnana-admin':        () => import('./admin/jnana.js'             + V).then(m => m.renderJnanaAdmin),
   'asana-admin':        () => import('./admin/asana.js'             + V).then(m => m.renderAsanaAdmin),
   // Institucional
