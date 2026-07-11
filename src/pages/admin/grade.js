@@ -38,8 +38,12 @@ export async function renderAlunoGrade(container, page) {
       return h === f.horario
     })
 
-    // Todos os planos dão acesso a todas as modalidades
-    const modPermitidas = ['hatha','acro','raja']
+    // Modalidades permitidas por plano
+    let modPermitidas = ['hatha','acro','raja']
+    if (isAluno && planoAluno) {
+      const mp = {brahma:['hatha'], shiva:['hatha','raja'], vishnu:['hatha','raja','acro']}
+      modPermitidas = mp[planoAluno] || ['hatha']
+    }
 
     // Buscar confirmações do aluno
     let minhasConfs = new Set()
@@ -81,9 +85,11 @@ export async function renderAlunoGrade(container, page) {
     }
 
     const prazoMin = Number(cfg.prazo_confirmacao_min||60)
+    const temCanceladaNaSemana = ocorrencias.some(o => o.cancelada)
 
     // Construir grade HTML
-    let gradeHTML = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:600px">`
+    // id="tour-grade-table": alvo do tour guiado (aponta a tabela inteira da semana)
+    let gradeHTML = `<div id="tour-grade-table" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:600px">`
     // Cabeçalho
     gradeHTML += `<tr><th style="background:var(--verde);color:var(--bege);padding:8px;font-size:11px;font-weight:500;width:60px">Hora</th>`
     diasDaSemana.forEach(d => {
@@ -117,15 +123,23 @@ export async function renderAlunoGrade(container, page) {
           const dtAula = new Date(oc.data_hora)
           const prazoLimite = new Date(dtAula.getTime() - prazoMin*60000)
           const foraPrazo = agora > prazoLimite
+          const permitida = modPermitidas.includes(oc.modalidade)
           const passada = dtAula < agora
+          const cancelada = !!oc.cancelada
 
           let bgCell = '#fff'
-          const borderCell = `border-left:3px solid ${CORES[oc.modalidade]||'#888'}`
+          let borderCell = `border-left:3px solid ${CORES[oc.modalidade]||'#888'}`
           if (confirmado) bgCell = 'rgba(232,188,79,.08)'
+          if (!permitida) bgCell = '#f8f8f8'
+          if (cancelada) bgCell = '#f3f3f3'
 
           let actionHtml = ''
-          if (isAluno && !passada) {
-            if (confirmado) {
+          if (cancelada) {
+            actionHtml = `<div style="font-size:9px;color:#8a1a1a;font-weight:600;margin-top:3px">🚫 Cancelada${oc.eh_feriado?' — feriado':''}</div>`
+          } else if (isAluno && !passada) {
+            if (!permitida) {
+              actionHtml = `<div style="font-size:9px;color:#ccc;margin-top:3px">🔒 ${planoAluno}</div>`
+            } else if (confirmado) {
               actionHtml = `<div style="font-size:9px;color:var(--dourado);font-weight:500;margin-top:3px">✓ Confirmado</div>`
             } else if (foraPrazo) {
               actionHtml = `<div style="font-size:9px;color:#c0392b;margin-top:3px">Prazo enc.</div>`
@@ -141,12 +155,11 @@ export async function renderAlunoGrade(container, page) {
             <button onclick="event.stopPropagation();excluirOcorrencia('${oc.id}')" style="padding:1px 5px;background:rgba(255,0,0,.08);color:#c0392b;border:none;border-radius:3px;font-size:9px;cursor:pointer" title="Excluir">✕</button>
             <button onclick="event.stopPropagation();verPresencasOcorrencia('${oc.id}')" style="padding:1px 5px;background:rgba(31,56,31,.1);color:var(--verde);border:none;border-radius:3px;font-size:9px;cursor:pointer" title="Presenças">👥</button>
           </div>` : ''
-
-          gradeHTML += `<td style="border:1px solid rgba(212,200,158,.3);background:${bgCell};padding:5px 7px;vertical-align:top;cursor:${isAluno?'default':'pointer'}" ${!isAluno?`onclick="verDetalhesOcorrencia('${oc.id}')"`:''}">
-            <div style="font-size:10px;font-weight:500;${borderCell};padding-left:4px;line-height:1.3;color:var(--txt)">${NOMES[oc.modalidade]}</div>
+          gradeHTML += `<td style="border:1px solid rgba(212,200,158,.3);background:${bgCell};padding:5px 7px;vertical-align:top;cursor:${isAluno?'default':'pointer'}${cancelada?';opacity:.75':''}" ${!isAluno?`onclick="verDetalhesOcorrencia('${oc.id}')"`:''}">
+            <div style="font-size:10px;font-weight:500;${borderCell};padding-left:4px;line-height:1.3;color:${cancelada?'#999':!permitida?'#ccc':'var(--txt)'}${cancelada?';text-decoration:line-through':''}">${NOMES[oc.modalidade]}</div>
             <div style="font-size:9px;color:var(--txt2);margin-top:1px">${oc.confirmados||0}/${oc.vagas_total}</div>
             ${oc.professor_nome?`<div style="font-size:9px;color:var(--txt2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px" title="${oc.professor_nome}">👤 ${oc.professor_nome.split(' ')[0]}</div>`:''}
-            ${isFeriado&&!isAluno?`<div style="font-size:9px;color:#8a6b1a;margin-top:1px">⚠ feriado</div>`:''}
+            ${isFeriado&&!isAluno&&!cancelada?`<div style="font-size:9px;color:#8a6b1a;margin-top:1px">⚠ feriado</div>`:''}
             ${actionHtml}
             ${adminActions}
           </td>`
@@ -159,6 +172,7 @@ export async function renderAlunoGrade(container, page) {
     // Legenda
     const legendaHtml = `<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px">
       ${['hatha','acro','raja'].map(m=>`<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--txt2)">${dot(m)}${NOMES[m]}</span>`).join('')}
+      ${temCanceladaNaSemana?`<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:#8a1a1a">🚫 Cancelada</span>`:''}
       ${isAluno?`<span style="font-size:11px;color:var(--txt2)">· Prazo: <strong>${prazoMin>=60?prazoMin/60+'h':prazoMin+'min'}</strong> antes</span>`:''}
     </div>`
 
@@ -281,7 +295,8 @@ export async function renderAlunoGrade(container, page) {
           <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Confirmados</div><div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">${oc.confirmados||0}/${oc.vagas_total}</div></div>
           <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Professor</div><div style="font-size:13px;font-weight:500;color:var(--verde);margin-top:3px">${oc.professor_nome||'—'}</div></div>
         </div>
-        ${oc.eh_feriado?`<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:8px 12px;font-size:12px;color:#7a5a10;margin-bottom:12px">⚠ Esta aula cai em feriado: ${oc.nome_feriado}</div>`:''}
+        ${oc.cancelada?`<div style="background:#fceaea;border:1px solid #f5c1c1;border-radius:6px;padding:8px 12px;font-size:12px;color:#8a1a1a;margin-bottom:12px">🚫 Esta aula está cancelada${oc.eh_feriado?` (feriado: ${oc.nome_feriado})`:''}</div>`:
+          oc.eh_feriado?`<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:8px 12px;font-size:12px;color:#7a5a10;margin-bottom:12px">⚠ Esta aula cai em feriado: ${oc.nome_feriado}</div>`:''}
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);margin-bottom:8px">Alunos confirmados (${confs.length})</div>
         ${confs.length===0?'<div style="font-size:12px;color:var(--txt2);padding:10px 0">Nenhuma confirmação ainda.</div>':
           confs.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--fundo);border-radius:6px;margin-bottom:4px">
@@ -294,4 +309,4 @@ export async function renderAlunoGrade(container, page) {
       `
       window._ocAtual = ocId
     }
-}       
+}   
