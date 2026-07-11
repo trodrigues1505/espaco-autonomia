@@ -52,6 +52,7 @@ const MENUS = {
     { id: 'criar-aulas',        label: 'Criar Aulas',         icon: 'ti-circle-plus'      },
     { id: 'alunos',             label: 'Alunos',              icon: 'ti-users'            },
     { id: 'professores',        label: 'Professores',         icon: 'ti-user-star'        },
+    { id: 'vinculos',           label: 'Vínculos Prof×Aluno', icon: 'ti-link'             },
     { id: 'presencas',          label: 'Presenças',           icon: 'ti-checkbox'         },
     { id: 'pagamentos',         label: 'Pagamentos',          icon: 'ti-currency-dollar'  },
     { id: 'planos',             label: 'Planos',              icon: 'ti-award'            },
@@ -353,4 +354,4 @@ export function initMobileMenu() {
       if (bar && window.innerWidth <= 768) bar.style.display = 'none'
     }
   })
-}
+}   
