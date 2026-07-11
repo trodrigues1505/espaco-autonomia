@@ -49,6 +49,10 @@ export async function renderConfig(container, page) {
       </div>
       <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
         <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--borda)">Alertas de Feriado</div>
+        <div style="background:rgba(31,56,31,.04);border:1px solid rgba(31,56,31,.12);border-radius:6px;padding:9px 13px;font-size:11px;color:var(--verde);margin-bottom:12px">
+          <i class="ti ti-info-circle"></i>
+          Ao sincronizar, aulas futuras já geradas que caem em feriado são canceladas automaticamente, e o crédito de quem já tinha confirmado presença nelas é estornado.
+        </div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(212,200,158,.25)">
           <div style="font-size:12px;font-weight:500">Feriados nacionais</div>
           <input type="checkbox" id="cfg-fnac" ${cfg.feriados_nacionais==='true'?'checked':''} style="width:15px;height:15px;accent-color:var(--verde)">
@@ -273,6 +277,8 @@ export async function renderConfig(container, page) {
     try {
       const ano = new Date().getFullYear()
       let total = 0
+      let totalOcsCanceladas = 0
+      let totalConfsEstornadas = 0
       for (const a of [ano, ano + 1]) {
         const r = await fetch(`https://brasilapi.com.br/api/feriados/v1/${a}`)
         if (!r.ok) throw new Error(`BrasilAPI ${r.status}`)
@@ -286,13 +292,27 @@ export async function renderConfig(container, page) {
             atualizado_em: new Date().toISOString(),
           }, { onConflict: 'data' })
           total++
+
+          // Cancela retroativamente qualquer ocorrência futura já gerada
+          // que caia nessa data, estornando crédito de quem já confirmou.
+          // Idempotente: rodar de novo não estorna em dobro.
+          const { data: cancelResult, error: errCancel } = await sb.rpc('admin_cancelar_ocorrencias_feriado', {
+            p_data: f.date,
+            p_nome_feriado: f.name,
+          })
+          if (!errCancel && cancelResult) {
+            totalOcsCanceladas += cancelResult.ocorrencias_canceladas || 0
+            totalConfsEstornadas += cancelResult.confirmacoes_estornadas || 0
+          }
         }
       }
       if (status) status.textContent = ''
-      toast(`✓ ${total} feriados sincronizados (${ano} e ${ano+1})`)
+      toast(`✓ ${total} feriados sincronizados (${ano} e ${ano+1})`
+        + (totalOcsCanceladas > 0 ? ` · ${totalOcsCanceladas} aula(s) cancelada(s) automaticamente` : '')
+        + (totalConfsEstornadas > 0 ? ` · ${totalConfsEstornadas} crédito(s) estornado(s)` : ''))
     } catch(e) {
       if (status) status.textContent = ''
       toast('Erro: ' + e.message)
     }
   }
-}    
+}
