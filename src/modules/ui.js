@@ -12,7 +12,7 @@
  *   - contadores numéricos animados
  *   - barras de progresso animadas
  *   - stagger nos cards (aparecem em sequência)
- *   - ripple em botões
+ *   - feedback universal em botões (ripple + hover + active)
  *   - hover lift em cards
  */
 
@@ -143,45 +143,86 @@ export function staggerCards(container) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// 5. RIPPLE EM BOTÕES
-// Efeito de onda ao clicar — igual ao Material Design mas sutil
+// 5. BOTÕES — feedback universal (ripple + hover + active)
+//
+// Usa delegação de evento no document: cobre QUALQUER botão da
+// aplicação, inclusive os inseridos DEPOIS do render inicial
+// (conteúdo de modal, listas recarregadas via filtro, etc.), sem
+// precisar rechamar nada — antes, o ripple só era aplicado aos
+// botões que já existiam no DOM no momento exato de uiAnimar(),
+// então qualquer botão criado depois (ex: corpo do modal de editar
+// aluno, linhas da lista após o debounce da busca) nunca recebia
+// nenhum feedback visual.
+//
+// A cor do ripple também passou a se adaptar ao fundo do botão:
+// antes era um branco fixo (rgba(255,255,255,.18)), invisível em
+// cima de botões claros/transparentes — que são a maioria no app
+// ("Cancelar", "✎", "✕", filtros). Agora: fundo escuro → ripple
+// claro, fundo claro → ripple escuro.
+//
+// Além do ripple (feedback de clique), foi injetado um CSS global
+// de hover/active que cobre TODO <button> da aplicação automatica-
+// mente, incluindo os futuros, sem depender de JS por elemento.
 // ─────────────────────────────────────────────────────────────
-export function initRipple(container) {
-  container.querySelectorAll('button').forEach(btn => {
-    if (btn.dataset.ripple) return  // evita duplicar
-    btn.dataset.ripple = '1'
-    btn.style.position = 'relative'
-    btn.style.overflow = 'hidden'
+function _corEscura(bgColor) {
+  const m = (bgColor || '').match(/\d+/g)
+  if (!m || m.length < 3) return false
+  const [r, g, b] = m.map(Number)
+  return (0.299 * r + 0.587 * g + 0.114 * b) < 150
+}
 
-    btn.addEventListener('click', function(e) {
-      const rect = btn.getBoundingClientRect()
-      const size = Math.max(rect.width, rect.height) * 1.5
-      const x = e.clientX - rect.left - size / 2
-      const y = e.clientY - rect.top  - size / 2
+export function initBotoesGlobal() {
+  if (document.body.dataset.botoesGlobalInit) return
+  document.body.dataset.botoesGlobalInit = '1'
 
-      const ripple = document.createElement('span')
-      ripple.style.cssText = `
-        position:absolute;
-        width:${size}px; height:${size}px;
-        left:${x}px; top:${y}px;
-        border-radius:50%;
-        background:rgba(255,255,255,.18);
-        transform:scale(0);
-        pointer-events:none;
-        animation:_ripple .5s ease-out forwards;
-      `
-      btn.appendChild(ripple)
-      setTimeout(() => ripple.remove(), 600)
-    })
-  })
-
-  // Injeta o keyframe uma única vez
-  if (!document.getElementById('_ripple-style')) {
+  if (!document.getElementById('_botoes-style')) {
     const s = document.createElement('style')
-    s.id = '_ripple-style'
-    s.textContent = `@keyframes _ripple { to { transform:scale(1); opacity:0; } }`
+    s.id = '_botoes-style'
+    s.textContent = `
+      @keyframes _ripple { to { transform:scale(1); opacity:0; } }
+      button { transition: filter .15s ease, transform .08s ease, box-shadow .15s ease; }
+      button:hover:not(:disabled) { filter: brightness(0.95); }
+      button:active:not(:disabled) { transform: scale(0.96); }
+      button:disabled { cursor: default; }
+    `
     document.head.appendChild(s)
   }
+
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('button')
+    if (!btn || btn.disabled) return
+
+    const rect = btn.getBoundingClientRect()
+    const size = Math.max(rect.width, rect.height) * 1.5
+    const x = e.clientX - rect.left - size / 2
+    const y = e.clientY - rect.top  - size / 2
+
+    const bg = getComputedStyle(btn).backgroundColor
+    const overlay = _corEscura(bg) ? 'rgba(255,255,255,.22)' : 'rgba(0,0,0,.10)'
+
+    if (getComputedStyle(btn).position === 'static') btn.style.position = 'relative'
+    btn.style.overflow = 'hidden'
+
+    const ripple = document.createElement('span')
+    ripple.style.cssText = `
+      position:absolute;
+      width:${size}px; height:${size}px;
+      left:${x}px; top:${y}px;
+      border-radius:50%;
+      background:${overlay};
+      transform:scale(0);
+      pointer-events:none;
+      animation:_ripple .5s ease-out forwards;
+    `
+    btn.appendChild(ripple)
+    setTimeout(() => ripple.remove(), 600)
+  })
+}
+
+// Mantido por compatibilidade com o nome antigo — agora só garante
+// que o listener global de botões esteja ativo (idempotente).
+export function initRipple(container) {
+  initBotoesGlobal()
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -252,12 +293,12 @@ export function uiAnimar(container) {
   // Executa na ordem certa: primeiro estrutura, depois detalhes
   fadeEntrada(container)
   animarTopbar(container)
+  initBotoesGlobal()
 
   // Pequeno delay para o DOM estar pintado antes das animações
   requestAnimationFrame(() => {
     staggerCards(container)
     animarBarras(container)
-    initRipple(container)
     initHoverLift(container)
     initRowHighlight(container)
 
