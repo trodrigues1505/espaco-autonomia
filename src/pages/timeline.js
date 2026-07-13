@@ -530,6 +530,7 @@ export async function renderTimeline(container, page) {
   function renderMedia(url, tipo) {
     if (!url) return ''
     if (!tipo) tipo = detectarTipoMidia(url)
+
     if (tipo === 'imagem') {
       return `<div style="margin-top:12px;cursor:zoom-in;position:relative" onclick="window._tlAbrirLightbox('${url}')" title="Clique para ampliar">
         <img src="${url}" referrerpolicy="no-referrer" style="width:100%;max-height:420px;object-fit:cover;display:block" loading="lazy" onerror="this.parentElement.remove()">
@@ -538,10 +539,27 @@ export async function renderTimeline(container, page) {
         </div>
       </div>`
     }
+
     if (tipo === 'video') {
-      const embed = youtubeEmbed(url) || url
-      return `<div style="margin-top:12px"><iframe src="${embed}" style="width:100%;aspect-ratio:16/9;border:none;display:block" allowfullscreen loading="lazy"></iframe></div>`
+      const embed = gerarEmbedVideo(url)
+      if (embed) {
+        return `<div style="margin-top:12px"><iframe src="${embed}" style="width:100%;aspect-ratio:16/9;border:none;display:block" allowfullscreen loading="lazy" referrerpolicy="no-referrer"></iframe></div>`
+      }
+      // Arquivo de vídeo direto (mp4/webm/ogg/mov) — sem provedor reconhecido, usa <video> nativo
+      return `<div style="margin-top:12px"><video src="${url}" controls preload="metadata" style="width:100%;max-height:420px;display:block;background:#000"></video></div>`
     }
+
+    if (tipo === 'pdf') {
+      const viewer = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`
+      return `<div style="margin-top:12px;border:1px solid var(--borda);border-radius:8px;overflow:hidden">
+        <iframe src="${viewer}" style="width:100%;height:420px;border:none;display:block" loading="lazy"></iframe>
+        <a href="${url}" target="_blank" rel="noopener"
+          style="display:flex;align-items:center;gap:6px;padding:8px 12px;font-size:11px;color:var(--txt2);background:rgba(31,56,31,.03);text-decoration:none">
+          <span>📄</span><span>Abrir PDF em nova aba</span>
+        </a>
+      </div>`
+    }
+
     return `<div style="margin:12px 18px 0">
       <a href="${url}" target="_blank" rel="noopener"
         style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(31,56,31,.04);border:1px solid var(--borda);border-radius:6px;text-decoration:none;color:var(--txt);font-size:12px">
@@ -550,17 +568,52 @@ export async function renderTimeline(container, page) {
     </div>`
   }
 
+  // Detecta o tipo de mídia a partir da URL: pdf, imagem, video ou link genérico.
+  // Cobre extensão direta de arquivo E hosts conhecidos que não expõem extensão na URL.
   function detectarTipoMidia(url) {
-    if (/\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i.test(url)) return 'imagem'
-    if (/imgur\.com\/.+\.(jpg|jpeg|png|gif|webp)/i.test(url)) return 'imagem'
-    if (/youtube\.com|youtu\.be/i.test(url)) return 'video'
-    if (/vimeo\.com/i.test(url)) return 'video'
+    const u = (url || '').split('#')[0].split('?')[0].toLowerCase()
+    const uOriginal = url || ''
+
+    // PDF — sempre por extensão
+    if (/\.pdf$/i.test(u)) return 'pdf'
+
+    // Vídeo — provedores conhecidos (qualquer formato de link) ou arquivo de vídeo direto
+    if (/youtube\.com|youtu\.be|vimeo\.com/i.test(uOriginal)) return 'video'
+    if (/\.(mp4|webm|ogv|ogg|mov|m4v)$/i.test(u)) return 'video'
+
+    // Imagem — extensão direta
+    if (/\.(jpe?g|png|gif|webp|svg|bmp|avif)$/i.test(u)) return 'imagem'
+    // Imagem — hosts conhecidos que servem imagem sem extensão na URL
+    if (/(^|\.)imgur\.com\//i.test(uOriginal)) return 'imagem'
+    if (/ibb\.co\//i.test(uOriginal)) return 'imagem'
+    if (/postimg\.cc\//i.test(uOriginal)) return 'imagem'
+    if (/i\.redd\.it\//i.test(uOriginal)) return 'imagem'
+    if (/cdn\.discordapp\.com\/attachments\//i.test(uOriginal) && /\.(jpe?g|png|gif|webp)$/i.test(u)) return 'imagem'
+
     return 'link'
   }
 
-  function youtubeEmbed(url) {
-    const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/)
-    return m ? `https://www.youtube.com/embed/${m[1]}` : null
+  // Converte uma URL de vídeo (YouTube em qualquer formato, ou Vimeo) para a URL de embed
+  // que pode ser usada como src de <iframe> sem ser bloqueada por X-Frame-Options.
+  // Retorna null se a URL não for de um provedor reconhecido (ex: vídeo direto .mp4).
+  function gerarEmbedVideo(url) {
+    // youtube.com/watch?v=ID (com quaisquer outros parâmetros antes ou depois do v=)
+    let m = url.match(/youtube\.com\/watch\?[^#]*\bv=([\w-]{6,})/i)
+    if (m) return `https://www.youtube.com/embed/${m[1]}`
+    // youtu.be/ID (link curto de compartilhamento)
+    m = url.match(/youtu\.be\/([\w-]{6,})/i)
+    if (m) return `https://www.youtube.com/embed/${m[1]}`
+    // youtube.com/shorts/ID
+    m = url.match(/youtube\.com\/shorts\/([\w-]{6,})/i)
+    if (m) return `https://www.youtube.com/embed/${m[1]}`
+    // já é um link de embed do YouTube — usa direto
+    if (/youtube\.com\/embed\//i.test(url)) return url
+    // vimeo.com/ID
+    m = url.match(/vimeo\.com\/(\d+)/i)
+    if (m) return `https://player.vimeo.com/video/${m[1]}`
+    // já é um link de player do Vimeo — usa direto
+    if (/player\.vimeo\.com\/video\//i.test(url)) return url
+    return null
   }
 
   // ════════════════════════════════════════════════════════════
@@ -821,7 +874,7 @@ function renderComposeBox(perfil, isAdmin, isProf) {
         <textarea id="tl-compose-texto" rows="3" placeholder="Compartilhe algo com a comunidade..."
           style="flex:1;border:1px solid var(--borda);border-radius:6px;padding:10px;font-size:13px;font-family:'DM Sans',sans-serif;resize:none;min-height:70px"></textarea>
       </div>
-      <input id="tl-compose-midia" type="url" placeholder="Link de imagem (Imgur), vídeo (YouTube) ou outro URL..."
+      <input id="tl-compose-midia" type="url" placeholder="Link de imagem, vídeo (YouTube/Vimeo), PDF ou outro URL..."
         style="width:100%;margin-top:10px;border:1px solid var(--borda);border-radius:6px;padding:8px 10px;font-size:12px;font-family:'DM Sans',sans-serif;box-sizing:border-box">
       ${noticeHtml}
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px">
@@ -830,4 +883,4 @@ function renderComposeBox(perfil, isAdmin, isProf) {
       </div>
     </div>
   `
-}  
+}   
