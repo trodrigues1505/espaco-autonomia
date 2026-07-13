@@ -10,7 +10,7 @@ export const BENEFICIO_INTRO = {
   kala_sadhya:    { titulo: 'Kāla Sādhyā',   desc: 'Agenda Flex. Cancelou com antecedência? Recupera em outra turma da grade sem custo.' },
   asana_marga:    { titulo: 'Āsana Mārga',   desc: 'Aula prática semanal no app. Sequência de āsanas, pranayama e mantra com estrutura completa para praticar em casa.' },
   yoga_adhyayana: { titulo: 'Yoga Adhyayana', desc: 'Estudo teórico semanal. Uma postura por semana com koshas, vāyus, chakras, doshas, elementos, origem e reflexão.' },
-  jnana_marga:    { titulo: 'Jñāna Mārga',   desc: 'Estudo literário diário. Uma postura publicada de segunda a sexta com simbolismo, instruções, benefícios e mapeamento energético.' },
+  jnana_marga:    { titulo: 'Jñāna Mārga',   desc: 'Estudo dos Yoga Sūtras. Um sutra de Patañjali publicado de segunda a sexta com texto original, transliteração, tradução e comentário.' },
   sadhana_purna:  { titulo: 'Sādhanā Pūrṇā', desc: 'Avaliação periódica de progresso com o professor. Conversa estruturada para mapear evolução e ajustar a prática.' },
   atma_vijnana:   { titulo: 'Ātma Vijñāna',  desc: 'Anamnese personalizada no início da jornada. Entrevista aprofundada com o professor sobre histórico, objetivos e limitações.' },
   shruti:         { titulo: 'Śruti',          desc: 'Áudio diário. Mantras, pranayamas guiados ou reflexões para ouvir no dia a dia.' },
