@@ -543,7 +543,7 @@ export async function renderTimeline(container, page) {
     if (tipo === 'video') {
       const embed = gerarEmbedVideo(url)
       if (embed) {
-        return `<div style="margin-top:12px"><iframe src="${embed}" style="width:100%;aspect-ratio:16/9;border:none;display:block" allowfullscreen loading="lazy" referrerpolicy="no-referrer"></iframe></div>`
+        return `<div style="margin-top:12px"><iframe src="${embed}" style="width:100%;aspect-ratio:16/9;border:none;display:block" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`
       }
       // Arquivo de vídeo direto (mp4/webm/ogg/mov) — sem provedor reconhecido, usa <video> nativo
       return `<div style="margin-top:12px"><video src="${url}" controls preload="metadata" style="width:100%;max-height:420px;display:block;background:#000"></video></div>`
@@ -883,4 +883,4 @@ function renderComposeBox(perfil, isAdmin, isProf) {
       </div>
     </div>
   `
-}   
+}  
