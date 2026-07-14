@@ -60,6 +60,7 @@ const MENUS = {
     { sec: 'Sistema' },
     { id: 'jnana-admin',        label: 'Jñāna Mārga',         icon: 'ti-book'             },
     { id: 'asana-admin',        label: 'Āsana Mārga',         icon: 'ti-yoga'             },
+    { id: 'adhyayana-admin',    label: 'Yoga Adhyayana',      icon: 'ti-flower'           },
     { id: 'config',             label: 'Configurações',        icon: 'ti-settings'         },
     ...ITENS_SOBRE,
   ],
