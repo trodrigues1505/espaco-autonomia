@@ -298,7 +298,29 @@ export async function renderAlunos(container, page) {
     if (alunoId) {
       const asaasNovo = document.getElementById('ca-asaas')?.value.trim() || null
       await _sb.from('matriculas').update({ativa:false}).eq('aluno_id', alunoId).eq('ativa', true)
-      await _sb.from('matriculas').insert({ aluno_id: alunoId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor, professor_id: professorId })
+      const { error: errMat } = await _sb.from('matriculas').insert({ aluno_id: alunoId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor, professor_id: professorId })
+      if (errMat) { toast('Erro ao criar matrícula: ' + errMat.message); return }
+
+      // Se um professor foi selecionado no cadastro, cria também o vínculo
+      // oficial em vinculos_professor_aluno (mesma RPC usada em vinculos.js).
+      // Sem isso, previsao_repasse_professor não encontra vínculo vigente
+      // para o primeiro mês do aluno, e o repasse desse período fica sem
+      // registrar essa relação professor-aluno.
+      if (professorId) {
+        const hoje = new Date().toISOString().slice(0,10)
+        const { error: errVinc } = await _sb.rpc('admin_vincular_aluno_professor', {
+          p_aluno_id: alunoId,
+          p_professor_id: professorId,
+          p_data_inicio: hoje,
+          p_observacao: 'Vínculo criado automaticamente no cadastro do aluno',
+        })
+        if (errVinc) {
+          // Não bloqueia o cadastro por causa disso, mas avisa explicitamente
+          // pra não passar despercebido — o admin pode ir em Vínculos e criar manualmente.
+          toast('Aluno cadastrado, mas houve erro ao criar vínculo com o professor: ' + errVinc.message)
+        }
+      }
+
       if (asaasNovo) await _sb.from('perfis').update({ asaas_customer_id: asaasNovo }).eq('id', alunoId)
       document.getElementById('modal-cad-aluno').style.display = 'none'
       toast('✓ Aluno cadastrado! Peça para entrar com Google usando: '+email)
@@ -318,18 +340,16 @@ export async function renderAlunos(container, page) {
         ${fi('','Telefone',`<input type="tel" id="ea-tel" ${inputStyle} value="${a.telefone||''}" placeholder="(11) 99999-9999">`)}
         <div style="font-size:11px;color:var(--txt2);margin-top:4px">E-mail: <strong>${a.email}</strong> (não editável — usado para login)</div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        ${fi('','Plano',`<select id="ea-plano" ${inputStyle} onchange="updateValorEdicao()">
-          <option value="brahma" ${mat?.plano_tipo==='brahma'?'selected':''}>Brahma</option>
-          <option value="shiva_1x" ${mat?.plano_tipo==='shiva_1x'?'selected':''}>Shiva 1x</option>
-          <option value="shiva_2x" ${mat?.plano_tipo==='shiva_2x'?'selected':''}>Shiva 2x</option>
-          <option value="vishnu_2x" ${mat?.plano_tipo==='vishnu_2x'?'selected':''}>Vishnu 2x</option>
-          <option value="vishnu_livre" ${mat?.plano_tipo==='vishnu_livre'?'selected':''}>Vishnu Livre</option>
-        </select>`)}
-        ${fi('','Professor',`<select id="ea-professor" ${inputStyle}>
-          <option value="">— Sem professor —</option>
-          ${professores.map(p=>`<option value="${p.id}" ${mat?.professor_id===p.id?'selected':''}>${p.nome}</option>`).join('')}
-        </select>`)}
+      ${fi('','Plano',`<select id="ea-plano" ${inputStyle} onchange="updateValorEdicao()">
+        <option value="brahma" ${mat?.plano_tipo==='brahma'?'selected':''}>Brahma</option>
+        <option value="shiva_1x" ${mat?.plano_tipo==='shiva_1x'?'selected':''}>Shiva 1x</option>
+        <option value="shiva_2x" ${mat?.plano_tipo==='shiva_2x'?'selected':''}>Shiva 2x</option>
+        <option value="vishnu_2x" ${mat?.plano_tipo==='vishnu_2x'?'selected':''}>Vishnu 2x</option>
+        <option value="vishnu_livre" ${mat?.plano_tipo==='vishnu_livre'?'selected':''}>Vishnu Livre</option>
+      </select>`)}
+      <div style="font-size:11px;color:var(--txt2);margin:-6px 0 12px">
+        Professor responsável agora é gerenciado em
+        <a href="#" onclick="document.getElementById('modal-edit-aluno').style.display='none';navigate('vinculos');return false" style="color:var(--verde);text-decoration:underline;text-underline-offset:2px">Vínculos</a>.
       </div>
       ${fi('','Valor mensal (R$)',`<input type="number" id="ea-valor" ${inputStyle} value="${mat?.valor_mensal||0}">`)}
       ${fi('','Vencimento',`<input type="date" id="ea-fim" ${inputStyle} value="${mat?.fim||''}">`)}
@@ -402,19 +422,49 @@ export async function renderAlunos(container, page) {
     const fim      = document.getElementById('ea-fim').value || null
     const ativo    = document.getElementById('ea-ativo').value === 'true'
     const asaasId  = document.getElementById('ea-asaas')?.value?.trim() || null
-    const professorId = document.getElementById('ea-professor').value || null
     const descontoFixo        = Number(document.getElementById('ea-desconto-fixo').value) || 0
     const descontoAvulsoValor = Number(document.getElementById('ea-desconto-avulso-valor').value) || 0
     const descontoAvulsoMeses = Number(document.getElementById('ea-desconto-avulso-meses').value) || 0
+
     const { error: errPerfil } = await _sb.from('perfis').update({ nome, telefone: tel || null, ativo, asaas_customer_id: asaasId }).eq('id', window._editAlunoId)
     if (errPerfil) { toast('Erro ao salvar perfil: ' + errPerfil.message); return }
-    await _sb.from('matriculas').update({ativa:false}).eq('aluno_id', window._editAlunoId).eq('ativa', true)
-    const { error: errMat } = await _sb.from('matriculas').insert({
-      aluno_id: window._editAlunoId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor, fim,
-      professor_id: professorId, desconto_fixo: descontoFixo,
-      desconto_avulso_valor: descontoAvulsoValor, desconto_avulso_meses: descontoAvulsoMeses, desconto_avulso_usado: 0,
-    })
-    if (errMat) { toast('Erro ao salvar matrícula: ' + errMat.message); return }
+
+    // Busca a matrícula ativa atual para comparar com o formulário e decidir
+    // se precisa encerrar+criar nova (mudança de plano/opção/valor) ou só
+    // atualizar a existente (demais campos) — evita duplicar matrícula a
+    // cada clique em Salvar (bug identificado em 15/07/2026).
+    const { data: matAtual, error: errBusca } = await _sb
+      .from('matriculas')
+      .select('*')
+      .eq('aluno_id', window._editAlunoId)
+      .eq('ativa', true)
+      .maybeSingle()
+    if (errBusca) { toast('Erro ao verificar matrícula atual: ' + errBusca.message); return }
+
+    const mudouPlano = !matAtual
+      || matAtual.plano_tipo !== plano
+      || matAtual.opcao_aulas !== opcao
+      || Number(matAtual.valor_mensal) !== valor
+
+    if (mudouPlano) {
+      if (matAtual) {
+        const { error: errDesativa } = await _sb.from('matriculas').update({ ativa: false }).eq('id', matAtual.id)
+        if (errDesativa) { toast('Erro ao encerrar matrícula anterior: ' + errDesativa.message); return }
+      }
+      const { error: errMat } = await _sb.from('matriculas').insert({
+        aluno_id: window._editAlunoId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor, fim,
+        professor_id: matAtual?.professor_id || null, desconto_fixo: descontoFixo,
+        desconto_avulso_valor: descontoAvulsoValor, desconto_avulso_meses: descontoAvulsoMeses, desconto_avulso_usado: 0,
+      })
+      if (errMat) { toast('Erro ao salvar matrícula: ' + errMat.message); return }
+    } else {
+      const { error: errMat } = await _sb.from('matriculas').update({
+        fim, desconto_fixo: descontoFixo,
+        desconto_avulso_valor: descontoAvulsoValor, desconto_avulso_meses: descontoAvulsoMeses,
+      }).eq('id', matAtual.id)
+      if (errMat) { toast('Erro ao salvar matrícula: ' + errMat.message); return }
+    }
+
     document.getElementById('modal-edit-aluno').style.display = 'none'
     toast(asaasId ? '✓ Aluno atualizado! Asaas vinculado.' : '✓ Aluno atualizado!')
     navigate('alunos')
@@ -449,4 +499,4 @@ export async function renderAlunos(container, page) {
     window._pendingEditAluno = null
     setTimeout(() => window.editarAluno && window.editarAluno(idParaEditar), 50)
   }
-}  
+}
