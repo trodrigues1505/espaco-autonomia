@@ -111,8 +111,8 @@ export async function renderAlunos(container, page) {
       ${professores.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('')}
     </select>`)}
     ${fi('','ID no Asaas (opcional)',`<input type="text" id="ca-asaas" ${inputStyle} placeholder="cus_...">`)}
-    <div style="background:rgba(232,188,79,.08);border:1px solid rgba(232,188,79,.2);border-radius:6px;padding:10px;font-size:11px;color:var(--txt2)">
-      O aluno acessa com Google usando o e-mail cadastrado.
+    <div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.3);border-radius:6px;padding:10px;font-size:11px;color:#7a5a10">
+      ⚠ O aluno precisa entrar no app pelo menos uma vez com Google usando este e-mail <strong>antes</strong> de ser cadastrado aqui — o login cria o registro de autenticação necessário. Se ele ainda não entrou, peça para fazer isso primeiro.
     </div>`,
     `<button onclick="document.getElementById('modal-cad-aluno').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
      <button onclick="salvarNovoAluno()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Cadastrar</button>`
@@ -286,46 +286,48 @@ export async function renderAlunos(container, page) {
     const valor = Number(document.getElementById('ca-valor').value)||PLANO_VALORES[plano]||0
     const professorId = document.getElementById('ca-professor').value || null
     if (!nome||!email) { toast('Preencha nome e e-mail'); return }
-    let errInv = null
-    try { const r = await _sb.auth.admin?.inviteUserByEmail(email); errInv = r?.error } catch(e) { errInv = { message: 'use service role key' } }
+
+    // O cadastro depende de o aluno já ter feito login com Google ao menos
+    // uma vez (isso cria a linha em auth.users e, por consequência, em
+    // perfis). Não criamos o perfil "do zero" aqui: perfis.id é FK para
+    // auth.users.id, e este app roda com chave anônima no navegador — sem
+    // acesso à Admin API do Supabase Auth para criar o usuário do lado do
+    // servidor. Um insert com id aleatório sempre violaria essa FK (409).
     const { data: existente } = await _sb.from('perfis').select('id').eq('email', email).single()
     let alunoId = existente?.id
+
     if (!alunoId) {
-      const tempId = crypto.randomUUID()
-      const { error: errP } = await _sb.from('perfis').insert({ id: tempId, nome, email, telefone: tel||null, tipo: 'aluno', ativo: true })
-      if (!errP) alunoId = tempId
+      toast('Este e-mail ainda não tem login no app. Peça para o(a) aluno(a) entrar primeiro com Google usando: '+email+' — depois volte aqui para cadastrar o plano.')
+      return
     }
-    if (alunoId) {
-      const asaasNovo = document.getElementById('ca-asaas')?.value.trim() || null
-      await _sb.from('matriculas').update({ativa:false}).eq('aluno_id', alunoId).eq('ativa', true)
-      const { error: errMat } = await _sb.from('matriculas').insert({ aluno_id: alunoId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor, professor_id: professorId })
-      if (errMat) { toast('Erro ao criar matrícula: ' + errMat.message); return }
 
-      // Se um professor foi selecionado no cadastro, cria também o vínculo
-      // oficial em vinculos_professor_aluno (mesma RPC usada em vinculos.js).
-      // Sem isso, previsao_repasse_professor não encontra vínculo vigente
-      // para o primeiro mês do aluno, e o repasse desse período fica sem
-      // registrar essa relação professor-aluno.
-      if (professorId) {
-        const hoje = new Date().toISOString().slice(0,10)
-        const { error: errVinc } = await _sb.rpc('admin_vincular_aluno_professor', {
-          p_aluno_id: alunoId,
-          p_professor_id: professorId,
-          p_data_inicio: hoje,
-          p_observacao: 'Vínculo criado automaticamente no cadastro do aluno',
-        })
-        if (errVinc) {
-          // Não bloqueia o cadastro por causa disso, mas avisa explicitamente
-          // pra não passar despercebido — o admin pode ir em Vínculos e criar manualmente.
-          toast('Aluno cadastrado, mas houve erro ao criar vínculo com o professor: ' + errVinc.message)
-        }
+    const asaasNovo = document.getElementById('ca-asaas')?.value.trim() || null
+    await _sb.from('perfis').update({ tipo: 'aluno' }).eq('id', alunoId)
+    await _sb.from('matriculas').update({ativa:false}).eq('aluno_id', alunoId).eq('ativa', true)
+    const { error: errMat } = await _sb.from('matriculas').insert({ aluno_id: alunoId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor, professor_id: professorId })
+    if (errMat) { toast('Erro ao criar matrícula: ' + errMat.message); return }
+
+    // Se um professor foi selecionado no cadastro, cria também o vínculo
+    // oficial em vinculos_professor_aluno (mesma RPC usada em vinculos.js).
+    // Sem isso, previsao_repasse_professor não encontra vínculo vigente
+    // para o primeiro mês do aluno.
+    if (professorId) {
+      const hoje = new Date().toISOString().slice(0,10)
+      const { error: errVinc } = await _sb.rpc('admin_vincular_aluno_professor', {
+        p_aluno_id: alunoId,
+        p_professor_id: professorId,
+        p_data_inicio: hoje,
+        p_observacao: 'Vínculo criado automaticamente no cadastro do aluno',
+      })
+      if (errVinc) {
+        toast('Aluno cadastrado, mas houve erro ao criar vínculo com o professor: ' + errVinc.message)
       }
+    }
 
-      if (asaasNovo) await _sb.from('perfis').update({ asaas_customer_id: asaasNovo }).eq('id', alunoId)
-      document.getElementById('modal-cad-aluno').style.display = 'none'
-      toast('✓ Aluno cadastrado! Peça para entrar com Google usando: '+email)
-      navigate('alunos')
-    } else { toast('Erro ao cadastrar. Verifique se o e-mail já existe.') }
+    if (asaasNovo) await _sb.from('perfis').update({ asaas_customer_id: asaasNovo }).eq('id', alunoId)
+    document.getElementById('modal-cad-aluno').style.display = 'none'
+    toast('✓ Aluno cadastrado!')
+    navigate('alunos')
   }
 
   window.editarAluno = async function(alunoId) {
