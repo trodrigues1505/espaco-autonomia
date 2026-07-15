@@ -714,9 +714,14 @@ export async function renderAlunos(container, page) {
     try {
       // Fecha o vínculo de professor em aberto, se existir — preserva o
       // histórico de repasse e evita deixar um vínculo "aberto" indefinido
-      // com um ex-aluno.
+      // com um ex-aluno. _sb.rpc(...) não retorna uma Promise real (é um
+      // "thenable"), então .catch() encadeado direto quebra com
+      // "...catch is not a function" (bug identificado em 15/07/2026) —
+      // por isso usamos await simples e checamos o campo error.
       const hoje = new Date().toISOString().slice(0,10)
-      await _sb.rpc('admin_desvincular_aluno', { p_aluno_id: alunoId, p_data_fim: hoje }).catch(() => {})
+      const { error: errDesvinc } = await _sb.rpc('admin_desvincular_aluno', { p_aluno_id: alunoId, p_data_fim: hoje })
+      // Erro aqui é esperado quando não existe vínculo aberto — ignorado de propósito.
+      void errDesvinc
 
       // Desativa a matrícula ativa (preserva o histórico da matrícula em si).
       await _sb.from('matriculas').update({ ativa: false }).eq('aluno_id', alunoId).eq('ativa', true)
