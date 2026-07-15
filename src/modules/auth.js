@@ -58,7 +58,12 @@ window.finalizarOnboarding = async function (userId, email) {
     })
     if (errP) throw new Error('Erro no perfil: ' + errP.message)
     document.getElementById('onboarding')?.remove()
-    await iniciarApp(userId)
+    // iniciarApp espera o objeto de usuário (usa user.id, user.email,
+    // user.user_metadata). Antes passávamos só a string do userId, o que
+    // deixava user.id undefined lá dentro e gerava a query
+    // "perfis?id=eq.undefined" — nunca encontrava o perfil recém-criado
+    // e reabria o onboarding em loop (bug identificado em 15/07/2026).
+    await iniciarApp({ id: userId, email, user_metadata: { full_name: nome, avatar_url: foto } })
   } catch (e) {
     toast(e.message)
     if (btn) { btn.textContent = 'Começar →'; btn.disabled = false }
