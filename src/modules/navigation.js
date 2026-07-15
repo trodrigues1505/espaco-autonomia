@@ -34,10 +34,6 @@ const DHARMA_PHALA = [
 // no menu do visitante também, porém bloqueados — clicar neles leva à tela
 // do benefício mostrando em quais planos ele está incluso e um CTA de
 // upgrade (ver src/pages/aluno/beneficios.js, _renderBeneficioGenerico).
-// Antes desta correção (15/07/2026), esses 7 benefícios nem apareciam no
-// menu do visitante, então ele nunca via o aviso "Disponível nos planos X,
-// Y, Z" — só alcançava essa mensagem se, por algum motivo, chegasse na URL
-// diretamente.
 const DHARMA_VISITANTE = ['sangha', 'asana_marga']
 
 export const BENEFICIO_IDS = DHARMA_PHALA.map(b => b.id)
@@ -57,11 +53,14 @@ const MENUS = {
     { id: 'grade',              label: 'Grade de Aulas',      icon: 'ti-calendar'         },
     { sec: 'Gestão' },
     { id: 'criar-aulas',        label: 'Criar Aulas',         icon: 'ti-circle-plus'      },
+    // 'Alunos' agora inclui, por abas internas: Alunos, Visitantes (Leads),
+    // Vínculos Prof×Aluno e Pagamentos (unificação de 15/07/2026). As
+    // entradas de menu separadas para 'vinculos' e 'pagamentos' foram
+    // removidas — as rotas em si continuam existindo em index.js para
+    // compatibilidade, mas não são mais linkadas diretamente pelo menu.
     { id: 'alunos',             label: 'Alunos',              icon: 'ti-users'            },
     { id: 'professores',        label: 'Professores',         icon: 'ti-user-star'        },
-    { id: 'vinculos',           label: 'Vínculos Prof×Aluno', icon: 'ti-link'             },
     { id: 'presencas',          label: 'Presenças',           icon: 'ti-checkbox'         },
-    { id: 'pagamentos',         label: 'Pagamentos',          icon: 'ti-currency-dollar'  },
     { id: 'planos',             label: 'Planos',              icon: 'ti-award'            },
     { id: 'previsao-professor', label: 'Repasse Professor',   icon: 'ti-calculator'       },
     { sec: 'Sistema' },
@@ -111,7 +110,6 @@ export function buildMenu(tipo, badges = {}) {
 
   const itens = [...(MENUS[tipo] || MENUS['aluno'])]
 
-  // Para alunos: injeta seção Dharma Phala com os 9 benefícios
   if (tipo === 'aluno') {
     itens.push({ sec: 'Dharma Phala' })
     const planoData = window._planoData || null
@@ -120,12 +118,6 @@ export function buildMenu(tipo, badges = {}) {
     }
   }
 
-  // Para visitantes: injeta seção Dharma Phala com TODOS os benefícios.
-  // Sangha e Āsana Mārga aparecem liberados; os demais aparecem bloqueados
-  // (mesmo estilo visual usado para aluno com plano insuficiente) — clicar
-  // neles navega normalmente e mostra a tela de upsell com os planos que
-  // incluem aquele benefício (fix de 15/07/2026: antes, esses 7 itens nem
-  // apareciam aqui, então o visitante nunca via o aviso de upgrade).
   if (tipo === 'visitante') {
     itens.push({ sec: 'Dharma Phala' })
     for (const b of DHARMA_PHALA) {
@@ -365,4 +357,4 @@ export function initMobileMenu() {
       if (bar && window.innerWidth <= 768) bar.style.display = 'none'
     }
   })
-}  
+}   
