@@ -465,36 +465,68 @@ export async function renderAlunos(container, page) {
     const asaasNovo = document.getElementById('pv-asaas')?.value.trim() || null
     if (!visitanteId) { toast('Erro: visitante não identificado'); return }
 
-    const { error: errPerfil } = await _sb.from('perfis').update({
-      tipo: 'aluno', telefone: tel || null,
-      ...(asaasNovo ? { asaas_customer_id: asaasNovo } : {}),
-    }).eq('id', visitanteId)
-    if (errPerfil) { toast('Erro ao promover perfil: ' + errPerfil.message); return }
+    // Trava o botão durante o processamento inteiro — evita que um segundo
+    // clique (por exemplo, enquanto o admin acha que a primeira tentativa
+    // "não fez nada" por causa de erro de RLS silencioso) dispare uma nova
+    // promoção completa e duplique matrícula/vínculo (bug identificado em
+    // 15/07/2026, causou 5 matrículas duplicadas para um único visitante).
+    const btn = document.querySelector('#modal-promover-visitante button[onclick="salvarPromocaoVisitante()"]')
+    if (btn) { btn.disabled = true; btn.textContent = 'Promovendo...' }
 
-    // Visitante não deveria ter matrícula ativa prévia, mas por segurança
-    // desativa qualquer resquício antes de criar a nova (mesmo padrão usado
-    // em salvarNovoAluno e salvarEdicaoAluno).
-    await _sb.from('matriculas').update({ativa:false}).eq('aluno_id', visitanteId).eq('ativa', true)
-    const { error: errMat } = await _sb.from('matriculas').insert({ aluno_id: visitanteId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor, professor_id: professorId })
-    if (errMat) { toast('Erro ao criar matrícula: ' + errMat.message); return }
-
-    if (professorId) {
-      const hoje = new Date().toISOString().slice(0,10)
-      const { error: errVinc } = await _sb.rpc('admin_vincular_aluno_professor', {
-        p_aluno_id: visitanteId,
-        p_professor_id: professorId,
-        p_data_inicio: hoje,
-        p_observacao: 'Vínculo criado automaticamente na promoção de visitante a aluno',
-      })
-      if (errVinc) {
-        toast('Aluno promovido, mas houve erro ao criar vínculo com o professor: ' + errVinc.message)
+    try {
+      // Confirma que o perfil ainda é visitante antes de prosseguir. Se já
+      // foi promovido (por esta ou por uma tentativa anterior), não refaz
+      // o trabalho.
+      const { data: atual, error: errAtual } = await _sb.from('perfis').select('tipo').eq('id', visitanteId).single()
+      if (errAtual) { toast('Erro ao verificar visitante: ' + errAtual.message); return }
+      if (atual?.tipo !== 'visitante') {
+        toast('Este perfil já não está mais como visitante (tipo atual: ' + (atual?.tipo || '?') + '). Nenhuma ação foi feita.')
+        document.getElementById('modal-promover-visitante').style.display = 'none'
+        window._abaAlunos = 'alunos'
+        navigate('alunos')
+        return
       }
-    }
 
-    document.getElementById('modal-promover-visitante').style.display = 'none'
-    toast('✓ Visitante promovido a aluno!')
-    window._abaAlunos = 'alunos'
-    navigate('alunos')
+      // IMPORTANTE: verifica quantas linhas o update realmente afetou.
+      // Se a policy de UPDATE do admin em perfis não existir, o Supabase/RLS
+      // filtra a linha silenciosamente e retorna sucesso com 0 linhas — sem
+      // erro. Checar apenas errPerfil não bastava (bug identificado em
+      // 15/07/2026: promoção "funcionava" segundo o toast, mas tipo nunca
+      // mudava porque só existia policy de UPDATE para "próprio perfil").
+      const { data: atualizado, error: errPerfil } = await _sb.from('perfis').update({
+        tipo: 'aluno', telefone: tel || null,
+        ...(asaasNovo ? { asaas_customer_id: asaasNovo } : {}),
+      }).eq('id', visitanteId).select('id')
+      if (errPerfil) { toast('Erro ao promover perfil: ' + errPerfil.message); return }
+      if (!atualizado || atualizado.length === 0) {
+        toast('Erro: nenhuma linha foi atualizada em perfis. Provável bloqueio de RLS (falta policy de UPDATE para admin) — verifique pg_policies.')
+        return
+      }
+
+      await _sb.from('matriculas').update({ativa:false}).eq('aluno_id', visitanteId).eq('ativa', true)
+      const { error: errMat } = await _sb.from('matriculas').insert({ aluno_id: visitanteId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor, professor_id: professorId })
+      if (errMat) { toast('Erro ao criar matrícula: ' + errMat.message); return }
+
+      if (professorId) {
+        const hoje = new Date().toISOString().slice(0,10)
+        const { error: errVinc } = await _sb.rpc('admin_vincular_aluno_professor', {
+          p_aluno_id: visitanteId,
+          p_professor_id: professorId,
+          p_data_inicio: hoje,
+          p_observacao: 'Vínculo criado automaticamente na promoção de visitante a aluno',
+        })
+        if (errVinc) {
+          toast('Aluno promovido, mas houve erro ao criar vínculo com o professor: ' + errVinc.message)
+        }
+      }
+
+      document.getElementById('modal-promover-visitante').style.display = 'none'
+      toast('✓ Visitante promovido a aluno!')
+      window._abaAlunos = 'alunos'
+      navigate('alunos')
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Promover a Aluno' }
+    }
   }
 
   window.editarAluno = async function(alunoId) {
@@ -668,4 +700,4 @@ export async function renderAlunos(container, page) {
     window._pendingEditAluno = null
     setTimeout(() => window.editarAluno && window.editarAluno(idParaEditar), 50)
   }
-}   
+}
