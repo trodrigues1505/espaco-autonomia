@@ -97,6 +97,16 @@ function filtrarVisitantesLista(todos, busca) {
   return todos.filter(v => !busca || (v.nome||'').toLowerCase().includes(busca.toLowerCase()) || (v.email||'').toLowerCase().includes(busca.toLowerCase()))
 }
 
+// Definição das abas que aparecem no topo da tela Alunos. 'vinculos' e
+// 'pagamentos' delegam a renderização para os módulos correspondentes
+// (unificação de 15/07/2026) — ver aplicarAbaAtual().
+const ABAS = [
+  { id: 'alunos',      label: 'Alunos',                 cor: 'var(--verde)' },
+  { id: 'visitantes',  label: 'Visitantes (Leads)',     cor: '#3a6ea5'      },
+  { id: 'vinculos',    label: 'Vínculos Prof×Aluno',    cor: 'var(--verde)' },
+  { id: 'pagamentos',  label: 'Pagamentos',             cor: 'var(--verde)' },
+]
+
 export async function renderAlunos(container, page) {
   const _sb = window._sb || sb
   const perfil = window._perfil
@@ -108,7 +118,7 @@ export async function renderAlunos(container, page) {
   const distribAberta = window._mostrarDistribPlano || false
 
   const [perfisRes, saldoRes, professoresRes, visitantesRes, notifs] = await Promise.all([
-    _sb.from('perfis').select('*, matriculas!matriculas_aluno_id_fkey(plano_tipo,opcao_aulas,valor_mensal,desconto_fixo,desconto_avulso_valor,desconto_avulso_meses,desconto_avulso_usado,ativa,fim,professor_id)').eq('tipo','aluno').order('nome'),
+    _sb.from('perfis').select('*, matriculas!matriculas_aluno_id_fkey(plano_tipo,opcao_aulas,valor_mensal,desconto_fixo,desconto_avulso_valor,desconto_avulso_meses,desconto_avulso_usado,ativa,fim)').eq('tipo','aluno').order('nome'),
     _sb.from('saldo_disponivel').select('aluno_id,saldo_total'),
     _sb.from('perfis').select('id,nome').eq('tipo','professor').order('nome'),
     _sb.from('perfis').select('id,nome,email,telefone,criado_em').eq('tipo','visitante').order('criado_em',{ascending:false}),
@@ -123,8 +133,6 @@ export async function renderAlunos(container, page) {
     (saldoRes.data || []).map(s => [s.aluno_id, s.saldo_total ?? 0])
   )
 
-  // Cache em memória: usado pelo filtro local (aplicarFiltroAlunos), evita
-  // refetch + re-render de tela inteira a cada tecla digitada na busca.
   window._alunosTodosCache = todos
   window._saldoPorAlunoCache = saldoPorAluno
   window._visitantesTodosCache = visitantesTodos
@@ -201,11 +209,21 @@ export async function renderAlunos(container, page) {
      <button onclick="salvarPromocaoVisitante()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Promover a Aluno</button>`
   )
 
+  const barraAbas = `
+    <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+      ${ABAS.map(t => `
+        <button onclick="window.trocarAbaAlunos('${t.id}')" style="padding:6px 16px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${aba===t.id?t.cor:'var(--borda)'};background:${aba===t.id?t.cor:'#fff'};color:${aba===t.id?'var(--bege)':'var(--txt2)'}">
+          ${t.label}${t.id==='visitantes'&&visitantesTodos.length>0?' · '+visitantesTodos.length:''}
+        </button>
+      `).join('')}
+    </div>
+  `
+
   container.innerHTML = `
     <div class="topbar">
       <div class="topbar-t">Alunos</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <input id="input-busca-aluno" placeholder="Buscar..." value="${busca}" oninput="window.filtrarAlunosDebounced(this.value)" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;width:140px;font-family:'DM Sans',sans-serif;outline:none">
+        ${aba==='alunos'||aba==='visitantes'?`<input id="input-busca-aluno" placeholder="Buscar..." value="${busca}" oninput="window.filtrarAlunosDebounced(this.value)" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;width:140px;font-family:'DM Sans',sans-serif;outline:none">`:''}
         ${aba==='alunos'?`<select onchange="window._filtroPlanoAlunos=this.value;window.aplicarFiltroAlunos()" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;background:#fff;color:var(--txt)">
           <option value="" ${!filtroPlanok?'selected':''}>Todos os planos</option>
           <option value="brahma"       ${filtroPlanok==='brahma'      ?'selected':''}>Brahma</option>
@@ -214,11 +232,12 @@ export async function renderAlunos(container, page) {
           <option value="vishnu_2x"    ${filtroPlanok==='vishnu_2x'   ?'selected':''}>Vishnu 2x</option>
           <option value="vishnu_livre" ${filtroPlanok==='vishnu_livre'?'selected':''}>Vishnu Livre</option>
         </select>`:''}
-        <button onclick="document.getElementById('modal-cad-aluno').style.display='flex'" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-user-plus"></i> Cadastrar</button>
+        ${aba==='alunos'?`<button onclick="document.getElementById('modal-cad-aluno').style.display='flex'" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-user-plus"></i> Cadastrar</button>`:''}
       </div>
     </div>
     <div class="content">
-      ${renderPainelNotif(notifs, { titulo: 'Avisos', maxVisiveis: 2 })}
+      ${aba==='alunos'?renderPainelNotif(notifs, { titulo: 'Avisos', maxVisiveis: 2 }):''}
+      ${aba==='alunos'?`
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:10px">
         <div style="background:var(--verde);border-radius:var(--r);padding:14px 16px">
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.7);margin-bottom:4px">Total de Alunos</div>
@@ -242,17 +261,15 @@ export async function renderAlunos(container, page) {
           </div>
           <div style="font-size:10px;color:var(--txt2);margin-top:2px">planos vencendo</div>
         </div>
-        <div id="card-visitantes" onclick="window.trocarAbaAlunos('visitantes')" title="Clique para ver os visitantes (leads)" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:box-shadow .15s;box-shadow:${aba==='visitantes'?'0 0 0 2px #3a6ea5 inset':'none'}">
+        <div id="card-visitantes" onclick="window.trocarAbaAlunos('visitantes')" title="Clique para ver os visitantes (leads)" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:box-shadow .15s">
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Visitantes (Leads)</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;color:#3a6ea5">${visitantesTodos.length}</div>
           <div style="font-size:10px;color:var(--txt2);margin-top:2px">usando o app · clique p/ ver</div>
         </div>
       </div>
+      `:''}
 
-      <div style="display:flex;gap:6px;margin-bottom:14px">
-        <button onclick="window.trocarAbaAlunos('alunos')" style="padding:6px 16px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${aba==='alunos'?'var(--verde)':'var(--borda)'};background:${aba==='alunos'?'var(--verde)':'#fff'};color:${aba==='alunos'?'var(--bege)':'var(--txt2)'}">Alunos</button>
-        <button onclick="window.trocarAbaAlunos('visitantes')" style="padding:6px 16px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${aba==='visitantes'?'#3a6ea5':'var(--borda)'};background:${aba==='visitantes'?'#3a6ea5':'#fff'};color:${aba==='visitantes'?'#fff':'var(--txt2)'}">Visitantes (Leads) ${visitantesTodos.length>0?'· '+visitantesTodos.length:''}</button>
-      </div>
+      ${barraAbas}
 
       ${aba==='alunos'?`
       <div style="margin-bottom:14px">
@@ -287,10 +304,12 @@ export async function renderAlunos(container, page) {
       <div id="lista-alunos-container">
         ${montarListaAlunosHTML(alunos, saldoPorAluno)}
       </div>
-      `:`
+      `:aba==='visitantes'?`
       <div id="lista-visitantes-container">
         ${montarListaVisitantesHTML(visitantes)}
       </div>
+      `:`
+      <div id="aba-delegada-container"></div>
       `}
     </div>
     ${modalCadastro}
@@ -317,21 +336,35 @@ export async function renderAlunos(container, page) {
 
   uiAnimar(container)
 
+  // Abas delegadas: renderizam a tela original de Vínculos ou Pagamentos
+  // dentro do sub-container, mantendo a barra de abas e o topbar da tela
+  // Alunos intactos. As telas delegadas se auto-atualizam via
+  // window._rerenderVinculos()/window._rerenderPagamentos() (ver
+  // vinculos.js/pagamentos.js), não via navigate(), então não saem do
+  // contexto da aba ao interagir com filtros internos.
+  if (aba === 'vinculos' || aba === 'pagamentos') {
+    const subContainer = document.getElementById('aba-delegada-container')
+    if (aba === 'vinculos') {
+      const { renderVinculos } = await import('./vinculos.js')
+      await renderVinculos(subContainer, 'vinculos')
+    } else {
+      const { renderPagamentos } = await import('./pagamentos.js')
+      await renderPagamentos(subContainer, 'pagamentos')
+    }
+  }
+
   if (busca) {
     const inp = document.getElementById('input-busca-aluno')
     if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length) }
   }
 
-  initNotifHandlers(notifs, perfil.id)
+  if (aba === 'alunos') initNotifHandlers(notifs, perfil.id)
 
   window.trocarAbaAlunos = function(novaAba) {
     window._abaAlunos = novaAba
     navigate('alunos')
   }
 
-  // Filtro local: só refiltra o cache em memória e substitui o container da
-  // lista. Não refaz fetch ao Supabase nem re-renderiza a tela inteira.
-  // Funciona tanto para a aba Alunos quanto Visitantes, conforme a aba ativa.
   window.filtrarAlunosDebounced = function(valor) {
     window._buscaAlunos = valor
     clearTimeout(_buscaAlunoTimer)
@@ -401,12 +434,6 @@ export async function renderAlunos(container, page) {
     const professorId = document.getElementById('ca-professor').value || null
     if (!nome||!email) { toast('Preencha nome e e-mail'); return }
 
-    // O cadastro depende de o aluno já ter feito login com Google ao menos
-    // uma vez (isso cria a linha em auth.users e, por consequência, em
-    // perfis). Não criamos o perfil "do zero" aqui: perfis.id é FK para
-    // auth.users.id, e este app roda com chave anônima no navegador — sem
-    // acesso à Admin API do Supabase Auth para criar o usuário do lado do
-    // servidor. Um insert com id aleatório sempre violaria essa FK (409).
     const { data: existente } = await _sb.from('perfis').select('id').eq('email', email).single()
     let alunoId = existente?.id
 
@@ -418,22 +445,17 @@ export async function renderAlunos(container, page) {
     const asaasNovo = document.getElementById('ca-asaas')?.value.trim() || null
     await _sb.from('perfis').update({ tipo: 'aluno' }).eq('id', alunoId)
     await _sb.from('matriculas').update({ativa:false}).eq('aluno_id', alunoId).eq('ativa', true)
-    const { error: errMat } = await _sb.from('matriculas').insert({ aluno_id: alunoId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor, professor_id: professorId })
+    // professor_id não é mais gravado em matriculas — vinculos_professor_aluno
+    // é a única fonte de verdade para o vínculo professor-aluno (decisão de
+    // 15/07/2026).
+    const { error: errMat } = await _sb.from('matriculas').insert({ aluno_id: alunoId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor })
     if (errMat) { toast('Erro ao criar matrícula: ' + errMat.message); return }
 
-    // Credita o saldo do mês corrente imediatamente, em vez de esperar o
-    // aluno logar ou tentar confirmar uma aula. Sem isso, o admin via saldo
-    // zerado logo após o cadastro mesmo com plano pago (bug identificado em
-    // 15/07/2026).
     const { error: errSaldo } = await _sb.rpc('creditar_aulas_mes', { p_aluno_id: alunoId, p_mes_ref: mesRefAtual() })
     if (errSaldo) {
       toast('Aluno cadastrado, mas houve erro ao gerar o saldo inicial: ' + errSaldo.message)
     }
 
-    // Se um professor foi selecionado no cadastro, cria também o vínculo
-    // oficial em vinculos_professor_aluno (mesma RPC usada em vinculos.js).
-    // Sem isso, previsao_repasse_professor não encontra vínculo vigente
-    // para o primeiro mês do aluno.
     if (professorId) {
       const hoje = new Date().toISOString().slice(0,10)
       const { error: errVinc } = await _sb.rpc('admin_vincular_aluno_professor', {
@@ -478,18 +500,10 @@ export async function renderAlunos(container, page) {
     const asaasNovo = document.getElementById('pv-asaas')?.value.trim() || null
     if (!visitanteId) { toast('Erro: visitante não identificado'); return }
 
-    // Trava o botão durante o processamento inteiro — evita que um segundo
-    // clique (por exemplo, enquanto o admin acha que a primeira tentativa
-    // "não fez nada" por causa de erro de RLS silencioso) dispare uma nova
-    // promoção completa e duplique matrícula/vínculo (bug identificado em
-    // 15/07/2026, causou 5 matrículas duplicadas para um único visitante).
     const btn = document.querySelector('#modal-promover-visitante button[onclick="salvarPromocaoVisitante()"]')
     if (btn) { btn.disabled = true; btn.textContent = 'Promovendo...' }
 
     try {
-      // Confirma que o perfil ainda é visitante antes de prosseguir. Se já
-      // foi promovido (por esta ou por uma tentativa anterior), não refaz
-      // o trabalho.
       const { data: atual, error: errAtual } = await _sb.from('perfis').select('tipo').eq('id', visitanteId).single()
       if (errAtual) { toast('Erro ao verificar visitante: ' + errAtual.message); return }
       if (atual?.tipo !== 'visitante') {
@@ -500,12 +514,6 @@ export async function renderAlunos(container, page) {
         return
       }
 
-      // IMPORTANTE: verifica quantas linhas o update realmente afetou.
-      // Se a policy de UPDATE do admin em perfis não existir, o Supabase/RLS
-      // filtra a linha silenciosamente e retorna sucesso com 0 linhas — sem
-      // erro. Checar apenas errPerfil não bastava (bug identificado em
-      // 15/07/2026: promoção "funcionava" segundo o toast, mas tipo nunca
-      // mudava porque só existia policy de UPDATE para "próprio perfil").
       const { data: atualizado, error: errPerfil } = await _sb.from('perfis').update({
         tipo: 'aluno', telefone: tel || null,
         ...(asaasNovo ? { asaas_customer_id: asaasNovo } : {}),
@@ -517,12 +525,9 @@ export async function renderAlunos(container, page) {
       }
 
       await _sb.from('matriculas').update({ativa:false}).eq('aluno_id', visitanteId).eq('ativa', true)
-      const { error: errMat } = await _sb.from('matriculas').insert({ aluno_id: visitanteId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor, professor_id: professorId })
+      const { error: errMat } = await _sb.from('matriculas').insert({ aluno_id: visitanteId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor })
       if (errMat) { toast('Erro ao criar matrícula: ' + errMat.message); return }
 
-      // Credita o saldo do mês corrente imediatamente — mesmo motivo do
-      // cadastro: sem isso, o visitante promovido aparece com saldo zerado
-      // até logar ou tentar confirmar uma aula.
       const { error: errSaldo } = await _sb.rpc('creditar_aulas_mes', { p_aluno_id: visitanteId, p_mes_ref: mesRefAtual() })
       if (errSaldo) {
         toast('Aluno promovido, mas houve erro ao gerar o saldo inicial: ' + errSaldo.message)
@@ -570,8 +575,8 @@ export async function renderAlunos(container, page) {
         <option value="vishnu_livre" ${mat?.plano_tipo==='vishnu_livre'?'selected':''}>Vishnu Livre</option>
       </select>`)}
       <div style="font-size:11px;color:var(--txt2);margin:-6px 0 12px">
-        Professor responsável agora é gerenciado em
-        <a href="#" onclick="document.getElementById('modal-edit-aluno').style.display='none';navigate('vinculos');return false" style="color:var(--verde);text-decoration:underline;text-underline-offset:2px">Vínculos</a>.
+        Professor responsável agora é gerenciado na aba
+        <a href="#" onclick="document.getElementById('modal-edit-aluno').style.display='none';window._abaAlunos='vinculos';navigate('alunos');return false" style="color:var(--verde);text-decoration:underline;text-underline-offset:2px">Vínculos</a>.
       </div>
       ${fi('','Valor mensal (R$)',`<input type="number" id="ea-valor" ${inputStyle} value="${mat?.valor_mensal||0}">`)}
       ${fi('','Vencimento',`<input type="date" id="ea-fim" ${inputStyle} value="${mat?.fim||''}">`)}
@@ -651,10 +656,6 @@ export async function renderAlunos(container, page) {
     const { error: errPerfil } = await _sb.from('perfis').update({ nome, telefone: tel || null, ativo, asaas_customer_id: asaasId }).eq('id', window._editAlunoId)
     if (errPerfil) { toast('Erro ao salvar perfil: ' + errPerfil.message); return }
 
-    // Busca a matrícula ativa atual para comparar com o formulário e decidir
-    // se precisa encerrar+criar nova (mudança de plano/opção/valor) ou só
-    // atualizar a existente (demais campos) — evita duplicar matrícula a
-    // cada clique em Salvar (bug identificado em 15/07/2026).
     const { data: matAtual, error: errBusca } = await _sb
       .from('matriculas')
       .select('*')
@@ -675,16 +676,11 @@ export async function renderAlunos(container, page) {
       }
       const { error: errMat } = await _sb.from('matriculas').insert({
         aluno_id: window._editAlunoId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor, fim,
-        professor_id: matAtual?.professor_id || null, desconto_fixo: descontoFixo,
+        desconto_fixo: descontoFixo,
         desconto_avulso_valor: descontoAvulsoValor, desconto_avulso_meses: descontoAvulsoMeses, desconto_avulso_usado: 0,
       })
       if (errMat) { toast('Erro ao salvar matrícula: ' + errMat.message); return }
 
-      // Troca de plano gera matrícula nova — credita o saldo do mês corrente
-      // com base no plano novo imediatamente, mesmo motivo dos outros dois
-      // fluxos (cadastro e promoção). creditar_aulas_mes usa "on conflict
-      // do nothing" na chave (aluno_id, mes_ref), então não duplica se já
-      // existir linha do mês criada anteriormente pelo plano antigo.
       const { error: errSaldo } = await _sb.rpc('creditar_aulas_mes', { p_aluno_id: window._editAlunoId, p_mes_ref: mesRefAtual() })
       if (errSaldo) {
         toast('Matrícula atualizada, mas houve erro ao gerar o saldo: ' + errSaldo.message)
@@ -712,26 +708,12 @@ export async function renderAlunos(container, page) {
     const btn = document.getElementById('btn-confirmar-exclusao')
     btn.disabled = true; btn.textContent = 'Processando...'
     try {
-      // Fecha o vínculo de professor em aberto, se existir — preserva o
-      // histórico de repasse e evita deixar um vínculo "aberto" indefinido
-      // com um ex-aluno. _sb.rpc(...) não retorna uma Promise real (é um
-      // "thenable"), então .catch() encadeado direto quebra com
-      // "...catch is not a function" (bug identificado em 15/07/2026) —
-      // por isso usamos await simples e checamos o campo error.
       const hoje = new Date().toISOString().slice(0,10)
       const { error: errDesvinc } = await _sb.rpc('admin_desvincular_aluno', { p_aluno_id: alunoId, p_data_fim: hoje })
-      // Erro aqui é esperado quando não existe vínculo aberto — ignorado de propósito.
       void errDesvinc
 
-      // Desativa a matrícula ativa (preserva o histórico da matrícula em si).
       await _sb.from('matriculas').update({ ativa: false }).eq('aluno_id', alunoId).eq('ativa', true)
 
-      // Demove para visitante em vez de apagar o perfil. Isso preserva
-      // presenças/saldo/matrículas como histórico e evita violar a FK de
-      // vinculos_professor_aluno.aluno_id -> perfis.id (bug identificado em
-      // 15/07/2026: o hard delete de perfis falhava porque um vínculo de
-      // professor ainda apontava para o aluno, deixando matrículas já
-      // apagadas mas o perfil preso em tipo='aluno' e sem plano).
       const { data: atualizado, error } = await _sb.from('perfis').update({ tipo: 'visitante' }).eq('id', alunoId).select('id')
       if (error) throw new Error(error.message)
       if (!atualizado || atualizado.length === 0) {
@@ -748,4 +730,4 @@ export async function renderAlunos(container, page) {
     window._pendingEditAluno = null
     setTimeout(() => window.editarAluno && window.editarAluno(idParaEditar), 50)
   }
-}  
+}   
