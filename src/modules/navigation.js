@@ -30,7 +30,14 @@ const DHARMA_PHALA = [
   { id: 'aluno-beneficio-naada-mandir',   label: 'Nāda Mandir',   icone: '🕌', beneficio: 'naada_mandir'   },
 ]
 
-// Benefícios disponíveis para visitantes
+// Benefícios disponíveis para visitantes (acesso pleno). Os demais aparecem
+// no menu do visitante também, porém bloqueados — clicar neles leva à tela
+// do benefício mostrando em quais planos ele está incluso e um CTA de
+// upgrade (ver src/pages/aluno/beneficios.js, _renderBeneficioGenerico).
+// Antes desta correção (15/07/2026), esses 7 benefícios nem apareciam no
+// menu do visitante, então ele nunca via o aviso "Disponível nos planos X,
+// Y, Z" — só alcançava essa mensagem se, por algum motivo, chegasse na URL
+// diretamente.
 const DHARMA_VISITANTE = ['sangha', 'asana_marga']
 
 export const BENEFICIO_IDS = DHARMA_PHALA.map(b => b.id)
@@ -113,13 +120,16 @@ export function buildMenu(tipo, badges = {}) {
     }
   }
 
-  // Para visitantes: injeta seção Dharma Phala com apenas Sangha e Āsana Mārga
+  // Para visitantes: injeta seção Dharma Phala com TODOS os benefícios.
+  // Sangha e Āsana Mārga aparecem liberados; os demais aparecem bloqueados
+  // (mesmo estilo visual usado para aluno com plano insuficiente) — clicar
+  // neles navega normalmente e mostra a tela de upsell com os planos que
+  // incluem aquele benefício (fix de 15/07/2026: antes, esses 7 itens nem
+  // apareciam aqui, então o visitante nunca via o aviso de upgrade).
   if (tipo === 'visitante') {
     itens.push({ sec: 'Dharma Phala' })
     for (const b of DHARMA_PHALA) {
-      if (DHARMA_VISITANTE.includes(b.beneficio)) {
-        itens.push({ ...b, _bloqueado: false })
-      }
+      itens.push({ ...b, _bloqueado: !DHARMA_VISITANTE.includes(b.beneficio) })
     }
   }
 
@@ -355,4 +365,4 @@ export function initMobileMenu() {
       if (bar && window.innerWidth <= 768) bar.style.display = 'none'
     }
   })
-}   
+}  
