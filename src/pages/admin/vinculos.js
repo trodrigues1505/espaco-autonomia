@@ -2,11 +2,20 @@
  * src/pages/admin/vinculos.js
  * Gestão do vínculo histórico entre professor e aluno, por período de datas.
  * Cada aluno pode ter no máximo um vínculo "em aberto" (sem data_fim) por vez.
+ *
+ * Desde 15/07/2026, esta tela também pode ser embutida como uma aba dentro
+ * de src/pages/admin/alunos.js. Para isso, todo auto-refresh interno que
+ * antes chamava navigate('vinculos') (o que redesenharia a página inteira,
+ * perdendo o contexto de abas) agora chama window._rerenderVinculos(), que
+ * apenas re-renderiza no container em que esta tela foi originalmente
+ * montada — funciona tanto embutida quanto acessada isoladamente.
  */
 
 import { sb } from '../../lib/supabase.js'
 import { toast, badge, card, modal, fi, inputStyle } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
+
+let _ultimoContainer = null
 
 function fmtData(d) {
   if (!d) return '—'
@@ -15,6 +24,9 @@ function fmtData(d) {
 
 export async function renderVinculos(container, page) {
   const _sb = window._sb || sb
+
+  _ultimoContainer = container
+  window._rerenderVinculos = () => renderVinculos(_ultimoContainer, 'vinculos')
 
   const filtroProf = window._vincFiltroProf || ''
   const buscaAluno = window._vincBusca || ''
@@ -86,17 +98,17 @@ export async function renderVinculos(container, page) {
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:flex-end">
         <div style="display:flex;flex-direction:column;gap:3px">
           <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Professor</label>
-          <select onchange="window._vincFiltroProf=this.value;navigate('vinculos')" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff">
+          <select onchange="window._vincFiltroProf=this.value;window._rerenderVinculos()" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff">
             <option value="" ${!filtroProf?'selected':''}>Todos</option>
             ${professores.map(p=>`<option value="${p.id}" ${filtroProf===p.id?'selected':''}>${p.nome}</option>`).join('')}
           </select>
         </div>
         <div style="display:flex;flex-direction:column;gap:3px">
           <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Buscar aluno</label>
-          <input id="input-busca-vinc" value="${buscaAluno}" placeholder="Nome do aluno..." oninput="window._vincBusca=this.value;navigate('vinculos')" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;width:180px">
+          <input id="input-busca-vinc" value="${buscaAluno}" placeholder="Nome do aluno..." oninput="window._vincBusca=this.value;window._rerenderVinculos()" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;width:180px">
         </div>
         <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--txt2);cursor:pointer;align-self:flex-end;padding:6px 0">
-          <input type="checkbox" ${somenteAtuais?'checked':''} onchange="window._vincSomenteAtuais=this.checked;navigate('vinculos')" style="accent-color:var(--verde)">
+          <input type="checkbox" ${somenteAtuais?'checked':''} onchange="window._vincSomenteAtuais=this.checked;window._rerenderVinculos()" style="accent-color:var(--verde)">
           Mostrar só vínculos em aberto
         </label>
       </div>
@@ -161,7 +173,7 @@ export async function renderVinculos(container, page) {
     if (error) { toast('Erro: ' + error.message); return }
     document.getElementById('modal-novo-vinculo').style.display = 'none'
     toast('✓ Vínculo criado!')
-    navigate('vinculos')
+    window._rerenderVinculos()
   }
 
   window.abrirEditarVinculo = function(id) {
@@ -200,7 +212,7 @@ export async function renderVinculos(container, page) {
     if (error) { toast('Erro: ' + error.message); return }
     document.getElementById('modal-editar-vinculo').style.display = 'none'
     toast('✓ Vínculo atualizado!')
-    navigate('vinculos')
+    window._rerenderVinculos()
   }
 
   window.confirmarDesvincular = function(id) {
@@ -218,7 +230,7 @@ export async function renderVinculos(container, page) {
       if (error) { toast('Erro: ' + error.message); return }
       document.getElementById('modal-confirmar-vinc').style.display = 'none'
       toast('✓ Aluno desvinculado')
-      navigate('vinculos')
+      window._rerenderVinculos()
     }
   }
 
@@ -235,7 +247,7 @@ export async function renderVinculos(container, page) {
       if (error) { toast('Erro: ' + error.message); return }
       document.getElementById('modal-confirmar-vinc').style.display = 'none'
       toast('✓ Vínculo excluído')
-      navigate('vinculos')
+      window._rerenderVinculos()
     }
   }
-}   
+}  
