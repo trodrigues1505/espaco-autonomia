@@ -51,7 +51,7 @@ function montarListaAlunosHTML(alunos, saldoPorAluno) {
           <span style="font-size:11px;color:${vencida?'#c0392b':'var(--txt2)'}">${mat?.fim?new Date(mat.fim+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):vencida?'Vencida':'—'}</span>
           <div style="display:flex;gap:4px">
             <button onclick="editarAluno('${a.id}')" style="padding:3px 10px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:11px;cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif">Editar</button>
-            <button onclick="confirmarExcluirAluno('${a.id}','${a.nome.replace(/'/g,"\\'")}')" style="padding:3px 8px;background:transparent;border:1px solid #f5c1c1;border-radius:5px;font-size:11px;cursor:pointer;color:#c0392b;font-family:'DM Sans',sans-serif" title="Excluir aluno">✕</button>
+            <button onclick="confirmarExcluirAluno('${a.id}','${a.nome.replace(/'/g,"\\'")}')" style="padding:3px 8px;background:transparent;border:1px solid #f5c1c1;border-radius:5px;font-size:11px;cursor:pointer;color:#c0392b;font-family:'DM Sans',sans-serif" title="Remover aluno (volta a visitante)">✕</button>
           </div>
         </div>`
       }).join('')
@@ -299,17 +299,17 @@ export async function renderAlunos(container, page) {
     <div id="modal-excluir-aluno" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.6);z-index:200;align-items:center;justify-content:center;padding:16px">
       <div style="background:#fff;border-radius:12px;width:400px;max-width:100%;overflow:hidden">
         <div style="background:#c0392b;padding:16px 20px">
-          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:#fff">Excluir Aluno</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:#fff">Remover Aluno</div>
         </div>
         <div style="padding:20px">
           <div id="excluir-aluno-msg" style="font-size:13px;color:var(--txt);margin-bottom:8px"></div>
-          <div style="font-size:11px;color:#c0392b;background:#fceaea;border:1px solid #f5c1c1;border-radius:6px;padding:10px;margin-top:10px">
-            ⚠ Esta ação remove o perfil, matrículas e presenças do aluno. Não pode ser desfeita.
+          <div style="font-size:11px;color:#7a5a10;background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.3);border-radius:6px;padding:10px;margin-top:10px">
+            ℹ O aluno volta ao status de <strong>visitante</strong>, a matrícula atual é encerrada e o vínculo com o professor (se houver) é fechado. Histórico de presenças, pagamentos e matrículas é preservado.
           </div>
         </div>
         <div style="padding:0 20px 16px;display:flex;justify-content:flex-end;gap:8px">
           <button onclick="document.getElementById('modal-excluir-aluno').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
-          <button id="btn-confirmar-exclusao" style="padding:7px 14px;background:#c0392b;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Excluir</button>
+          <button id="btn-confirmar-exclusao" style="padding:7px 14px;background:#c0392b;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Remover</button>
         </div>
       </div>
     </div>
@@ -684,10 +684,7 @@ export async function renderAlunos(container, page) {
       // com base no plano novo imediatamente, mesmo motivo dos outros dois
       // fluxos (cadastro e promoção). creditar_aulas_mes usa "on conflict
       // do nothing" na chave (aluno_id, mes_ref), então não duplica se já
-      // existir linha do mês criada anteriormente pelo plano antigo — só
-      // não retroage o valor de aulas_plano nesse caso específico, que é
-      // esperado (mudança de plano no meio do mês não deveria re-creditar
-      // aulas já usadas do plano anterior).
+      // existir linha do mês criada anteriormente pelo plano antigo.
       const { error: errSaldo } = await _sb.rpc('creditar_aulas_mes', { p_aluno_id: window._editAlunoId, p_mes_ref: mesRefAtual() })
       if (errSaldo) {
         toast('Matrícula atualizada, mas houve erro ao gerar o saldo: ' + errSaldo.message)
@@ -706,27 +703,39 @@ export async function renderAlunos(container, page) {
   }
 
   window.confirmarExcluirAluno = function(alunoId, nomeAluno) {
-    document.getElementById('excluir-aluno-msg').textContent = 'Tem certeza que deseja excluir ' + nomeAluno + '?'
+    document.getElementById('excluir-aluno-msg').textContent = 'Remover ' + nomeAluno + '? O perfil volta a visitante.'
     document.getElementById('modal-excluir-aluno').style.display = 'flex'
     document.getElementById('btn-confirmar-exclusao').onclick = function() { excluirAluno(alunoId) }
   }
 
   window.excluirAluno = async function(alunoId) {
     const btn = document.getElementById('btn-confirmar-exclusao')
-    btn.disabled = true; btn.textContent = 'Excluindo...'
+    btn.disabled = true; btn.textContent = 'Processando...'
     try {
-      await _sb.from('presencas').delete().eq('aluno_id', alunoId)
-      await _sb.from('saldo_aulas').delete().eq('aluno_id', alunoId)
-      await _sb.from('matriculas').delete().eq('aluno_id', alunoId)
-      const { data: linhasApagadas, error } = await _sb.from('perfis').delete().eq('id', alunoId).select('id')
+      // Fecha o vínculo de professor em aberto, se existir — preserva o
+      // histórico de repasse e evita deixar um vínculo "aberto" indefinido
+      // com um ex-aluno.
+      const hoje = new Date().toISOString().slice(0,10)
+      await _sb.rpc('admin_desvincular_aluno', { p_aluno_id: alunoId, p_data_fim: hoje }).catch(() => {})
+
+      // Desativa a matrícula ativa (preserva o histórico da matrícula em si).
+      await _sb.from('matriculas').update({ ativa: false }).eq('aluno_id', alunoId).eq('ativa', true)
+
+      // Demove para visitante em vez de apagar o perfil. Isso preserva
+      // presenças/saldo/matrículas como histórico e evita violar a FK de
+      // vinculos_professor_aluno.aluno_id -> perfis.id (bug identificado em
+      // 15/07/2026: o hard delete de perfis falhava porque um vínculo de
+      // professor ainda apontava para o aluno, deixando matrículas já
+      // apagadas mas o perfil preso em tipo='aluno' e sem plano).
+      const { data: atualizado, error } = await _sb.from('perfis').update({ tipo: 'visitante' }).eq('id', alunoId).select('id')
       if (error) throw new Error(error.message)
-      if (!linhasApagadas || linhasApagadas.length === 0) {
-        throw new Error('Nenhuma linha foi removida em perfis. Provável bloqueio de RLS (falta policy de DELETE para o admin nessa tabela) — verifique pg_policies.')
+      if (!atualizado || atualizado.length === 0) {
+        throw new Error('Nenhuma linha foi atualizada em perfis. Provável bloqueio de RLS (falta policy de UPDATE para admin) — verifique pg_policies.')
       }
       document.getElementById('modal-excluir-aluno').style.display = 'none'
-      toast('✓ Aluno excluído.')
+      toast('✓ Aluno removido — voltou ao status de visitante.')
       navigate('alunos')
-    } catch(e) { toast('Erro ao excluir: ' + e.message); btn.disabled = false; btn.textContent = 'Excluir' }
+    } catch(e) { toast('Erro: ' + e.message); btn.disabled = false; btn.textContent = 'Remover' }
   }
 
   if (window._pendingEditAluno) {
@@ -734,4 +743,4 @@ export async function renderAlunos(container, page) {
     window._pendingEditAluno = null
     setTimeout(() => window.editarAluno && window.editarAluno(idParaEditar), 50)
   }
-}   
+}  
