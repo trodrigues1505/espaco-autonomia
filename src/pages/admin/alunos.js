@@ -11,6 +11,11 @@ import { uiAnimar } from '../../modules/ui.js'
 
 let _buscaAlunoTimer = null
 
+function fmtDataHora(d) {
+  if (!d) return '—'
+  return new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
+}
+
 function montarListaAlunosHTML(alunos, saldoPorAluno) {
   return card('Lista de Alunos ('+alunos.length+')', '',
     `<div style="display:grid;grid-template-columns:1fr 80px 60px 60px 80px 160px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
@@ -50,6 +55,33 @@ function montarListaAlunosHTML(alunos, saldoPorAluno) {
   )
 }
 
+function montarListaVisitantesHTML(visitantes) {
+  return card('Visitantes / Leads ('+visitantes.length+')', '',
+    `<div style="display:grid;grid-template-columns:1fr 130px 110px 120px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
+      <span>Visitante</span><span>Telefone</span><span>Lead desde</span><span></span>
+    </div>
+    ${visitantes.length===0?'<div style="padding:18px;font-size:12px;color:var(--txt2)">Nenhum visitante no momento.</div>':
+      visitantes.map(v => {
+        const initials = (v.nome||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()
+        return `<div style="display:grid;grid-template-columns:1fr 130px 110px 120px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(58,110,165,.12);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:#3a6ea5;flex-shrink:0">${initials}</div>
+            <div>
+              <div style="font-weight:500">${v.nome||'—'}</div>
+              <div style="font-size:10px;color:var(--txt2)">${v.email}</div>
+            </div>
+          </div>
+          <span style="font-size:11px;color:var(--txt2)">${v.telefone||'—'}</span>
+          <span style="font-size:11px;color:var(--txt2)">${fmtDataHora(v.criado_em)}</span>
+          <div>
+            <button onclick="abrirPromoverVisitante('${v.id}')" style="padding:4px 10px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">↑ Promover a Aluno</button>
+          </div>
+        </div>`
+      }).join('')
+    }`
+  )
+}
+
 function filtrarAlunosLista(todos, busca, filtroPlanok, semAsaas) {
   return todos
     .filter(a => !busca || a.nome.toLowerCase().includes(busca.toLowerCase()) || a.email.toLowerCase().includes(busca.toLowerCase()))
@@ -57,24 +89,31 @@ function filtrarAlunosLista(todos, busca, filtroPlanok, semAsaas) {
     .filter(a => !semAsaas || !a.asaas_customer_id)
 }
 
+function filtrarVisitantesLista(todos, busca) {
+  return todos.filter(v => !busca || (v.nome||'').toLowerCase().includes(busca.toLowerCase()) || (v.email||'').toLowerCase().includes(busca.toLowerCase()))
+}
+
 export async function renderAlunos(container, page) {
   const _sb = window._sb || sb
   const perfil = window._perfil
 
+  const aba = window._abaAlunos || 'alunos'
   const busca = window._buscaAlunos || ''
   const filtroPlanok = window._filtroPlanoAlunos || ''
   const filtroSemAsaas = window._filtroSemAsaasAlunos || false
   const distribAberta = window._mostrarDistribPlano || false
 
-  const [perfisRes, saldoRes, professoresRes, notifs] = await Promise.all([
+  const [perfisRes, saldoRes, professoresRes, visitantesRes, notifs] = await Promise.all([
     _sb.from('perfis').select('*, matriculas!matriculas_aluno_id_fkey(plano_tipo,opcao_aulas,valor_mensal,desconto_fixo,desconto_avulso_valor,desconto_avulso_meses,desconto_avulso_usado,ativa,fim,professor_id)').eq('tipo','aluno').order('nome'),
     _sb.from('saldo_disponivel').select('aluno_id,saldo_total'),
     _sb.from('perfis').select('id,nome').eq('tipo','professor').order('nome'),
+    _sb.from('perfis').select('id,nome,email,telefone,criado_em').eq('tipo','visitante').order('criado_em',{ascending:false}),
     carregarNotificacoes(perfil, 'alunos'),
   ])
 
   const todos = perfisRes.data || []
   const professores = professoresRes.data || []
+  const visitantesTodos = visitantesRes.data || []
 
   const saldoPorAluno = Object.fromEntries(
     (saldoRes.data || []).map(s => [s.aluno_id, s.saldo_total ?? 0])
@@ -84,8 +123,11 @@ export async function renderAlunos(container, page) {
   // refetch + re-render de tela inteira a cada tecla digitada na busca.
   window._alunosTodosCache = todos
   window._saldoPorAlunoCache = saldoPorAluno
+  window._visitantesTodosCache = visitantesTodos
+  window._professoresCache = professores
 
   let alunos = filtrarAlunosLista(todos, busca, filtroPlanok, filtroSemAsaas)
+  let visitantes = filtrarVisitantesLista(visitantesTodos, busca)
 
   const modalCadastro = modal('modal-cad-aluno', 'Cadastrar Aluno',
     `${fi('','Nome completo',`<input type="text" id="ca-nome" ${inputStyle} placeholder="Nome do aluno">`)}
@@ -112,7 +154,7 @@ export async function renderAlunos(container, page) {
     </select>`)}
     ${fi('','ID no Asaas (opcional)',`<input type="text" id="ca-asaas" ${inputStyle} placeholder="cus_...">`)}
     <div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.3);border-radius:6px;padding:10px;font-size:11px;color:#7a5a10">
-      ⚠ O aluno precisa entrar no app pelo menos uma vez com Google usando este e-mail <strong>antes</strong> de ser cadastrado aqui — o login cria o registro de autenticação necessário. Se ele ainda não entrou, peça para fazer isso primeiro.
+      ⚠ O aluno precisa entrar no app pelo menos uma vez com Google usando este e-mail <strong>antes</strong> de ser cadastrado aqui — o login cria o registro de autenticação necessário. Se ele já é visitante no app, use a aba <strong>Visitantes (Leads)</strong> para promover diretamente.
     </div>`,
     `<button onclick="document.getElementById('modal-cad-aluno').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
      <button onclick="salvarNovoAluno()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Cadastrar</button>`
@@ -124,25 +166,56 @@ export async function renderAlunos(container, page) {
      <button onclick="salvarEdicaoAluno()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Salvar</button>`
   )
 
+  const modalPromover = modal('modal-promover-visitante', 'Promover Visitante a Aluno',
+    `<input type="hidden" id="pv-id">
+    <div style="background:rgba(58,110,165,.08);border:1px solid rgba(58,110,165,.25);border-radius:8px;padding:12px;margin-bottom:14px">
+      <div id="pv-nome" style="font-size:14px;font-weight:500;color:var(--txt)"></div>
+      <div id="pv-email" style="font-size:12px;color:var(--txt2);margin-top:2px"></div>
+    </div>
+    ${fi('','Telefone',`<input type="tel" id="pv-tel" ${inputStyle} placeholder="(11) 99999-9999">`)}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      ${fi('','Plano',`<select id="pv-plano" ${inputStyle} onchange="updateValorPromocao()">
+        <option value="brahma">Brahma — 1× por semana — R$100/mês</option>
+        <option value="shiva_1x">Shiva 1x — 1× por semana — R$150/mês</option>
+        <option value="shiva_2x">Shiva 2x — 2× por semana — R$200/mês</option>
+        <option value="vishnu_2x">Vishnu 2x — 2× por semana — R$250/mês</option>
+        <option value="vishnu_livre">Vishnu Livre — uso livre — R$300/mês</option>
+      </select>`)}
+      ${fi('','Aulas/semana',`<select id="pv-opcao" ${inputStyle} onchange="updateValorPromocao()">
+        <option value="1">1× por semana</option>
+        <option value="2">2× por semana</option>
+        <option value="99">Uso livre</option>
+      </select>`)}
+    </div>
+    ${fi('','Valor mensal (R$)',`<input type="number" id="pv-valor" ${inputStyle} value="100">`)}
+    ${fi('','Professor responsável',`<select id="pv-professor" ${inputStyle}>
+      <option value="">— Sem professor —</option>
+      ${professores.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('')}
+    </select>`)}
+    ${fi('','ID no Asaas (opcional)',`<input type="text" id="pv-asaas" ${inputStyle} placeholder="cus_...">`)}`,
+    `<button onclick="document.getElementById('modal-promover-visitante').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+     <button onclick="salvarPromocaoVisitante()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Promover a Aluno</button>`
+  )
+
   container.innerHTML = `
     <div class="topbar">
       <div class="topbar-t">Alunos</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <input id="input-busca-aluno" placeholder="Buscar..." value="${busca}" oninput="window.filtrarAlunosDebounced(this.value)" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;width:140px;font-family:'DM Sans',sans-serif;outline:none">
-        <select onchange="window._filtroPlanoAlunos=this.value;window.aplicarFiltroAlunos()" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;background:#fff;color:var(--txt)">
+        ${aba==='alunos'?`<select onchange="window._filtroPlanoAlunos=this.value;window.aplicarFiltroAlunos()" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;background:#fff;color:var(--txt)">
           <option value="" ${!filtroPlanok?'selected':''}>Todos os planos</option>
           <option value="brahma"       ${filtroPlanok==='brahma'      ?'selected':''}>Brahma</option>
           <option value="shiva_1x"     ${filtroPlanok==='shiva_1x'    ?'selected':''}>Shiva 1x</option>
           <option value="shiva_2x"     ${filtroPlanok==='shiva_2x'    ?'selected':''}>Shiva 2x</option>
           <option value="vishnu_2x"    ${filtroPlanok==='vishnu_2x'   ?'selected':''}>Vishnu 2x</option>
           <option value="vishnu_livre" ${filtroPlanok==='vishnu_livre'?'selected':''}>Vishnu Livre</option>
-        </select>
+        </select>`:''}
         <button onclick="document.getElementById('modal-cad-aluno').style.display='flex'" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-user-plus"></i> Cadastrar</button>
       </div>
     </div>
     <div class="content">
       ${renderPainelNotif(notifs, { titulo: 'Avisos', maxVisiveis: 2 })}
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px">
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:10px">
         <div style="background:var(--verde);border-radius:var(--r);padding:14px 16px">
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.7);margin-bottom:4px">Total de Alunos</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;color:var(--bege)">${todos?.length||0}</div>
@@ -165,7 +238,19 @@ export async function renderAlunos(container, page) {
           </div>
           <div style="font-size:10px;color:var(--txt2);margin-top:2px">planos vencendo</div>
         </div>
+        <div id="card-visitantes" onclick="window.trocarAbaAlunos('visitantes')" title="Clique para ver os visitantes (leads)" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:box-shadow .15s;box-shadow:${aba==='visitantes'?'0 0 0 2px #3a6ea5 inset':'none'}">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Visitantes (Leads)</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;color:#3a6ea5">${visitantesTodos.length}</div>
+          <div style="font-size:10px;color:var(--txt2);margin-top:2px">usando o app · clique p/ ver</div>
+        </div>
       </div>
+
+      <div style="display:flex;gap:6px;margin-bottom:14px">
+        <button onclick="window.trocarAbaAlunos('alunos')" style="padding:6px 16px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${aba==='alunos'?'var(--verde)':'var(--borda)'};background:${aba==='alunos'?'var(--verde)':'#fff'};color:${aba==='alunos'?'var(--bege)':'var(--txt2)'}">Alunos</button>
+        <button onclick="window.trocarAbaAlunos('visitantes')" style="padding:6px 16px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${aba==='visitantes'?'#3a6ea5':'var(--borda)'};background:${aba==='visitantes'?'#3a6ea5':'#fff'};color:${aba==='visitantes'?'#fff':'var(--txt2)'}">Visitantes (Leads) ${visitantesTodos.length>0?'· '+visitantesTodos.length:''}</button>
+      </div>
+
+      ${aba==='alunos'?`
       <div style="margin-bottom:14px">
         <button onclick="window.toggleDistribPlano()" style="width:100%;text-align:left;background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:10px 18px;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px">
           <i id="icon-toggle-distrib" class="ti ti-chevron-${distribAberta?'down':'right'}" style="font-size:13px"></i> Distribuição por Plano
@@ -198,9 +283,15 @@ export async function renderAlunos(container, page) {
       <div id="lista-alunos-container">
         ${montarListaAlunosHTML(alunos, saldoPorAluno)}
       </div>
+      `:`
+      <div id="lista-visitantes-container">
+        ${montarListaVisitantesHTML(visitantes)}
+      </div>
+      `}
     </div>
     ${modalCadastro}
     ${modalEditar}
+    ${modalPromover}
     <div id="modal-excluir-aluno" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.6);z-index:200;align-items:center;justify-content:center;padding:16px">
       <div style="background:#fff;border-radius:12px;width:400px;max-width:100%;overflow:hidden">
         <div style="background:#c0392b;padding:16px 20px">
@@ -229,8 +320,14 @@ export async function renderAlunos(container, page) {
 
   initNotifHandlers(notifs, perfil.id)
 
+  window.trocarAbaAlunos = function(novaAba) {
+    window._abaAlunos = novaAba
+    navigate('alunos')
+  }
+
   // Filtro local: só refiltra o cache em memória e substitui o container da
   // lista. Não refaz fetch ao Supabase nem re-renderiza a tela inteira.
+  // Funciona tanto para a aba Alunos quanto Visitantes, conforme a aba ativa.
   window.filtrarAlunosDebounced = function(valor) {
     window._buscaAlunos = valor
     clearTimeout(_buscaAlunoTimer)
@@ -238,9 +335,17 @@ export async function renderAlunos(container, page) {
   }
 
   window.aplicarFiltroAlunos = function() {
+    const buscaAtual = window._buscaAlunos || ''
+    const abaAtual = window._abaAlunos || 'alunos'
+    if (abaAtual === 'visitantes') {
+      const visitantesCache = window._visitantesTodosCache || []
+      const visitantesFiltrados = filtrarVisitantesLista(visitantesCache, buscaAtual)
+      const wrap = document.getElementById('lista-visitantes-container')
+      if (wrap) wrap.innerHTML = montarListaVisitantesHTML(visitantesFiltrados)
+      return
+    }
     const todosCache = window._alunosTodosCache || []
     const saldoCache = window._saldoPorAlunoCache || {}
-    const buscaAtual = window._buscaAlunos || ''
     const filtroAtual = window._filtroPlanoAlunos || ''
     const semAsaasAtual = window._filtroSemAsaasAlunos || false
     const alunosFiltrados = filtrarAlunosLista(todosCache, buscaAtual, filtroAtual, semAsaasAtual)
@@ -275,6 +380,11 @@ export async function renderAlunos(container, page) {
   window.updateValorPlano = function() {
     const p = document.getElementById('ca-plano')?.value
     if (p && document.getElementById('ca-valor')) document.getElementById('ca-valor').value = PLANO_VALORES[p]||0
+  }
+
+  window.updateValorPromocao = function() {
+    const p = document.getElementById('pv-plano')?.value
+    if (p && document.getElementById('pv-valor')) document.getElementById('pv-valor').value = PLANO_VALORES[p]||0
   }
 
   window.salvarNovoAluno = async function() {
@@ -327,6 +437,63 @@ export async function renderAlunos(container, page) {
     if (asaasNovo) await _sb.from('perfis').update({ asaas_customer_id: asaasNovo }).eq('id', alunoId)
     document.getElementById('modal-cad-aluno').style.display = 'none'
     toast('✓ Aluno cadastrado!')
+    navigate('alunos')
+  }
+
+  window.abrirPromoverVisitante = function(visitanteId) {
+    const v = (window._visitantesTodosCache || []).find(x => x.id === visitanteId)
+    if (!v) return
+    document.getElementById('pv-id').value = v.id
+    document.getElementById('pv-nome').textContent = v.nome || '—'
+    document.getElementById('pv-email').textContent = v.email
+    document.getElementById('pv-tel').value = v.telefone || ''
+    document.getElementById('pv-plano').value = 'brahma'
+    document.getElementById('pv-opcao').value = '1'
+    document.getElementById('pv-valor').value = PLANO_VALORES['brahma']||100
+    document.getElementById('pv-professor').value = ''
+    document.getElementById('pv-asaas').value = ''
+    document.getElementById('modal-promover-visitante').style.display = 'flex'
+  }
+
+  window.salvarPromocaoVisitante = async function() {
+    const visitanteId = document.getElementById('pv-id').value
+    const tel = document.getElementById('pv-tel').value.trim()
+    const plano = document.getElementById('pv-plano').value
+    const opcao = PLANO_OPCOES[plano]||1
+    const valor = Number(document.getElementById('pv-valor').value)||PLANO_VALORES[plano]||0
+    const professorId = document.getElementById('pv-professor').value || null
+    const asaasNovo = document.getElementById('pv-asaas')?.value.trim() || null
+    if (!visitanteId) { toast('Erro: visitante não identificado'); return }
+
+    const { error: errPerfil } = await _sb.from('perfis').update({
+      tipo: 'aluno', telefone: tel || null,
+      ...(asaasNovo ? { asaas_customer_id: asaasNovo } : {}),
+    }).eq('id', visitanteId)
+    if (errPerfil) { toast('Erro ao promover perfil: ' + errPerfil.message); return }
+
+    // Visitante não deveria ter matrícula ativa prévia, mas por segurança
+    // desativa qualquer resquício antes de criar a nova (mesmo padrão usado
+    // em salvarNovoAluno e salvarEdicaoAluno).
+    await _sb.from('matriculas').update({ativa:false}).eq('aluno_id', visitanteId).eq('ativa', true)
+    const { error: errMat } = await _sb.from('matriculas').insert({ aluno_id: visitanteId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor, professor_id: professorId })
+    if (errMat) { toast('Erro ao criar matrícula: ' + errMat.message); return }
+
+    if (professorId) {
+      const hoje = new Date().toISOString().slice(0,10)
+      const { error: errVinc } = await _sb.rpc('admin_vincular_aluno_professor', {
+        p_aluno_id: visitanteId,
+        p_professor_id: professorId,
+        p_data_inicio: hoje,
+        p_observacao: 'Vínculo criado automaticamente na promoção de visitante a aluno',
+      })
+      if (errVinc) {
+        toast('Aluno promovido, mas houve erro ao criar vínculo com o professor: ' + errVinc.message)
+      }
+    }
+
+    document.getElementById('modal-promover-visitante').style.display = 'none'
+    toast('✓ Visitante promovido a aluno!')
+    window._abaAlunos = 'alunos'
     navigate('alunos')
   }
 
@@ -502,3 +669,4 @@ export async function renderAlunos(container, page) {
     setTimeout(() => window.editarAluno && window.editarAluno(idParaEditar), 50)
   }
 }
+
