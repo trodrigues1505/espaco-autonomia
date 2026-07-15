@@ -16,6 +16,10 @@ function fmtDataHora(d) {
   return new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
 }
 
+function mesRefAtual() {
+  return new Date().toISOString().slice(0, 7) + '-01'
+}
+
 function montarListaAlunosHTML(alunos, saldoPorAluno) {
   return card('Lista de Alunos ('+alunos.length+')', '',
     `<div style="display:grid;grid-template-columns:1fr 80px 60px 60px 80px 160px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
@@ -417,6 +421,15 @@ export async function renderAlunos(container, page) {
     const { error: errMat } = await _sb.from('matriculas').insert({ aluno_id: alunoId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor, professor_id: professorId })
     if (errMat) { toast('Erro ao criar matrícula: ' + errMat.message); return }
 
+    // Credita o saldo do mês corrente imediatamente, em vez de esperar o
+    // aluno logar ou tentar confirmar uma aula. Sem isso, o admin via saldo
+    // zerado logo após o cadastro mesmo com plano pago (bug identificado em
+    // 15/07/2026).
+    const { error: errSaldo } = await _sb.rpc('creditar_aulas_mes', { p_aluno_id: alunoId, p_mes_ref: mesRefAtual() })
+    if (errSaldo) {
+      toast('Aluno cadastrado, mas houve erro ao gerar o saldo inicial: ' + errSaldo.message)
+    }
+
     // Se um professor foi selecionado no cadastro, cria também o vínculo
     // oficial em vinculos_professor_aluno (mesma RPC usada em vinculos.js).
     // Sem isso, previsao_repasse_professor não encontra vínculo vigente
@@ -506,6 +519,14 @@ export async function renderAlunos(container, page) {
       await _sb.from('matriculas').update({ativa:false}).eq('aluno_id', visitanteId).eq('ativa', true)
       const { error: errMat } = await _sb.from('matriculas').insert({ aluno_id: visitanteId, plano_tipo: plano, opcao_aulas: opcao, valor_mensal: valor, professor_id: professorId })
       if (errMat) { toast('Erro ao criar matrícula: ' + errMat.message); return }
+
+      // Credita o saldo do mês corrente imediatamente — mesmo motivo do
+      // cadastro: sem isso, o visitante promovido aparece com saldo zerado
+      // até logar ou tentar confirmar uma aula.
+      const { error: errSaldo } = await _sb.rpc('creditar_aulas_mes', { p_aluno_id: visitanteId, p_mes_ref: mesRefAtual() })
+      if (errSaldo) {
+        toast('Aluno promovido, mas houve erro ao gerar o saldo inicial: ' + errSaldo.message)
+      }
 
       if (professorId) {
         const hoje = new Date().toISOString().slice(0,10)
@@ -658,6 +679,19 @@ export async function renderAlunos(container, page) {
         desconto_avulso_valor: descontoAvulsoValor, desconto_avulso_meses: descontoAvulsoMeses, desconto_avulso_usado: 0,
       })
       if (errMat) { toast('Erro ao salvar matrícula: ' + errMat.message); return }
+
+      // Troca de plano gera matrícula nova — credita o saldo do mês corrente
+      // com base no plano novo imediatamente, mesmo motivo dos outros dois
+      // fluxos (cadastro e promoção). creditar_aulas_mes usa "on conflict
+      // do nothing" na chave (aluno_id, mes_ref), então não duplica se já
+      // existir linha do mês criada anteriormente pelo plano antigo — só
+      // não retroage o valor de aulas_plano nesse caso específico, que é
+      // esperado (mudança de plano no meio do mês não deveria re-creditar
+      // aulas já usadas do plano anterior).
+      const { error: errSaldo } = await _sb.rpc('creditar_aulas_mes', { p_aluno_id: window._editAlunoId, p_mes_ref: mesRefAtual() })
+      if (errSaldo) {
+        toast('Matrícula atualizada, mas houve erro ao gerar o saldo: ' + errSaldo.message)
+      }
     } else {
       const { error: errMat } = await _sb.from('matriculas').update({
         fim, desconto_fixo: descontoFixo,
@@ -700,4 +734,4 @@ export async function renderAlunos(container, page) {
     window._pendingEditAluno = null
     setTimeout(() => window.editarAluno && window.editarAluno(idParaEditar), 50)
   }
-}
+}   
