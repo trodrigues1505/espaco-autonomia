@@ -1,9 +1,8 @@
 /**
  * src/pages/admin/adhyayana.js
  * Gestão do Yoga Adhyayana — estudo teórico/simbólico de cada āsana.
- * Cadastro via IA: cola o texto bruto (nome / origem / koshas / vāyus / chakras /
- * doshas / tattvas / benefícios / observações / fechamento) → IA interpreta os
- * blocos de texto → admin confirma e salva.
+ * Cadastro via IA: cola o texto bruto → IA interpreta os blocos de texto →
+ * admin revisa em etapas (wizard) → salva.
  *
  * Não confundir com asana.js (Āsana Mārga): aquele é a aula prática com
  * estatísticas agregadas (musculos/koshas em percentual). Este é o estudo
@@ -14,13 +13,57 @@
 import { toast } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 
+// ── Definição dos passos do wizard de revisão ─────────────────
+const STEPS = [
+  {
+    titulo: 'Identificação',
+    campos: [
+      { id: 'nome',             label: 'Nome',                          tipo: 'input', ph: 'ex: Devyāsana — Postura da Deusa' },
+      { id: 'nome_alternativo', label: 'Nome alternativo',              tipo: 'input', ph: 'ex: Utkaṭa Koṇāsana' },
+      { id: 'nivel',            label: 'Nível',                          tipo: 'input', ph: 'ex: Intermediário' },
+      { id: 'imagem_url',       label: 'Link da imagem (Imgur)',        tipo: 'input', ph: 'https://i.imgur.com/...' },
+      { id: 'publicada_em',     label: 'Data de publicação',            tipo: 'date'  },
+    ],
+  },
+  {
+    titulo: 'Origem e simbolismo',
+    campos: [
+      { id: 'origem_simbolismo', label: 'Origem e simbolismo', tipo: 'textarea', rows: 10 },
+    ],
+  },
+  {
+    titulo: 'Corpo energético',
+    campos: [
+      { id: 'koshas',  label: 'Koshas estimulados',    tipo: 'textarea', rows: 5 },
+      { id: 'vayus',   label: 'Prāṇa Vāyus ativados',  tipo: 'textarea', rows: 5 },
+      { id: 'chakras', label: 'Chakras envolvidos',    tipo: 'textarea', rows: 5 },
+    ],
+  },
+  {
+    titulo: 'Ayurveda e elementos',
+    campos: [
+      { id: 'doshas',  label: 'Doshas',                tipo: 'textarea', rows: 4 },
+      { id: 'tattvas', label: 'Elementos (Tattvas)',   tipo: 'textarea', rows: 5 },
+    ],
+  },
+  {
+    titulo: 'Benefícios e fechamento',
+    campos: [
+      { id: 'beneficios_fisiologicos',  label: 'Benefícios fisiológicos',     tipo: 'textarea', rows: 5 },
+      { id: 'beneficios_sutis',         label: 'Benefícios sutis',            tipo: 'textarea', rows: 5 },
+      { id: 'observacoes_terapeuticas', label: 'Observações terapêuticas',    tipo: 'textarea', rows: 4 },
+      { id: 'fechamento',               label: 'Fechamento (parágrafo reflexivo)', tipo: 'textarea', rows: 3 },
+    ],
+  },
+]
+
 export async function renderAdhyayanaAdmin(container, page) {
   const sb   = window._sb
   const hoje = new Date().toISOString().slice(0, 10)
 
   const { data: asanas, error } = await sb
     .from('adhyayana_asanas')
-    .select('id,nome,nome_alternativo,nivel,publicada_em')
+    .select('id,nome,nome_alternativo,nivel,imagem_url,publicada_em')
     .order('publicada_em', { ascending: true })
 
   if (error) {
@@ -33,7 +76,6 @@ export async function renderAdhyayanaAdmin(container, page) {
   const futuros       = (asanas||[]).filter(a => a.publicada_em > hoje)
   const publicados    = (asanas||[]).filter(a => a.publicada_em <= hoje)
 
-  // Sugestão de dias úteis (seg-sex) livres nas próximas semanas — mesmo padrão do jnana.js
   const diasOcupados = new Set((asanas||[]).map(a => a.publicada_em))
   const sugestoesDias = []
   const d = new Date()
@@ -84,7 +126,6 @@ export async function renderAdhyayanaAdmin(container, page) {
            </div>`
       }
 
-      <!-- Stats -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">
         <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Total publicados</div>
@@ -106,7 +147,6 @@ export async function renderAdhyayanaAdmin(container, page) {
         </div>
       </div>
 
-      <!-- Lista agrupada -->
       ${futuros.length > 0 ? `
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#BA7517;font-weight:500;margin-bottom:8px">
           ⏳ Agendados — visíveis somente na data
@@ -121,9 +161,12 @@ export async function renderAdhyayanaAdmin(container, page) {
             <div style="display:grid;grid-template-columns:1fr 130px 110px;
                         align-items:center;gap:10px;padding:11px 18px;
                         border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
-              <div>
-                <div style="font-weight:500;color:var(--txt)">${a.nome}</div>
-                ${a.nome_alternativo ? `<div style="font-size:10px;color:var(--txt2);margin-top:1px;font-style:italic">${a.nome_alternativo}</div>` : ''}
+              <div style="display:flex;align-items:center;gap:10px">
+                ${a.imagem_url ? `<img src="${a.imagem_url}" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0">` : ''}
+                <div>
+                  <div style="font-weight:500;color:var(--txt)">${a.nome}</div>
+                  ${a.nome_alternativo ? `<div style="font-size:10px;color:var(--txt2);margin-top:1px;font-style:italic">${a.nome_alternativo}</div>` : ''}
+                </div>
               </div>
               <div style="display:flex;flex-direction:column;gap:3px">
                 <input type="date" value="${a.publicada_em}" id="data-${a.id}"
@@ -163,9 +206,12 @@ export async function renderAdhyayanaAdmin(container, page) {
                         align-items:center;gap:10px;padding:11px 18px;
                         border-bottom:1px solid rgba(212,200,158,.3);font-size:12px;
                         background:${isHoje ? 'rgba(232,188,79,.05)' : 'transparent'}">
-                <div>
-                  <div style="font-weight:500;color:var(--txt)">${a.nome}</div>
-                  ${a.nome_alternativo ? `<div style="font-size:10px;color:var(--txt2);margin-top:1px;font-style:italic">${a.nome_alternativo}</div>` : ''}
+                <div style="display:flex;align-items:center;gap:10px">
+                  ${a.imagem_url ? `<img src="${a.imagem_url}" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0">` : ''}
+                  <div>
+                    <div style="font-weight:500;color:var(--txt)">${a.nome}</div>
+                    ${a.nome_alternativo ? `<div style="font-size:10px;color:var(--txt2);margin-top:1px;font-style:italic">${a.nome_alternativo}</div>` : ''}
+                  </div>
                 </div>
                 <div>${badgeStatus(a.publicada_em)}<div style="font-size:10px;color:var(--txt2);margin-top:2px">${fmtDia(a.publicada_em)}</div></div>
                 <div style="display:flex;gap:4px">
@@ -182,7 +228,6 @@ export async function renderAdhyayanaAdmin(container, page) {
       </div>
     </div>
 
-    <!-- ── Modal de prévia ───────────────────────────────────── -->
     <div id="modal-previa-adhyayana" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.7);
                                           z-index:300;align-items:flex-start;justify-content:center;
                                           padding:16px;overflow-y:auto">
@@ -195,7 +240,6 @@ export async function renderAdhyayanaAdmin(container, page) {
       </div>
     </div>
 
-    <!-- ── Modal de cadastro ─────────────────────────────────── -->
     <div id="modal-adhyayana" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.6);
                                    z-index:200;align-items:flex-start;justify-content:center;
                                    padding:16px;overflow-y:auto">
@@ -207,7 +251,7 @@ export async function renderAdhyayanaAdmin(container, page) {
           <div>
             <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;
                         color:var(--bege)" id="adhy-modal-titulo">Novo Āsana</div>
-            <div style="font-size:11px;color:rgba(242,236,206,.6);margin-top:2px">
+            <div style="font-size:11px;color:rgba(242,236,206,.6);margin-top:2px" id="adhy-modal-subtitulo">
               Cole o texto completo do estudo do āsana e a IA extrai os campos
             </div>
           </div>
@@ -259,7 +303,6 @@ export async function renderAdhyayanaAdmin(container, page) {
 
   uiAnimar(container)
 
-  // ── Reagendar rápido ──────────────────────────────────────
   window.reagendarAsanaAdhyayana = async function(id) {
     const novaData = document.getElementById('data-' + id)?.value
     if (!novaData) { toast('Selecione uma data'); return }
@@ -271,7 +314,10 @@ export async function renderAdhyayanaAdmin(container, page) {
 
   window.abrirFormAdhyayana = function() {
     window._editAdhyayanaId = null
+    window._adhyDadosRevisao = null
+    window._adhyStepAtual = 1
     document.getElementById('adhy-modal-titulo').textContent = 'Novo Āsana'
+    document.getElementById('adhy-modal-subtitulo').textContent = 'Cole o texto completo do estudo do āsana e a IA extrai os campos'
     document.getElementById('adhy-etapa-1').style.display = 'block'
     document.getElementById('adhy-etapa-2').style.display = 'none'
     document.getElementById('adhy-etapa-2').innerHTML = ''
@@ -287,6 +333,8 @@ export async function renderAdhyayanaAdmin(container, page) {
   window.fecharFormAdhyayana = function() {
     document.getElementById('modal-adhyayana').style.display = 'none'
     window._editAdhyayanaId = null
+    window._adhyDadosRevisao = null
+    window._adhyStepAtual = 1
   }
 
   window.previaAdhyayana = async function(id) {
@@ -307,6 +355,7 @@ export async function renderAdhyayanaAdmin(container, page) {
     document.getElementById('previa-adhyayana-body').innerHTML = `
       <div style="background:#fff;border-radius:12px;overflow:hidden">
         <div style="background:var(--verde);padding:16px 18px">
+          ${a.imagem_url ? `<img src="${a.imagem_url}" style="width:100%;max-height:220px;object-fit:cover;border-radius:8px;margin-bottom:12px">` : ''}
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:rgba(242,236,206,.55);margin-bottom:6px">
             ✦ Yoga Adhyayana · ${fmtDia(a.publicada_em)}${a.nivel ? ' · ' + a.nivel : ''}
           </div>
@@ -332,12 +381,13 @@ export async function renderAdhyayanaAdmin(container, page) {
     const { data: a } = await sb.from('adhyayana_asanas').select('*').eq('id', id).single()
     if (!a) { toast('Āsana não encontrado'); return }
     window._editAdhyayanaId = id
+    window._adhyDadosRevisao = { ...a }
+    window._adhyStepAtual = 1
     document.getElementById('adhy-modal-titulo').textContent = `Editar — ${a.nome}`
     document.getElementById('adhy-etapa-1').style.display = 'none'
-    _montarCamposRevisao(a)
     document.getElementById('adhy-etapa-2').style.display = 'block'
-    _mostrarBotaoSalvar()
     document.getElementById('modal-adhyayana').style.display = 'flex'
+    _renderStepAtual()
   }
 
   window.interpretarComIAAdhyayana = async function() {
@@ -387,12 +437,11 @@ Regras:
           messages: [{ role: 'user', content: texto }],
         }),
       })
+      const raw_data = await response.json()
       if (!response.ok) {
-        const errText = await response.text()
-        throw new Error('Proxy retornou ' + response.status + ': ' + errText)
+        throw new Error(raw_data?.error || ('Proxy retornou ' + response.status))
       }
-      const data = await response.json()
-      const raw  = data.content?.[0]?.text || ''
+      const raw  = raw_data.content?.[0]?.text || ''
       let parsed
       try {
         parsed = JSON.parse(raw.replace(/```json|```/g, '').trim())
@@ -400,10 +449,12 @@ Regras:
         throw new Error('IA retornou formato inesperado. Tente novamente.')
       }
       parsed.publicada_em = document.getElementById('adhy-data-pub').value || proximoLivre
-      _montarCamposRevisao(parsed)
+      parsed.imagem_url = null
+      window._adhyDadosRevisao = parsed
+      window._adhyStepAtual = 1
       document.getElementById('adhy-etapa-1').style.display = 'none'
       document.getElementById('adhy-etapa-2').style.display = 'block'
-      _mostrarBotaoSalvar()
+      _renderStepAtual()
       toast('✓ Campos extraídos — revise e salve')
     } catch(e) {
       toast('Erro: ' + e.message)
@@ -412,74 +463,99 @@ Regras:
     }
   }
 
-  function _montarCamposRevisao(a) {
-    const f = (label, el, dica = '') => `
-      <div style="display:flex;flex-direction:column;gap:4px">
-        <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;
-                       color:var(--txt2);font-weight:500">${label}</label>
-        ${el}
-        ${dica ? `<div style="font-size:10px;color:var(--txt2)">${dica}</div>` : ''}
-      </div>`
-    const inp = (id, val = '', ph = '') =>
-      `<input id="${id}" value="${(val||'').toString().replace(/"/g,'&quot;')}" placeholder="${ph}"
-        style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
-               font-family:'DM Sans',sans-serif;outline:none;width:100%">`
-    const ta = (id, val = '', rows = 3, ph = '') =>
-      `<textarea id="${id}" rows="${rows}" placeholder="${ph}"
-        style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
-               font-family:'DM Sans',sans-serif;outline:none;width:100%;resize:vertical">${val||''}</textarea>`
-
-    document.getElementById('adhy-etapa-2').innerHTML = `
-      <div style="background:rgba(31,56,31,.04);border-radius:8px;padding:10px 14px;
-                  margin-bottom:16px;font-size:12px;color:var(--verde);
-                  display:flex;align-items:center;gap:8px">
-        <i class="ti ti-sparkles"></i>
-        <span>Campos extraídos pela IA. Revise e corrija se necessário antes de salvar.</span>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:14px">
-        <div style="display:grid;grid-template-columns:1fr 1fr 150px;gap:12px">
-          ${f('Nome', inp('adhy-nome', a.nome, 'ex: Devyāsana — Postura da Deusa'))}
-          ${f('Nome alternativo', inp('adhy-nome-alt', a.nome_alternativo, 'ex: Utkaṭa Koṇāsana'))}
-          ${f('Nível', inp('adhy-nivel', a.nivel, 'ex: Intermediário'))}
-        </div>
-        ${f('Data de publicação', `<input type="date" id="adhy-data" value="${a.publicada_em || proximoLivre}"
-            style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
-                   font-family:'DM Sans',sans-serif;outline:none;width:200px">`)}
-        ${f('Origem e simbolismo', ta('adhy-origem', a.origem_simbolismo, 5))}
-        ${f('Koshas estimulados', ta('adhy-koshas', a.koshas, 4))}
-        ${f('Prāṇa Vāyus ativados', ta('adhy-vayus', a.vayus, 4))}
-        ${f('Chakras envolvidos', ta('adhy-chakras', a.chakras, 4))}
-        ${f('Doshas', ta('adhy-doshas', a.doshas, 3))}
-        ${f('Elementos (Tattvas)', ta('adhy-tattvas', a.tattvas, 4))}
-        ${f('Benefícios fisiológicos', ta('adhy-benef-fisio', a.beneficios_fisiologicos, 5))}
-        ${f('Benefícios sutis', ta('adhy-benef-sutis', a.beneficios_sutis, 4))}
-        ${f('Observações terapêuticas', ta('adhy-observacoes', a.observacoes_terapeuticas, 4))}
-        ${f('Fechamento (parágrafo reflexivo)', ta('adhy-fechamento', a.fechamento, 3))}
-      </div>
-    `
+  function _lerStepAtual() {
+    const step = STEPS[window._adhyStepAtual - 1]
+    for (const campo of step.campos) {
+      const el = document.getElementById('adhy-f-' + campo.id)
+      if (el) window._adhyDadosRevisao[campo.id] = el.value.trim() || null
+    }
   }
 
-  function _mostrarBotaoSalvar() {
+  function _renderStepAtual() {
+    const idx  = window._adhyStepAtual
+    const step = STEPS[idx - 1]
+    const dados = window._adhyDadosRevisao || {}
+
+    document.getElementById('adhy-modal-subtitulo').textContent =
+      `Revisão — Passo ${idx} de ${STEPS.length}: ${step.titulo}`
+
+    const dots = STEPS.map((s, i) => {
+      const n = i + 1
+      const ativo     = n === idx
+      const concluido = n < idx
+      const cor = ativo ? 'var(--dourado)' : concluido ? 'var(--verde)' : 'rgba(31,56,31,.15)'
+      return `<span style="width:8px;height:8px;border-radius:50%;background:${cor};display:inline-block"></span>`
+    }).join('<span style="width:16px;height:1px;background:rgba(31,56,31,.15);display:inline-block"></span>')
+
+    const camposHtml = step.campos.map(campo => {
+      const val = (dados[campo.id] ?? '').toString().replace(/"/g, '&quot;')
+      const inputEl = campo.tipo === 'textarea'
+        ? `<textarea id="adhy-f-${campo.id}" rows="${campo.rows || 4}" placeholder="${campo.ph || ''}"
+            style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
+                   font-family:'DM Sans',sans-serif;outline:none;width:100%;resize:vertical">${dados[campo.id] || ''}</textarea>`
+        : `<input type="${campo.tipo === 'date' ? 'date' : 'text'}" id="adhy-f-${campo.id}" value="${val}" placeholder="${campo.ph || ''}"
+            style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
+                   font-family:'DM Sans',sans-serif;outline:none;width:100%">`
+      return `
+        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px">
+          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;
+                         color:var(--txt2);font-weight:500">${campo.label}</label>
+          ${inputEl}
+        </div>`
+    }).join('')
+
+    document.getElementById('adhy-etapa-2').innerHTML = `
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:18px">${dots}</div>
+      ${camposHtml}
+    `
+
+    const ehPrimeiro = idx === 1
+    const ehUltimo   = idx === STEPS.length
     document.getElementById('adhyayana-modal-footer').innerHTML = `
-      <button onclick="voltarEtapa1Adhyayana()"
+      <button onclick="${ehPrimeiro ? 'voltarEtapa1Adhyayana()' : 'adhyVoltarStep()'}"
         style="padding:8px 16px;background:transparent;border:1px solid var(--borda);
                border-radius:6px;font-size:12px;cursor:pointer;margin-right:auto">
-        ← Novo texto
+        ← ${ehPrimeiro ? 'Novo texto' : 'Voltar'}
       </button>
       <button onclick="fecharFormAdhyayana()"
         style="padding:8px 16px;background:transparent;border:1px solid var(--borda);
                border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
-      <button onclick="salvarAdhyayana()"
-        style="padding:8px 16px;background:var(--verde);color:var(--bege);border:none;
-               border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
-               font-weight:500">
-        <i class="ti ti-check"></i> Salvar āsana
-      </button>`
+      ${ehUltimo
+        ? `<button onclick="salvarAdhyayana()"
+             style="padding:8px 16px;background:var(--verde);color:var(--bege);border:none;
+                    border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
+                    font-weight:500">
+             <i class="ti ti-check"></i> Salvar āsana
+           </button>`
+        : `<button onclick="adhyAvancarStep()"
+             style="padding:8px 16px;background:var(--verde);color:var(--bege);border:none;
+                    border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
+                    font-weight:500">
+             Próximo →
+           </button>`}
+    `
+  }
+
+  window.adhyAvancarStep = function() {
+    _lerStepAtual()
+    if (window._adhyStepAtual < STEPS.length) {
+      window._adhyStepAtual++
+      _renderStepAtual()
+    }
+  }
+
+  window.adhyVoltarStep = function() {
+    _lerStepAtual()
+    if (window._adhyStepAtual > 1) {
+      window._adhyStepAtual--
+      _renderStepAtual()
+    }
   }
 
   window.voltarEtapa1Adhyayana = function() {
     document.getElementById('adhy-etapa-1').style.display = 'block'
     document.getElementById('adhy-etapa-2').style.display = 'none'
+    document.getElementById('adhy-modal-subtitulo').textContent = 'Cole o texto completo do estudo do āsana e a IA extrai os campos'
     const btn = document.getElementById('btn-interpretar-adhy')
     if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-sparkles"></i> Interpretar com IA' }
     document.getElementById('adhyayana-modal-footer').innerHTML = `
@@ -489,25 +565,26 @@ Regras:
   }
 
   window.salvarAdhyayana = async function() {
-    const get = id => document.getElementById(id)?.value?.trim() || ''
-    const nome = get('adhy-nome')
-    if (!nome) { toast('Informe o nome do āsana'); return }
+    _lerStepAtual()
+    const dados = window._adhyDadosRevisao || {}
+    if (!dados.nome) { toast('Informe o nome do āsana'); return }
     const payload = {
-      nome,
-      nome_alternativo:         get('adhy-nome-alt') || null,
-      nivel:                    get('adhy-nivel') || null,
-      origem_simbolismo:        get('adhy-origem') || null,
-      koshas:                   get('adhy-koshas') || null,
-      vayus:                    get('adhy-vayus') || null,
-      chakras:                  get('adhy-chakras') || null,
-      doshas:                   get('adhy-doshas') || null,
-      tattvas:                  get('adhy-tattvas') || null,
-      beneficios_fisiologicos:  get('adhy-benef-fisio') || null,
-      beneficios_sutis:         get('adhy-benef-sutis') || null,
-      observacoes_terapeuticas: get('adhy-observacoes') || null,
-      fechamento:               get('adhy-fechamento') || null,
-      publicada_em:             get('adhy-data') || proximoLivre,
-      atualizado_em:            new Date().toISOString(),
+      nome:                      dados.nome,
+      nome_alternativo:          dados.nome_alternativo || null,
+      nivel:                     dados.nivel || null,
+      imagem_url:                dados.imagem_url || null,
+      origem_simbolismo:         dados.origem_simbolismo || null,
+      koshas:                    dados.koshas || null,
+      vayus:                     dados.vayus || null,
+      chakras:                   dados.chakras || null,
+      doshas:                    dados.doshas || null,
+      tattvas:                   dados.tattvas || null,
+      beneficios_fisiologicos:   dados.beneficios_fisiologicos || null,
+      beneficios_sutis:          dados.beneficios_sutis || null,
+      observacoes_terapeuticas:  dados.observacoes_terapeuticas || null,
+      fechamento:                dados.fechamento || null,
+      publicada_em:              dados.publicada_em || proximoLivre,
+      atualizado_em:             new Date().toISOString(),
     }
     let err
     if (window._editAdhyayanaId) {
