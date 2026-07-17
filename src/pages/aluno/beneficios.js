@@ -13,8 +13,8 @@ const SANGHA_LINKS = {
   brahma:       'https://chat.whatsapp.com/BWIMnUs5ijOAZmoBCEt9su',
   shiva_1x:     'https://chat.whatsapp.com/ChO0Yyy1D3F7zFG43PYUIJ',
   shiva_2x:     'https://chat.whatsapp.com/ChO0Yyy1D3F7zFG43PYUIJ',
-  vishnu_2x:    'https://chat.whatsapp.com/FM9JIsvkTYBB511z2IUWBW',
-  vishnu_livre: 'https://chat.whatsapp.com/FM9JIsvkTYBB511z2IUWBW',
+  vishnu_2x:    'https://chat.whatsapp.com/ChO0Yyy1D3F7zFG43PYUIJ',
+  vishnu_livre: 'https://chat.whatsapp.com/ChO0Yyy1D3F7zFG43PYUIJ',
   visitante:    'https://chat.whatsapp.com/FyU5bisgUG1HB2rVUx4Ur2',
 }
 
@@ -834,6 +834,18 @@ async function _renderJnanaMarga(container) {
   const sutra_hoje = sutras.find(s => s.publicada_em === hoje) || sutras[0]
   let sutraSel = sutra_hoje
 
+  // Lista ordenada da mais antiga para a mais recente — usada na navegação anterior/próximo
+  // ("anterior" = sutra publicado antes, "próximo" = depois).
+  const sutrasOrdemCrescente = [...sutras].sort((a, b) => a.publicada_em < b.publicada_em ? -1 : 1)
+  function _jnTemAnterior(s) {
+    const idx = sutrasOrdemCrescente.findIndex(x => x.id === s.id)
+    return idx > 0
+  }
+  function _jnTemProximo(s) {
+    const idx = sutrasOrdemCrescente.findIndex(x => x.id === s.id)
+    return idx >= 0 && idx < sutrasOrdemCrescente.length - 1
+  }
+
   function _salvarSutra(s) {
     const dataFmt = new Date(s.publicada_em + 'T12:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })
     const comentarioHtml = (s.comentario||'').split(/\n\s*\n/).map(p => `<p>${p}</p>`).join('')
@@ -877,6 +889,22 @@ async function _renderJnanaMarga(container) {
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#7a5a10;font-weight:500;margin-bottom:6px">Na prática</div>
           <p style="font-size:13px;color:var(--txt);line-height:1.7;margin:0">${s.pratica}</p>
         </div>` : ''}
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button onclick="window._jnAnterior()" ${_jnTemAnterior(s) ? '' : 'disabled'}
+          style="flex:1;padding:10px;background:#fff;color:${_jnTemAnterior(s) ? 'var(--verde)' : 'var(--txt2)'};
+                 border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;
+                 font-size:12px;cursor:${_jnTemAnterior(s) ? 'pointer' : 'default'};opacity:${_jnTemAnterior(s) ? '1' : '.4'};
+                 display:flex;align-items:center;justify-content:center;gap:6px">
+          <i class="ti ti-chevron-left"></i> Anterior
+        </button>
+        <button onclick="window._jnProximo()" ${_jnTemProximo(s) ? '' : 'disabled'}
+          style="flex:1;padding:10px;background:#fff;color:${_jnTemProximo(s) ? 'var(--verde)' : 'var(--txt2)'};
+                 border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;
+                 font-size:12px;cursor:${_jnTemProximo(s) ? 'pointer' : 'default'};opacity:${_jnTemProximo(s) ? '1' : '.4'};
+                 display:flex;align-items:center;justify-content:center;gap:6px">
+          Próximo <i class="ti ti-chevron-right"></i>
+        </button>
+      </div>
       <button onclick="window._salvarJN()" style="width:100%;margin-bottom:16px;padding:10px;background:#fff;color:var(--verde);border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:500">
         <i class="ti ti-download"></i> Salvar este sutra em PDF
       </button>`
@@ -925,6 +953,14 @@ async function _renderJnanaMarga(container) {
     })
     const view = document.getElementById('jn-sutra-view')
     if (view) { view.innerHTML = renderSutra(s); view.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
+  }
+  window._jnAnterior = function() {
+    const idx = sutrasOrdemCrescente.findIndex(x => x.id === sutraSel.id)
+    if (idx > 0) window._jnSelSutra(sutrasOrdemCrescente[idx - 1].id)
+  }
+  window._jnProximo = function() {
+    const idx = sutrasOrdemCrescente.findIndex(x => x.id === sutraSel.id)
+    if (idx >= 0 && idx < sutrasOrdemCrescente.length - 1) window._jnSelSutra(sutrasOrdemCrescente[idx + 1].id)
   }
   uiAnimar(container)
 }
@@ -994,4 +1030,4 @@ function _renderBeneficioGenerico(container, b, campo, temAcesso, planoTipo, isV
     ` : ''}
   `
   uiAnimar(container)
-}    
+}   
