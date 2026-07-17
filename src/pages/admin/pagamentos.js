@@ -14,6 +14,11 @@ import { SUPABASE_ANON } from '../../lib/supabase.js'
 import { toast } from '../../modules/utils.js'
 
 import { uiAnimar } from '../../modules/ui.js'
+// Correção (mesmo bug encontrado em previsao-professor.js): esta tela nunca
+// integrou o painel de notificações, mesmo estando listada em
+// admin_pagamentos_vencidos.paginas (notificacoes.js).
+import { carregarNotificacoes, renderPainelNotif, initNotifHandlers,
+         calcularBadgesMenu, aplicarBadgesMenu } from '../../modules/notificacoes.js'
 
 const FN_URL   = 'https://kctgcjvfsuinwlbgljdw.supabase.co/functions/v1/asaas-proxy'
 const ASAAS_KEY_STORAGE = 'ea_asaas_key'
@@ -153,6 +158,7 @@ const registros = todos
 
 export async function renderPagamentos(container, page) {
   const sbClient = window._sb
+  const perfil   = window._perfil
   const agora    = new Date()
 
   _ultimoContainer = container
@@ -169,12 +175,13 @@ export async function renderPagamentos(container, page) {
 
   const filtroPlano = window._pgPlano || ''
 
-  const [pgRes, perfisRes] = await Promise.all([
+  const [pgRes, perfisRes, notifs] = await Promise.all([
     sbClient.from('pagamentos').select('*, aluno:perfis!aluno_id(id,nome,email)')
       .order('vencimento', { ascending: false }).limit(500),
     // FK explícita para evitar ambiguidade com professor_id
     sbClient.from('perfis').select('id,nome,email,asaas_customer_id,matriculas!matriculas_aluno_id_fkey(plano_tipo,ativa)')
       .not('asaas_customer_id', 'is', null),
+    carregarNotificacoes(perfil, 'pagamentos'),
   ])
 
   const pgs = pgRes.data || []
@@ -266,6 +273,7 @@ export async function renderPagamentos(container, page) {
       </div>
     </div>
     <div class="content">
+      ${renderPainelNotif(notifs, { titulo: 'Avisos', maxVisiveis: 2 })}
 
       ${semNome > 0 ? `
         <div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:9px 13px;font-size:12px;color:#7a5a10;margin-bottom:12px;display:flex;align-items:center;gap:8px">
@@ -410,6 +418,8 @@ export async function renderPagamentos(container, page) {
     </div>
   `
 uiAnimar(container)
+  initNotifHandlers(notifs, perfil.id)
+  aplicarBadgesMenu(calcularBadgesMenu(notifs))
   window.abrirSyncAsaas = function() {
     document.getElementById('modal-sync-asaas').style.display = 'flex'
   }
