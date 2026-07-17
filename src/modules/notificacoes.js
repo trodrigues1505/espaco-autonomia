@@ -7,6 +7,9 @@
  *   - carregarNotificacoes() recebe o perfil como argumento explícito
  *   - Bug 2: aluno_pagamento_vencido agora filtra por vencimento passado real
  *            evitando falso positivo quando cobrança futura tem status OVERDUE no Asaas
+ *   - Bug 3: dispensar notificação (individual ou "todas") agora recalcula e reaplica
+ *            os badges do menu lateral — antes, o badge ficava preso até recarregar
+ *            a página inteira, porque só o contador interno do painel era atualizado.
  */
 
 const TIPOS = {
@@ -541,6 +544,12 @@ export function initNotifHandlers(notifs, perfilId) {
       const atual = parseInt(badge.textContent) - 1
       if (atual <= 0) badge.remove(); else badge.textContent = atual
     }
+    // Bug 3 corrigido: sem isso, o badge vermelho no menu lateral ficava preso
+    // mesmo depois de dispensar, porque só o contador do painel era atualizado
+    // — o badge do menu nunca era recalculado nem reaplicado.
+    const n = notifs.find(x => x.key === key)
+    if (n) n.lida = true
+    aplicarBadgesMenu(calcularBadgesMenu(notifs))
   }
   window._notifMarcarTodasLidas = async function () {
     await marcarTodasLidas(notifs, perfilId)
@@ -548,6 +557,9 @@ export function initNotifHandlers(notifs, perfilId) {
       el.style.opacity = '0'; setTimeout(() => el.remove(), 260)
     })
     document.getElementById('notif-badge-count')?.remove()
+    // Bug 3 corrigido (ver acima) — mesma correção para "dispensar tudo".
+    notifs.forEach(n => { n.lida = true })
+    aplicarBadgesMenu(calcularBadgesMenu(notifs))
   }
 }
 
