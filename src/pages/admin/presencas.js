@@ -10,6 +10,11 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
+// Correção (mesmo bug de previsao-professor.js / pagamentos.js / criar_aulas.js):
+// esta tela nunca integrou o painel de notificações, mesmo estando listada em
+// admin_alunos_sumidos.paginas (notificacoes.js).
+import { carregarNotificacoes, renderPainelNotif, initNotifHandlers,
+         calcularBadgesMenu, aplicarBadgesMenu } from '../../modules/notificacoes.js'
 
 export async function renderPresencas(container, page) {
   const sb = window._sb
@@ -22,9 +27,12 @@ export async function renderPresencas(container, page) {
   const inicioDia = new Date(dataSel); inicioDia.setHours(0,0,0,0)
   const fimDia    = new Date(dataSel); fimDia.setHours(23,59,59,999)
 
-  const { data: ocHoje } = await sb.from('ocorrencias_vagas').select('*')
-    .gte('data_hora', inicioDia.toISOString()).lte('data_hora', fimDia.toISOString())
-    .eq('cancelada', false).order('data_hora')
+  const [{ data: ocHoje }, notifs] = await Promise.all([
+    sb.from('ocorrencias_vagas').select('*')
+      .gte('data_hora', inicioDia.toISOString()).lte('data_hora', fimDia.toISOString())
+      .eq('cancelada', false).order('data_hora'),
+    carregarNotificacoes(perfil, 'presencas'),
+  ])
 
   const ocSelecionadaId = window._ocPresencaId || ocHoje?.[0]?.id
 
@@ -82,6 +90,7 @@ export async function renderPresencas(container, page) {
       <div style="font-size:11px;color:var(--txt2)">${dataFmtLonga}</div>
     </div>
     <div class="content">
+      ${renderPainelNotif(notifs, { titulo: 'Avisos', maxVisiveis: 2 })}
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
         <button onclick="window._presencaData='${anteriorISO}';window._ocPresencaId=null;navigate('presencas')"
           style="padding:5px 10px;background:#fff;color:var(--txt);border:1px solid var(--borda);border-radius:5px;font-size:13px;cursor:pointer">‹</button>
@@ -135,6 +144,8 @@ export async function renderPresencas(container, page) {
     </div>
   `
 uiAnimar(container)
+  initNotifHandlers(notifs, perfil.id)
+  aplicarBadgesMenu(calcularBadgesMenu(notifs))
   window.setPresenca = async function(confId, presente) {
     const { error } = await sb.rpc('admin_set_presenca', {
       p_conf_id: confId,
@@ -230,4 +241,4 @@ uiAnimar(container)
     toast('✓ Presença removida' + (!ehLivre && foiDebitado ? ' e crédito estornado' : ''))
     navigate('presencas')
   }
-}       
+}   
