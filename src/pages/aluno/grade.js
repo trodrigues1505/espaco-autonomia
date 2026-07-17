@@ -85,6 +85,7 @@ export async function renderAlunoGrade(container, page) {
     }
 
     const prazoMin = Number(cfg.prazo_confirmacao_min||60)
+    const temCanceladaNaSemana = ocorrencias.some(o => o.cancelada)
 
     // Construir grade HTML
     // id="tour-grade-table": alvo do tour guiado (aponta a tabela inteira da semana)
@@ -124,14 +125,18 @@ export async function renderAlunoGrade(container, page) {
           const foraPrazo = agora > prazoLimite
           const permitida = modPermitidas.includes(oc.modalidade)
           const passada = dtAula < agora
+          const cancelada = !!oc.cancelada
 
           let bgCell = '#fff'
           let borderCell = `border-left:3px solid ${CORES[oc.modalidade]||'#888'}`
           if (confirmado) bgCell = 'rgba(232,188,79,.08)'
           if (!permitida) bgCell = '#f8f8f8'
+          if (cancelada) bgCell = '#f3f3f3'
 
           let actionHtml = ''
-          if (isAluno && !passada) {
+          if (cancelada) {
+            actionHtml = `<div style="font-size:9px;color:#8a1a1a;font-weight:600;margin-top:3px">🚫 Cancelada${oc.eh_feriado?' — feriado':''}</div>`
+          } else if (isAluno && !passada) {
             if (!permitida) {
               actionHtml = `<div style="font-size:9px;color:#ccc;margin-top:3px">🔒 ${planoAluno}</div>`
             } else if (confirmado) {
@@ -148,13 +153,12 @@ export async function renderAlunoGrade(container, page) {
           const adminActions = !isAluno ? `<div style="display:flex;gap:2px;margin-top:3px">
             <button onclick="event.stopPropagation();editarOcorrencia('${oc.id}')" style="padding:1px 5px;background:rgba(31,56,31,.1);color:var(--verde);border:none;border-radius:3px;font-size:9px;cursor:pointer" title="Editar">✎</button>
             <button onclick="event.stopPropagation();excluirOcorrencia('${oc.id}')" style="padding:1px 5px;background:rgba(255,0,0,.08);color:#c0392b;border:none;border-radius:3px;font-size:9px;cursor:pointer" title="Excluir">✕</button>
-            <button onclick="event.stopPropagation();verPresencasOcorrencia('${oc.id}')" style="padding:1px 5px;background:rgba(31,56,31,.1);color:var(--verde);border:none;border-radius:3px;font-size:9px;cursor:pointer" title="Presenças">👥</button>
           </div>` : ''
-          gradeHTML += `<td style="border:1px solid rgba(212,200,158,.3);background:${bgCell};padding:5px 7px;vertical-align:top;cursor:${isAluno?'default':'pointer'}" ${!isAluno?`onclick="verDetalhesOcorrencia('${oc.id}')"`:''}">
-            <div style="font-size:10px;font-weight:500;${borderCell};padding-left:4px;line-height:1.3;color:${!permitida?'#ccc':'var(--txt)'}">${NOMES[oc.modalidade]}</div>
+          gradeHTML += `<td style="border:1px solid rgba(212,200,158,.3);background:${bgCell};padding:5px 7px;vertical-align:top;cursor:${isAluno?'default':'pointer'}${cancelada?';opacity:.75':''}" ${!isAluno?`onclick="verDetalhesOcorrencia('${oc.id}')"`:''}">
+            <div style="font-size:10px;font-weight:500;${borderCell};padding-left:4px;line-height:1.3;color:${cancelada?'#999':!permitida?'#ccc':'var(--txt)'}${cancelada?';text-decoration:line-through':''}">${NOMES[oc.modalidade]}</div>
             <div style="font-size:9px;color:var(--txt2);margin-top:1px">${oc.confirmados||0}/${oc.vagas_total}</div>
             ${oc.professor_nome?`<div style="font-size:9px;color:var(--txt2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px" title="${oc.professor_nome}">👤 ${oc.professor_nome.split(' ')[0]}</div>`:''}
-            ${isFeriado&&!isAluno?`<div style="font-size:9px;color:#8a6b1a;margin-top:1px">⚠ feriado</div>`:''}
+            ${isFeriado&&!isAluno&&!cancelada?`<div style="font-size:9px;color:#8a6b1a;margin-top:1px">⚠ feriado</div>`:''}
             ${actionHtml}
             ${adminActions}
           </td>`
@@ -167,6 +171,7 @@ export async function renderAlunoGrade(container, page) {
     // Legenda
     const legendaHtml = `<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px">
       ${['hatha','acro','raja'].map(m=>`<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--txt2)">${dot(m)}${NOMES[m]}</span>`).join('')}
+      ${temCanceladaNaSemana?`<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:#8a1a1a">🚫 Cancelada</span>`:''}
       ${isAluno?`<span style="font-size:11px;color:var(--txt2)">· Prazo: <strong>${prazoMin>=60?prazoMin/60+'h':prazoMin+'min'}</strong> antes</span>`:''}
     </div>`
 
@@ -207,11 +212,13 @@ export async function renderAlunoGrade(container, page) {
       </div>
     </div>`
 
-    // Modal detalhes ocorrência (admin)
+    // Modal detalhes ocorrência (admin) — agora com presença inline (item 6: unificação Grade+Presenças).
+    // Em vez de só listar confirmados e navegar pra tela de Presenças, o próprio modal permite
+    // marcar presente/ausente, adicionar aluno e remover presença — reaproveitando as mesmas
+    // RPCs SECURITY DEFINER que presencas.js já usa.
     const modalDetalhes = !isAluno ? modal('modal-det-oc', 'Detalhes da Aula',
       `<div id="det-oc-body">Carregando...</div>`,
-      `<button onclick="document.getElementById('modal-det-oc').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Fechar</button>
-       <button onclick="navigate('presencas')" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Ver Presenças</button>`
+      `<button onclick="document.getElementById('modal-det-oc').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Fechar</button>`
     ) : ''
 
     container.innerHTML = `
@@ -256,11 +263,6 @@ export async function renderAlunoGrade(container, page) {
       navigate(page)
     }
 
-    window.verPresencasOcorrencia = async function(ocId) {
-      window._ocPresencaId = ocId
-      navigate('presencas')
-    }
-
     window.confirmarOcorrencia = async function(ocId) {
       const { data, error } = await sb.rpc('confirmar_presenca', { p_aluno_id: window._perfil.id, p_ocorrencia_id: ocId })
       if (error || !data?.ok) { toast('❌ '+(data?.motivo||error?.message)); return }
@@ -268,18 +270,41 @@ export async function renderAlunoGrade(container, page) {
       navigate(page)
     }
 
+    // ── Modal de detalhes + presença inline (item 6) ────────────────
+    // Toda a lógica de marcar presente/ausente/adicionar/remover é a mesma
+    // de presencas.js, só que renderizada dentro deste modal em vez de navegar
+    // pra uma tela separada. window._presencaDebitou continua sendo usado
+    // pelo mesmo padrão de estorno de saldo já existente.
     window.verDetalhesOcorrencia = async function(ocId) {
-      const modal = document.getElementById('modal-det-oc')
-      modal.style.display = 'flex'
+      const modalEl = document.getElementById('modal-det-oc')
+      modalEl.style.display = 'flex'
+      window._ocAtual = ocId
+      await _renderDetalhesPresenca(ocId)
+    }
+
+    async function _renderDetalhesPresenca(ocId) {
       const body = document.getElementById('det-oc-body')
       body.innerHTML = 'Carregando...'
-      const [ocRes, confsRes] = await Promise.all([
+
+      const [ocRes2, confsRes, todosAlunosRes] = await Promise.all([
         sb.from('ocorrencias_vagas').select('*').eq('id', ocId).single(),
-        sb.from('confirmacoes').select('*, aluno:perfis!aluno_id(nome)').eq('ocorrencia_id', ocId).in('status',['confirmado','presente','ausente']).order('confirmado_em'),
+        sb.from('confirmacoes').select('*, aluno:perfis!aluno_id(id,nome,email)').eq('ocorrencia_id', ocId).neq('status','cancelado').order('confirmado_em'),
+        sb.from('perfis').select('id,nome,email').eq('tipo','aluno').eq('ativo',true).order('nome'),
       ])
-      const oc = ocRes.data
+      const oc    = ocRes2.data
       const confs = confsRes.data || []
+      const todosAlunos = todosAlunosRes.data || []
       const dt = new Date(oc.data_hora)
+      const agora = new Date()
+      const aulaPassada = dt < agora
+
+      const statusMap   = { confirmado:'Confirmado', presente:'Presente', ausente:'Ausente', pendente:'Pendente', cancelado:'Cancelado' }
+      const statusBg    = { confirmado:'#e8f4e8', presente:'#e8f4e8', ausente:'#fceaea', pendente:'rgba(232,188,79,.15)', cancelado:'#f0ede4' }
+      const statusColor = { confirmado:'#1a5a1a', presente:'#1a5a1a', ausente:'#8a1a1a', pendente:'#7a5a10', cancelado:'#5a5a4a' }
+
+      const alunosJaConfirmados = new Set(confs.map(c => c.aluno?.id).filter(Boolean))
+      const alunosDisponiveis = todosAlunos.filter(a => !alunosJaConfirmados.has(a.id))
+
       body.innerHTML = `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
           <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Aula</div><div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${NOMES[oc.modalidade]}</div></div>
@@ -289,17 +314,101 @@ export async function renderAlunoGrade(container, page) {
           <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Confirmados</div><div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">${oc.confirmados||0}/${oc.vagas_total}</div></div>
           <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Professor</div><div style="font-size:13px;font-weight:500;color:var(--verde);margin-top:3px">${oc.professor_nome||'—'}</div></div>
         </div>
-        ${oc.eh_feriado?`<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:8px 12px;font-size:12px;color:#7a5a10;margin-bottom:12px">⚠ Esta aula cai em feriado: ${oc.nome_feriado}</div>`:''}
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);margin-bottom:8px">Alunos confirmados (${confs.length})</div>
+        ${oc.cancelada?`<div style="background:#fceaea;border:1px solid #f5c1c1;border-radius:6px;padding:8px 12px;font-size:12px;color:#8a1a1a;margin-bottom:12px">🚫 Esta aula está cancelada${oc.eh_feriado?` (feriado: ${oc.nome_feriado})`:''}</div>`:
+          oc.eh_feriado?`<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:8px 12px;font-size:12px;color:#7a5a10;margin-bottom:12px">⚠ Esta aula cai em feriado: ${oc.nome_feriado}</div>`:''}
+        ${aulaPassada?`<div style="margin-bottom:10px"><span style="font-size:10px;color:#e67e22;background:rgba(230,126,34,.1);padding:2px 8px;border-radius:10px">Aula já realizada</span></div>`:''}
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Presenças (${confs.length})</div>
+          <button onclick="window._marcarTodosPresentesModal('${ocId}')" style="padding:3px 10px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">✓ Todos presentes</button>
+        </div>
+        <div style="background:rgba(242,236,206,.25);border:1px solid var(--borda);border-radius:6px;padding:10px;margin-bottom:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500;white-space:nowrap">+ Adicionar aluno</span>
+          <select id="sel-add-aluno-modal" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff;color:var(--txt);flex:1;min-width:160px">
+            <option value="">— selecionar aluno —</option>
+            ${alunosDisponiveis.map(a=>`<option value="${a.id}">${a.nome}</option>`).join('')}
+          </select>
+          <button onclick="window._adicionarAlunoModal('${ocId}')" style="padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Adicionar${aulaPassada?' (débita saldo)':''}</button>
+        </div>
         ${confs.length===0?'<div style="font-size:12px;color:var(--txt2);padding:10px 0">Nenhuma confirmação ainda.</div>':
-          confs.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--fundo);border-radius:6px;margin-bottom:4px">
-            <span style="font-size:12px;font-weight:500">${c.aluno?.nome||'—'}</span>
-            ${badge(c.status==='confirmado'?'Confirmado':c.status==='presente'?'Presente':'Ausente',
-              c.status==='confirmado'?'#e8f4e8':c.status==='presente'?'#e8f4e8':'#fceaea',
-              c.status==='ausente'?'#8a1a1a':'#1a5a1a')}
+          confs.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--fundo);border-radius:6px;margin-bottom:5px" id="conf-row-modal-${c.id}">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:24px;height:24px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:var(--verde)">${(c.aluno?.nome||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()}</div>
+              <span style="font-size:12px;font-weight:500">${c.aluno?.nome||'—'}</span>
+              ${badge(statusMap[c.status]||c.status, statusBg[c.status]||'#f0ede4', statusColor[c.status]||'#5a5a4a')}
+            </div>
+            <div style="display:flex;gap:4px">
+              <button onclick="window._setPresencaModal('${ocId}','${c.id}',true)" style="padding:3px 7px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Presente">✓</button>
+              <button onclick="window._setPresencaModal('${ocId}','${c.id}',false)" style="padding:3px 7px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Ausente">✕</button>
+              <button onclick="window._excluirPresencaModal('${ocId}','${c.id}','${(c.aluno?.nome||'').replace(/'/g,"\\'")}')" style="padding:3px 7px;background:#f0ede4;color:#5a5a4a;border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Remover">🗑</button>
+            </div>
           </div>`).join('')
         }
       `
-      window._ocAtual = ocId
     }
-}  
+
+    window._setPresencaModal = async function(ocId, confId, presente) {
+      const { error } = await sb.rpc('admin_set_presenca', { p_conf_id: confId, p_presente: presente })
+      if (error) { toast('Erro: '+error.message); return }
+      toast(presente ? '✓ Marcado presente' : '✕ Marcado ausente')
+      await _renderDetalhesPresenca(ocId)
+      navigate(page) // atualiza contadores da grade por trás do modal
+      document.getElementById('modal-det-oc').style.display = 'flex'
+    }
+
+    window._marcarTodosPresentesModal = async function(ocId) {
+      const { error } = await sb.rpc('admin_marcar_todos_presentes', { p_ocorrencia_id: ocId })
+      if (error) { toast('Erro: '+error.message); return }
+      toast('✓ Todos marcados como presentes!')
+      await _renderDetalhesPresenca(ocId)
+      navigate(page)
+      document.getElementById('modal-det-oc').style.display = 'flex'
+    }
+
+    window._adicionarAlunoModal = async function(ocId) {
+      const alunoId = document.getElementById('sel-add-aluno-modal')?.value
+      if (!alunoId) { toast('Selecione um aluno'); return }
+
+      const { data: existe } = await sb.from('confirmacoes')
+        .select('id,status').eq('ocorrencia_id', ocId).eq('aluno_id', alunoId).maybeSingle()
+
+      if (existe && existe.status !== 'cancelado') {
+        toast('Aluno já está na lista')
+        return
+      }
+      const { data, error } = await sb.rpc('admin_adicionar_presenca', { p_aluno_id: alunoId, p_ocorrencia_id: ocId })
+      if (error || !data?.ok) { toast('Erro: ' + (data?.motivo || error?.message)); return }
+
+      if (!window._presencaDebitou) window._presencaDebitou = {}
+      const { data: novaConf } = await sb.from('confirmacoes').select('id').eq('ocorrencia_id', ocId).eq('aluno_id', alunoId).single()
+      if (novaConf?.id) window._presencaDebitou[novaConf.id] = !!data.debitou
+
+      toast(existe ? '✓ Presença reativada!' : ('✓ Aluno adicionado!' + (data.debitou ? ' Saldo debitado.' : '')))
+      await _renderDetalhesPresenca(ocId)
+      navigate(page)
+      document.getElementById('modal-det-oc').style.display = 'flex'
+    }
+
+    window._excluirPresencaModal = async function(ocId, confId, nomeAluno) {
+      if (!confirm('Remover presença de ' + nomeAluno + '?\nSe o saldo foi debitado, ele será estornado.')) return
+
+      const { data: conf } = await sb.from('confirmacoes').select('aluno_id,ocorrencia_id,status').eq('id', confId).single()
+      if (!conf) { toast('Confirmação não encontrada'); return }
+
+      const { error } = await sb.rpc('admin_cancelar_presenca', { p_conf_id: confId })
+      if (error) { toast('Erro: '+error.message); return }
+
+      const foiDebitado = window._presencaDebitou?.[confId] ?? (conf.status === 'presente')
+      const { data: mat } = await sb.from('matriculas').select('plano_tipo,opcao_aulas').eq('aluno_id', conf.aluno_id).eq('ativa', true).single()
+      const ehLivre = mat?.plano_tipo === 'vishnu_livre' || mat?.opcao_aulas === 99
+
+      if (!ehLivre && foiDebitado) {
+        await sb.rpc('creditar_aulas_manual', { p_aluno_id: conf.aluno_id, p_quantidade: 1, p_motivo: 'Estorno por remoção de presença pelo admin' })
+      }
+      if (window._presencaDebitou) delete window._presencaDebitou[confId]
+
+      toast('✓ Presença removida' + (!ehLivre && foiDebitado ? ' e crédito estornado' : ''))
+      await _renderDetalhesPresenca(ocId)
+      navigate(page)
+      document.getElementById('modal-det-oc').style.display = 'flex'
+    }
+}   
