@@ -6,6 +6,11 @@
 import { toast } from '../../modules/utils.js'
 import { renderHistoricoRepasse, abrirModalRegistrarRepasse } from './repasse-pago.js'
 import { uiAnimar } from '../../modules/ui.js'
+// Correção: esta tela nunca integrou o painel de notificações, mesmo estando listada
+// em admin_repasse_pendente.paginas (notificacoes.js). Por isso o aviso de "repasse
+// não registrado" aparecia no dashboard mas nunca aqui, onde a ação deveria acontecer.
+import { carregarNotificacoes, renderPainelNotif, initNotifHandlers,
+         calcularBadgesMenu, aplicarBadgesMenu } from '../../modules/notificacoes.js'
 
 function fmtR(v) {
   return 'R$ ' + (v||0).toFixed(2).replace('.', ',')
@@ -19,6 +24,7 @@ function nomeMes(ym) {
 
 export async function renderPrevisaoProfessor(container, page) {
   const sb = window._sb
+  const perfil = window._perfil
 
   const agora = new Date()
   if (!window._ppMes) window._ppMes = agora.toISOString().slice(0, 7)
@@ -32,11 +38,10 @@ export async function renderPrevisaoProfessor(container, page) {
     mesesDisponiveis.push(d.toISOString().slice(0, 7))
   }
 
-  const { data: professores } = await sb
-    .from('perfis')
-    .select('id, nome')
-    .eq('tipo', 'professor')
-    .order('nome')
+  const [{ data: professores }, notifs] = await Promise.all([
+    sb.from('perfis').select('id, nome').eq('tipo', 'professor').order('nome'),
+    carregarNotificacoes(perfil, 'previsao-professor'),
+  ])
 
   let profIdEfetivo = profSelId
   if (!profIdEfetivo && professores?.length === 1) {
@@ -91,6 +96,7 @@ export async function renderPrevisaoProfessor(container, page) {
       </div>
     </div>
     <div class="content">
+      ${renderPainelNotif(notifs)}
 
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
         <span style="font-size:11px;color:var(--txt2);font-weight:500">Mês:</span>
@@ -207,5 +213,7 @@ export async function renderPrevisaoProfessor(container, page) {
     }
   }
   uiAnimar(container)
+  initNotifHandlers(notifs, perfil.id)
+  aplicarBadgesMenu(calcularBadgesMenu(notifs))
   window.abrirModalRegistrarRepasse = abrirModalRegistrarRepasse
-}
+}    
