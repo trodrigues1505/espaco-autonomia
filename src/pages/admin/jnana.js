@@ -15,13 +15,19 @@ const CAPITULOS = [
   { nome: 'Kaivalyapāda', ordem: 4 },
 ]
 
+// Rótulo de número de sutra: mostra intervalo (ex: "10–11") quando a linha
+// cobre mais de um sutra (numero_sutra_fim preenchido), senão mostra o número único.
+function _labelNumero(s) {
+  return s.numero_sutra_fim ? `${s.numero_sutra}–${s.numero_sutra_fim}` : `${s.numero_sutra}`
+}
+
 export async function renderJnanaAdmin(container, page) {
   const sb   = window._sb
   const hoje = new Date().toISOString().slice(0, 10)
 
   const { data: sutras, error } = await sb
     .from('jnana_sutras')
-    .select('id,capitulo,capitulo_ordem,numero_sutra,transliteracao,traducao,publicada_em')
+    .select('id,capitulo,capitulo_ordem,numero_sutra,numero_sutra_fim,transliteracao,traducao,publicada_em')
     .order('publicada_em', { ascending: true })
 
   if (error) {
@@ -47,10 +53,15 @@ export async function renderJnanaAdmin(container, page) {
   }
   const proximoLivre = sugestoesDias[0] || hoje
 
-  // Próximo número de sutra sugerido: continua o último capítulo cadastrado (por data), senão começa Samādhipāda #1
+  // Próximo número de sutra sugerido: continua o último capítulo cadastrado (por data), senão começa Samādhipāda #1.
+  // Usa numero_sutra_fim quando existir, pois a última linha pode cobrir mais de um sutra
+  // (ex: uma linha com numero_sutra=10 e numero_sutra_fim=11 já cobriu os sutras 10 e 11 —
+  // o próximo cadastro deve sugerir 12, não 11).
   const ultimoCadastrado = (sutras||[]).slice().sort((a,b) => a.publicada_em < b.publicada_em ? 1 : -1)[0]
   const capituloSugerido = ultimoCadastrado ? ultimoCadastrado.capitulo_ordem : 1
-  const numeroSugerido   = ultimoCadastrado ? ultimoCadastrado.numero_sutra + 1 : 1
+  const numeroSugerido   = ultimoCadastrado
+    ? (ultimoCadastrado.numero_sutra_fim || ultimoCadastrado.numero_sutra) + 1
+    : 1
 
   function fmtDia(iso) {
     const dt = new Date(iso + 'T12:00')
@@ -94,7 +105,7 @@ export async function renderJnanaAdmin(container, page) {
                       padding:12px 16px;margin-bottom:16px;font-size:13px;color:#1a5a1a;
                       display:flex;align-items:center;gap:10px">
              <i class="ti ti-check" style="font-size:18px"></i>
-             <span>Sutra de hoje: <strong>${hojePublicado.capitulo} ${hojePublicado.numero_sutra} — ${hojePublicado.transliteracao}</strong></span>
+             <span>Sutra de hoje: <strong>${hojePublicado.capitulo} ${_labelNumero(hojePublicado)} — ${hojePublicado.transliteracao}</strong></span>
            </div>`
       }
 
@@ -136,7 +147,7 @@ export async function renderJnanaAdmin(container, page) {
                         align-items:center;gap:10px;padding:11px 18px;
                         border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
               <div>
-                <div style="font-weight:500;color:var(--txt)">${s.capitulo} ${s.numero_sutra}</div>
+                <div style="font-weight:500;color:var(--txt)">${s.capitulo} ${_labelNumero(s)}</div>
                 <div style="font-size:10px;color:var(--txt2);margin-top:1px;font-style:italic">${s.transliteracao}</div>
               </div>
               <span style="color:var(--txt2);font-size:11px">${s.capitulo}</span>
@@ -155,7 +166,7 @@ export async function renderJnanaAdmin(container, page) {
                   style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--verde);border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Prévia">👁</button>
                 <button onclick="editarSutra('${s.id}')"
                   style="padding:3px 8px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✎</button>
-                <button onclick="excluirSutra('${s.id}','${s.capitulo} ${s.numero_sutra}')"
+                <button onclick="excluirSutra('${s.id}','${s.capitulo} ${_labelNumero(s)}')"
                   style="padding:3px 8px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✕</button>
               </div>
             </div>`).join('')}
@@ -179,7 +190,7 @@ export async function renderJnanaAdmin(container, page) {
                         border-bottom:1px solid rgba(212,200,158,.3);font-size:12px;
                         background:${isHoje ? 'rgba(232,188,79,.05)' : 'transparent'}">
                 <div>
-                  <div style="font-weight:500;color:var(--txt)">${s.capitulo} ${s.numero_sutra}</div>
+                  <div style="font-weight:500;color:var(--txt)">${s.capitulo} ${_labelNumero(s)}</div>
                   <div style="font-size:10px;color:var(--txt2);margin-top:1px;font-style:italic">${s.transliteracao}</div>
                 </div>
                 <span style="color:var(--txt2);font-size:11px">${s.capitulo}</span>
@@ -189,7 +200,7 @@ export async function renderJnanaAdmin(container, page) {
                     style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--verde);border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Prévia">👁</button>
                   <button onclick="editarSutra('${s.id}')"
                     style="padding:3px 8px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✎</button>
-                  <button onclick="excluirSutra('${s.id}','${s.capitulo} ${s.numero_sutra}')"
+                  <button onclick="excluirSutra('${s.id}','${s.capitulo} ${_labelNumero(s)}')"
                     style="padding:3px 8px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✕</button>
                 </div>
               </div>`
@@ -320,7 +331,7 @@ export async function renderJnanaAdmin(container, page) {
         </div>
         <div style="padding:18px">
           <div style="background:var(--verde);border-radius:10px;padding:16px;margin-bottom:14px">
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:rgba(242,236,206,.55);margin-bottom:8px">✦ ${s.capitulo} · sutra ${s.numero_sutra} · ${fmtDia(s.publicada_em)}</div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:rgba(242,236,206,.55);margin-bottom:8px">✦ ${s.capitulo} · sutra ${_labelNumero(s)} · ${fmtDia(s.publicada_em)}</div>
             ${s.contexto_capitulo ? `<div style="font-size:12px;color:rgba(242,236,206,.75);line-height:1.6;margin-bottom:12px;font-style:italic">${s.contexto_capitulo}</div>` : ''}
             <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--bege);direction:ltr">${s.texto_devanagari}</div>
             <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:rgba(242,236,206,.8);margin-top:4px">${s.transliteracao}</div>
@@ -346,7 +357,7 @@ export async function renderJnanaAdmin(container, page) {
     const { data: s } = await sb.from('jnana_sutras').select('*').eq('id', id).single()
     if (!s) { toast('Sutra não encontrado'); return }
     window._editJnanaId = id
-    document.getElementById('jnana-modal-titulo').textContent = `Editar — ${s.capitulo} ${s.numero_sutra}`
+    document.getElementById('jnana-modal-titulo').textContent = `Editar — ${s.capitulo} ${_labelNumero(s)}`
     document.getElementById('jn-etapa-1').style.display = 'none'
     _montarCamposRevisao(s)
     document.getElementById('jn-etapa-2').style.display = 'block'
@@ -419,6 +430,7 @@ Regras:
       parsed.capitulo_ordem = capituloOrdem
       parsed.capitulo       = (CAPITULOS.find(c => c.ordem === capituloOrdem) || CAPITULOS[0]).nome
       parsed.numero_sutra   = numeroSutra
+      parsed.numero_sutra_fim = null
       parsed.publicada_em   = document.getElementById('jn-data-pub').value || proximoLivre
       _montarCamposRevisao(parsed)
       document.getElementById('jn-etapa-1').style.display = 'none'
@@ -457,11 +469,16 @@ Regras:
         <span>Campos extraídos pela IA. Revise e corrija se necessário antes de salvar.</span>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px">
-        <div style="display:grid;grid-template-columns:1fr 100px 150px;gap:12px">
+        <div style="display:grid;grid-template-columns:1fr 90px 90px 150px;gap:12px">
           ${f('Capítulo', selectCapitulo('jn-r-capitulo', s.capitulo_ordem))}
           ${f('Nº sutra', `<input type="number" id="jn-r-numero" min="1" value="${s.numero_sutra}"
               style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
                      font-family:'DM Sans',sans-serif;outline:none;width:100%">`)}
+          ${f('Até (opcional)', `<input type="number" id="jn-r-numero-fim" min="1" value="${s.numero_sutra_fim || ''}"
+              placeholder="—"
+              style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
+                     font-family:'DM Sans',sans-serif;outline:none;width:100%">`,
+              'Preencha só se esta publicação juntar mais de um sutra (ex: 10 até 11).')}
           ${f('Data de publicação', `<input type="date" id="jn-data" value="${s.publicada_em || proximoLivre}"
               style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
                      font-family:'DM Sans',sans-serif;outline:none;width:100%">`)}
@@ -509,6 +526,8 @@ Regras:
     const get = id => document.getElementById(id)?.value?.trim() || ''
     const capitulo_ordem = parseInt(get('jn-r-capitulo'), 10)
     const numero_sutra   = parseInt(get('jn-r-numero'), 10)
+    const numeroFimRaw   = get('jn-r-numero-fim')
+    const numero_sutra_fim = numeroFimRaw ? parseInt(numeroFimRaw, 10) : null
     const capitulo       = (CAPITULOS.find(c => c.ordem === capitulo_ordem) || CAPITULOS[0]).nome
     const texto_devanagari = get('jn-devanagari')
     const transliteracao   = get('jn-translit')
@@ -517,10 +536,14 @@ Regras:
       toast('Preencha devanāgarī, transliteração e tradução'); return
     }
     if (!numero_sutra) { toast('Informe o número do sutra'); return }
+    if (numero_sutra_fim !== null && numero_sutra_fim <= numero_sutra) {
+      toast('O "até" precisa ser maior que o número inicial'); return
+    }
     const payload = {
       capitulo,
       capitulo_ordem,
       numero_sutra,
+      numero_sutra_fim,
       contexto_capitulo: get('jn-contexto') || null,
       texto_devanagari,
       transliteracao,
@@ -548,4 +571,4 @@ Regras:
     toast('✓ Sutra excluído.')
     navigate('jnana-admin')
   }
-}
+}   
