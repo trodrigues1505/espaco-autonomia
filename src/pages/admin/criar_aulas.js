@@ -8,6 +8,11 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
+// Correção (mesmo bug de previsao-professor.js / pagamentos.js): esta tela
+// nunca integrou o painel de notificações, mesmo estando listada em
+// admin_aulas_sem_professor.paginas (notificacoes.js).
+import { carregarNotificacoes, renderPainelNotif, initNotifHandlers,
+         calcularBadgesMenu, aplicarBadgesMenu } from '../../modules/notificacoes.js'
 
 export async function renderCriarAulas(container, page) {
   const sb = window._sb
@@ -15,13 +20,14 @@ export async function renderCriarAulas(container, page) {
   const tipo = perfil?.tipo
 
     const hojeISO = new Date().toISOString()
-    const [aulasRes, profsRes, cfgRes, ocsFutRes, ocsTodosRes] = await Promise.all([
+    const [aulasRes, profsRes, cfgRes, ocsFutRes, ocsTodosRes, notifs] = await Promise.all([
       sb.from('aulas').select('*, professor:perfis!professor_id(nome), horarios:aulas_horarios(*)').order('criado_em', {ascending:false}),
       sb.from('perfis').select('id,nome').eq('tipo','professor').order('nome'),
       sb.from('configuracoes').select('*'),
       // RPC agrupa no banco — evita o limite de 1000 linhas do PostgREST
       sb.rpc('get_aulas_com_ocorrencias', { p_data_hora: hojeISO }),
       sb.rpc('get_aulas_com_ocorrencias', { p_data_hora: null }),
+      carregarNotificacoes(perfil, 'criar-aulas'),
     ])
     const aulas = aulasRes.data || []
     const profs = profsRes.data || []
@@ -147,6 +153,7 @@ export async function renderCriarAulas(container, page) {
         </div>
       </div>
       <div class="content">
+        ${renderPainelNotif(notifs, { titulo: 'Avisos', maxVisiveis: 2 })}
         <div style="background:rgba(31,56,31,.04);border:1px solid rgba(31,56,31,.12);border-radius:6px;padding:9px 13px;font-size:12px;color:var(--verde);margin-bottom:12px;display:flex;align-items:center;gap:8px">
           <i class="ti ti-info-circle"></i>
           <span>Após criar uma aula fixa, clique em <strong>Gerar</strong> para criar as datas do semestre no banco.</span>
@@ -213,6 +220,8 @@ export async function renderCriarAulas(container, page) {
       ${modalGerar}
     `
 uiAnimar(container)
+    initNotifHandlers(notifs, perfil.id)
+    aplicarBadgesMenu(calcularBadgesMenu(notifs))
     window.toggleTipoAula = function() {
       const t = document.getElementById('na-tipo').value
       document.getElementById('na-dias-wrap').style.display = t==='fixa'?'block':'none'
@@ -487,4 +496,4 @@ uiAnimar(container)
       toast(ativa ? 'Aula pausada' : 'Aula ativada')
       navigate('criar-aulas')
     }
-}  
+}   
