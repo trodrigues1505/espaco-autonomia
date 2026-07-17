@@ -125,6 +125,13 @@ function _abrirLightbox(src, alt) {
 }
 window._abrirLightbox = _abrirLightbox
 
+// Rótulo de número de sutra: mostra intervalo (ex: "10–11") quando a linha
+// cobre mais de um sutra (numero_sutra_fim preenchido), senão mostra o número único.
+// (Mesma função existe em jnana.js, no admin — mantidas em sincronia de propósito.)
+function _labelNumeroSutra(s) {
+  return s.numero_sutra_fim ? `${s.numero_sutra}–${s.numero_sutra_fim}` : `${s.numero_sutra}`
+}
+
 // ── Botão salvar PDF ──────────────────────────────────────────
 function _btnSalvar(onclick) {
   return `
@@ -753,8 +760,8 @@ async function _renderJnanaMarga(container) {
   function _salvarSutra(s) {
     const dataFmt = new Date(s.publicada_em + 'T12:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })
     const comentarioHtml = (s.comentario||'').split(/\n\s*\n/).map(p => `<p>${p}</p>`).join('')
-    _imprimirHTML(`Jñāna Mārga — ${s.capitulo} ${s.numero_sutra}`, `
-      <h1>${s.capitulo} — Sutra ${s.numero_sutra}</h1>
+    _imprimirHTML(`Jñāna Mārga — ${s.capitulo} ${_labelNumeroSutra(s)}`, `
+      <h1>${s.capitulo} — Sutra ${_labelNumeroSutra(s)}</h1>
       <p style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:#5a7a5a;margin-bottom:4px">${s.transliteracao}</p>
       <div class="meta"><span>Jñāna Mārga · Yoga Sūtras</span><span>${dataFmt}</span></div>
       ${s.contexto_capitulo ? `<div class="citacao">${s.contexto_capitulo}</div>` : ''}
@@ -776,7 +783,7 @@ async function _renderJnanaMarga(container) {
     return `
       <div style="background:var(--verde);border-radius:12px;padding:20px;margin-bottom:16px">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.55);margin-bottom:8px">
-          ${isHoje ? '✦ Sutra de hoje' : dataFmt} · ${s.capitulo} ${s.numero_sutra}
+          ${isHoje ? '✦ Sutra de hoje' : dataFmt} · ${s.capitulo} ${_labelNumeroSutra(s)}
         </div>
         ${s.contexto_capitulo ? `<p style="font-size:12px;color:rgba(242,236,206,.75);line-height:1.6;margin-bottom:14px;font-style:italic">${s.contexto_capitulo}</p>` : ''}
         <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:var(--bege);line-height:1.3">${s.texto_devanagari}</div>
@@ -806,7 +813,7 @@ async function _renderJnanaMarga(container) {
           <button onclick="window._jnSelSutra('${s.id}')" id="jn-hist-${s.id}"
             style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:#fff;border:1px solid var(--borda);border-radius:8px;cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif">
             <div>
-              <div style="font-size:13px;font-weight:500;color:var(--txt)">${s.capitulo} ${s.numero_sutra}</div>
+              <div style="font-size:13px;font-weight:500;color:var(--txt)">${s.capitulo} ${_labelNumeroSutra(s)}</div>
               <div style="font-size:11px;color:var(--txt2);font-style:italic">${s.transliteracao}</div>
             </div>
             <div style="font-size:11px;color:var(--txt2);flex-shrink:0;margin-left:12px">${new Date(s.publicada_em + 'T12:00').toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})}</div>
@@ -910,4 +917,4 @@ function _renderBeneficioGenerico(container, b, campo, temAcesso, planoTipo, isV
     ` : ''}
   `
   uiAnimar(container)
-}  
+} 
