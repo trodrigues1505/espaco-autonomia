@@ -13,8 +13,8 @@ const SANGHA_LINKS = {
   brahma:       'https://chat.whatsapp.com/BWIMnUs5ijOAZmoBCEt9su',
   shiva_1x:     'https://chat.whatsapp.com/ChO0Yyy1D3F7zFG43PYUIJ',
   shiva_2x:     'https://chat.whatsapp.com/ChO0Yyy1D3F7zFG43PYUIJ',
-  vishnu_2x:    'https://chat.whatsapp.com/ChO0Yyy1D3F7zFG43PYUIJ',
-  vishnu_livre: 'https://chat.whatsapp.com/ChO0Yyy1D3F7zFG43PYUIJ',
+  vishnu_2x:    'https://chat.whatsapp.com/FM9JIsvkTYBB511z2IUWBW',
+  vishnu_livre: 'https://chat.whatsapp.com/FM9JIsvkTYBB511z2IUWBW',
   visitante:    'https://chat.whatsapp.com/FyU5bisgUG1HB2rVUx4Ur2',
 }
 
