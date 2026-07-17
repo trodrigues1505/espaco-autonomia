@@ -13,6 +13,28 @@
 import { toast } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 
+// ── Lightbox de imagem (clique para ampliar) — mesmo padrão usado
+// na visão do aluno (beneficios.js) e na timeline (timeline.js).
+function _abrirLightboxAdhy(src, alt) {
+  document.getElementById('_adhy-lightbox')?.remove()
+  const lb = document.createElement('div')
+  lb.id = '_adhy-lightbox'
+  lb.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;
+    display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out`
+  lb.innerHTML = `
+    <img src="${src}" alt="${alt}" referrerpolicy="no-referrer"
+      style="max-width:100%;max-height:90vh;border-radius:8px;object-fit:contain;
+             box-shadow:0 20px 60px rgba(0,0,0,.5)">
+    <button onclick="document.getElementById('_adhy-lightbox').remove()"
+      style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);
+             border:none;border-radius:50%;width:36px;height:36px;color:#fff;
+             font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+             line-height:1">×</button>`
+  lb.addEventListener('click', e => { if (e.target === lb) lb.remove() })
+  document.body.appendChild(lb)
+}
+window._abrirLightboxAdhy = _abrirLightboxAdhy
+
 // ── Definição dos passos do wizard de revisão ─────────────────
 const STEPS = [
   {
@@ -355,7 +377,17 @@ export async function renderAdhyayanaAdmin(container, page) {
     document.getElementById('previa-adhyayana-body').innerHTML = `
       <div style="background:#fff;border-radius:12px;overflow:hidden">
         <div style="background:var(--verde);padding:16px 18px">
-          ${a.imagem_url ? `<img src="${a.imagem_url}" style="width:100%;max-height:220px;object-fit:cover;border-radius:8px;margin-bottom:12px">` : ''}
+          ${a.imagem_url ? `
+            <div style="position:relative;border-radius:8px;overflow:hidden;margin-bottom:12px;cursor:zoom-in"
+                 onclick="_abrirLightboxAdhy('${a.imagem_url}','${(a.nome||'').replace(/'/g,"\\'")}')" title="Clique para ampliar">
+              <img src="${a.imagem_url}" referrerpolicy="no-referrer"
+                style="width:100%;max-height:220px;object-fit:cover;display:block">
+              <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);
+                          border-radius:20px;padding:3px 8px;font-size:10px;color:#fff;
+                          display:flex;align-items:center;gap:4px;pointer-events:none">
+                <i class="ti ti-zoom-in" style="font-size:12px"></i> ampliar
+              </div>
+            </div>` : ''}
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:rgba(242,236,206,.55);margin-bottom:6px">
             ✦ Yoga Adhyayana · ${fmtDia(a.publicada_em)}${a.nivel ? ' · ' + a.nivel : ''}
           </div>
@@ -605,4 +637,4 @@ Regras:
     toast('✓ Āsana excluído.')
     navigate('adhyayana-admin')
   }
-}
+}   
