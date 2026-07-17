@@ -13,8 +13,8 @@ const SANGHA_LINKS = {
   brahma:       'https://chat.whatsapp.com/BWIMnUs5ijOAZmoBCEt9su',
   shiva_1x:     'https://chat.whatsapp.com/ChO0Yyy1D3F7zFG43PYUIJ',
   shiva_2x:     'https://chat.whatsapp.com/ChO0Yyy1D3F7zFG43PYUIJ',
-  vishnu_2x:    'https://chat.whatsapp.com/FM9JIsvkTYBB511z2IUWBW',
-  vishnu_livre: 'https://chat.whatsapp.com/FM9JIsvkTYBB511z2IUWBW',
+  vishnu_2x:    'https://chat.whatsapp.com/ChO0Yyy1D3F7zFG43PYUIJ',
+  vishnu_livre: 'https://chat.whatsapp.com/ChO0Yyy1D3F7zFG43PYUIJ',
   visitante:    'https://chat.whatsapp.com/FyU5bisgUG1HB2rVUx4Ur2',
 }
 
@@ -365,9 +365,10 @@ function _stepper(secoes, prefixo) {
                   <div style="display:flex;gap:10px;padding:9px 0;
                               border-bottom:${i < s.itens.length-1 ? '1px solid rgba(212,200,158,.3)' : 'none'}">
                     <div style="width:6px;height:6px;border-radius:50%;background:${s.cor};flex-shrink:0;margin-top:6px"></div>
-                    <div style="font-size:13px;line-height:1.6">
-                      <span style="font-weight:500;color:var(--txt)">${item.termo}</span>
-                      <span style="color:var(--txt2)">: ${item.desc}</span>
+                    <div style="font-size:13px;line-height:1.6;white-space:pre-line">
+                      ${item.termo
+                        ? `<span style="font-weight:500;color:var(--txt)">${item.termo}</span><span style="color:var(--txt2)">: ${item.desc}</span>`
+                        : `<span style="color:var(--txt)">${item.desc}</span>`}
                     </div>
                   </div>`).join('')}
                 ${idx < secoes.length - 1
@@ -404,25 +405,76 @@ function _injetarAnimacao() {
   }
 }
 
-// ── Yoga Adhyayana ────────────────────────────────────────────
+// ── Yoga Adhyayana — lido de adhyayana_asanas (Supabase) ───────
 async function _renderYogaAdhyayana(container) {
-  const { AULA_SEMANA: aula } = await import(`../../data/yoga_adhyayana.js?t=${Date.now()}`)
   _injetarAnimacao()
+  const sb   = window._sb
+  const hoje = new Date().toISOString().slice(0, 10)
+  const { data: linhas, error } = await sb
+    .from('adhyayana_asanas')
+    .select('*')
+    .lte('publicada_em', hoje)
+    .order('publicada_em', { ascending: false })
+    .limit(1)
+  if (error) {
+    container.querySelector('.content').innerHTML = `<p style="color:#c0392b;font-size:13px">Erro: ${error.message}</p>`
+    return
+  }
+  const aula = linhas?.[0]
+  if (!aula) {
+    container.querySelector('.content').innerHTML = `
+      <div style="text-align:center;padding:48px 24px">
+        <div style="font-size:40px;margin-bottom:12px">📖</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--verde);margin-bottom:8px">Em breve</div>
+        <div style="font-size:13px;color:var(--txt2)">O estudo do Yoga Adhyayana chegará em breve.</div>
+      </div>`
+    return
+  }
+
   const nivelCor = { 'Iniciante': '#2d7a2d', 'Intermediário': '#c8a020', 'Avançado': '#8a1a1a', 'Novato': '#2d7a2d' }[aula.nivel] || 'var(--verde)'
   const nivelBg  = { 'Iniciante': 'rgba(45,122,45,.1)', 'Intermediário': 'rgba(200,160,32,.1)', 'Avançado': 'rgba(138,26,26,.1)', 'Novato': 'rgba(45,122,45,.1)' }[aula.nivel] || 'rgba(31,56,31,.08)'
-  const { renderStepper, containerId } = _stepper(aula.secoes, 'ya')
-  const imgHtml = aula.imagem ? `
+
+  // Monta as seções do stepper a partir dos campos de texto cadastrados no wizard admin.
+  // Cada campo vira um item; quando um campo estiver vazio, ele simplesmente não aparece.
+  const secoes = []
+  if (aula.origem_simbolismo)
+    secoes.push({ id:'origem', titulo:'Origem e simbolismo', icone:'ti-book', cor:'#BA7517',
+      itens: [{ termo: null, desc: aula.origem_simbolismo }] })
+
+  const corpoEnergetico = []
+  if (aula.koshas)  corpoEnergetico.push({ termo:'Koshas',       desc: aula.koshas })
+  if (aula.vayus)   corpoEnergetico.push({ termo:'Prāṇa Vāyus',  desc: aula.vayus })
+  if (aula.chakras) corpoEnergetico.push({ termo:'Chakras',      desc: aula.chakras })
+  if (corpoEnergetico.length)
+    secoes.push({ id:'energetico', titulo:'Corpo energético', icone:'ti-sparkles', cor:'#639922', itens: corpoEnergetico })
+
+  const ayurveda = []
+  if (aula.doshas)  ayurveda.push({ termo:'Doshas',              desc: aula.doshas })
+  if (aula.tattvas) ayurveda.push({ termo:'Elementos (Tattvas)', desc: aula.tattvas })
+  if (ayurveda.length)
+    secoes.push({ id:'ayurveda', titulo:'Ayurveda e elementos', icone:'ti-atom', cor:'#8e44ad', itens: ayurveda })
+
+  const beneficios = []
+  if (aula.beneficios_fisiologicos) beneficios.push({ termo:'Benefícios fisiológicos',    desc: aula.beneficios_fisiologicos })
+  if (aula.beneficios_sutis)        beneficios.push({ termo:'Benefícios sutis',           desc: aula.beneficios_sutis })
+  if (aula.observacoes_terapeuticas) beneficios.push({ termo:'Observações terapêuticas',  desc: aula.observacoes_terapeuticas })
+  if (beneficios.length)
+    secoes.push({ id:'beneficios', titulo:'Benefícios', icone:'ti-heart-filled', cor:'#c0392b', itens: beneficios })
+
+  const { renderStepper, containerId } = _stepper(secoes, 'ya')
+
+  const imgHtml = aula.imagem_url ? `
     <div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:16px;
                 background:var(--verde);min-height:160px;cursor:zoom-in"
-         onclick="_abrirLightbox('${aula.imagem}','${aula.tema}')" title="Clique para ampliar">
-      <img src="${aula.imagem}" alt="${aula.tema}" referrerpolicy="no-referrer"
+         onclick="_abrirLightbox('${aula.imagem_url}','${aula.nome}')" title="Clique para ampliar">
+      <img src="${aula.imagem_url}" alt="${aula.nome}" referrerpolicy="no-referrer"
         style="width:100%;max-height:240px;object-fit:cover;object-position:center center;
                display:block;opacity:.9" onerror="this.parentElement.style.display='none'">
       <div style="position:absolute;bottom:0;left:0;right:0;padding:16px;
                   background:linear-gradient(to top,rgba(31,56,31,.92) 0%,transparent 100%)">
         <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;
-                    color:var(--bege);line-height:1.2">${aula.tema}</div>
-        <div style="font-size:11px;color:rgba(242,236,206,.75);margin-top:3px">${aula.nivel_descricao}</div>
+                    color:var(--bege);line-height:1.2">${aula.nome}</div>
+        ${aula.nome_alternativo ? `<div style="font-size:11px;color:rgba(242,236,206,.75);margin-top:3px;font-style:italic">${aula.nome_alternativo}</div>` : ''}
       </div>
       <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);
                   border-radius:20px;padding:3px 8px;font-size:10px;color:#fff;
@@ -430,6 +482,8 @@ async function _renderYogaAdhyayana(container) {
         <i class="ti ti-zoom-in" style="font-size:12px"></i> ampliar
       </div>
     </div>` : ''
+
+  const dataFmt = new Date(aula.publicada_em + 'T12:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })
 
   container.querySelector('.content').innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px">
@@ -443,41 +497,34 @@ async function _renderYogaAdhyayana(container) {
       ${_btnSalvar('window._salvarYA()')}
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-      <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">Aula ${aula.numero}</span>
-      <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.data}</span>
-      <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.categoria}</span>
-      <span style="font-size:11px;background:${nivelBg};color:${nivelCor};padding:3px 10px;border-radius:20px;font-weight:500">${aula.nivel}</span>
+      <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${dataFmt}</span>
+      ${aula.nivel ? `<span style="font-size:11px;background:${nivelBg};color:${nivelCor};padding:3px 10px;border-radius:20px;font-weight:500">${aula.nivel}</span>` : ''}
     </div>
     ${imgHtml}
-    <div style="border-left:3px solid var(--dourado);background:rgba(232,188,79,.07);
-                border-radius:0 8px 8px 0;padding:13px 16px;margin-bottom:18px">
-      <p style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;
-                color:var(--verde);line-height:1.6;margin:0">"${aula.citacao}"</p>
-    </div>
     <div id="${containerId}" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px 16px;margin-bottom:16px">
-      ${renderStepper()}
+      ${secoes.length ? renderStepper() : '<p style="font-size:13px;color:var(--txt2)">Ainda não há conteúdo detalhado cadastrado para este āsana.</p>'}
     </div>
+    ${aula.fechamento ? `
     <div style="background:var(--verde);border-radius:12px;padding:20px">
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.55);margin-bottom:8px;font-weight:500">Reflexão da semana</div>
-      <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--bege);line-height:1.7;margin:0;font-style:italic">${aula.reflexao}</p>
-    </div>
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.55);margin-bottom:8px;font-weight:500">Reflexão</div>
+      <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--bege);line-height:1.7;margin:0;font-style:italic;white-space:pre-line">${aula.fechamento}</p>
+    </div>` : ''}
   `
   window._salvarYA = function() {
-    const secoesHtml = aula.secoes.map(s => `
+    const secoesHtml = secoes.map(s => `
       <h2>${s.titulo}</h2>
       <div class="secao">
         ${s.itens.map(item => `
-          <div class="item"><div class="item-termo">${item.termo}</div><div class="item-desc">${item.desc}</div></div>`).join('')}
+          <div class="item"><div class="item-termo">${item.termo || ''}</div><div class="item-desc">${item.desc}</div></div>`).join('')}
       </div>`).join('')
-    const imgTag = aula.imagem ? `<img src="${aula.imagem}" alt="${aula.tema}" class="postura" referrerpolicy="no-referrer">` : ''
-    _imprimirHTML(`Yoga Adhyayana — ${aula.tema}`, `
-      <h1>${aula.tema}</h1>
-      <div class="meta"><span>Aula ${aula.numero}</span><span>${aula.data}</span><span>${aula.categoria}</span><span>${aula.nivel}</span></div>
+    const imgTag = aula.imagem_url ? `<img src="${aula.imagem_url}" alt="${aula.nome}" class="postura" referrerpolicy="no-referrer">` : ''
+    _imprimirHTML(`Yoga Adhyayana — ${aula.nome}`, `
+      <h1>${aula.nome}</h1>
+      ${aula.nome_alternativo ? `<p style="font-family:'Cormorant Garamond',serif;font-size:14px;font-style:italic;color:#5a7a5a;margin-bottom:6px">${aula.nome_alternativo}</p>` : ''}
+      <div class="meta"><span>${dataFmt}</span>${aula.nivel ? `<span>${aula.nivel}</span>` : ''}</div>
       ${imgTag}
-      <div class="citacao">"${aula.citacao}"</div>
-      <p style="font-size:11px;color:#888;margin-bottom:16px">${aula.nivel_descricao}</p>
       ${secoesHtml}
-      <div class="reflexao"><div class="reflexao-label">Reflexão da semana</div>${aula.reflexao}</div>
+      ${aula.fechamento ? `<div class="reflexao"><div class="reflexao-label">Reflexão</div>${aula.fechamento}</div>` : ''}
     `)
   }
   uiAnimar(container)
@@ -572,6 +619,17 @@ function _secoesAsana(aula) {
   return secoes
 }
 
+// Detecção simples de URL de imagem (mesma lógica-base do timeline.js), usada para decidir
+// se o link do Tummee deve renderizar como <img> com lightbox ou como <iframe> (página embutida).
+function _ehImagemUrl(url) {
+  const u = (url || '').split('#')[0].split('?')[0].toLowerCase()
+  if (/\.(jpe?g|png|gif|webp|svg|bmp|avif)$/i.test(u)) return true
+  if (/(^|\.)imgur\.com\//i.test(url)) return true
+  if (/ibb\.co\//i.test(url)) return true
+  if (/postimg\.cc\//i.test(url)) return true
+  return false
+}
+
 function _blocoAulaPratica(aula, secoes, sufixo) {
   const { renderStepper, containerId } = _stepper(secoes, 'am' + sufixo)
   const badges = [
@@ -583,7 +641,25 @@ function _blocoAulaPratica(aula, secoes, sufixo) {
 
   const descricaoGerada = _gerarDescricaoAsana(aula)
 
-  const iframeHtml = aula.link_tummee ? `
+  const linkEhImagem = aula.link_tummee && _ehImagemUrl(aula.link_tummee)
+
+  const iframeHtml = aula.link_tummee ? (
+    linkEhImagem ? `
+    <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:16px">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:4px">Sequência de Āsanas</div>
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">Faça-os devagar, sem forçar — de 30s a 1min cada āsana. Clique na imagem para ampliar.</div>
+      <div style="position:relative;border-radius:8px;overflow:hidden;cursor:zoom-in"
+           onclick="_abrirLightbox('${aula.link_tummee}','Sequência de āsanas')" title="Clique para ampliar">
+        <img src="${aula.link_tummee}" alt="Sequência de āsanas" referrerpolicy="no-referrer"
+          style="width:100%;max-height:480px;object-fit:contain;display:block;background:#f7f5ee"
+          onerror="this.parentElement.parentElement.style.display='none'">
+        <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);
+                    border-radius:20px;padding:3px 8px;font-size:10px;color:#fff;
+                    display:flex;align-items:center;gap:4px;pointer-events:none">
+          <i class="ti ti-zoom-in" style="font-size:12px"></i> ampliar
+        </div>
+      </div>
+    </div>` : `
     <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:16px">
       <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:4px">Sequência de Āsanas</div>
       <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">Faça-os devagar, sem forçar — de 30s a 1min cada āsana.</div>
@@ -598,7 +674,8 @@ function _blocoAulaPratica(aula, secoes, sufixo) {
           style="width:100%;height:600px;border:none;display:block" loading="lazy"
           title="Sequência de āsanas"></iframe>
       </div>
-    </div>` : ''
+    </div>`
+  ) : ''
 
   return `
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">${badges}</div>
@@ -917,4 +994,4 @@ function _renderBeneficioGenerico(container, b, campo, temAcesso, planoTipo, isV
     ` : ''}
   `
   uiAnimar(container)
-} 
+}    
