@@ -21,14 +21,14 @@ export async function renderVocabularioAdmin(container, page) {
     .order('termo', { ascending: true })
 
   if (error) {
-    container.innerHTML = `<div class="topbar"><div class="topbar-t">Vocabulário</div></div>
+    container.innerHTML = `<div class="topbar"><div class="topbar-t">Śabda Kośa</div></div>
       <div class="content"><p style="color:#c0392b">Erro: ${error.message}</p></div>`
     return
   }
 
   container.innerHTML = `
     <div class="topbar">
-      <div class="topbar-t">Vocabulário</div>
+      <div class="topbar-t">Śabda Kośa</div>
       <button onclick="abrirFormVocab()"
         style="padding:6px 14px;background:var(--verde);color:var(--bege);border:none;
                border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
