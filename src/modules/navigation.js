@@ -52,17 +52,25 @@ const MENUS = {
     { id: 'timeline',           label: 'Timeline',            icone: '💬'                  },
     { id: 'grade',              label: 'Grade de Aulas',      icon: 'ti-calendar'         },
     { sec: 'Gestão' },
-    { id: 'criar-aulas',        label: 'Criar Aulas',         icon: 'ti-circle-plus'      },
+    // 'criar-aulas' agora vive como aba dentro de 'grade' (unificação
+    // Grade + Criar Aulas). A rota em si continua existindo em index.js
+    // para compatibilidade (várias funções de criar_aulas.js chamam
+    // navigate('criar-aulas') internamente), só não é mais linkada
+    // diretamente pelo menu — mesmo padrão já usado para 'vinculos' e
+    // 'pagamentos' dentro de 'alunos'.
     // 'Alunos' agora inclui, por abas internas: Alunos, Visitantes (Leads),
-    // Vínculos Prof×Aluno e Pagamentos (unificação de 15/07/2026). As
-    // entradas de menu separadas para 'vinculos' e 'pagamentos' foram
-    // removidas — as rotas em si continuam existindo em index.js para
-    // compatibilidade, mas não são mais linkadas diretamente pelo menu.
+    // Vínculos Prof×Aluno, Pagamentos e Engajamento (unificação de
+    // 15/07/2026 + rodadas seguintes). As entradas de menu separadas para
+    // 'vinculos' e 'pagamentos' foram removidas — as rotas em si continuam
+    // existindo em index.js para compatibilidade, mas não são mais
+    // linkadas diretamente pelo menu.
     { id: 'alunos',             label: 'Alunos',              icon: 'ti-users'            },
     { id: 'professores',        label: 'Professores',         icon: 'ti-user-star'        },
+    // 'previsao-professor' agora vive como aba dentro de 'professores'
+    // (unificação Professores + Repasse). Mesma lógica de compatibilidade
+    // acima: a rota continua existindo, só não é mais linkada pelo menu.
     { id: 'presencas',          label: 'Presenças',           icon: 'ti-checkbox'         },
     { id: 'planos',             label: 'Planos',              icon: 'ti-award'            },
-    { id: 'previsao-professor', label: 'Repasse Professor',   icon: 'ti-calculator'       },
     { sec: 'Sistema' },
     { id: 'jnana-admin',        label: 'Jñāna Mārga',         icon: 'ti-book'             },
     { id: 'asana-admin',        label: 'Āsana Mārga',         icon: 'ti-yoga'             },
