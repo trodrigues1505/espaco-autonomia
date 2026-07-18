@@ -75,7 +75,7 @@ const MENUS = {
     { id: 'jnana-admin',        label: 'Jñāna Mārga',         icon: 'ti-book'             },
     { id: 'asana-admin',        label: 'Āsana Mārga',         icon: 'ti-yoga'             },
     { id: 'adhyayana-admin',    label: 'Yoga Adhyayana',      icon: 'ti-flower'           },
-    { id: 'vocabulario-admin',  label: 'Vocabulário',         icon: 'ti-abc'              },
+    { id: 'vocabulario-admin',  label: 'Śabda Kośa',          icon: 'ti-abc'              },
     { id: 'config',             label: 'Configurações',        icon: 'ti-settings'         },
     ...ITENS_SOBRE,
   ],
@@ -366,4 +366,4 @@ export function initMobileMenu() {
       if (bar && window.innerWidth <= 768) bar.style.display = 'none'
     }
   })
-}   
+}
