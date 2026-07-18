@@ -5,6 +5,7 @@
 
 import { uiAnimar } from '../../modules/ui.js'
 import { BENEFICIO_INTRO } from '../../modules/navigation.js'
+import { aplicarVocabulario } from '../../modules/vocabulario.js'
 
 // Chave localStorage para controlar quais intros já foram vistas
 const _introVista = campo => `ea_intro_${campo}_${window._perfil?.id || 'x'}`
@@ -13,8 +14,8 @@ const SANGHA_LINKS = {
   brahma:       'https://chat.whatsapp.com/BWIMnUs5ijOAZmoBCEt9su',
   shiva_1x:     'https://chat.whatsapp.com/ChO0Yyy1D3F7zFG43PYUIJ',
   shiva_2x:     'https://chat.whatsapp.com/ChO0Yyy1D3F7zFG43PYUIJ',
-  vishnu_2x:    'https://chat.whatsapp.com/ChO0Yyy1D3F7zFG43PYUIJ',
-  vishnu_livre: 'https://chat.whatsapp.com/ChO0Yyy1D3F7zFG43PYUIJ',
+  vishnu_2x:    'https://chat.whatsapp.com/FM9JIsvkTYBB511z2IUWBW',
+  vishnu_livre: 'https://chat.whatsapp.com/FM9JIsvkTYBB511z2IUWBW',
   visitante:    'https://chat.whatsapp.com/FyU5bisgUG1HB2rVUx4Ur2',
 }
 
@@ -543,6 +544,7 @@ async function _renderYogaAdhyayana(container) {
     `)
   }
   uiAnimar(container)
+  await aplicarVocabulario(container)
 }
 
 // ── Āsana Mārga — lido de asana_praticas (Supabase), sem histórico ──
@@ -823,6 +825,7 @@ async function _renderAsanaMarga(container) {
   if (temAula2 && temConteudo2) window._salvarAM2 = function() { _salvarAula(aula2, secoes2, `Aula ${aula2.numero || ''} (Shiva/Vishnu)`) }
 
   uiAnimar(container)
+  await aplicarVocabulario(container)
 }
 
 // ── Jñāna Mārga — Estudo dos Yoga Sutras ───────────────────────
@@ -980,6 +983,7 @@ async function _renderJnanaMarga(container) {
     if (idx >= 0 && idx < sutrasOrdemCrescente.length - 1) window._jnSelSutra(sutrasOrdemCrescente[idx + 1].id)
   }
   uiAnimar(container)
+  await aplicarVocabulario(container)
 }
 
 // ── Benefício genérico ────────────────────────────────────────
@@ -1047,4 +1051,5 @@ function _renderBeneficioGenerico(container, b, campo, temAcesso, planoTipo, isV
     ` : ''}
   `
   uiAnimar(container)
-}   
+  await aplicarVocabulario(container)
+}  
