@@ -99,12 +99,14 @@ function filtrarVisitantesLista(todos, busca) {
 
 // Definição das abas que aparecem no topo da tela Alunos. 'vinculos' e
 // 'pagamentos' delegam a renderização para os módulos correspondentes
-// (unificação de 15/07/2026) — ver aplicarAbaAtual().
+// (unificação de 15/07/2026) — ver aplicarAbaAtual(). 'engajamento' segue
+// o mesmo padrão de delegação (adicionado em rodada posterior).
 const ABAS = [
   { id: 'alunos',      label: 'Alunos',                 cor: 'var(--verde)' },
   { id: 'visitantes',  label: 'Visitantes (Leads)',     cor: '#3a6ea5'      },
   { id: 'vinculos',    label: 'Vínculos Prof×Aluno',    cor: 'var(--verde)' },
   { id: 'pagamentos',  label: 'Pagamentos',             cor: 'var(--verde)' },
+  { id: 'engajamento', label: 'Engajamento',            cor: '#8e44ad'      },
 ]
 
 export async function renderAlunos(container, page) {
@@ -336,20 +338,23 @@ export async function renderAlunos(container, page) {
 
   uiAnimar(container)
 
-  // Abas delegadas: renderizam a tela original de Vínculos ou Pagamentos
-  // dentro do sub-container, mantendo a barra de abas e o topbar da tela
-  // Alunos intactos. As telas delegadas se auto-atualizam via
+  // Abas delegadas: renderizam a tela original de Vínculos, Pagamentos ou
+  // Engajamento dentro do sub-container, mantendo a barra de abas e o
+  // topbar da tela Alunos intactos. As telas delegadas se auto-atualizam via
   // window._rerenderVinculos()/window._rerenderPagamentos() (ver
   // vinculos.js/pagamentos.js), não via navigate(), então não saem do
   // contexto da aba ao interagir com filtros internos.
-  if (aba === 'vinculos' || aba === 'pagamentos') {
+  if (aba === 'vinculos' || aba === 'pagamentos' || aba === 'engajamento') {
     const subContainer = document.getElementById('aba-delegada-container')
     if (aba === 'vinculos') {
       const { renderVinculos } = await import('./vinculos.js')
       await renderVinculos(subContainer, 'vinculos')
-    } else {
+    } else if (aba === 'pagamentos') {
       const { renderPagamentos } = await import('./pagamentos.js')
       await renderPagamentos(subContainer, 'pagamentos')
+    } else {
+      const { renderEngajamento } = await import('./engajamento.js')
+      await renderEngajamento(subContainer, 'engajamento')
     }
   }
 
