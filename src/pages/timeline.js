@@ -4,6 +4,7 @@
 
 import { toast } from '../modules/utils.js'
 import { uiAnimar } from '../modules/ui.js'
+import { aplicarVocabulario } from '../modules/vocabulario.js'
 
 const PLANOS_POSTAR_PENDENTE = ['vishnu_2x', 'vishnu_livre']
 const PLANOS_COMENTAR        = ['vishnu_2x', 'vishnu_livre', 'shiva_1x', 'shiva_2x']
@@ -461,6 +462,7 @@ export async function renderTimeline(container, page) {
     posts.forEach(post => feedEl.insertAdjacentHTML('beforeend', renderPostCard(post, false)))
     ligarEventosPosts(posts.map(p => p.id))
     _observarVisualizacoes(posts.map(p => p.id))
+    await aplicarVocabulario(feedEl)
 
     feedOffset += posts.length
     document.getElementById('tl-load-more').style.display = posts.length < PAGE_SIZE ? 'none' : 'block'
@@ -974,4 +976,4 @@ function renderComposeBox(perfil, isAdmin, isProf) {
       </div>
     </div>
   `
-}   
+}  
