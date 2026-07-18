@@ -1,7 +1,7 @@
 /**
  * src/pages/index.js
  */
-const V = '?v=22'
+const V = '?v=23'
 const rotaMap = {
   'dashboard':          () => import('./admin/dashboard.js'  + V).then(m => m.renderDashboard),
   'timeline':           () => import('./timeline.js'         + V).then(m => m.renderTimeline),
@@ -27,6 +27,8 @@ const rotaMap = {
   'jnana-admin':        () => import('./admin/jnana.js'             + V).then(m => m.renderJnanaAdmin),
   'asana-admin':        () => import('./admin/asana.js'             + V).then(m => m.renderAsanaAdmin),
   'adhyayana-admin':    () => import('./admin/adhyayana.js'         + V).then(m => m.renderAdhyayanaAdmin),
+  // Vocabulário (novo — clique automático em termos no texto do app)
+  'vocabulario-admin':  () => import('./admin/vocabulario.js'       + V).then(m => m.renderVocabularioAdmin),
   // Institucional
   'espaco':             () => import('./institucional.js' + V).then(m => m.renderEspaco),
   'nossa-pratica':       () => import('./institucional.js' + V).then(m => m.renderNossaPratica),
@@ -59,4 +61,4 @@ export async function navigate(page) {
     console.error(`navigate(${page}):`, e)
   }
 }
-window.navigate = navigate   
+window.navigate = navigate  
