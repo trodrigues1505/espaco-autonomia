@@ -14,6 +14,37 @@ export async function renderAlunoGrade(container, page) {
   const tipo = perfil?.tipo
 
     const isAluno = page === 'aluno-grade'
+
+    // ── Unificação Grade + Criar Aulas (abas, só no lado admin) ──────
+    // A rota 'criar-aulas' continua existindo em index.js para
+    // compatibilidade — mesmo padrão já usado em alunos.js.
+    if (!isAluno) {
+      const abaGrade = window._abaGrade || 'grade'
+      const barraAbasGrade = `
+        <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+          ${[{id:'grade',label:'Grade'},{id:'aulas',label:'Aulas Fixas & Avulsas'}].map(t => `
+            <button onclick="window._abaGrade='${t.id}';navigate('${page}')" style="padding:6px 16px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${abaGrade===t.id?'var(--verde)':'var(--borda)'};background:${abaGrade===t.id?'var(--verde)':'#fff'};color:${abaGrade===t.id?'var(--bege)':'var(--txt2)'}">
+              ${t.label}
+            </button>`).join('')}
+        </div>`
+
+      if (abaGrade === 'aulas') {
+        container.innerHTML = `
+          <div class="topbar"><div class="topbar-t">Grade de Aulas</div></div>
+          <div class="content">
+            ${barraAbasGrade}
+            <div id="aba-delegada-grade"></div>
+          </div>`
+        const subContainer = document.getElementById('aba-delegada-grade')
+        const { renderCriarAulas } = await import('./criar_aulas.js')
+        await renderCriarAulas(subContainer, 'criar-aulas')
+        return
+      }
+      // abaGrade === 'grade': segue o fluxo normal abaixo, só injetando a
+      // barra de abas no topo do conteúdo (ver montagem do container mais adiante).
+      window._gradeBarraAbas = barraAbasGrade
+    }
+
     const hoje = new Date()
     // Semana com offset navegável
     const offset = window._gradeOffset || 0
@@ -227,6 +258,7 @@ export async function renderAlunoGrade(container, page) {
         ${isAluno?`<div>${badge('Plano '+planoAluno,'#e8f4e8','#1a5a1a')}</div>`:''}
       </div>
       <div class="content">
+        ${!isAluno ? (window._gradeBarraAbas || '') : ''}
         ${feriados?.length?`<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:9px 13px;display:flex;align-items:center;gap:8px;font-size:12px;color:#7a5a10;margin-bottom:12px"><i class="ti ti-alert-triangle" style="color:var(--dourado)"></i><span>Há feriados esta semana: ${(feriados||[]).map(f=>f.nome).join(', ')}</span></div>`:''}
         ${navHtml}
         ${legendaHtml}
@@ -410,5 +442,5 @@ export async function renderAlunoGrade(container, page) {
       await _renderDetalhesPresenca(ocId)
       navigate(page)
       document.getElementById('modal-det-oc').style.display = 'flex'
-    }  
-}
+    }
+}  
