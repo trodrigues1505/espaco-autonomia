@@ -105,6 +105,15 @@ export async function renderTimeline(container, page) {
         <div id="votos-enquete-body" style="overflow-y:auto;flex:1;padding:12px 20px">Carregando...</div>
       </div>
     </div>
+    <div id="modal-lista-pessoas" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.7);z-index:400;align-items:center;justify-content:center;padding:16px">
+      <div style="background:#fff;border-radius:12px;width:400px;max-width:100%;max-height:75vh;display:flex;flex-direction:column;overflow:hidden">
+        <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)" id="lista-pessoas-titulo">—</div>
+          <button onclick="document.getElementById('modal-lista-pessoas').style.display='none'" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
+        </div>
+        <div id="lista-pessoas-body" style="overflow-y:auto;flex:1;padding:14px 20px">Carregando...</div>
+      </div>
+    </div>
   `
 
   uiAnimar(container)
@@ -128,6 +137,77 @@ export async function renderTimeline(container, page) {
   document.getElementById('btn-carregar-mais')?.addEventListener('click', () => carregarFeed(true))
 
   await Promise.all([carregarFeed(false), carregarEnquetes()])
+
+  // ════════════════════════════════════════════════════════════
+  // Quem curtiu / salvou / visualizou (admin) — item 2
+  // ════════════════════════════════════════════════════════════
+
+  window._abrirListaPessoas = async function(tipo, postId, titulo) {
+    const modal = document.getElementById('modal-lista-pessoas')
+    const body  = document.getElementById('lista-pessoas-body')
+    document.getElementById('lista-pessoas-titulo').textContent = titulo
+    modal.style.display = 'flex'
+    body.innerHTML = 'Carregando...'
+
+    const config = {
+      curtidas:       { tabela: 'timeline_curtidas',      campoData: 'criado_em' },
+      salvos:         { tabela: 'timeline_salvos',        campoData: 'criado_em' },
+      visualizacoes:  { tabela: 'timeline_visualizacoes', campoData: 'visualizado_em' },
+    }[tipo]
+    if (!config) { body.innerHTML = '<p style="font-size:12px;color:#c0392b">Tipo inválido.</p>'; return }
+
+    const { data, error } = await sb
+      .from(config.tabela)
+      .select(`perfil_id, ${config.campoData}, perfil:perfis!perfil_id(nome)`)
+      .eq('post_id', postId)
+      .order(config.campoData, { ascending: true })
+
+    if (error) { body.innerHTML = `<p style="font-size:12px;color:#c0392b">Erro: ${escapeHtml(error.message)}</p>`; return }
+    if (!data?.length) { body.innerHTML = '<p style="font-size:12px;color:var(--txt2)">Ninguém ainda.</p>'; return }
+
+    body.innerHTML = data.map(r => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(212,200,158,.3)">
+        <span style="font-size:13px;font-weight:500;color:var(--txt)">${escapeHtml(r.perfil?.nome || '—')}</span>
+        <span style="font-size:11px;color:var(--txt2)">${new Date(r[config.campoData]).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })}</span>
+      </div>`).join('')
+  }
+
+  // Rastreio de visualização: quando um post fica visível na tela por ~1s,
+  // registra em timeline_visualizacoes (upsert — não duplica por aluno/post).
+  // Silencioso em caso de erro, pois visualização não é uma ação crítica.
+  function _observarVisualizacoes(ids) {
+    if (!('IntersectionObserver' in window)) return
+    window._tlVisualizacoesRegistradas = window._tlVisualizacoesRegistradas || new Set()
+    const registradas = window._tlVisualizacoesRegistradas
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const el = entry.target
+        const postId = el.dataset.postId
+        if (!postId || registradas.has(postId)) return
+        if (entry.isIntersecting) {
+          el._tlViewTimer = setTimeout(async () => {
+            if (registradas.has(postId)) return
+            registradas.add(postId)
+            observer.unobserve(el)
+            try {
+              await sb.from('timeline_visualizacoes').upsert(
+                { post_id: postId, perfil_id: perfil.id },
+                { onConflict: 'post_id,perfil_id' }
+              )
+            } catch (e) { /* silencioso */ }
+          }, 1000)
+        } else {
+          clearTimeout(el._tlViewTimer)
+        }
+      })
+    }, { threshold: 0.6 })
+
+    ids.forEach(id => {
+      const el = document.getElementById(`tl-post-${id}`)
+      if (el) { el.dataset.postId = id; observer.observe(el) }
+    })
+  }
 
   // ════════════════════════════════════════════════════════════
   // Enquetes (múltipla escolha)
@@ -380,6 +460,7 @@ export async function renderTimeline(container, page) {
 
     posts.forEach(post => feedEl.insertAdjacentHTML('beforeend', renderPostCard(post, false)))
     ligarEventosPosts(posts.map(p => p.id))
+    _observarVisualizacoes(posts.map(p => p.id))
 
     feedOffset += posts.length
     document.getElementById('tl-load-more').style.display = posts.length < PAGE_SIZE ? 'none' : 'block'
@@ -480,6 +561,15 @@ export async function renderTimeline(container, page) {
           title="Excluir post">🗑</button>`
       : ''
 
+    // Linha admin-only: acesso rápido a "quem curtiu / salvou / visualizou" (item 2).
+    // Não aparece pra professor nem aluno — só admin enxerga essas listas.
+    const adminStatsRow = (isAdmin && post.status !== 'pendente') ? `
+      <div style="display:flex;gap:14px;padding:7px 18px;border-top:1px solid rgba(212,200,158,.2);font-size:10px;color:var(--txt2)">
+        <span style="cursor:pointer" onclick="window._abrirListaPessoas('curtidas','${post.id}','Quem curtiu')">❤️ ver quem curtiu</span>
+        <span style="cursor:pointer" onclick="window._abrirListaPessoas('salvos','${post.id}','Quem salvou')">🔖 ver quem salvou</span>
+        <span style="cursor:pointer" onclick="window._abrirListaPessoas('visualizacoes','${post.id}','Quem visualizou')">👁 ver quem visualizou</span>
+      </div>` : ''
+
     const modBar = emModeracao ? `
       <div style="display:flex;gap:8px;padding:10px 18px;border-top:1px solid var(--borda);background:#fff8f0">
         <span style="flex:1;font-size:11px;color:#e67e22;display:flex;align-items:center">Moderar este post:</span>
@@ -517,6 +607,7 @@ export async function renderTimeline(container, page) {
           ${btnComentar}
           ${btnSalvar}
         </div>
+        ${adminStatsRow}
         ${modBar}
         ${comentariosSection}
       </div>
@@ -883,4 +974,4 @@ function renderComposeBox(perfil, isAdmin, isProf) {
       </div>
     </div>
   `
-}    
+}   
