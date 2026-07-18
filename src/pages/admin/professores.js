@@ -1,6 +1,9 @@
 /**
  * src/pages/admin/professores.js
- * Gestão de professores
+ * Gestão de professores + repasse (unificação em abas, mesmo padrão de
+ * src/pages/admin/alunos.js). A aba "Repasse" delega para
+ * previsao-professor.js, que continua funcionando de forma independente
+ * (a rota 'previsao-professor' segue existindo em index.js).
  */
 
 import { sb }         from '../../lib/supabase.js'
@@ -23,8 +26,45 @@ function exibirModalidades(p) {
   return m.map(x => ({ hatha: 'Hatha', acro: 'Acro', raja: 'Raja' }[x] || x)).join(', ')
 }
 
+const ABAS = [
+  { id: 'professores', label: 'Professores', cor: 'var(--verde)' },
+  { id: 'repasse',      label: 'Repasse',     cor: 'var(--verde)' },
+]
+
 export async function renderProfessores(container, page) {
   const sb = window._sb
+  const aba = window._abaProfessores || 'professores'
+
+  const barraAbas = `
+    <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+      ${ABAS.map(t => `
+        <button onclick="window.trocarAbaProfessores('${t.id}')" style="padding:6px 16px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${aba===t.id?t.cor:'var(--borda)'};background:${aba===t.id?t.cor:'#fff'};color:${aba===t.id?'var(--bege)':'var(--txt2)'}">
+          ${t.label}
+        </button>
+      `).join('')}
+    </div>
+  `
+
+  if (aba === 'repasse') {
+    container.innerHTML = `
+      <div class="topbar">
+        <div class="topbar-t">Professores</div>
+      </div>
+      <div class="content">
+        ${barraAbas}
+        <div id="aba-delegada-professores"></div>
+      </div>
+    `
+    uiAnimar(container)
+    window.trocarAbaProfessores = function(novaAba) {
+      window._abaProfessores = novaAba
+      navigate('professores')
+    }
+    const subContainer = document.getElementById('aba-delegada-professores')
+    const { renderPrevisaoProfessor } = await import('./previsao-professor.js')
+    await renderPrevisaoProfessor(subContainer, 'previsao-professor')
+    return
+  }
 
   const { data: profs } = await sb.from('perfis').select('*').eq('tipo','professor').order('nome')
 
@@ -34,6 +74,7 @@ export async function renderProfessores(container, page) {
       <button onclick="document.getElementById('modal-cad-prof').style.display='flex'" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-user-plus"></i> Cadastrar Professor</button>
     </div>
     <div class="content">
+      ${barraAbas}
       <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden;margin-bottom:16px">
         <div style="display:grid;grid-template-columns:1fr 160px 70px 80px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
           <span>Professor</span><span>Especialidades</span><span>Status</span><span></span>
@@ -97,6 +138,11 @@ export async function renderProfessores(container, page) {
     </div>
   `
 uiAnimar(container)
+  window.trocarAbaProfessores = function(novaAba) {
+    window._abaProfessores = novaAba
+    navigate('professores')
+  }
+
   window.editarProfessor = async function(profId) {
     const { data: p, error: errP } = await sb.from('perfis').select('*').eq('id', profId).single()
     if (errP || !p) { toast('Erro ao buscar professor'); return }
@@ -226,4 +272,4 @@ uiAnimar(container)
     toast('✓ Professor cadastrado! Oriente-o a fazer login com: ' + email)
     navigate('professores')
   }
-}
+}   
