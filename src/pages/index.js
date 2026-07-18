@@ -28,7 +28,7 @@ const rotaMap = {
   'asana-admin':        () => import('./admin/asana.js'             + V).then(m => m.renderAsanaAdmin),
   'adhyayana-admin':    () => import('./admin/adhyayana.js'         + V).then(m => m.renderAdhyayanaAdmin),
   // Vocabulário (novo — clique automático em termos no texto do app)
-  'vocabulario-admin':  () => import('./admin/vocabulario-admin.js'       + V).then(m => m.renderVocabularioAdmin),
+  'vocabulario-admin':  () => import('./admin/vocabulario.js'       + V).then(m => m.renderVocabularioAdmin),
   // Institucional
   'espaco':             () => import('./institucional.js' + V).then(m => m.renderEspaco),
   'nossa-pratica':       () => import('./institucional.js' + V).then(m => m.renderNossaPratica),
@@ -61,4 +61,4 @@ export async function navigate(page) {
     console.error(`navigate(${page}):`, e)
   }
 }
-window.navigate = navigate  
+window.navigate = navigate
