@@ -405,8 +405,23 @@ function _injetarAnimacao() {
   }
 }
 
+// Registro de acesso a benefício (item: dashboard de engajamento).
+// Upsert com onConflict evita duplicar quando o aluno abre a mesma tela
+// várias vezes no mesmo dia — conta como 1 acesso naquele dia.
+// Silencioso em erro: isso não pode travar a experiência do aluno.
+async function _registrarAcessoBeneficio(beneficio) {
+  if (window._perfil?.tipo !== 'aluno') return
+  try {
+    await window._sb.from('beneficio_acessos').upsert(
+      { aluno_id: window._perfil.id, beneficio, dia: new Date().toISOString().slice(0, 10) },
+      { onConflict: 'aluno_id,beneficio,dia', ignoreDuplicates: true }
+    )
+  } catch (e) { /* silencioso */ }
+}
+
 // ── Yoga Adhyayana — lido de adhyayana_asanas (Supabase) ───────
 async function _renderYogaAdhyayana(container) {
+  _registrarAcessoBeneficio('yoga_adhyayana')
   _injetarAnimacao()
   const sb   = window._sb
   const hoje = new Date().toISOString().slice(0, 10)
@@ -719,6 +734,7 @@ function _emBreveAsanaHtml() {
 }
 
 async function _renderAsanaMarga(container) {
+  _registrarAcessoBeneficio('asana_marga')
   _injetarAnimacao()
   const sb = window._sb
   const { data: linhas, error } = await sb.from('asana_praticas').select('*').order('slot', { ascending: true })
@@ -811,6 +827,7 @@ async function _renderAsanaMarga(container) {
 
 // ── Jñāna Mārga — Estudo dos Yoga Sutras ───────────────────────
 async function _renderJnanaMarga(container) {
+  _registrarAcessoBeneficio('jnana_marga')
   _injetarAnimacao()
   const sb   = window._sb
   const hoje = new Date().toISOString().slice(0, 10)
