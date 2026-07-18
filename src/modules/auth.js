@@ -127,6 +127,12 @@ export async function iniciarApp(user) {
 
     window._perfil = perfil
 
+    // Registro de acesso (alimenta o dashboard de engajamento do admin —
+    // sinal "login recente"). Não bloqueia o carregamento do app: falha
+    // aqui não deve impedir o login de acontecer.
+    sb.from('perfis').update({ ultimo_acesso: new Date().toISOString() }).eq('id', perfil.id)
+      .then(({ error }) => { if (error) console.warn('ultimo_acesso:', error.message) })
+
     document.getElementById('login-screen').style.display = 'none'
     document.getElementById('app-shell').style.display    = 'block'
     document.getElementById('sb-nome').textContent        = perfil.nome
@@ -230,4 +236,4 @@ document.getElementById('login-senha')
   ?.addEventListener('keydown', e => { if (e.key === 'Enter') window.fazerLogin() })
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-google')?.addEventListener('click', window.loginGoogle)
-})
+})   
