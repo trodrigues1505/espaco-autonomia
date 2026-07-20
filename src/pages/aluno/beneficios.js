@@ -987,7 +987,7 @@ async function _renderJnanaMarga(container) {
 }
 
 // ── Benefício genérico ────────────────────────────────────────
-function _renderBeneficioGenerico(container, b, campo, temAcesso, planoTipo, isVisitante) {
+async function _renderBeneficioGenerico(container, b, campo, temAcesso, planoTipo, isVisitante) {
   const ORDEM = ['brahma','shiva_1x','shiva_2x','vishnu_2x','vishnu_livre']
   const idxAtual = ORDEM.indexOf(planoTipo)
   const planosComAcesso = PLANOS_COM_BENEFICIO[campo] || []
