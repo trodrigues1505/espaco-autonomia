@@ -126,4 +126,4 @@ window.cancelarOcorrenciaGrade = async function(ocId, infoObj) {
   if (perfil?.tipo === 'admin') {
     window._cancelReturnPage = window._currentPage || 'grade'
   }
-}   
+}       
