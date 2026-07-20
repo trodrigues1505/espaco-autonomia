@@ -233,4 +233,4 @@ window._abrirCancelamentoEmMassa = function() {
   }
   window._cancelReturnPage = window._currentPage
   abrirModalCancelarEmMassa(infos)
-}    
+}   
