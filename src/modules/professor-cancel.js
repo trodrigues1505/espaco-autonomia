@@ -1,6 +1,7 @@
 /**
  * src/modules/professor-cancel.js
- * Responsabilidade: cancelamento de aula pelo professor.
+ * Responsabilidade: cancelamento de aula pelo professor (e pelo admin, para
+ * qualquer professor — ver window.cancelarOcorrenciaGrade).
  *
  * Colunas reais da tabela ocorrencias:
  *   id, aula_id, data_hora, vagas_override, cancelada,
@@ -16,6 +17,12 @@ let _cancelAulaInfo = null
 export function abrirModalCancelarAula(ocorrenciaId, infoObj) {
   _cancelAulaId   = ocorrenciaId
   _cancelAulaInfo = infoObj
+
+  // Reset defensivo: garante que o botão não fique preso em "Cancelando…"
+  // de uma tentativa anterior que teve sucesso (bug original: o botão só
+  // era resetado no catch, nunca no caminho de sucesso).
+  const btn = document.querySelector('#modal-cancel-aula .btn-danger')
+  if (btn) { btn.textContent = 'Cancelar Aula'; btn.disabled = false }
 
   const infoEl = document.getElementById('modal-cancel-info')
   if (infoEl && infoObj) {
@@ -77,6 +84,13 @@ export async function confirmarCancelamentoAula() {
       .then(r => { if (r.error) console.warn('estornar_confirmacoes_ocorrencia:', r.error.message) })
 
     window.toast('✓ Aula cancelada.')
+
+    // Reset do botão ANTES de fechar o modal — corrige o bug em que o botão
+    // ficava preso em "Cancelando…"/disabled após um cancelamento bem-sucedido,
+    // reaparecendo travado na próxima aula cancelada (modal é reaproveitado,
+    // não recriado).
+    if (btn) { btn.textContent = 'Cancelar Aula'; btn.disabled = false }
+
     fecharModalCancelarAula()
     const destino = window._cancelReturnPage || 'prof-aulas'
     window._cancelReturnPage = null
@@ -112,4 +126,4 @@ window.cancelarOcorrenciaGrade = async function(ocId, infoObj) {
   if (perfil?.tipo === 'admin') {
     window._cancelReturnPage = window._currentPage || 'grade'
   }
-}
+}   
