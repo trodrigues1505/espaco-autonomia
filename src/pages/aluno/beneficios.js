@@ -431,13 +431,11 @@ async function _renderYogaAdhyayana(container) {
     .select('*')
     .lte('publicada_em', hoje)
     .order('publicada_em', { ascending: false })
-    .limit(1)
   if (error) {
     container.querySelector('.content').innerHTML = `<p style="color:#c0392b;font-size:13px">Erro: ${error.message}</p>`
     return
   }
-  const aula = linhas?.[0]
-  if (!aula) {
+  if (!linhas || linhas.length === 0) {
     container.querySelector('.content').innerHTML = `
       <div style="text-align:center;padding:48px 24px">
         <div style="font-size:40px;margin-bottom:12px">📖</div>
@@ -447,86 +445,48 @@ async function _renderYogaAdhyayana(container) {
     return
   }
 
-  const nivelCor = { 'Iniciante': '#2d7a2d', 'Intermediário': '#c8a020', 'Avançado': '#8a1a1a', 'Novato': '#2d7a2d' }[aula.nivel] || 'var(--verde)'
-  const nivelBg  = { 'Iniciante': 'rgba(45,122,45,.1)', 'Intermediário': 'rgba(200,160,32,.1)', 'Avançado': 'rgba(138,26,26,.1)', 'Novato': 'rgba(45,122,45,.1)' }[aula.nivel] || 'rgba(31,56,31,.08)'
+  // Postura da semana = a publicada hoje; se ninguém publicou hoje, cai na mais recente.
+  const aulaSemana = linhas.find(l => l.publicada_em === hoje) || linhas[0]
+  let aulaSel = aulaSemana
+  // Estado de ordenação da tabela de histórico (mantido em closure, sobrevive a re-renders parciais).
+  let ordenacao = { campo: 'data', direcao: 'desc' }
+
+  const NIVEL_COR = { 'Iniciante': '#2d7a2d', 'Intermediário': '#c8a020', 'Avançado': '#8a1a1a', 'Novato': '#2d7a2d' }
+  const NIVEL_BG  = { 'Iniciante': 'rgba(45,122,45,.1)', 'Intermediário': 'rgba(200,160,32,.1)', 'Avançado': 'rgba(138,26,26,.1)', 'Novato': 'rgba(45,122,45,.1)' }
 
   // Monta as seções do stepper a partir dos campos de texto cadastrados no wizard admin.
   // Cada campo vira um item; quando um campo estiver vazio, ele simplesmente não aparece.
-  const secoes = []
-  if (aula.origem_simbolismo)
-    secoes.push({ id:'origem', titulo:'Origem e simbolismo', icone:'ti-book', cor:'#BA7517',
-      itens: [{ termo: null, desc: aula.origem_simbolismo }] })
+  function _montarSecoes(aula) {
+    const secoes = []
+    if (aula.origem_simbolismo)
+      secoes.push({ id:'origem', titulo:'Origem e simbolismo', icone:'ti-book', cor:'#BA7517',
+        itens: [{ termo: null, desc: aula.origem_simbolismo }] })
 
-  const corpoEnergetico = []
-  if (aula.koshas)  corpoEnergetico.push({ termo:'Koshas',       desc: aula.koshas })
-  if (aula.vayus)   corpoEnergetico.push({ termo:'Prāṇa Vāyus',  desc: aula.vayus })
-  if (aula.chakras) corpoEnergetico.push({ termo:'Chakras',      desc: aula.chakras })
-  if (corpoEnergetico.length)
-    secoes.push({ id:'energetico', titulo:'Corpo energético', icone:'ti-sparkles', cor:'#639922', itens: corpoEnergetico })
+    const corpoEnergetico = []
+    if (aula.koshas)  corpoEnergetico.push({ termo:'Koshas',       desc: aula.koshas })
+    if (aula.vayus)   corpoEnergetico.push({ termo:'Prāṇa Vāyus',  desc: aula.vayus })
+    if (aula.chakras) corpoEnergetico.push({ termo:'Chakras',      desc: aula.chakras })
+    if (corpoEnergetico.length)
+      secoes.push({ id:'energetico', titulo:'Corpo energético', icone:'ti-sparkles', cor:'#639922', itens: corpoEnergetico })
 
-  const ayurveda = []
-  if (aula.doshas)  ayurveda.push({ termo:'Doshas',              desc: aula.doshas })
-  if (aula.tattvas) ayurveda.push({ termo:'Elementos (Tattvas)', desc: aula.tattvas })
-  if (ayurveda.length)
-    secoes.push({ id:'ayurveda', titulo:'Ayurveda e elementos', icone:'ti-atom', cor:'#8e44ad', itens: ayurveda })
+    const ayurveda = []
+    if (aula.doshas)  ayurveda.push({ termo:'Doshas',              desc: aula.doshas })
+    if (aula.tattvas) ayurveda.push({ termo:'Elementos (Tattvas)', desc: aula.tattvas })
+    if (ayurveda.length)
+      secoes.push({ id:'ayurveda', titulo:'Ayurveda e elementos', icone:'ti-atom', cor:'#8e44ad', itens: ayurveda })
 
-  const beneficios = []
-  if (aula.beneficios_fisiologicos) beneficios.push({ termo:'Benefícios fisiológicos',    desc: aula.beneficios_fisiologicos })
-  if (aula.beneficios_sutis)        beneficios.push({ termo:'Benefícios sutis',           desc: aula.beneficios_sutis })
-  if (aula.observacoes_terapeuticas) beneficios.push({ termo:'Observações terapêuticas',  desc: aula.observacoes_terapeuticas })
-  if (beneficios.length)
-    secoes.push({ id:'beneficios', titulo:'Benefícios', icone:'ti-heart-filled', cor:'#c0392b', itens: beneficios })
+    const beneficios = []
+    if (aula.beneficios_fisiologicos) beneficios.push({ termo:'Benefícios fisiológicos',    desc: aula.beneficios_fisiologicos })
+    if (aula.beneficios_sutis)        beneficios.push({ termo:'Benefícios sutis',           desc: aula.beneficios_sutis })
+    if (aula.observacoes_terapeuticas) beneficios.push({ termo:'Observações terapêuticas',  desc: aula.observacoes_terapeuticas })
+    if (beneficios.length)
+      secoes.push({ id:'beneficios', titulo:'Benefícios', icone:'ti-heart-filled', cor:'#c0392b', itens: beneficios })
 
-  const { renderStepper, containerId } = _stepper(secoes, 'ya')
+    return secoes
+  }
 
-  const imgHtml = aula.imagem_url ? `
-    <div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:16px;
-                background:var(--verde);min-height:160px;cursor:zoom-in"
-         onclick="_abrirLightbox('${aula.imagem_url}','${aula.nome}')" title="Clique para ampliar">
-      <img src="${aula.imagem_url}" alt="${aula.nome}" referrerpolicy="no-referrer"
-        style="width:100%;max-height:240px;object-fit:cover;object-position:center center;
-               display:block;opacity:.9" onerror="this.parentElement.style.display='none'">
-      <div style="position:absolute;bottom:0;left:0;right:0;padding:16px;
-                  background:linear-gradient(to top,rgba(31,56,31,.92) 0%,transparent 100%)">
-        <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;
-                    color:var(--bege);line-height:1.2">${aula.nome}</div>
-        ${aula.nome_alternativo ? `<div style="font-size:11px;color:rgba(242,236,206,.75);margin-top:3px;font-style:italic">${aula.nome_alternativo}</div>` : ''}
-      </div>
-      <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);
-                  border-radius:20px;padding:3px 8px;font-size:10px;color:#fff;
-                  display:flex;align-items:center;gap:4px">
-        <i class="ti ti-zoom-in" style="font-size:12px"></i> ampliar
-      </div>
-    </div>` : ''
-
-  const dataFmt = new Date(aula.publicada_em + 'T12:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })
-
-  container.querySelector('.content').innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:26px">📖</span>
-        <div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">Yoga Adhyayana</div>
-          <div style="font-size:12px;color:var(--txt2)">Conteúdo da semana</div>
-        </div>
-      </div>
-      ${_btnSalvar('window._salvarYA()')}
-    </div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-      <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${dataFmt}</span>
-      ${aula.nivel ? `<span style="font-size:11px;background:${nivelBg};color:${nivelCor};padding:3px 10px;border-radius:20px;font-weight:500">${aula.nivel}</span>` : ''}
-    </div>
-    ${imgHtml}
-    <div id="${containerId}" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px 16px;margin-bottom:16px">
-      ${secoes.length ? renderStepper() : '<p style="font-size:13px;color:var(--txt2)">Ainda não há conteúdo detalhado cadastrado para este āsana.</p>'}
-    </div>
-    ${aula.fechamento ? `
-    <div style="background:var(--verde);border-radius:12px;padding:20px">
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.55);margin-bottom:8px;font-weight:500">Reflexão</div>
-      <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--bege);line-height:1.7;margin:0;font-style:italic;white-space:pre-line">${aula.fechamento}</p>
-    </div>` : ''}
-  `
-  window._salvarYA = function() {
+  function _salvarAula(aula, secoes) {
+    const dataFmt = new Date(aula.publicada_em + 'T12:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })
     const secoesHtml = secoes.map(s => `
       <h2>${s.titulo}</h2>
       <div class="secao">
@@ -543,6 +503,160 @@ async function _renderYogaAdhyayana(container) {
       ${aula.fechamento ? `<div class="reflexao"><div class="reflexao-label">Reflexão</div>${aula.fechamento}</div>` : ''}
     `)
   }
+
+  // Bloco "destaque" — a postura em foco no topo (semana atual ou uma escolhida na tabela).
+  function _renderDestaque(aula) {
+    const secoes = _montarSecoes(aula)
+    const { renderStepper, containerId } = _stepper(secoes, 'ya')
+    const isSemana = aula.id === aulaSemana.id
+
+    const imgHtml = aula.imagem_url ? `
+      <div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:16px;
+                  background:var(--verde);min-height:160px;cursor:zoom-in"
+           onclick="_abrirLightbox('${aula.imagem_url}','${aula.nome}')" title="Clique para ampliar">
+        <img src="${aula.imagem_url}" alt="${aula.nome}" referrerpolicy="no-referrer"
+          style="width:100%;max-height:240px;object-fit:cover;object-position:center center;
+                 display:block;opacity:.9" onerror="this.parentElement.style.display='none'">
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:16px;
+                    background:linear-gradient(to top,rgba(31,56,31,.92) 0%,transparent 100%)">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;
+                      color:var(--bege);line-height:1.2">${aula.nome}</div>
+          ${aula.nome_alternativo ? `<div style="font-size:11px;color:rgba(242,236,206,.75);margin-top:3px;font-style:italic">${aula.nome_alternativo}</div>` : ''}
+        </div>
+        <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);
+                    border-radius:20px;padding:3px 8px;font-size:10px;color:#fff;
+                    display:flex;align-items:center;gap:4px">
+          <i class="ti ti-zoom-in" style="font-size:12px"></i> ampliar
+        </div>
+      </div>` : ''
+
+    const dataFmt = new Date(aula.publicada_em + 'T12:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })
+    const cor = NIVEL_COR[aula.nivel] || 'var(--verde)'
+    const bg  = NIVEL_BG[aula.nivel] || 'rgba(31,56,31,.08)'
+
+    window._salvarYA = function() { _salvarAula(aula, secoes) }
+
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:26px">📖</span>
+          <div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">Yoga Adhyayana</div>
+            <div style="font-size:12px;color:var(--txt2)">${isSemana ? 'Postura da semana' : 'Consultando āsana do histórico'}</div>
+          </div>
+        </div>
+        ${_btnSalvar('window._salvarYA()')}
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+        ${isSemana ? `<span style="font-size:11px;background:var(--dourado);color:#4a3300;padding:3px 10px;border-radius:20px;font-weight:500">★ Postura da semana</span>` : ''}
+        <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${dataFmt}</span>
+        ${aula.nivel ? `<span style="font-size:11px;background:${bg};color:${cor};padding:3px 10px;border-radius:20px;font-weight:500">${aula.nivel}</span>` : ''}
+      </div>
+      ${imgHtml}
+      <div id="${containerId}" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px 16px;margin-bottom:16px">
+        ${secoes.length ? renderStepper() : '<p style="font-size:13px;color:var(--txt2)">Ainda não há conteúdo detalhado cadastrado para este āsana.</p>'}
+      </div>
+      ${aula.fechamento ? `
+      <div style="background:var(--verde);border-radius:12px;padding:20px;margin-bottom:20px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.55);margin-bottom:8px;font-weight:500">Reflexão</div>
+        <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--bege);line-height:1.7;margin:0;font-style:italic;white-space:pre-line">${aula.fechamento}</p>
+      </div>` : ''}
+    `
+  }
+
+  function _iconeOrdenacao(campo) {
+    if (ordenacao.campo !== campo) return '<i class="ti ti-arrows-sort" style="font-size:12px;opacity:.35"></i>'
+    return ordenacao.direcao === 'asc'
+      ? '<i class="ti ti-sort-ascending" style="font-size:12px"></i>'
+      : '<i class="ti ti-sort-descending" style="font-size:12px"></i>'
+  }
+
+  // Tabela com TODAS as posturas já cadastradas (histórico completo), ordenável por nome ou data.
+  function _renderTabela() {
+    const arr = [...linhas].sort((a, b) => {
+      let va, vb
+      if (ordenacao.campo === 'nome') { va = (a.nome || '').toLowerCase(); vb = (b.nome || '').toLowerCase() }
+      else { va = a.publicada_em; vb = b.publicada_em }
+      if (va < vb) return ordenacao.direcao === 'asc' ? -1 : 1
+      if (va > vb) return ordenacao.direcao === 'asc' ? 1 : -1
+      return 0
+    })
+
+    const linhasHtml = arr.map(l => {
+      const isSemana = l.id === aulaSemana.id
+      const isAtiva  = l.id === aulaSel.id
+      const dataFmt  = new Date(l.publicada_em + 'T12:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' })
+      return `
+        <button onclick="window._yaSelPostura('${l.id}')" id="ya-linha-${l.id}"
+          style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;
+                 padding:11px 14px;background:${isAtiva ? 'rgba(31,56,31,.06)' : '#fff'};
+                 border:1px solid ${isAtiva ? 'var(--verde)' : 'var(--borda)'};border-radius:8px;
+                 cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif;margin-bottom:6px">
+          <div style="min-width:0">
+            <div style="font-size:13px;font-weight:500;color:var(--txt);display:flex;align-items:center;gap:6px">
+              ${isSemana ? '<span style="color:var(--dourado)">★</span>' : ''}
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.nome}</span>
+            </div>
+            ${l.nome_alternativo ? `<div style="font-size:11px;color:var(--txt2);font-style:italic">${l.nome_alternativo}</div>` : ''}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            ${l.nivel ? `<span style="font-size:10px;color:${NIVEL_COR[l.nivel] || 'var(--txt2)'}">${l.nivel}</span>` : ''}
+            <span style="font-size:11px;color:var(--txt2)">${dataFmt}</span>
+          </div>
+        </button>`
+    }).join('')
+
+    return `
+      <div style="margin-top:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500">
+            Todas as posturas (${linhas.length})
+          </div>
+          <div style="display:flex;gap:6px">
+            <button onclick="window._yaOrdenar('nome')"
+              style="display:flex;align-items:center;gap:4px;padding:5px 10px;background:#fff;
+                     border:1px solid var(--borda);border-radius:6px;font-size:11px;color:var(--txt2);
+                     cursor:pointer;font-family:'DM Sans',sans-serif">
+              Nome ${_iconeOrdenacao('nome')}
+            </button>
+            <button onclick="window._yaOrdenar('data')"
+              style="display:flex;align-items:center;gap:4px;padding:5px 10px;background:#fff;
+                     border:1px solid var(--borda);border-radius:6px;font-size:11px;color:var(--txt2);
+                     cursor:pointer;font-family:'DM Sans',sans-serif">
+              Data ${_iconeOrdenacao('data')}
+            </button>
+          </div>
+        </div>
+        <div id="ya-tabela-linhas">${linhasHtml}</div>
+      </div>`
+  }
+
+  container.querySelector('.content').innerHTML = `
+    <div id="ya-destaque">${_renderDestaque(aulaSel)}</div>
+    <div id="ya-tabela">${_renderTabela()}</div>
+  `
+
+  window._yaSelPostura = function(id) {
+    const l = linhas.find(x => x.id === id)
+    if (!l) return
+    aulaSel = l
+    const destaqueEl = document.getElementById('ya-destaque')
+    if (destaqueEl) destaqueEl.innerHTML = _renderDestaque(aulaSel)
+    const tabelaEl = document.getElementById('ya-tabela')
+    if (tabelaEl) tabelaEl.innerHTML = _renderTabela()
+    destaqueEl?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  window._yaOrdenar = function(campo) {
+    if (ordenacao.campo === campo) {
+      ordenacao.direcao = ordenacao.direcao === 'asc' ? 'desc' : 'asc'
+    } else {
+      ordenacao = { campo, direcao: campo === 'nome' ? 'asc' : 'desc' }
+    }
+    const tabelaEl = document.getElementById('ya-tabela')
+    if (tabelaEl) tabelaEl.innerHTML = _renderTabela()
+  }
+
   uiAnimar(container)
   await aplicarVocabulario(container)
 }
@@ -1052,4 +1166,4 @@ async function _renderBeneficioGenerico(container, b, campo, temAcesso, planoTip
   `
   uiAnimar(container)
   await aplicarVocabulario(container)
-}  
+}
