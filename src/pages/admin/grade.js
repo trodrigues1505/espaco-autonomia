@@ -14,6 +14,7 @@ export async function renderAlunoGrade(container, page) {
   const tipo = perfil?.tipo
 
     const isAluno = page === 'aluno-grade'
+    if (!isAluno) window._currentPage = page
 
     // ── Unificação Grade + Criar Aulas (abas, só no lado admin) ──────
     // A rota 'criar-aulas' continua existindo em index.js para
@@ -60,6 +61,24 @@ export async function renderAlunoGrade(container, page) {
     let ocorrencias = ocRes.data || []
     const cfg = Object.fromEntries((cfgRes.data||[]).map(c=>[c.chave,c.valor]))
     const planoAluno = matRes.data?.plano_tipo
+
+    // ── Cache para ações da grade (admin): edição, exclusão, cancelamento
+    // individual e em massa dependem de reencontrar o objeto oc completo
+    // (incluindo professor_id, usado por cancelarOcorrenciaGrade para checar
+    // permissão) a partir só do id, sem precisar de outro round-trip ao banco.
+    if (!isAluno) {
+      window._ocsCache = {}
+      ocorrencias.forEach(o => { window._ocsCache[o.id] = o })
+      window._ocsSelecionadas = window._ocsSelecionadas || new Set()
+      window._atualizarBarraSelecao = function() {
+        const bar = document.getElementById('barra-selecao-massa')
+        if (!bar) return
+        const n = window._ocsSelecionadas.size
+        bar.style.display = n > 0 ? 'flex' : 'none'
+        const span = document.getElementById('barra-selecao-count')
+        if (span) span.textContent = `${n} aula(s) selecionada(s)`
+      }
+    }
 
     // ── Filtros do aluno ──────────────────────────────────────
     const f = window._gradeFiltrosAluno || {}
@@ -181,9 +200,14 @@ export async function renderAlunoGrade(container, page) {
             }
           }
 
-          const adminActions = !isAluno ? `<div style="display:flex;gap:2px;margin-top:3px">
+          // adminActions: editar/excluir sempre; cancelar só se a aula ainda não
+          // estiver cancelada e ainda não tiver acontecido; checkbox de seleção
+          // em massa some quando já cancelada (nada a cancelar de novo).
+          const adminActions = !isAluno ? `<div style="display:flex;gap:2px;margin-top:3px;align-items:center">
             <button onclick="event.stopPropagation();editarOcorrencia('${oc.id}')" style="padding:1px 5px;background:rgba(31,56,31,.1);color:var(--verde);border:none;border-radius:3px;font-size:9px;cursor:pointer" title="Editar">✎</button>
             <button onclick="event.stopPropagation();excluirOcorrencia('${oc.id}')" style="padding:1px 5px;background:rgba(255,0,0,.08);color:#c0392b;border:none;border-radius:3px;font-size:9px;cursor:pointer" title="Excluir">✕</button>
+            ${!cancelada && !passada ? `<button onclick="event.stopPropagation();window.cancelarOcorrenciaGrade('${oc.id}',window._ocsCache['${oc.id}'])" style="padding:1px 5px;background:#fceaea;color:#8a1a1a;border:none;border-radius:3px;font-size:9px;cursor:pointer" title="Cancelar aula">⊘</button>
+            <input type="checkbox" class="chk-cancel-massa" ${window._ocsSelecionadas.has(oc.id)?'checked':''} onclick="event.stopPropagation();window._toggleOcSelecionada('${oc.id}')" style="margin-left:3px;cursor:pointer;width:12px;height:12px" title="Selecionar para cancelamento em massa">` : ''}
           </div>` : ''
           gradeHTML += `<td style="border:1px solid rgba(212,200,158,.3);background:${bgCell};padding:5px 7px;vertical-align:top;cursor:${isAluno?'default':'pointer'}${cancelada?';opacity:.75':''}" ${!isAluno?`onclick="verDetalhesOcorrencia('${oc.id}')"`:''}">
             <div style="font-size:10px;font-weight:500;${borderCell};padding-left:4px;line-height:1.3;color:${cancelada?'#999':!permitida?'#ccc':'var(--txt)'}${cancelada?';text-decoration:line-through':''}">${NOMES[oc.modalidade]}</div>
@@ -205,6 +229,13 @@ export async function renderAlunoGrade(container, page) {
       ${temCanceladaNaSemana?`<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:#8a1a1a">🚫 Cancelada</span>`:''}
       ${isAluno?`<span style="font-size:11px;color:var(--txt2)">· Prazo: <strong>${prazoMin>=60?prazoMin/60+'h':prazoMin+'min'}</strong> antes</span>`:''}
     </div>`
+
+    // Barra de seleção para cancelamento em massa (admin)
+    const barraSelecaoHtml = !isAluno ? `<div id="barra-selecao-massa" style="display:none;align-items:center;gap:10px;background:#fceaea;border:1px solid #f5c1c1;border-radius:6px;padding:8px 14px;margin-bottom:12px">
+      <span id="barra-selecao-count" style="font-size:12px;color:#8a1a1a"></span>
+      <button onclick="window._abrirCancelamentoEmMassa()" style="padding:5px 12px;background:#8a1a1a;color:#fff;border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">Cancelar selecionadas</button>
+      <button onclick="window._ocsSelecionadas.clear();window._atualizarBarraSelecao();document.querySelectorAll('.chk-cancel-massa').forEach(c=>c.checked=false)" style="padding:5px 10px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">Limpar seleção</button>
+    </div>` : ''
 
     // Navegação de semana
     const fAtivo = window._gradeFiltrosAluno && Object.values(window._gradeFiltrosAluno).some(v=>v)
@@ -261,11 +292,13 @@ export async function renderAlunoGrade(container, page) {
         ${!isAluno ? (window._gradeBarraAbas || '') : ''}
         ${feriados?.length?`<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:9px 13px;display:flex;align-items:center;gap:8px;font-size:12px;color:#7a5a10;margin-bottom:12px"><i class="ti ti-alert-triangle" style="color:var(--dourado)"></i><span>Há feriados esta semana: ${(feriados||[]).map(f=>f.nome).join(', ')}</span></div>`:''}
         ${navHtml}
+        ${barraSelecaoHtml}
         ${legendaHtml}
         ${gradeHTML}
       </div>
       ${modalDetalhes}
     `
+    if (!isAluno) window._atualizarBarraSelecao()
 
     window.editarOcorrencia = async function(ocId) {
       const { data: oc } = await sb.from('ocorrencias').select('*, aula:aulas(vagas,modalidade)').eq('id', ocId).single()
@@ -346,7 +379,7 @@ export async function renderAlunoGrade(container, page) {
           <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Confirmados</div><div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">${oc.confirmados||0}/${oc.vagas_total}</div></div>
           <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Professor</div><div style="font-size:13px;font-weight:500;color:var(--verde);margin-top:3px">${oc.professor_nome||'—'}</div></div>
         </div>
-        ${oc.cancelada?`<div style="background:#fceaea;border:1px solid #f5c1c1;border-radius:6px;padding:8px 12px;font-size:12px;color:#8a1a1a;margin-bottom:12px">🚫 Esta aula está cancelada${oc.eh_feriado?` (feriado: ${oc.nome_feriado})`:''}</div>`:
+        ${oc.cancelada?`<div style="background:#fceaea;border:1px solid #f5c1c1;border-radius:6px;padding:8px 12px;font-size:12px;color:#8a1a1a;margin-bottom:12px">🚫 Esta aula está cancelada${oc.eh_feriado?` (feriado: ${oc.nome_feriado})`:''}${oc.motivo_cancel?` — Motivo: ${oc.motivo_cancel}`:''}</div>`:
           oc.eh_feriado?`<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:8px 12px;font-size:12px;color:#7a5a10;margin-bottom:12px">⚠ Esta aula cai em feriado: ${oc.nome_feriado}</div>`:''}
         ${aulaPassada?`<div style="margin-bottom:10px"><span style="font-size:10px;color:#e67e22;background:rgba(230,126,34,.1);padding:2px 8px;border-radius:10px">Aula já realizada</span></div>`:''}
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -443,4 +476,4 @@ export async function renderAlunoGrade(container, page) {
       navigate(page)
       document.getElementById('modal-det-oc').style.display = 'flex'
     }
-}  
+}   
