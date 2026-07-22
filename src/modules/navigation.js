@@ -95,14 +95,12 @@ const MENUS = {
     { id: 'aluno-grade',  label: 'Grade de Aulas', icon: 'ti-calendar' },
     { id: 'aluno-minhas', label: 'Minhas Aulas',   icon: 'ti-bookmark' },
     { id: 'aluno-plano',  label: 'Meu Plano',      icon: 'ti-award'    },
-    { id: 'vocabulario-aluno', label: 'Śabda Kośa', icon: 'ti-abc'     },
     ...ITENS_SOBRE,
   ],
   visitante: [
     { sec: 'Meu Espaço' },
     { id: 'aluno-home', label: 'Início', icon: 'ti-home' },
     { id: 'timeline',   label: 'Timeline', icone: '💬'    },
-    { id: 'vocabulario-aluno', label: 'Śabda Kośa', icon: 'ti-abc' },
     ...ITENS_SOBRE,
   ],
 }
@@ -127,6 +125,9 @@ export function buildMenu(tipo, badges = {}) {
     for (const b of DHARMA_PHALA) {
       itens.push({ ...b, _bloqueado: planoData ? !planoData[b.beneficio] : false })
     }
+    // Śabda Kośa não é um benefício de plano — sempre liberado, mas mora
+    // visualmente na seção Dharma Phala por ser conteúdo de estudo.
+    itens.push({ id: 'vocabulario-aluno', label: 'Śabda Kośa', icone: '📖', _bloqueado: false })
   }
 
   if (tipo === 'visitante') {
@@ -134,6 +135,7 @@ export function buildMenu(tipo, badges = {}) {
     for (const b of DHARMA_PHALA) {
       itens.push({ ...b, _bloqueado: !DHARMA_VISITANTE.includes(b.beneficio) })
     }
+    itens.push({ id: 'vocabulario-aluno', label: 'Śabda Kośa', icone: '📖', _bloqueado: false })
   }
 
   for (const item of itens) {
