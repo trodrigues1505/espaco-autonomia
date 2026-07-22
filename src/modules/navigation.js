@@ -95,12 +95,14 @@ const MENUS = {
     { id: 'aluno-grade',  label: 'Grade de Aulas', icon: 'ti-calendar' },
     { id: 'aluno-minhas', label: 'Minhas Aulas',   icon: 'ti-bookmark' },
     { id: 'aluno-plano',  label: 'Meu Plano',      icon: 'ti-award'    },
+    { id: 'vocabulario-aluno', label: 'Śabda Kośa', icon: 'ti-abc'     },
     ...ITENS_SOBRE,
   ],
   visitante: [
     { sec: 'Meu Espaço' },
     { id: 'aluno-home', label: 'Início', icon: 'ti-home' },
     { id: 'timeline',   label: 'Timeline', icone: '💬'    },
+    { id: 'vocabulario-aluno', label: 'Śabda Kośa', icon: 'ti-abc' },
     ...ITENS_SOBRE,
   ],
 }
