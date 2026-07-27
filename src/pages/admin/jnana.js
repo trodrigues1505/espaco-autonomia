@@ -388,7 +388,7 @@ export async function renderJnanaAdmin(container, page) {
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
         body: JSON.stringify({
           model: 'claude-sonnet-4-6',
-          max_tokens: 1500,
+          max_tokens: 3000,
           system: `Você é um extrator de dados de textos sobre o estudo dos Yoga Sutras de Patañjali.
 O texto colado tem tipicamente estas seções, separadas por linhas de "---":
 - ONDE ESTAMOS: contexto do capítulo/pāda em estudo
@@ -422,11 +422,14 @@ Regras:
       const data = await response.json()
       const raw  = data.content?.[0]?.text || ''
       let parsed
-      try {
-        parsed = JSON.parse(raw.replace(/```json|```/g, '').trim())
-      } catch {
-        throw new Error('IA retornou formato inesperado. Tente novamente.')
-      }
+try {
+  const match = raw.match(/\{[\s\S]*\}/)
+  if (!match) throw new Error('sem JSON no texto')
+  parsed = JSON.parse(match[0])
+} catch {
+  console.error('RAW da IA (falhou parse):', raw)
+  throw new Error('IA retornou formato inesperado. Tente novamente.')
+}
       parsed.capitulo_ordem = capituloOrdem
       parsed.capitulo       = (CAPITULOS.find(c => c.ordem === capituloOrdem) || CAPITULOS[0]).nome
       parsed.numero_sutra   = numeroSutra
