@@ -616,4 +616,85 @@ a[style*="background"]:hover { filter: brightness(1.06); transform: translateY(-
 
   /* Texto cinza-neutro usado em telefone não cadastrado etc. (plano.js) */
   [style*="#ccc"] { color: #6B7566 !important; }
+
+  /* ── Ampliação de cobertura — arquivos admin/*.js ───────────────
+     Catalogados em: adhyayana.js, alunos.js, asana.js, config.js,
+     criar_aulas.js, dashboard.js, engajamento.js, grade.js (admin),
+     jnana.js, pagamentos.js, planos.js, presencas.js,
+     previsao-professor.js, professores.js, repasse-pago.js,
+     vinculos.js, vocabulario.js.
+     ATENÇÃO: card()/modal()/badge()/fi() de modules/utils.js não
+     foram vistos — cobertura abaixo é só do HTML que apareceu
+     inline nesses arquivos, não do que essas funções geram. */
+
+  /* Cabeçalhos de tabela em tom bege — ficam pálidos/sem contraste no escuro */
+  [style*="rgba(242,236,206,.25)"],
+  [style*="rgba(242,236,206,.3)"],
+  [style*="rgba(242,236,206,.4)"],
+  [style*="rgba(242,236,206,.45)"],
+  [style*="rgba(242,236,206,.5)"] {
+    background: rgba(154,171,147,.14) !important;
+  }
+
+  /* Aba "Visitantes (Leads)" — tons de azul */
+  [style*="rgba(58,110,165,.08)"],
+  [style*="rgba(58,110,165,.12)"] { background: rgba(90,140,190,.20) !important; }
+  [style*="rgba(58,110,165,.25)"] { border-color: rgba(90,140,190,.45) !important; }
+  [style*="#3a6ea5"] { color: #8FB8DE !important; }
+
+  /* Aba "Engajamento" — roxo */
+  [style*="#8e44ad"] { color: #C89BDB !important; }
+
+  /* "Aula já realizada" (presencas.js/previsao-professor.js) */
+  [style*="rgba(230,126,34,.1)"] { background: rgba(232,158,79,.20) !important; }
+  [style*="#e67e22"] { color: #F0A860 !important; }
+
+  /* Linha de aula redundante (criar_aulas.js) */
+  [style*="rgba(255,180,180,.12)"] { background: rgba(192,57,43,.14) !important; }
+
+  /* Caixa clara de comentário/reflexão (adhyayana.js preview, asana.js) */
+  [style*="#f9f7f0"] { background: #202A1E !important; }
+
+  /* Tint dourado mais fraco — badge "Agendada" (adhyayana.js/jnana.js) */
+  [style*="rgba(232,188,79,.08)"] { background: rgba(232,188,79,.16) !important; }
+
+  /* Borda de "Sem futuras"/aviso — rgba(232,188,79,.4) usado como border, não bg */
+  [style*="rgba(232,188,79,.4)"] { border-color: rgba(232,188,79,.5) !important; }
+
+  /* ── Ampliação de cobertura — modules/utils.js, timeline.js,
+     contrato.js, navigation.js, professor/*.js ────────────────
+     Agora com card()/modal()/badge()/fi() de utils.js à vista. */
+
+  /* PLANO_BADGES (utils.js): Brahma e Shiva 2x usam cor própria,
+     fora do padrão dourado/verde já coberto */
+  [style*="#f0ede4"] { background: rgba(154,171,147,.16) !important; }
+  [style*="#5a5a4a"] { color: #A8B39E !important; }
+  [style*="#d4edda"] { background: rgba(74,138,74,.20) !important; }
+  [style*="#155724"] { color: #8FD18F !important; }
+
+  /* Tint dourado do contrato (LGPD) */
+  [style*="rgba(232,188,79,.12)"] { background: rgba(232,188,79,.18) !important; }
+
+  /* Tints verdes mais fracos (timeline.js comentários, navigation.js iniciais) */
+  [style*="rgba(31,56,31,.03)"],
+  [style*="rgba(31,56,31,.12)"] { background: rgba(74,138,74,.18) !important; }
+
+  /* Banner de moderação (timeline.js) */
+  [style*="#fff8f0"] { background: rgba(232,158,79,.14) !important; }
+  [style*="#f0d9b5"] { border-color: rgba(232,158,79,.4) !important; }
+
+  /* Badge "Contrato aceito" (contrato.js) */
+  [style*="#f0faf0"] { background: rgba(74,138,74,.20) !important; }
+  [style*="#b6ddb6"] { border-color: rgba(74,138,74,.4) !important; }
+  [style*="#2e7d32"], [style*="#4a7a4a"] { color: #8FD18F !important; }
+
+  /* Linha "ausente" na chamada do professor (professor/home.js) */
+  [style*="rgba(255,0,0,.03)"] { background: rgba(192,57,43,.14) !important; }
+
+  /* ── modules/notificacoes.js — COR_NIVEL (painel de avisos) ──── */
+  /* Nível "aviso": rgba(232,188,79,.1) é string distinta de .08/.15/.18 */
+  [style*="rgba(232,188,79,.1)"] { background: rgba(232,188,79,.16) !important; }
+  /* Nível "info": fundo e borda verdes bem fracos */
+  [style*="rgba(31,56,31,.05)"] { background: rgba(74,138,74,.16) !important; }
+  [style*="rgba(31,56,31,.15)"] { border-color: rgba(124,156,130,.3) !important; }
 }
