@@ -42,6 +42,20 @@ export async function renderVocabularioAdmin(container, page) {
         <span>Termos ficam clicáveis automaticamente em qualquer texto do app. Reconhecimento ignora maiúscula/minúscula e diacríticos — "Sankalpa", "sankalpa" e "saṅkalpa" contam como o mesmo termo.</span>
       </div>
 
+      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">Termos não catalogados</div>
+          <button onclick="escanearTermosNaoCatalogados()"
+            style="padding:6px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px;white-space:nowrap">
+            <i class="ti ti-search"></i> Escanear agora
+          </button>
+        </div>
+        <div style="font-size:11px;color:var(--txt2);margin-bottom:10px">
+          Varre Jñāna Mārga, Yoga Adhyayana e Āsana Mārga procurando palavras com diacríticos exclusivos de transliteração sânscrita (ā, ī, ū, ṛ, ṃ, ḥ, ṣ, ṭ, ḍ, ṇ, ś, ñ, ṅ) que ainda não estão cadastradas aqui.
+        </div>
+        <div id="termos-nao-catalogados-container"></div>
+      </div>
+
       <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden">
         <div style="display:grid;grid-template-columns:1fr 2fr 90px;padding:8px 18px;
                     background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;
@@ -151,4 +165,135 @@ export async function renderVocabularioAdmin(container, page) {
     toast('✓ Termo excluído.')
     navigate('vocabulario-admin')
   }
-}
+
+  // ── Escaneamento de termos não catalogados ──────────────────
+  // Heurística: qualquer palavra contendo um diacrítico exclusivo de IAST
+  // (transliteração sânscrita) — nenhum desses caracteres existe em
+  // ortografia portuguesa, então a presença de um deles é um sinal forte
+  // e confiável de que a palavra é um termo sânscrito.
+  const IAST_MARCADOR = /[āīūṛṃḥṣṭḍṇśñṅĀĪŪṚṂḤṢṬḌṆŚÑṄ]/
+  const REGEX_PALAVRA = /[A-Za-zĀĪŪṚṂḤṢṬḌṆŚÑṄāīūṛṃḥṣṭḍṇśñṅ]{3,}/g
+
+  function _extrairDoTexto(texto, destino) {
+    if (!texto || typeof texto !== 'string') return
+    const palavras = texto.match(REGEX_PALAVRA) || []
+    for (const p of palavras) {
+      if (IAST_MARCADOR.test(p)) {
+        const idx = texto.indexOf(p)
+        const contexto = texto.slice(Math.max(0, idx - 40), idx + p.length + 40).trim()
+        destino.push({ termo: p, contexto })
+      }
+    }
+  }
+
+  window.escanearTermosNaoCatalogados = async function() {
+    const btn = document.querySelector('button[onclick="escanearTermosNaoCatalogados()"]')
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Escaneando...' }
+    const container = document.getElementById('termos-nao-catalogados-container')
+    container.innerHTML = '<div style="font-size:12px;color:var(--txt2);padding:8px 0">Escaneando...</div>'
+
+    try {
+      const encontrados = []
+
+      // Jñāna Mārga
+      const { data: sutras } = await sb.from('jnana_sutras').select('contexto_capitulo,comentario,pratica')
+      for (const s of sutras || []) {
+        _extrairDoTexto(s.contexto_capitulo, encontrados)
+        _extrairDoTexto(s.comentario, encontrados)
+        _extrairDoTexto(s.pratica, encontrados)
+      }
+
+      // Yoga Adhyayana
+      const { data: asanas } = await sb.from('adhyayana_asanas').select(
+        'origem_simbolismo,koshas,vayus,chakras,doshas,tattvas,beneficios_fisiologicos,beneficios_sutis,observacoes_terapeuticas,fechamento'
+      )
+      const CAMPOS_ADHY = ['origem_simbolismo','koshas','vayus','chakras','doshas','tattvas',
+        'beneficios_fisiologicos','beneficios_sutis','observacoes_terapeuticas','fechamento']
+      for (const a of asanas || []) {
+        for (const campo of CAMPOS_ADHY) _extrairDoTexto(a[campo], encontrados)
+      }
+
+      // Āsana Mārga (campos são arrays jsonb de {termo, desc})
+      const { data: praticas } = await sb.from('asana_praticas').select('*')
+      const CAMPOS_ASANA = ['introducao','pranayama','mantra','koshas','chakras','gunas','tipos_yoga','musculos']
+      for (const p of praticas || []) {
+        for (const campo of CAMPOS_ASANA) {
+          const lista = p[campo]
+          if (Array.isArray(lista)) {
+            for (const item of lista) {
+              if (item?.termo) _extrairDoTexto(item.termo, encontrados)
+              if (item?.desc) _extrairDoTexto(item.desc, encontrados)
+            }
+          }
+        }
+      }
+
+      // Dedup por termo normalizado — mantém só a 1ª ocorrência (com contexto)
+      const vistos = new Map()
+      for (const f of encontrados) {
+        const norm = _normalizarDiacriticos(f.termo)
+        if (!vistos.has(norm)) vistos.set(norm, f)
+      }
+
+      // Remove os que já estão catalogados
+      const { data: existentes } = await sb.from('vocabulario').select('termo_normalizado')
+      const jaCatalogados = new Set((existentes || []).map(v => v.termo_normalizado))
+      const novos = [...vistos.entries()]
+        .filter(([norm]) => !jaCatalogados.has(norm))
+        .map(([norm, f]) => ({ ...f, termo_normalizado: norm }))
+        .sort((a, b) => a.termo.localeCompare(b.termo))
+
+      _renderTermosNaoCatalogados(novos)
+    } catch (e) {
+      container.innerHTML = `<p style="color:#c0392b;font-size:12px">Erro ao escanear: ${e.message}</p>`
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-search"></i> Escanear agora' }
+    }
+  }
+
+  function _renderTermosNaoCatalogados(lista) {
+    const container = document.getElementById('termos-nao-catalogados-container')
+    if (!lista.length) {
+      container.innerHTML = '<div style="font-size:12px;color:var(--txt2);padding:8px 0">Nenhum termo novo encontrado — tudo que foi detectado já está catalogado.</div>'
+      return
+    }
+    container.innerHTML = `
+      <div style="font-size:11px;color:#7a5a10;background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:8px 12px;margin-bottom:10px">
+        ${lista.length} termo(s) encontrado(s), ainda não cadastrado(s). Revise o contexto e escreva a definição de cada um antes de salvar.
+      </div>
+      ${lista.map((item, i) => `
+        <div style="border:1px solid var(--borda);border-radius:8px;padding:12px 14px;margin-bottom:8px" id="tnc-${i}">
+          <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">
+            <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">${item.termo}</span>
+          </div>
+          <div style="font-size:11px;color:var(--txt2);font-style:italic;margin-bottom:8px">"...${item.contexto}..."</div>
+          <textarea id="tnc-def-${i}" rows="2" placeholder="Escreva a definição deste termo..."
+            style="width:100%;border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;resize:vertical;box-sizing:border-box;margin-bottom:8px"></textarea>
+          <div style="display:flex;gap:6px">
+            <button onclick="salvarTermoEscaneado(${i}, '${item.termo.replace(/'/g, "\\'")}')"
+              style="padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">
+              ✓ Cadastrar
+            </button>
+            <button onclick="document.getElementById('tnc-${i}').remove()"
+              style="padding:5px 12px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:11px;cursor:pointer;color:var(--txt2)">
+              Ignorar
+            </button>
+          </div>
+        </div>`).join('')}
+    `
+  }
+
+  window.salvarTermoEscaneado = async function(idx, termo) {
+    const definicao = document.getElementById(`tnc-def-${idx}`)?.value.trim()
+    if (!definicao) { toast('Escreva a definição antes de cadastrar'); return }
+    const { error: err } = await sb.from('vocabulario').insert({
+      termo,
+      termo_normalizado: _normalizarDiacriticos(termo),
+      definicao,
+    })
+    if (err) { toast('Erro: ' + err.message); return }
+    invalidarCacheVocabulario()
+    toast(`✓ "${termo}" cadastrado!`)
+    document.getElementById(`tnc-${idx}`)?.remove()
+  }
+}   
