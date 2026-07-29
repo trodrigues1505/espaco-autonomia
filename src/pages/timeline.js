@@ -579,6 +579,10 @@ export async function renderTimeline(container, page) {
         <button class="tl-btn-rejeitar" data-post="${post.id}" style="padding:6px 14px;background:#fff;color:#c0392b;border:1px solid #f5c1c1;border-radius:6px;font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer">Rejeitar</button>
       </div>` : ''
 
+    // ── Comentários ──────────────────────────────────────────
+    // Correção 1: adicionado overflow:hidden por padrão aqui (mantido),
+    // mas agora toggleComentarios() alterna também o overflow para
+    // permitir rolagem quando o conteúdo ultrapassa max-height:600px.
     const comentariosSection = podeComentar ? `
       <div id="tl-comments-${post.id}" data-aberto="0" style="max-height:0;overflow:hidden;border-top:0 solid var(--borda);padding:0 18px;transition:max-height .2s ease">
         <div id="tl-comments-list-${post.id}"></div>
@@ -774,17 +778,24 @@ export async function renderTimeline(container, page) {
     toast(salvo ? 'Removido dos salvos' : 'Post salvo 🔖')
   }
 
+  // Correção 1 (item 1 do bug report): ao abrir a seção de comentários,
+  // agora também setamos overflow:auto — sem isso, o conteúdo que
+  // ultrapassasse os 600px de max-height ficava simplesmente cortado,
+  // sem barra de rolagem, pois overflow:hidden (definido no HTML inicial)
+  // nunca era revertido.
   async function toggleComentarios(postId) {
     const sec = document.getElementById(`tl-comments-${postId}`)
     if (!sec) return
     const aberto = sec.dataset.aberto === '1'
     if (aberto) {
       sec.style.maxHeight = '0'
+      sec.style.overflow = 'hidden'
       sec.style.borderTopWidth = '0'
       sec.style.padding = '0 18px'
       sec.dataset.aberto = '0'
     } else {
       sec.style.maxHeight = '600px'
+      sec.style.overflow = 'auto'
       sec.style.borderTopWidth = '1px'
       sec.style.padding = '10px 18px'
       sec.dataset.aberto = '1'
@@ -824,7 +835,7 @@ export async function renderTimeline(container, page) {
               <span style="font-size:11px;font-weight:600;color:var(--verde)">${escapeHtml(c.autor_nome)}</span>
               ${btnExcluirComentario}
             </div>
-            <div style="font-size:12px;color:var(--txt);margin-top:2px;line-height:1.5">${escapeHtml(c.comentario_text)}</div>
+            <div style="font-size:12px;color:var(--txt);margin-top:2px;line-height:1.5;white-space:pre-wrap;word-break:break-word">${escapeHtml(c.comentario_text)}</div>
             <div style="font-size:10px;color:var(--txt2);margin-top:3px">${formatarData(c.comentario_em)}</div>
           </div>
         </div>`
@@ -976,4 +987,4 @@ function renderComposeBox(perfil, isAdmin, isProf) {
       </div>
     </div>
   `
-}  
+}
