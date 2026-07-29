@@ -147,3 +147,120 @@ export async function aplicarVocabulario(container) {
   const alvo = container.querySelector?.('.content') || container
   _percorrerEEnvolver(alvo, window._vocabRegex)
 }
+
+// ── Seleção de texto → criar/editar termo na hora ───────────────
+// Só faz sentido pra quem tem permissão de escrever no vocabulário (admin,
+// conforme a RLS "admin escreve vocabulario"). Ao selecionar uma palavra ou
+// frase curta em qualquer lugar do app, aparece um botão flutuante — clicar
+// nele abre um modal pra criar (ou editar, se já existir) a definição.
+let _selecaoInit = false
+
+export function initSelecaoParaCriarTermo() {
+  if (_selecaoInit) return
+  _selecaoInit = true
+
+  document.addEventListener('mouseup', (e) => {
+    // Ignora cliques dentro do próprio botão flutuante ou do modal, senão
+    // o botão desaparece antes do clique nele completar.
+    if (e.target.closest?.('#_voc-botao-flutuante') || e.target.closest?.('#_voc-modal-criar')) return
+
+    const sel = window.getSelection()
+    const texto = sel?.toString().trim() || ''
+    document.getElementById('_voc-botao-flutuante')?.remove()
+
+    if (!texto || texto.length < 2 || texto.length > 60 || texto.includes('\n')) return
+    if (window._perfil?.tipo !== 'admin') return
+
+    const range = sel.getRangeAt(0)
+    const rect = range.getBoundingClientRect()
+    if (!rect || (rect.width === 0 && rect.height === 0)) return
+
+    const btn = document.createElement('button')
+    btn.id = '_voc-botao-flutuante'
+    btn.textContent = '+ Śabda Kośa'
+    btn.style.cssText = `
+      position:fixed; top:${rect.top - 34}px; left:${Math.max(8, rect.left)}px;
+      z-index:700; background:var(--verde, #1F381F); color:var(--bege, #f2ecce);
+      border:none; border-radius:6px; padding:5px 10px; font-size:11px;
+      font-family:'DM Sans',sans-serif; cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,.25);
+    `
+    btn.addEventListener('mousedown', (ev) => ev.preventDefault()) // não perde a seleção ao clicar
+    btn.addEventListener('click', () => {
+      btn.remove()
+      _abrirModalCriarTermo(texto)
+    })
+    document.body.appendChild(btn)
+  })
+
+  // Remove o botão se o usuário clicar fora ou rolar a página
+  document.addEventListener('scroll', () => document.getElementById('_voc-botao-flutuante')?.remove(), true)
+}
+
+async function _abrirModalCriarTermo(textoSelecionado) {
+  document.getElementById('_voc-modal-criar')?.remove()
+  const normalizado = _normalizarDiacriticos(textoSelecionado)
+
+  // Verifica se o termo já existe, pra abrir em modo edição em vez de duplicar
+  let existente = null
+  try {
+    const { data } = await window._sb.from('vocabulario').select('*').eq('termo_normalizado', normalizado).maybeSingle()
+    existente = data || null
+  } catch (e) { /* segue como novo termo se a checagem falhar */ }
+
+  const div = document.createElement('div')
+  div.id = '_voc-modal-criar'
+  div.style.cssText = 'position:fixed;inset:0;background:rgba(31,56,31,.7);z-index:700;display:flex;align-items:center;justify-content:center;padding:20px'
+  div.innerHTML = `
+    <div style="background:#fff;border-radius:12px;width:420px;max-width:100%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+      <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)">
+          ${existente ? 'Editar termo' : 'Novo termo no Śabda Kośa'}
+        </div>
+        <button id="_voc-fechar-criar" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
+      </div>
+      <div style="padding:20px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Termo</label>
+          <input id="_voc-input-termo" value="${_esc(existente?.termo || textoSelecionado)}"
+            style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Definição</label>
+          <textarea id="_voc-input-def" rows="4" placeholder="O que significa este termo..."
+            style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;resize:vertical">${_esc(existente?.definicao || '')}</textarea>
+        </div>
+        ${existente ? '<div style="font-size:10px;color:#7a5a10">Este termo já existe — salvar aqui atualiza a definição.</div>' : ''}
+      </div>
+      <div style="padding:0 20px 20px;display:flex;justify-content:flex-end;gap:8px">
+        <button id="_voc-cancelar-criar" style="padding:8px 16px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+        <button id="_voc-salvar-criar" style="padding:8px 16px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500">
+          ✓ Salvar
+        </button>
+      </div>
+    </div>`
+  document.body.appendChild(div)
+
+  div.addEventListener('click', (e) => { if (e.target === div) div.remove() })
+  document.getElementById('_voc-fechar-criar').addEventListener('click', () => div.remove())
+  document.getElementById('_voc-cancelar-criar').addEventListener('click', () => div.remove())
+  document.getElementById('_voc-salvar-criar').addEventListener('click', async () => {
+    const termo = document.getElementById('_voc-input-termo').value.trim()
+    const definicao = document.getElementById('_voc-input-def').value.trim()
+    if (!termo || !definicao) return
+    const btnSalvar = document.getElementById('_voc-salvar-criar')
+    btnSalvar.disabled = true
+    btnSalvar.textContent = 'Salvando...'
+    const { error } = await window._sb.from('vocabulario').upsert(
+      { termo, termo_normalizado: _normalizarDiacriticos(termo), definicao },
+      { onConflict: 'termo_normalizado' }
+    )
+    if (error) {
+      btnSalvar.disabled = false
+      btnSalvar.textContent = '✓ Salvar'
+      alert('Erro ao salvar: ' + error.message)
+      return
+    }
+    invalidarCacheVocabulario()
+    div.remove()
+  })
+}
