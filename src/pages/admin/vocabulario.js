@@ -29,12 +29,20 @@ export async function renderVocabularioAdmin(container, page) {
   container.innerHTML = `
     <div class="topbar">
       <div class="topbar-t">Śabda Kośa</div>
-      <button onclick="abrirFormVocab()"
-        style="padding:6px 14px;background:var(--verde);color:var(--bege);border:none;
-               border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
-               display:flex;align-items:center;gap:5px">
-        <i class="ti ti-plus"></i> Novo termo
-      </button>
+      <div style="display:flex;gap:8px">
+        <button onclick="abrirImportVocab()"
+          style="padding:6px 14px;background:transparent;color:var(--verde);border:1px solid var(--verde);
+                 border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
+                 display:flex;align-items:center;gap:5px">
+          <i class="ti ti-upload"></i> Importar JSON
+        </button>
+        <button onclick="abrirFormVocab()"
+          style="padding:6px 14px;background:var(--verde);color:var(--bege);border:none;
+                 border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
+                 display:flex;align-items:center;gap:5px">
+          <i class="ti ti-plus"></i> Novo termo
+        </button>
+      </div>
     </div>
     <div class="content">
       <div style="background:rgba(31,56,31,.04);border:1px solid rgba(31,56,31,.12);border-radius:6px;padding:9px 13px;font-size:12px;color:var(--verde);margin-bottom:14px;display:flex;align-items:center;gap:8px">
@@ -107,6 +115,52 @@ export async function renderVocabularioAdmin(container, page) {
           <button onclick="salvarVocab()"
             style="padding:8px 16px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500">
             <i class="ti ti-check"></i> Salvar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="modal-import-vocab" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.6);
+                                   z-index:210;align-items:center;justify-content:center;padding:16px">
+      <div style="background:#fff;border-radius:12px;width:640px;max-width:100%;max-height:88vh;display:flex;flex-direction:column">
+        <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)" id="import-vocab-titulo">Importar termos (JSON)</div>
+          <button onclick="fecharImportVocab()"
+            style="background:none;border:none;color:var(--bege);font-size:22px;cursor:pointer;line-height:1">×</button>
+        </div>
+
+        <div id="import-vocab-step-colar" style="padding:20px;display:flex;flex-direction:column;gap:12px;overflow-y:auto">
+          <div style="font-size:12px;color:var(--txt2)">
+            Cole abaixo um array JSON no formato <code>[{"termo": "...", "definicao": "..."}]</code>, ou selecione um arquivo <code>.json</code>.
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Arquivo .json</label>
+            <input type="file" id="import-vocab-file" accept="application/json,.json"
+              style="font-size:12px;font-family:'DM Sans',sans-serif">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Ou cole o JSON aqui</label>
+            <textarea id="import-vocab-textarea" rows="10" placeholder='[{"termo": "Sankalpa", "definicao": "..."}]'
+              style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:12px;font-family:monospace;outline:none;resize:vertical"></textarea>
+          </div>
+          <div id="import-vocab-erro" style="display:none;font-size:12px;color:#c0392b;background:#fceaea;border-radius:6px;padding:8px 12px"></div>
+        </div>
+
+        <div id="import-vocab-step-preview" style="display:none;padding:20px;overflow-y:auto;flex:1">
+          <div id="import-vocab-preview-resumo" style="font-size:12px;color:var(--txt2);margin-bottom:12px"></div>
+          <div id="import-vocab-preview-lista"></div>
+        </div>
+
+        <div style="padding:16px 20px;border-top:1px solid var(--borda);display:flex;justify-content:space-between;gap:8px">
+          <button id="import-vocab-btn-voltar" onclick="voltarImportVocab()" style="display:none;padding:8px 16px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">
+            ← Voltar
+          </button>
+          <div style="flex:1"></div>
+          <button onclick="fecharImportVocab()"
+            style="padding:8px 16px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+          <button id="import-vocab-btn-avancar" onclick="prevalidarImportVocab()"
+            style="padding:8px 16px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500">
+            Continuar →
           </button>
         </div>
       </div>
@@ -320,5 +374,194 @@ export async function renderVocabularioAdmin(container, page) {
     a.remove()
     URL.revokeObjectURL(url)
     toast(`✓ ${lista.length} termo(s) exportado(s)`)
+  }
+
+  // ── Importação em lote de termos já com definição ───────────
+  // Recebe um array [{termo, definicao}], valida, deduplica contra o que
+  // já existe na tabela e contra o próprio lote, mostra prévia, e só então
+  // insere tudo de uma vez (um único insert em lote, não um loop).
+
+  window.abrirImportVocab = function() {
+    document.getElementById('import-vocab-erro').style.display = 'none'
+    document.getElementById('import-vocab-erro').textContent = ''
+    document.getElementById('import-vocab-textarea').value = ''
+    document.getElementById('import-vocab-file').value = ''
+    document.getElementById('import-vocab-step-colar').style.display = 'flex'
+    document.getElementById('import-vocab-step-preview').style.display = 'none'
+    document.getElementById('import-vocab-btn-voltar').style.display = 'none'
+    document.getElementById('import-vocab-btn-avancar').style.display = 'inline-block'
+    document.getElementById('import-vocab-btn-avancar').textContent = 'Continuar →'
+    document.getElementById('import-vocab-btn-avancar').onclick = window.prevalidarImportVocab
+    document.getElementById('import-vocab-titulo').textContent = 'Importar termos (JSON)'
+    document.getElementById('modal-import-vocab').style.display = 'flex'
+
+    const fileInput = document.getElementById('import-vocab-file')
+    fileInput.onchange = function() {
+      const file = fileInput.files?.[0]
+      if (!file) return
+      const reader = new FileReader()
+      reader.onload = () => { document.getElementById('import-vocab-textarea').value = reader.result }
+      reader.onerror = () => { _mostrarErroImportVocab('Não foi possível ler o arquivo selecionado.') }
+      reader.readAsText(file)
+    }
+  }
+
+  window.fecharImportVocab = function() {
+    document.getElementById('modal-import-vocab').style.display = 'none'
+  }
+
+  function _mostrarErroImportVocab(msg) {
+    const el = document.getElementById('import-vocab-erro')
+    el.textContent = msg
+    el.style.display = 'block'
+  }
+
+  function _parseImportJson(raw) {
+    raw = (raw || '').trim()
+    if (!raw) throw new Error('Cole o JSON ou selecione um arquivo antes de continuar.')
+    let parsed
+    try {
+      parsed = JSON.parse(raw)
+    } catch {
+      // Fallback: extrai o primeiro array presente no texto colado, caso
+      // venha com texto/markdown ao redor (mesmo padrão usado no jnana.js).
+      const m = raw.match(/\[[\s\S]*\]/)
+      if (!m) throw new Error('Não encontrei um array JSON válido no texto colado.')
+      parsed = JSON.parse(m[0])
+    }
+    if (!Array.isArray(parsed)) throw new Error('O JSON precisa ser um array de objetos {termo, definicao}.')
+    return parsed
+  }
+
+  window.prevalidarImportVocab = async function() {
+    document.getElementById('import-vocab-erro').style.display = 'none'
+    let parsed
+    try {
+      parsed = _parseImportJson(document.getElementById('import-vocab-textarea').value)
+    } catch (e) {
+      _mostrarErroImportVocab(e.message)
+      return
+    }
+
+    // Validação item a item
+    const validos = []
+    const invalidos = []
+    parsed.forEach((item, i) => {
+      const termo = String(item?.termo ?? '').trim()
+      const definicao = String(item?.definicao ?? '').trim()
+      if (!termo || !definicao) { invalidos.push({ i, item }); return }
+      validos.push({ termo, definicao, termo_normalizado: _normalizarDiacriticos(termo) })
+    })
+
+    // Dedup dentro do próprio lote — mantém a primeira ocorrência
+    const semDupInterna = []
+    const vistosNoLote = new Set()
+    let duplicadosNoLote = 0
+    for (const v of validos) {
+      if (vistosNoLote.has(v.termo_normalizado)) { duplicadosNoLote++; continue }
+      vistosNoLote.add(v.termo_normalizado)
+      semDupInterna.push(v)
+    }
+
+    // Dedup contra o que já existe na tabela
+    const { data: existentes, error: errExist } = await sb.from('vocabulario').select('termo_normalizado')
+    if (errExist) { _mostrarErroImportVocab('Erro ao consultar termos existentes: ' + errExist.message); return }
+    const jaCatalogados = new Set((existentes || []).map(v => v.termo_normalizado))
+
+    const novos = semDupInterna.filter(v => !jaCatalogados.has(v.termo_normalizado))
+    const jaExistentes = semDupInterna.filter(v => jaCatalogados.has(v.termo_normalizado))
+
+    window._importVocabNovos = novos
+    window._importVocabJaExistentes = jaExistentes
+    window._importVocabInvalidos = invalidos
+
+    _renderPreviewImportVocab({ novos, jaExistentes, invalidos, duplicadosNoLote, totalRecebido: parsed.length })
+
+    document.getElementById('import-vocab-step-colar').style.display = 'none'
+    document.getElementById('import-vocab-step-preview').style.display = 'block'
+    document.getElementById('import-vocab-btn-voltar').style.display = 'inline-block'
+    const btnAvancar = document.getElementById('import-vocab-btn-avancar')
+    btnAvancar.textContent = novos.length ? `Importar ${novos.length} termo(s)` : 'Nada a importar'
+    btnAvancar.disabled = !novos.length
+    btnAvancar.style.opacity = novos.length ? '1' : '.5'
+    btnAvancar.onclick = window.confirmarImportVocab
+    document.getElementById('import-vocab-titulo').textContent = 'Revisar importação'
+  }
+
+  function _renderPreviewImportVocab({ novos, jaExistentes, invalidos, duplicadosNoLote, totalRecebido }) {
+    const resumo = document.getElementById('import-vocab-preview-resumo')
+    resumo.innerHTML = `
+      ${totalRecebido} registro(s) recebido(s) do JSON.<br>
+      <b style="color:var(--verde)">${novos.length}</b> serão importados como termos novos.
+      ${jaExistentes.length ? `<br><b style="color:#7a5a10">${jaExistentes.length}</b> já existem no vocabulário e serão ignorados (não sobrescrevem).` : ''}
+      ${duplicadosNoLote ? `<br><b style="color:#7a5a10">${duplicadosNoLote}</b> duplicado(s) dentro do próprio JSON colado (mantida só a primeira ocorrência).` : ''}
+      ${invalidos.length ? `<br><b style="color:#c0392b">${invalidos.length}</b> registro(s) sem "termo" ou "definicao" — ignorados.` : ''}
+    `
+
+    const lista = document.getElementById('import-vocab-preview-lista')
+    if (!novos.length) {
+      lista.innerHTML = '<div style="font-size:12px;color:var(--txt2);padding:8px 0">Nenhum termo novo para importar.</div>'
+      return
+    }
+    lista.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 2fr;padding:6px 12px;background:rgba(242,236,206,.45);
+                  font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px;border-radius:6px 6px 0 0">
+        <span>Termo</span><span>Definição</span>
+      </div>
+      <div style="max-height:320px;overflow-y:auto;border:1px solid var(--borda);border-top:none;border-radius:0 0 6px 6px">
+        ${novos.map(v => `
+          <div style="display:grid;grid-template-columns:1fr 2fr;gap:10px;padding:8px 12px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
+            <span style="font-weight:500;color:var(--txt)">${_escImport(v.termo)}</span>
+            <span style="color:var(--txt2)">${_escImport(v.definicao)}</span>
+          </div>`).join('')}
+      </div>
+    `
+  }
+
+  function _escImport(str) {
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  }
+
+  window.voltarImportVocab = function() {
+    document.getElementById('import-vocab-step-preview').style.display = 'none'
+    document.getElementById('import-vocab-step-colar').style.display = 'flex'
+    document.getElementById('import-vocab-btn-voltar').style.display = 'none'
+    const btnAvancar = document.getElementById('import-vocab-btn-avancar')
+    btnAvancar.textContent = 'Continuar →'
+    btnAvancar.disabled = false
+    btnAvancar.style.opacity = '1'
+    btnAvancar.onclick = window.prevalidarImportVocab
+    document.getElementById('import-vocab-titulo').textContent = 'Importar termos (JSON)'
+  }
+
+  window.confirmarImportVocab = async function() {
+    const novos = window._importVocabNovos || []
+    if (!novos.length) return
+    const btn = document.getElementById('import-vocab-btn-avancar')
+    btn.disabled = true
+    const textoOriginal = btn.textContent
+    btn.textContent = 'Importando...'
+
+    const payload = novos.map(v => ({
+      termo: v.termo,
+      termo_normalizado: v.termo_normalizado,
+      definicao: v.definicao,
+    }))
+
+    const { error: err } = await sb.from('vocabulario').insert(payload)
+
+    if (err) {
+      btn.disabled = false
+      btn.textContent = textoOriginal
+      _mostrarErroImportVocab('Erro ao importar: ' + err.message)
+      document.getElementById('import-vocab-step-preview').style.display = 'none'
+      document.getElementById('import-vocab-step-colar').style.display = 'flex'
+      return
+    }
+
+    invalidarCacheVocabulario()
+    toast(`✓ ${novos.length} termo(s) importado(s)!`)
+    document.getElementById('modal-import-vocab').style.display = 'none'
+    navigate('vocabulario-admin')
   }
 }
