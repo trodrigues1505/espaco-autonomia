@@ -243,6 +243,7 @@ export async function renderVocabularioAdmin(container, page) {
         .map(([norm, f]) => ({ ...f, termo_normalizado: norm }))
         .sort((a, b) => a.termo.localeCompare(b.termo))
 
+      window._tncLista = novos
       _renderTermosNaoCatalogados(novos)
     } catch (e) {
       container.innerHTML = `<p style="color:#c0392b;font-size:12px">Erro ao escanear: ${e.message}</p>`
@@ -258,8 +259,12 @@ export async function renderVocabularioAdmin(container, page) {
       return
     }
     container.innerHTML = `
-      <div style="font-size:11px;color:#7a5a10;background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:8px 12px;margin-bottom:10px">
-        ${lista.length} termo(s) encontrado(s), ainda não cadastrado(s). Revise o contexto e escreva a definição de cada um antes de salvar.
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:#7a5a10;background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:8px 12px;margin-bottom:10px">
+        <span>${lista.length} termo(s) encontrado(s), ainda não cadastrado(s). Revise o contexto e escreva a definição de cada um antes de salvar.</span>
+        <button onclick="exportarTermosEscaneadosJson()"
+          style="padding:4px 10px;background:#fff;color:#7a5a10;border:1px solid rgba(232,188,79,.5);border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;display:flex;align-items:center;gap:4px">
+          <i class="ti ti-download"></i> Exportar JSON
+        </button>
       </div>
       ${lista.map((item, i) => `
         <div style="border:1px solid var(--borda);border-radius:8px;padding:12px 14px;margin-bottom:8px" id="tnc-${i}">
@@ -296,4 +301,24 @@ export async function renderVocabularioAdmin(container, page) {
     toast(`✓ "${termo}" cadastrado!`)
     document.getElementById(`tnc-${idx}`)?.remove()
   }
-}   
+
+  // Exporta a lista escaneada (termo + contexto onde apareceu) como um
+  // arquivo .json, no formato que encaixa direto no prompt de geração de
+  // definições em lote. Não depende de servidor — gera o arquivo no
+  // próprio navegador via Blob e dispara o download.
+  window.exportarTermosEscaneadosJson = function() {
+    const lista = window._tncLista || []
+    if (!lista.length) { toast('Nenhum termo escaneado pra exportar'); return }
+    const exportavel = lista.map(item => ({ termo: item.termo, contexto: item.contexto }))
+    const blob = new Blob([JSON.stringify(exportavel, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `sabda-kosha-termos-nao-catalogados-${new Date().toISOString().slice(0,10)}.json`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+    toast(`✓ ${lista.length} termo(s) exportado(s)`)
+  }
+}
