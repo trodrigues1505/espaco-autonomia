@@ -7,6 +7,7 @@ import { buildMenu, homePorPerfil, initMobileMenu } from './navigation.js'
 import { verificarContrato } from './contrato.js'
 import { initProfessorCancel } from './professor-cancel.js'
 import { toast, PLANO_NOMES } from './utils.js'
+import { initSelecaoParaCriarTermo } from './vocabulario.js'
 
 // ── Onboarding ───────────────────────────────────────────────
 // Todo login novo pelo Google entra como 'visitante'. A promoção para
@@ -174,6 +175,7 @@ export async function iniciarApp(user) {
     buildMenu(perfil.tipo)
     initMobileMenu()
     initProfessorCancel()
+    if (perfil.tipo === 'admin') initSelecaoParaCriarTermo()
 
     if (perfil.tipo === 'aluno') {
       await verificarContrato(perfil.id, perfil.nome)
@@ -236,4 +238,4 @@ document.getElementById('login-senha')
   ?.addEventListener('keydown', e => { if (e.key === 'Enter') window.fazerLogin() })
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-google')?.addEventListener('click', window.loginGoogle)
-})   
+})
