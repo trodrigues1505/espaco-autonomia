@@ -76,6 +76,7 @@ const MENUS = {
     { id: 'asana-admin',        label: 'Āsana Mārga',         icon: 'ti-yoga'             },
     { id: 'adhyayana-admin',    label: 'Yoga Adhyayana',      icon: 'ti-flower'           },
     { id: 'vocabulario-admin',  label: 'Śabda Kośa',          icon: 'ti-abc'              },
+    { id: 'grantha-admin',      label: 'Grantha Mandir',      icon: 'ti-library'          },
     { id: 'config',             label: 'Configurações',        icon: 'ti-settings'         },
     ...ITENS_SOBRE,
   ],
@@ -128,6 +129,7 @@ export function buildMenu(tipo, badges = {}) {
     // Śabda Kośa não é um benefício de plano — sempre liberado, mas mora
     // visualmente na seção Dharma Phala por ser conteúdo de estudo.
     itens.push({ id: 'vocabulario-aluno', label: 'Śabda Kośa', icone: '📖', _bloqueado: false })
+    itens.push({ id: 'grantha-aluno', label: 'Grantha Mandir', icone: '📚', _bloqueado: false })
   }
 
   if (tipo === 'visitante') {
@@ -136,6 +138,7 @@ export function buildMenu(tipo, badges = {}) {
       itens.push({ ...b, _bloqueado: !DHARMA_VISITANTE.includes(b.beneficio) })
     }
     itens.push({ id: 'vocabulario-aluno', label: 'Śabda Kośa', icone: '📖', _bloqueado: false })
+    itens.push({ id: 'grantha-aluno', label: 'Grantha Mandir', icone: '📚', _bloqueado: false })
   }
 
   for (const item of itens) {
