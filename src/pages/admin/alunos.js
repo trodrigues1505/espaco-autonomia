@@ -234,6 +234,7 @@ export async function renderAlunos(container, page) {
           <option value="vishnu_2x"    ${filtroPlanok==='vishnu_2x'   ?'selected':''}>Vishnu 2x</option>
           <option value="vishnu_livre" ${filtroPlanok==='vishnu_livre'?'selected':''}>Vishnu Livre</option>
         </select>`:''}
+        ${aba==='alunos'?`<button onclick="window.executarCreditoMensal()" title="Gera o crédito de aulas do mês atual para todos os alunos com matrícula ativa. É seguro rodar mais de uma vez — alunos que já têm o crédito deste mês não são duplicados." style="padding:6px 13px;background:#fff;color:var(--verde);border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-refresh"></i> Creditar aulas do mês</button>`:''}
         ${aba==='alunos'?`<button onclick="document.getElementById('modal-cad-aluno').style.display='flex'" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-user-plus"></i> Cadastrar</button>`:''}
       </div>
     </div>
@@ -427,6 +428,40 @@ export async function renderAlunos(container, page) {
   window.updateValorPromocao = function() {
     const p = document.getElementById('pv-plano')?.value
     if (p && document.getElementById('pv-valor')) document.getElementById('pv-valor').value = PLANO_VALORES[p]||0
+  }
+
+  // Botão manual "Creditar aulas do mês" — salvaguarda caso o cron mensal
+  // (creditar_aulas_todos_alunos_mes agendado via pg_cron, dia 1 00:00) não
+  // rode por algum motivo. Chama a mesma RPC de lote; é seguro repetir pois
+  // creditar_aulas_mes usa "on conflict (aluno_id, mes_ref) do nothing".
+  window.executarCreditoMensal = async function() {
+    if (!confirm('Isso vai gerar o crédito de aulas do mês atual para todos os alunos com matrícula ativa. Alunos que já têm o crédito deste mês não serão duplicados. Continuar?')) return
+
+    const btn = document.querySelector('button[onclick="window.executarCreditoMensal()"]')
+    const btnHtmlOriginal = btn ? btn.innerHTML : null
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Creditando...' }
+
+    try {
+      const { data, error } = await _sb.rpc('creditar_aulas_todos_alunos_mes', { p_mes_ref: mesRefAtual() })
+      if (error) { toast('Erro ao creditar aulas: ' + error.message); return }
+
+      const linhas = data || []
+      const erros = linhas.filter(r => r.status !== 'ok')
+      const okCount = linhas.length - erros.length
+
+      if (erros.length > 0) {
+        console.error('Erros ao creditar aulas do mês:', erros)
+        toast('✓ ' + okCount + ' aluno(s) creditado(s), ' + erros.length + ' com erro (veja o console).')
+      } else {
+        toast('✓ ' + okCount + ' aluno(s) creditado(s) para o mês atual!')
+      }
+
+      navigate('alunos')
+    } catch(e) {
+      toast('Erro: ' + e.message)
+    } finally {
+      if (btn) { btn.disabled = false; if (btnHtmlOriginal !== null) btn.innerHTML = btnHtmlOriginal }
+    }
   }
 
   window.salvarNovoAluno = async function() {
@@ -735,4 +770,4 @@ export async function renderAlunos(container, page) {
     window._pendingEditAluno = null
     setTimeout(() => window.editarAluno && window.editarAluno(idParaEditar), 50)
   }
-}   
+}
