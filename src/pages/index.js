@@ -1,7 +1,7 @@
 /**
  * src/pages/index.js
  */
-const V = '?v=26'
+const V = '?v=27'
 const rotaMap = {
   'dashboard':          () => import('./admin/dashboard.js'  + V).then(m => m.renderDashboard),
   'timeline':           () => import('./timeline.js'         + V).then(m => m.renderTimeline),
@@ -36,6 +36,7 @@ const rotaMap = {
   // Institucional
   'espaco':             () => import('./institucional.js' + V).then(m => m.renderEspaco),
   'nossa-pratica':       () => import('./institucional.js' + V).then(m => m.renderNossaPratica),
+  'privacidade':         () => import('../modules/privacidade.js' + V).then(m => m.renderMeusDados),
   // Dharma Phala — um loader por benefício, todos apontam para o mesmo módulo
   'aluno-beneficio-sangha':         () => import('./aluno/beneficios.js' + V).then(m => m.renderAlunosBeneficios),
   'aluno-beneficio-kala-sadhya':    () => import('./aluno/beneficios.js' + V).then(m => m.renderAlunosBeneficios),
