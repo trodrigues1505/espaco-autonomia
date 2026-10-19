@@ -9,6 +9,7 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
 import { carregarNotificacoes, renderPainelNotif, initNotifHandlers,
          calcularBadgesMenu, aplicarBadgesMenu } from '../../modules/notificacoes.js'
 import { uiAnimar } from '../../modules/ui.js'   // ← linha 1: import
+import { renderAgendaSemanal } from '../../modules/agenda.js'
 
 export async function renderDashboard(container, page) {
   const sb = window._sb
@@ -55,6 +56,7 @@ export async function renderDashboard(container, page) {
         <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Confirmações</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${totalConf}</div></div>
         <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Vagas livres</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${totalLivres}</div></div>
       </div>
+      <div id="agenda-semana"></div>
       <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px">
         <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden">
           <div style="padding:13px 18px;border-bottom:1px solid var(--borda)"><span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">Aulas de hoje</span></div>
@@ -105,5 +107,10 @@ export async function renderDashboard(container, page) {
   `
 
   initNotifHandlers(notifs, perfil.id)
+  // Agenda semanal arrastável. Se a mudança envolve o dia de hoje, recarrega o dashboard
+  // para atualizar também a lista "Aulas de hoje".
+  renderAgendaSemanal(document.getElementById('agenda-semana'), {
+    sb, onAlterou: () => renderDashboard(container, page),
+  })
   uiAnimar(container)   // ← linha 2: chama tudo
 }       

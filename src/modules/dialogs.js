@@ -128,3 +128,25 @@ export function formularioModal({ titulo, texto = '', campos, confirmar = 'Salva
       inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); enviar() } }))
   })
 }
+
+/**
+ * Aviso temporário com ação (ex.: "Desfazer"), anunciado por leitores de tela.
+ * Só um por vez. Retorna uma função para fechar manualmente.
+ */
+export function avisoComAcao({ texto, acao, aoClicar, duracao = 8000 }) {
+  document.querySelector('.ui-snack')?.remove()
+  const el = document.createElement('div')
+  el.className = 'ui-snack'
+  el.setAttribute('role', 'status')
+  el.setAttribute('aria-live', 'polite')
+  el.innerHTML = `
+    <span class="ui-snack__txt">${esc(texto)}</span>
+    ${acao ? `<button type="button" class="ui-snack__btn" data-acao>${esc(acao)}</button>` : ''}
+    <button type="button" class="ui-snack__x" data-x aria-label="Fechar aviso"><i class="ti ti-x" aria-hidden="true"></i></button>`
+  document.body.appendChild(el)
+  const fechar = () => { clearTimeout(timer); el.remove() }
+  const timer = setTimeout(fechar, duracao)
+  el.querySelector('[data-x]').addEventListener('click', fechar)
+  el.querySelector('[data-acao]')?.addEventListener('click', () => { fechar(); aoClicar?.() })
+  return fechar
+}
