@@ -15,9 +15,9 @@
 
 import { sb } from '../lib/supabase.js'
 
-// v2 = Política de Privacidade 1.0 (19/10/2026). Subir a versão força nova ciência de todos.
-const VERSAO = 'v2'
-const KEY    = 'lgpd_consent_v2'
+// v3 = Política de Privacidade 1.1 (pré-cadastro e mídias de posts). Subir a versão força nova ciência de todos.
+const VERSAO = 'v3'
+const KEY    = 'lgpd_consent_v3'
 
 // ── Banner ───────────────────────────────────────────────────
 export function initLGPD() {

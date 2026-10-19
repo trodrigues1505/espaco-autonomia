@@ -16,9 +16,9 @@ export { confirmarModal }   // compatibilidade com quem já importava daqui
 const CONTROLADOR   = 'Thiago Rodrigues do Nascimento'
 const CNPJ          = '60.456.737/0001-45'
 const EMAIL_CONTATO = 'thiago.rodrigues@espacoautonomia.com'
-const VERSAO_DOC    = '1.0'
+const VERSAO_DOC    = '1.1'
 const VIGENCIA      = '19/10/2026'
-const VERSAO_ACEITE = 'v2'          // deve ser igual a VERSAO em lgpd.js
+const VERSAO_ACEITE = 'v3'          // deve ser igual a VERSAO em lgpd.js
 
 // ── Texto da política ────────────────────────────────────────
 function secao(titulo, corpo) {
@@ -38,6 +38,7 @@ export function politicaHTML() {
     ${secao('2. Quais dados coletamos', `
       <ul>
         <li><strong>Cadastro:</strong> nome, e-mail, telefone (opcional) e foto de perfil (do Google ou informada por você).</li>
+        <li><strong>Pré-cadastro:</strong> se você é cliente do espaço e ainda não acessou o app, guardamos seu nome, e-mail e telefone vindos do cadastro de cobrança (Asaas).</li>
         <li><strong>Vida no estúdio:</strong> matrícula e plano, confirmações e presenças em aulas, saldo de aulas.</li>
         <li><strong>Pagamentos:</strong> cobranças, valores, vencimentos e status (processados pelo Asaas).</li>
         <li><strong>Uso do app:</strong> data do último acesso, conquistas e engajamento, acessos aos conteúdos de estudo.</li>
@@ -65,13 +66,13 @@ export function politicaHTML() {
         <li><strong>Professores e equipe do espaço:</strong> acessam apenas o necessário para a função (por exemplo, presenças e contato).</li>
         <li><strong>Autoridades:</strong> quando houver obrigação legal.</li>
       </ul>
-      <p>Na Timeline, seu nome e foto aparecem para os demais participantes do app quando você publica ou comenta.</p>`)}
+      <p>Na Timeline, seu nome e foto aparecem para os demais participantes do app quando você publica ou comenta. Imagens e vídeos dos posts são links para serviços externos (como Imgur ou YouTube) e seguem as regras desses serviços.</p>`)}
 
     ${secao('5. Transferência internacional', `
       <p>Alguns desses fornecedores podem armazenar ou processar dados fora do Brasil. Essa transferência ocorre para executar o serviço contratado por você (art. 33, IX, da LGPD).</p>`)}
 
     ${secao('6. Por quanto tempo guardamos', `
-      <p>Mantemos seus dados enquanto você for aluno(a) e por até <strong>2 anos</strong> após o encerramento do vínculo. Depois desse prazo, eles são eliminados ou anonimizados.</p>
+      <p>Mantemos seus dados enquanto você for aluno(a) e por até <strong>2 anos</strong> após o encerramento do vínculo (no pré-cadastro, após a última atualização). Depois desse prazo, eles são eliminados ou anonimizados.</p>
       <p>Registros de pagamento podem ser mantidos por mais tempo quando a lei exigir (obrigações fiscais e contábeis).</p>`)}
 
     ${secao('7. Seus direitos (art. 18 da LGPD)', `

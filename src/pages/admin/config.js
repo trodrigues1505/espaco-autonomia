@@ -114,7 +114,7 @@ export async function renderConfig(container, page) {
           Retenção de dados (2 anos)
         </div>
         <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">
-          Ex-alunos sem matrícula ativa, sem cobrança em aberto e sem atividade há mais de 2 anos são anonimizados automaticamente no dia 1º de cada mês.
+          Ex-alunos sem matrícula ativa, sem cobrança em aberto e sem atividade há mais de 2 anos são anonimizados automaticamente no dia 1º de cada mês. Pré-cadastros vindos do Asaas (quem nunca acessou o app) sem atualização há mais de 2 anos são removidos na mesma data.
         </div>
         <div id="retencao-info" style="font-size:13px;color:var(--txt2)">Carregando...</div>
       </div>
@@ -234,9 +234,11 @@ export async function renderConfig(container, page) {
         const { data, error } = await sb.rpc('lgpd_anonimizar_titular', { p_aluno: btn.dataset.aluno, p_solicitacao: id })
         if (error) { btn.disabled = false; toast('Erro: ' + error.message, 5000); return }
         const avisos = data?.avisos?.length ? ' Avisos: ' + data.avisos.join(' | ') : ''
+        const posts = Number(data?.posts_apagados || 0)
+        const lembrete = posts > 0 ? ` ${posts} post(s) apagado(s). Lembrete: remova no Imgur as imagens desses posts.` : ''
         toast(data?.auth_anonimizado === false
-          ? 'Perfil anonimizado, mas o login não foi limpo.' + avisos
-          : 'Titular anonimizado.' + avisos, 7000)
+          ? 'Perfil anonimizado, mas o login não foi limpo.' + lembrete + avisos
+          : 'Titular anonimizado.' + lembrete + avisos, 9000)
       } else {
         const ok = await confirmarModal({
           titulo: 'Marcar como atendida?',
@@ -274,7 +276,7 @@ export async function renderConfig(container, page) {
       : 'nenhuma execução ainda'
     const lista = (previa?.candidatos || []).slice(0, 10)
     el.innerHTML = `
-      <div class="priv-item__t">${previa?.total || 0} perfil(is) elegível(is) para a próxima execução</div>
+      <div class="priv-item__t">${previa?.total || 0} perfil(is) e ${previa?.pendentes_total || 0} pré-cadastro(s) elegível(is) para a próxima execução</div>
       <div class="ui-help" style="margin-top:2px">Última execução: ${esc(ultima)}</div>
       ${lista.length ? `<ul class="priv-list" style="margin-top:8px">${lista.map(c => `
         <li class="priv-item">
@@ -284,7 +286,10 @@ export async function renderConfig(container, page) {
           </div>
           <span class="ui-help">sem atividade desde ${esc(new Date(c.ultima_atividade).toLocaleDateString('pt-BR'))}</span>
         </li>`).join('')}</ul>
-        ${previa.total > lista.length ? `<div class="ui-help" style="margin-top:6px">e mais ${previa.total - lista.length}</div>` : ''}` : ''}`
+        ${previa.total > lista.length ? `<div class="ui-help" style="margin-top:6px">e mais ${previa.total - lista.length}</div>` : ''}` : ''}
+      ${(previa?.pendentes || []).length ? `<div class="ui-help" style="margin-top:10px">Pré-cadastros a remover: ${
+        previa.pendentes.slice(0, 10).map(p => esc(p.nome || p.email || '—')).join(', ')
+      }${previa.pendentes_total > 10 ? ' e mais ' + (previa.pendentes_total - 10) : ''}</div>` : ''}`
   })()
 
   window.salvarConfig = async function() {
