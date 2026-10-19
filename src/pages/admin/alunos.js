@@ -5,7 +5,7 @@
 import { sb }         from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
-          calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
+          calcularNivel, NIVEL_LABELS, esc } from '../../modules/utils.js'
 import { carregarNotificacoes, renderPainelNotif, initNotifHandlers } from '../../modules/notificacoes.js'
 import { uiAnimar } from '../../modules/ui.js'
 
@@ -40,8 +40,8 @@ function montarListaAlunosHTML(alunos, saldoPorAluno) {
           <div style="display:flex;align-items:center;gap:8px">
             <div style="width:28px;height:28px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:var(--verde);flex-shrink:0">${initials}</div>
             <div>
-              <div style="font-weight:500">${a.nome}</div>
-              <div style="font-size:10px;color:var(--txt2)">${a.email}</div>
+              <div style="font-weight:500">${esc(a.nome)}</div>
+              <div style="font-size:10px;color:var(--txt2)">${esc(a.email)}</div>
               ${temDesconto?`<div style="font-size:10px;color:#e67e22">🏷 com desconto</div>`:''}
             </div>
           </div>
@@ -51,7 +51,7 @@ function montarListaAlunosHTML(alunos, saldoPorAluno) {
           <span style="font-size:11px;color:${vencida?'#c0392b':'var(--txt2)'}">${mat?.fim?new Date(mat.fim+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):vencida?'Vencida':'—'}</span>
           <div style="display:flex;gap:4px">
             <button onclick="editarAluno('${a.id}')" style="padding:3px 10px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:11px;cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif">Editar</button>
-            <button onclick="confirmarExcluirAluno('${a.id}','${a.nome.replace(/'/g,"\\'")}')" style="padding:3px 8px;background:transparent;border:1px solid #f5c1c1;border-radius:5px;font-size:11px;cursor:pointer;color:#c0392b;font-family:'DM Sans',sans-serif" title="Remover aluno (volta a visitante)">✕</button>
+            <button data-nome="${esc(a.nome)}" onclick="confirmarExcluirAluno('${a.id}', this.dataset.nome)" style="padding:3px 8px;background:transparent;border:1px solid #f5c1c1;border-radius:5px;font-size:11px;cursor:pointer;color:#c0392b;font-family:'DM Sans',sans-serif" title="Remover aluno (volta a visitante)">✕</button>
           </div>
         </div>`
       }).join('')
@@ -71,11 +71,11 @@ function montarListaVisitantesHTML(visitantes) {
           <div style="display:flex;align-items:center;gap:8px">
             <div style="width:28px;height:28px;border-radius:50%;background:rgba(58,110,165,.12);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:#3a6ea5;flex-shrink:0">${initials}</div>
             <div>
-              <div style="font-weight:500">${v.nome||'—'}</div>
-              <div style="font-size:10px;color:var(--txt2)">${v.email}</div>
+              <div style="font-weight:500">${esc(v.nome||'—')}</div>
+              <div style="font-size:10px;color:var(--txt2)">${esc(v.email)}</div>
             </div>
           </div>
-          <span style="font-size:11px;color:var(--txt2)">${v.telefone||'—'}</span>
+          <span style="font-size:11px;color:var(--txt2)">${esc(v.telefone||'—')}</span>
           <span style="font-size:11px;color:var(--txt2)">${fmtDataHora(v.criado_em)}</span>
           <div>
             <button onclick="abrirPromoverVisitante('${v.id}')" style="padding:4px 10px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">↑ Promover a Aluno</button>
@@ -164,7 +164,7 @@ export async function renderAlunos(container, page) {
     ${fi('','Valor mensal (R$)',`<input type="number" id="ca-valor" ${inputStyle} value="100">`)}
     ${fi('','Professor responsável',`<select id="ca-professor" ${inputStyle}>
       <option value="">— Sem professor —</option>
-      ${professores.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('')}
+      ${professores.map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('')}
     </select>`)}
     ${fi('','ID no Asaas (opcional)',`<input type="text" id="ca-asaas" ${inputStyle} placeholder="cus_...">`)}
     <div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.3);border-radius:6px;padding:10px;font-size:11px;color:#7a5a10">
@@ -204,7 +204,7 @@ export async function renderAlunos(container, page) {
     ${fi('','Valor mensal (R$)',`<input type="number" id="pv-valor" ${inputStyle} value="100">`)}
     ${fi('','Professor responsável',`<select id="pv-professor" ${inputStyle}>
       <option value="">— Sem professor —</option>
-      ${professores.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('')}
+      ${professores.map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('')}
     </select>`)}
     ${fi('','ID no Asaas (opcional)',`<input type="text" id="pv-asaas" ${inputStyle} placeholder="cus_...">`)}`,
     `<button onclick="document.getElementById('modal-promover-visitante').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
@@ -603,9 +603,9 @@ export async function renderAlunos(container, page) {
     document.getElementById('edit-aluno-body').innerHTML = `
       <div style="background:rgba(242,236,206,.3);border:1px solid var(--borda);border-radius:8px;padding:12px;margin-bottom:14px">
         <div style="font-size:11px;font-weight:500;color:var(--verde);margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px">Dados Pessoais</div>
-        ${fi('','Nome completo',`<input type="text" id="ea-nome" ${inputStyle} value="${(a.nome||'').replace(/"/g,'&quot;')}">`)}
-        ${fi('','Telefone',`<input type="tel" id="ea-tel" ${inputStyle} value="${a.telefone||''}" placeholder="(11) 99999-9999">`)}
-        <div style="font-size:11px;color:var(--txt2);margin-top:4px">E-mail: <strong>${a.email}</strong> (não editável — usado para login)</div>
+        ${fi('','Nome completo',`<input type="text" id="ea-nome" ${inputStyle} value="${esc(a.nome)}">`)}
+        ${fi('','Telefone',`<input type="tel" id="ea-tel" ${inputStyle} value="${esc(a.telefone)}" placeholder="(11) 99999-9999">`)}
+        <div style="font-size:11px;color:var(--txt2);margin-top:4px">E-mail: <strong>${esc(a.email)}</strong> (não editável — usado para login)</div>
       </div>
       ${fi('','Plano',`<select id="ea-plano" ${inputStyle} onchange="updateValorEdicao()">
         <option value="brahma" ${mat?.plano_tipo==='brahma'?'selected':''}>Brahma</option>
