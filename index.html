@@ -58,6 +58,10 @@
         </svg>
         Entrar com Google
       </button>
+      <p class="login-legal">
+        Este app é destinado a maiores de 18 anos. Ao entrar, você declara ter lido a
+        <a href="#" onclick="window.abrirPolitica(); return false">Política de Privacidade</a>.
+      </p>
     </div>
   </div>
 </div>
@@ -105,15 +109,15 @@
 </div>
 
 <!-- ══ MÓDULO: LGPD ════════════════════════════════════════ -->
-<div id="lgpd-banner">
+<div id="lgpd-banner" role="region" aria-label="Aviso de privacidade">
   <p>
-    <strong>🔒 Privacidade</strong> — Armazenamos apenas os dados necessários para a gestão das aulas
-    (nome, e-mail, presenças e plano). Não compartilhamos com terceiros para marketing.
-    Em conformidade com a <strong>LGPD (Lei 13.709/2018)</strong>.
+    <strong>Privacidade</strong> — Usamos seus dados (nome, e-mail, telefone, presenças, plano e pagamentos)
+    para gerenciar suas aulas e cobranças, com apoio de Supabase, Asaas e Google.
+    Leia a <a href="#" onclick="window.abrirPolitica(); return false">Política de Privacidade</a>
+    e conheça seus direitos (LGPD, Lei 13.709/2018).
   </p>
   <div style="display:flex;gap:8px;flex-shrink:0">
-    <button class="lgpd-btn lgpd-btn--reject" onclick="window.lgpdRejeitar()">Só essenciais</button>
-    <button class="lgpd-btn lgpd-btn--accept" onclick="window.lgpdAceitar()">Entendido ✓</button>
+    <button class="lgpd-btn lgpd-btn--accept" onclick="window.lgpdAceitar()">Li e entendi</button>
   </div>
 </div>
 
@@ -167,6 +171,7 @@
 <script type="module">
   import { initLGPD }    from './src/modules/lgpd.js'
   import { initPWA }     from './src/modules/pwa.js'
+  import './src/modules/privacidade.js'   // registra window.abrirPolitica
   import { initSession } from './src/modules/auth.js'
   import './src/pages/index.js'  // registra window.navigate
 
