@@ -43,6 +43,7 @@ const ITENS_SOBRE = [
   { sec: 'Sobre' },
   { id: 'espaco',        label: 'O Espaço',       icon: 'ti-building' },
   { id: 'nossa-pratica', label: 'Nossa Prática',  icon: 'ti-compass' },
+  { id: 'privacidade',   label: 'Privacidade',    icon: 'ti-shield-lock' },
 ]
 
 const MENUS = {
