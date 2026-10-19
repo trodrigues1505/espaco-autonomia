@@ -8,6 +8,7 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS, esc } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
+import { confirmarModal } from '../../modules/privacidade.js'
 
 export async function renderConfig(container, page) {
   const sb = window._sb
@@ -96,6 +97,17 @@ export async function renderConfig(container, page) {
         <div id="asaas-preview" style="margin-top:12px"></div>
       </div>
 
+      <!-- Solicitações de titulares (LGPD Art. 18) -->
+      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid var(--borda)">
+          Solicitações de titulares (LGPD)
+        </div>
+        <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">
+          Pedidos de exclusão, correção e informação feitos pelos próprios usuários. Prazo legal de resposta: 15 dias.
+        </div>
+        <div id="titulares-lista" class="priv-admin" style="font-size:13px;color:var(--txt2)">Carregando...</div>
+      </div>
+
       <!-- Aceites de Contrato -->
       <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
         <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid var(--borda)">
@@ -153,6 +165,85 @@ export async function renderConfig(container, page) {
       </div>
       <div style="margin-top:8px;font-size:11px;color:var(--txt2)">${contratos.length} aceite(s) registrado(s)</div>
     `
+  })()
+
+  // ── Solicitações de titulares (LGPD) ─────────────────────────
+  ;(async () => {
+    const el = document.getElementById('titulares-lista')
+    if (!el) return
+    const ROTULO = { exclusao: 'Excluir dados e encerrar conta', correcao: 'Corrigir dados', informacao: 'Informação sobre o uso dos dados' }
+
+    async function carregar() {
+      const { data, error } = await sb
+        .from('solicitacoes_titular')
+        .select('id, aluno_id, tipo, mensagem, criada_em, aluno:perfis!aluno_id(nome, email)')
+        .eq('status', 'aberta')
+        .order('criada_em', { ascending: true })
+
+      if (error) {
+        el.textContent = 'Recurso ainda não ativado: rode sql/02_lgpd_titular.sql no Supabase. (' + error.message + ')'
+        return
+      }
+      if (!data?.length) { el.textContent = 'Nenhuma solicitação em aberto.'; return }
+
+      el.innerHTML = data.map(s => {
+        const dias = Math.floor((Date.now() - new Date(s.criada_em).getTime()) / 86400000)
+        const alerta = dias >= 10
+        const acao = s.tipo === 'exclusao'
+          ? `<button type="button" class="priv-btn priv-btn--danger" data-acao="anonimizar" data-id="${esc(s.id)}" data-aluno="${esc(s.aluno_id)}">Anonimizar e concluir</button>`
+          : `<button type="button" class="priv-btn priv-btn--secondary" data-acao="atender" data-id="${esc(s.id)}">Marcar como atendida</button>`
+        return `
+          <div class="priv-row">
+            <div>
+              <div class="priv-row__nome">${esc(s.aluno?.nome || '—')}</div>
+              <div class="priv-help"><a class="priv-link" href="mailto:${esc(s.aluno?.email || '')}">${esc(s.aluno?.email || '—')}</a></div>
+              <div class="priv-row__prazo ${alerta ? 'priv-row__prazo--alerta' : ''}">há ${dias} dia(s)${alerta ? ' · prazo de 15 dias se aproximando' : ''}</div>
+            </div>
+            <div>
+              <div class="priv-item__t">${esc(ROTULO[s.tipo] || s.tipo)}</div>
+              <div class="priv-help">${esc(s.mensagem || 'Sem detalhes informados.')}</div>
+            </div>
+            <div>${acao}</div>
+          </div>`
+      }).join('')
+    }
+
+    el.addEventListener('click', async e => {
+      const btn = e.target.closest('[data-acao]')
+      if (!btn) return
+      const id = btn.dataset.id
+      if (btn.dataset.acao === 'anonimizar') {
+        const ok = await confirmarModal({
+          titulo: 'Anonimizar este titular?',
+          texto: 'O nome, e-mail, telefone, foto e login serão removidos e os comentários da Timeline serão apagados. Pagamentos ficam retidos sem identificação direta.\n\nEsta ação não pode ser desfeita.',
+          confirmar: 'Anonimizar e concluir', perigo: true,
+        })
+        if (!ok) return
+        btn.disabled = true
+        const { data, error } = await sb.rpc('lgpd_anonimizar_titular', { p_aluno: btn.dataset.aluno, p_solicitacao: id })
+        if (error) { btn.disabled = false; toast('Erro: ' + error.message, 5000); return }
+        const avisos = data?.avisos?.length ? ' Avisos: ' + data.avisos.join(' | ') : ''
+        toast(data?.auth_anonimizado === false
+          ? 'Perfil anonimizado, mas o login não foi limpo.' + avisos
+          : 'Titular anonimizado.' + avisos, 7000)
+      } else {
+        const ok = await confirmarModal({
+          titulo: 'Marcar como atendida?',
+          texto: 'Confirme que você já respondeu ao titular por e-mail.',
+          confirmar: 'Marcar como atendida',
+        })
+        if (!ok) return
+        btn.disabled = true
+        const { error } = await sb.from('solicitacoes_titular')
+          .update({ status: 'atendida', resolvida_em: new Date().toISOString(), resolvida_por: window._perfil.id })
+          .eq('id', id)
+        if (error) { btn.disabled = false; toast('Erro: ' + error.message, 5000); return }
+        toast('Solicitação concluída.')
+      }
+      carregar()
+    })
+
+    carregar()
   })()
 
   window.salvarConfig = async function() {
