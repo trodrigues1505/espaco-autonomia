@@ -124,4 +124,17 @@ export function toast(msg, dur = 2400) {
   }, dur)
 }
 // Expõe globalmente para uso em onclick inline
-window.toast = toast   
+window.toast = toast
+
+// ── Escape de HTML ───────────────────────────────────────────
+// Use em QUALQUER dado vindo do usuário (nome, e-mail, telefone, texto livre)
+// antes de interpolar em template string que vira innerHTML ou atributo.
+export function esc(v) {
+  return String(v ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+window.esc = esc
