@@ -8,6 +8,7 @@ import { verificarContrato } from './contrato.js'
 import { initProfessorCancel } from './professor-cancel.js'
 import { toast, PLANO_NOMES } from './utils.js'
 import { initSelecaoParaCriarTermo } from './vocabulario.js'
+import { sincronizarConsentimentoAposLogin, lgpdLimparLocal } from './lgpd.js'
 
 // ── Onboarding ───────────────────────────────────────────────
 // Todo login novo pelo Google entra como 'visitante'. A promoção para
@@ -90,6 +91,7 @@ window.fazerLogin = async function () {
 }
 
 window.fazerLogout = async function () {
+  lgpdLimparLocal()
   await sb.auth.signOut()
 }
 
@@ -127,6 +129,10 @@ export async function iniciarApp(user) {
     }
 
     window._perfil = perfil
+
+    // LGPD: leva o consentimento dado antes do login para o banco (ou restaura o cache).
+    // Não bloqueia o carregamento do app.
+    sincronizarConsentimentoAposLogin(perfil.id).catch(e => console.warn('lgpd sync:', e?.message))
 
     // Registro de acesso (alimenta o dashboard de engajamento do admin —
     // sinal "login recente"). Não bloqueia o carregamento do app: falha
