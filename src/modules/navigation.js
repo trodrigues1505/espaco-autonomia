@@ -181,6 +181,12 @@ export function buildMenu(tipo, badges = {}) {
     }
 
     d.onclick = () => window.navigate(item.id)
+    // Acessível por teclado: Tab chega, Enter/Espaço ativa
+    d.setAttribute('role', 'link')
+    d.tabIndex = 0
+    d.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); d.click() }
+    })
     nav.appendChild(d)
   }
 
@@ -351,27 +357,42 @@ function _ativarImpersonar(tipo, pessoa) {
 }
 
 // ── Mobile hamburger ─────────────────────────────────────────
+// Botão real (#sb-toggle) com aria-expanded; o estado vem da classe .mobile-open
+// do menu — assim o tour (tour.js), que abre/fecha o menu pela classe, também
+// mantém o botão sincronizado.
 export function initMobileMenu() {
-  const sbEl = document.querySelector('.sb')
-  if (!sbEl) return
-  sbEl.addEventListener('click', e => {
-    if (window.innerWidth > 768) return
-    const nav = document.getElementById('nav-menu')
-    if (!nav) return
-    const rect = sbEl.getBoundingClientRect()
-    if (e.clientX > rect.right - 50) {
-      nav.classList.toggle('mobile-open')
-      const bar = document.getElementById('impersonate-bar')
-      if (bar && (window._perfil?.tipo === 'admin' || window._perfilAdmin?.tipo === 'admin')) {
-        bar.style.display = nav.classList.contains('mobile-open') ? 'block' : 'none'
-      }
+  const btn = document.getElementById('sb-toggle')
+  const nav = document.getElementById('nav-menu')
+  if (!btn || !nav || btn.dataset.pronto) return
+  btn.dataset.pronto = '1'
+
+  const barImp = () => document.getElementById('impersonate-bar')
+  const ehAdmin = () => window._perfil?.tipo === 'admin' || window._perfilAdmin?.tipo === 'admin'
+
+  const sincronizar = () => {
+    const aberto = nav.classList.contains('mobile-open')
+    btn.setAttribute('aria-expanded', String(aberto))
+    btn.setAttribute('aria-label', aberto ? 'Fechar menu' : 'Abrir menu')
+    const ico = btn.querySelector('i')
+    if (ico) ico.className = aberto ? 'ti ti-x' : 'ti ti-menu-2'
+    const bar = barImp()
+    if (bar && ehAdmin()) bar.style.display = aberto ? 'block' : 'none'
+  }
+
+  new MutationObserver(sincronizar).observe(nav, { attributes: true, attributeFilter: ['class'] })
+
+  btn.addEventListener('click', () => nav.classList.toggle('mobile-open'))
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && nav.classList.contains('mobile-open')) {
+      nav.classList.remove('mobile-open'); btn.focus()
     }
   })
   document.addEventListener('click', e => {
-    if (e.target.classList.contains('ni')) {
-      document.getElementById('nav-menu')?.classList.remove('mobile-open')
-      const bar = document.getElementById('impersonate-bar')
+    if (e.target.closest?.('.ni')) {
+      nav.classList.remove('mobile-open')
+      const bar = barImp()
       if (bar && window.innerWidth <= 768) bar.style.display = 'none'
     }
   })
+  sincronizar()
 }

@@ -116,6 +116,8 @@ export function prazoLabel(min) {
 export function toast(msg, dur = 2400) {
   const t = document.createElement('div')
   t.className = 'toast'
+  t.setAttribute('role', 'status')
+  t.setAttribute('aria-live', 'polite')
   t.textContent = msg
   document.body.appendChild(t)
   setTimeout(() => {

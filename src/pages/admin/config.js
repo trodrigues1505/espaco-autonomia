@@ -8,7 +8,7 @@ import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, pr
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
           calcularNivel, NIVEL_LABELS, esc } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
-import { confirmarModal } from '../../modules/privacidade.js'
+import { confirmarModal } from '../../modules/dialogs.js'
 
 export async function renderConfig(container, page) {
   const sb = window._sb
@@ -108,6 +108,17 @@ export async function renderConfig(container, page) {
         <div id="titulares-lista" class="priv-admin" style="font-size:13px;color:var(--txt2)">Carregando...</div>
       </div>
 
+      <!-- Retenção de dados (2 anos) -->
+      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid var(--borda)">
+          Retenção de dados (2 anos)
+        </div>
+        <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">
+          Ex-alunos sem matrícula ativa, sem cobrança em aberto e sem atividade há mais de 2 anos são anonimizados automaticamente no dia 1º de cada mês.
+        </div>
+        <div id="retencao-info" style="font-size:13px;color:var(--txt2)">Carregando...</div>
+      </div>
+
       <!-- Aceites de Contrato -->
       <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
         <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid var(--borda)">
@@ -181,7 +192,7 @@ export async function renderConfig(container, page) {
         .order('criada_em', { ascending: true })
 
       if (error) {
-        el.textContent = 'Recurso ainda não ativado: rode sql/02_lgpd_titular.sql no Supabase. (' + error.message + ')'
+        el.textContent = 'Recurso ainda não ativado: rode o 02_lgpd_titular.sql no Supabase. (' + error.message + ')'
         return
       }
       if (!data?.length) { el.textContent = 'Nenhuma solicitação em aberto.'; return }
@@ -190,18 +201,18 @@ export async function renderConfig(container, page) {
         const dias = Math.floor((Date.now() - new Date(s.criada_em).getTime()) / 86400000)
         const alerta = dias >= 10
         const acao = s.tipo === 'exclusao'
-          ? `<button type="button" class="priv-btn priv-btn--danger" data-acao="anonimizar" data-id="${esc(s.id)}" data-aluno="${esc(s.aluno_id)}">Anonimizar e concluir</button>`
-          : `<button type="button" class="priv-btn priv-btn--secondary" data-acao="atender" data-id="${esc(s.id)}">Marcar como atendida</button>`
+          ? `<button type="button" class="ui-btn ui-btn--danger" data-acao="anonimizar" data-id="${esc(s.id)}" data-aluno="${esc(s.aluno_id)}">Anonimizar e concluir</button>`
+          : `<button type="button" class="ui-btn ui-btn--secondary" data-acao="atender" data-id="${esc(s.id)}">Marcar como atendida</button>`
         return `
           <div class="priv-row">
             <div>
               <div class="priv-row__nome">${esc(s.aluno?.nome || '—')}</div>
-              <div class="priv-help"><a class="priv-link" href="mailto:${esc(s.aluno?.email || '')}">${esc(s.aluno?.email || '—')}</a></div>
+              <div class="ui-help"><a class="ui-link" href="mailto:${esc(s.aluno?.email || '')}">${esc(s.aluno?.email || '—')}</a></div>
               <div class="priv-row__prazo ${alerta ? 'priv-row__prazo--alerta' : ''}">há ${dias} dia(s)${alerta ? ' · prazo de 15 dias se aproximando' : ''}</div>
             </div>
             <div>
               <div class="priv-item__t">${esc(ROTULO[s.tipo] || s.tipo)}</div>
-              <div class="priv-help">${esc(s.mensagem || 'Sem detalhes informados.')}</div>
+              <div class="ui-help">${esc(s.mensagem || 'Sem detalhes informados.')}</div>
             </div>
             <div>${acao}</div>
           </div>`
@@ -244,6 +255,36 @@ export async function renderConfig(container, page) {
     })
 
     carregar()
+  })()
+
+  // ── Retenção de dados (prévia) ────────────────────────────────
+  ;(async () => {
+    const el = document.getElementById('retencao-info')
+    if (!el) return
+    const [{ data: previa, error }, { data: ult }] = await Promise.all([
+      sb.rpc('lgpd_retencao_previa'),
+      sb.from('lgpd_retencao_log').select('executado_em').order('executado_em', { ascending: false }).limit(1),
+    ])
+    if (error) {
+      el.textContent = 'Recurso ainda não ativado: rode o 03_lgpd_retencao.sql no Supabase. (' + error.message + ')'
+      return
+    }
+    const ultima = ult?.[0]?.executado_em
+      ? new Date(ult[0].executado_em).toLocaleDateString('pt-BR')
+      : 'nenhuma execução ainda'
+    const lista = (previa?.candidatos || []).slice(0, 10)
+    el.innerHTML = `
+      <div class="priv-item__t">${previa?.total || 0} perfil(is) elegível(is) para a próxima execução</div>
+      <div class="ui-help" style="margin-top:2px">Última execução: ${esc(ultima)}</div>
+      ${lista.length ? `<ul class="priv-list" style="margin-top:8px">${lista.map(c => `
+        <li class="priv-item">
+          <div>
+            <div class="priv-item__t">${esc(c.nome || '—')}</div>
+            <div class="ui-help">${esc(c.email || '—')}</div>
+          </div>
+          <span class="ui-help">sem atividade desde ${esc(new Date(c.ultima_atividade).toLocaleDateString('pt-BR'))}</span>
+        </li>`).join('')}</ul>
+        ${previa.total > lista.length ? `<div class="ui-help" style="margin-top:6px">e mais ${previa.total - lista.length}</div>` : ''}` : ''}`
   })()
 
   window.salvarConfig = async function() {
@@ -315,7 +356,7 @@ export async function renderConfig(container, page) {
   }
 
   window.executarImportAsaas = async function() {
-    if (!confirm('Confirmar importação? Perfis existentes serão atualizados com dados do Asaas.')) return
+    if (!(await confirmarModal({ titulo: 'Importar do Asaas?', texto: 'Confirmar importação? Perfis existentes serão atualizados com dados do Asaas.', confirmar: 'Importar', perigo: false }))) return
     const status = document.getElementById('asaas-status')
     status.textContent = '⏳ Importando...'
     try {

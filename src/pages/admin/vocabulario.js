@@ -4,6 +4,7 @@
  * qualquer texto do app (ver src/modules/vocabulario.js).
  */
 
+import { confirmarModal } from '../../modules/dialogs.js'
 import { toast } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 import { invalidarCacheVocabulario } from '../../modules/vocabulario.js'
@@ -176,7 +177,7 @@ export async function renderVocabularioAdmin(container, page) {
   }
 
   window.excluirVocab = async function(id, termo) {
-    if (!confirm(`Excluir "${termo}"? Esta ação não pode ser desfeita.`)) return
+    if (!(await confirmarModal({ titulo: 'Excluir?', texto: `Excluir "${termo}"? Esta ação não pode ser desfeita.`, confirmar: 'Excluir', perigo: true }))) return
     const { error: err } = await sb.from('vocabulario').delete().eq('id', id)
     if (err) { toast('Erro: ' + err.message); return }
     invalidarCacheVocabulario()

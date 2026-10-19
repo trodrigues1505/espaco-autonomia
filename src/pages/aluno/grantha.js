@@ -15,7 +15,7 @@ const CATEGORIAS_LABEL = {
 function _esc(str) { return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
 
 function _falar(texto) {
-  if (!('speechSynthesis' in window)) { alert('Seu navegador não suporta leitura em voz alta.'); return }
+  if (!('speechSynthesis' in window)) { window.toast('Seu navegador não suporta leitura em voz alta.', 4000); return }
   window.speechSynthesis.cancel()
   const utter = new SpeechSynthesisUtterance(texto)
   utter.lang = 'pt-BR'

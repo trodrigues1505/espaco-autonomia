@@ -9,6 +9,7 @@
  *   abrirModalRegistrarRepasse(professorId, nomeProfessor, valorPrevisto, mesRef)
  */
 
+import { confirmarModal } from '../../modules/dialogs.js'
 import { toast } from '../../modules/utils.js'
 
 function fmtR(v) {
@@ -296,7 +297,7 @@ export async function renderHistoricoRepasse(container, professorId, isAdmin) {
 
   // ── Handler: excluir ─────────────────────────────────────────
   window._excluirRepasse = async function (id) {
-    if (!confirm('Excluir este registro de repasse?')) return
+    if (!(await confirmarModal({ titulo: 'Excluir?', texto: 'Excluir este registro de repasse?', confirmar: 'Excluir', perigo: true }))) return
     const { error } = await sb.from('repasses_pagos').delete().eq('id', id)
     if (error) { toast('Erro: ' + error.message); return }
     toast('Repasse excluído')

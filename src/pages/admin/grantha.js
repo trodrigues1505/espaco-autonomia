@@ -7,6 +7,7 @@
  * Artigos (tipo='artigo') usam o campo 'conteudo' direto, sem versos.
  */
 
+import { confirmarModal } from '../../modules/dialogs.js'
 import { toast } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 
@@ -244,7 +245,7 @@ export async function renderGranthaAdmin(container, page) {
   }
 
   window.excluirGrantha = async function(id, titulo) {
-    if (!confirm(`Excluir "${titulo}" e todos os seus versos? Esta ação não pode ser desfeita.`)) return
+    if (!(await confirmarModal({ titulo: 'Excluir?', texto: `Excluir "${titulo}" e todos os seus versos? Esta ação não pode ser desfeita.`, confirmar: 'Excluir', perigo: true }))) return
     const { error: err } = await sb.from('grantha_mandir').delete().eq('id', id)
     if (err) { toast('Erro: ' + err.message); return }
     toast('✓ Excluído.')
@@ -282,7 +283,7 @@ export async function renderGranthaAdmin(container, page) {
   }
 
   window.excluirVerso = async function(id) {
-    if (!confirm('Excluir este verso?')) return
+    if (!(await confirmarModal({ titulo: 'Excluir?', texto: 'Excluir este verso?', confirmar: 'Excluir', perigo: true }))) return
     const { error: err } = await sb.from('grantha_versos').delete().eq('id', id)
     if (err) { toast('Erro: ' + err.message); return }
     await _carregarListaVersos()

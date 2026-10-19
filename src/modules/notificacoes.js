@@ -39,6 +39,35 @@ const TIPOS = {
     },
   },
 
+  admin_solicitacoes_titular: {
+    roles: ['admin'],
+    paginas: ['dashboard', 'config'],
+    async checar(sb) {
+      // LGPD Art. 18 — prazo legal de resposta: 15 dias
+      const { data } = await sb
+        .from('solicitacoes_titular')
+        .select('id, criada_em')
+        .eq('status', 'aberta')
+        .order('criada_em', { ascending: false })
+      if (!data?.length) return []
+      const maisAntiga = data[data.length - 1].criada_em
+      const dias = Math.floor((Date.now() - new Date(maisAntiga).getTime()) / 86400000)
+      const urgente = dias >= 10
+      return [{
+        // a chave muda quando chega solicitação nova ou quando o prazo aperta,
+        // então o aviso reaparece mesmo se já tiver sido dispensado antes
+        key: `admin_solic_titular_${data[0].criada_em}_${urgente ? 'u' : 'n'}`,
+        titulo: `${data.length} solicitação(ões) de titular em aberto`,
+        corpo: urgente
+          ? `A mais antiga tem ${dias} dias — o prazo legal de resposta é 15 dias.`
+          : 'Pedidos de exclusão, correção ou informação sobre dados pessoais (LGPD).',
+        nivel: urgente ? 'urgente' : 'aviso',
+        acao: { label: 'Atender', page: 'config' },
+        menuIds: ['config'],
+      }]
+    },
+  },
+
   admin_planos_vencendo: {
     roles: ['admin'],
     paginas: ['dashboard', 'alunos'],

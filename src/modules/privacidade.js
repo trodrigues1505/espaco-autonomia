@@ -3,12 +3,15 @@
  * Privacidade e LGPD:
  *  • Política de Privacidade (diálogo acessível do login, do banner e da tela "Privacidade")
  *  • Tela "Privacidade e meus dados": baixar dados, enviar solicitações (Art. 18), ver aceite
- *  • confirmarModal(): diálogo de confirmação (substitui window.confirm nestas telas)
+ *  • diálogos: ver src/modules/dialogs.js
  *
  * Pré-requisito: supabase/sql/02_lgpd_titular.sql
  */
 
 import { toast, esc } from './utils.js'
+import { abrirDialogo, confirmarModal } from './dialogs.js'
+
+export { confirmarModal }   // compatibilidade com quem já importava daqui
 
 const CONTROLADOR   = 'Thiago Rodrigues do Nascimento'
 const CNPJ          = '60.456.737/0001-45'
@@ -30,7 +33,7 @@ export function politicaHTML() {
     ${secao('1. Quem somos', `
       <p>O Espaço Autonomia é operado por <strong>${CONTROLADOR}</strong>, CNPJ ${CNPJ}, em Franco da Rocha/SP.
       Somos o <em>controlador</em> dos dados pessoais tratados neste aplicativo, ou seja, quem decide como e por que eles são usados.</p>
-      <p>Canal de contato (encarregado pelo tratamento de dados): <a class="priv-link" href="mailto:${EMAIL_CONTATO}">${EMAIL_CONTATO}</a>.</p>`)}
+      <p>Canal de contato (encarregado pelo tratamento de dados): <a class="ui-link" href="mailto:${EMAIL_CONTATO}">${EMAIL_CONTATO}</a>.</p>`)}
 
     ${secao('2. Quais dados coletamos', `
       <ul>
@@ -85,7 +88,7 @@ export function politicaHTML() {
 
     ${secao('8. Como exercer seus direitos', `
       <p>No app, abra <strong>Privacidade</strong> no menu: lá você baixa seus dados e envia solicitações. Também pode escrever para
-      <a class="priv-link" href="mailto:${EMAIL_CONTATO}">${EMAIL_CONTATO}</a>. Respondemos em até <strong>15 dias</strong>.</p>
+      <a class="ui-link" href="mailto:${EMAIL_CONTATO}">${EMAIL_CONTATO}</a>. Respondemos em até <strong>15 dias</strong>.</p>
       <p>Ao pedir a exclusão, seu acesso ao app é encerrado e seus dados pessoais são anonimizados, exceto os que a lei nos obriga a guardar, que ficam retidos apenas pelo prazo exigido.</p>
       <p>Você também pode registrar reclamação junto à Autoridade Nacional de Proteção de Dados (ANPD), em gov.br/anpd.</p>`)}
 
@@ -105,76 +108,13 @@ export function politicaHTML() {
   </div>`
 }
 
-// ── Diálogo acessível ────────────────────────────────────────
-function abrirDialogo({ titulo, corpoHTML, rodapeHTML = '', onFechar }) {
-  const anterior = document.activeElement
-  const tid = 'priv-t-' + Math.random().toString(36).slice(2, 8)
-  const root = document.createElement('div')
-  root.className = 'priv-overlay'
-  root.innerHTML = `
-    <div class="priv-dialog" role="dialog" aria-modal="true" aria-labelledby="${tid}">
-      <div class="priv-dialog__head">
-        <h2 class="priv-dialog__title" id="${tid}">${esc(titulo)}</h2>
-        <button type="button" class="priv-icon-btn" data-fechar aria-label="Fechar">
-          <i class="ti ti-x" aria-hidden="true"></i>
-        </button>
-      </div>
-      <div class="priv-dialog__body">${corpoHTML}</div>
-      ${rodapeHTML ? `<div class="priv-dialog__foot">${rodapeHTML}</div>` : ''}
-    </div>`
-  document.body.appendChild(root)
-  const overflowAntes = document.body.style.overflow
-  document.body.style.overflow = 'hidden'
-
-  let fechado = false
-  const fechar = () => {
-    if (fechado) return
-    fechado = true
-    document.removeEventListener('keydown', onKey, true)
-    document.body.style.overflow = overflowAntes
-    root.remove()
-    anterior?.focus?.()
-    onFechar?.()
-  }
-  const onKey = e => {
-    if (e.key === 'Escape') { e.stopPropagation(); fechar(); return }
-    if (e.key !== 'Tab') return
-    const foc = [...root.querySelectorAll('a[href],button:not([disabled]),input,select,textarea')]
-    if (!foc.length) return
-    const primeiro = foc[0], ultimo = foc[foc.length - 1]
-    if (e.shiftKey && document.activeElement === primeiro) { e.preventDefault(); ultimo.focus() }
-    else if (!e.shiftKey && document.activeElement === ultimo) { e.preventDefault(); primeiro.focus() }
-  }
-  document.addEventListener('keydown', onKey, true)
-  root.addEventListener('mousedown', e => { if (e.target === root) fechar() })
-  root.querySelector('[data-fechar]').addEventListener('click', fechar)
-  root.querySelector('[data-fechar]').focus()
-  return { root, fechar }
-}
-
 export function abrirPolitica() {
   abrirDialogo({
     titulo: 'Política de Privacidade',
     corpoHTML: politicaHTML(),
-    rodapeHTML: `<button type="button" class="priv-btn priv-btn--primary" data-ok>Entendi</button>`,
+    rodapeHTML: `<button type="button" class="ui-btn ui-btn--primary" data-ok>Entendi</button>`,
   }).root.querySelector('[data-ok]').addEventListener('click', e =>
-    e.target.closest('.priv-overlay').querySelector('[data-fechar]').click())
-}
-
-export function confirmarModal({ titulo, texto, confirmar = 'Confirmar', cancelar = 'Cancelar', perigo = false }) {
-  return new Promise(resolve => {
-    let decidido = false
-    const d = abrirDialogo({
-      titulo,
-      corpoHTML: `<p class="priv-text">${esc(texto)}</p>`,
-      rodapeHTML: `
-        <button type="button" class="priv-btn priv-btn--ghost" data-nao>${esc(cancelar)}</button>
-        <button type="button" class="priv-btn ${perigo ? 'priv-btn--danger' : 'priv-btn--primary'}" data-sim>${esc(confirmar)}</button>`,
-      onFechar: () => { if (!decidido) resolve(false) },
-    })
-    d.root.querySelector('[data-nao]').addEventListener('click', () => d.fechar())
-    d.root.querySelector('[data-sim]').addEventListener('click', () => { decidido = true; resolve(true); d.fechar() })
-  })
+    e.target.closest('.ui-overlay').querySelector('[data-fechar]').click())
 }
 
 // ── Tela "Privacidade e meus dados" ──────────────────────────
@@ -204,18 +144,18 @@ export async function renderMeusDados(container) {
   ])
 
   const listaSols = errSols
-    ? `<div class="priv-empty"><i class="ti ti-plug-off" aria-hidden="true"></i>
-         <span>As solicitações ainda não estão ativas neste ambiente. Escreva para <a class="priv-link" href="mailto:${EMAIL_CONTATO}">${EMAIL_CONTATO}</a>.</span></div>`
+    ? `<div class="ui-empty"><i class="ti ti-plug-off" aria-hidden="true"></i>
+         <span>As solicitações ainda não estão ativas neste ambiente. Escreva para <a class="ui-link" href="mailto:${EMAIL_CONTATO}">${EMAIL_CONTATO}</a>.</span></div>`
     : !sols?.length
-      ? `<div class="priv-empty"><i class="ti ti-inbox" aria-hidden="true"></i><span>Você ainda não enviou nenhuma solicitação.</span></div>`
+      ? `<div class="ui-empty"><i class="ti ti-inbox" aria-hidden="true"></i><span>Você ainda não enviou nenhuma solicitação.</span></div>`
       : `<ul class="priv-list">${sols.map(s => {
           const st = STATUS[s.status] || STATUS.aberta
           return `<li class="priv-item">
             <div>
               <div class="priv-item__t">${esc(TIPOS[s.tipo] || s.tipo)}</div>
-              <div class="priv-help">Enviada em ${fmtData(s.criada_em)}${s.resolvida_em ? ' · respondida em ' + fmtData(s.resolvida_em) : ''}</div>
+              <div class="ui-help">Enviada em ${fmtData(s.criada_em)}${s.resolvida_em ? ' · respondida em ' + fmtData(s.resolvida_em) : ''}</div>
             </div>
-            <span class="priv-badge priv-badge--${esc(s.status)}"><i class="ti ${st.icone}" aria-hidden="true"></i>${st.txt}</span>
+            <span class="ui-badge ui-badge--${esc(s.status)}"><i class="ti ${st.icone}" aria-hidden="true"></i>${st.txt}</span>
           </li>`
         }).join('')}</ul>`
 
@@ -233,14 +173,14 @@ export async function renderMeusDados(container) {
             <dt>E-mail</dt><dd>${esc(perfil.email)}</dd>
             <dt>Telefone</dt><dd>${esc(perfil.telefone || 'não informado')}</dd>
           </dl>
-          <p class="priv-help">Para corrigir algum dado, envie uma solicitação abaixo.</p>
+          <p class="ui-help">Para corrigir algum dado, envie uma solicitação abaixo.</p>
         </section>
 
         <section class="priv-card" aria-labelledby="priv-h-baixar">
           <div class="priv-card__head"><span class="priv-card__icon"><i class="ti ti-download" aria-hidden="true"></i></span>
             <h3 id="priv-h-baixar">Baixar meus dados</h3></div>
-          <p class="priv-text">Receba uma cópia de tudo que o app guarda sobre você (cadastro, aulas, pagamentos, Timeline e aceites) em um arquivo legível.</p>
-          <div><button type="button" class="priv-btn priv-btn--primary" data-act="baixar">
+          <p class="ui-text">Receba uma cópia de tudo que o app guarda sobre você (cadastro, aulas, pagamentos, Timeline e aceites) em um arquivo legível.</p>
+          <div><button type="button" class="ui-btn ui-btn--primary" data-act="baixar">
             <i class="ti ti-file-download" aria-hidden="true"></i><span>Baixar arquivo</span></button></div>
         </section>
 
@@ -248,18 +188,18 @@ export async function renderMeusDados(container) {
           <div class="priv-card__head"><span class="priv-card__icon"><i class="ti ti-message-question" aria-hidden="true"></i></span>
             <h3 id="priv-h-sol">Fazer uma solicitação</h3></div>
           <div class="priv-form">
-            <div class="priv-field">
-              <label class="priv-label" for="priv-tipo">O que você precisa?</label>
-              <select id="priv-tipo" class="priv-input">
+            <div class="ui-field">
+              <label class="ui-label" for="priv-tipo">O que você precisa?</label>
+              <select id="priv-tipo" class="ui-input">
                 ${Object.entries(TIPOS).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('')}
               </select>
             </div>
-            <div class="priv-field">
-              <label class="priv-label" for="priv-msg">Detalhes <span class="priv-help">(opcional, até 500 caracteres)</span></label>
-              <textarea id="priv-msg" class="priv-input" maxlength="500" rows="3"
+            <div class="ui-field">
+              <label class="ui-label" for="priv-msg">Detalhes <span class="ui-help">(opcional, até 500 caracteres)</span></label>
+              <textarea id="priv-msg" class="ui-input" maxlength="500" rows="3"
                 placeholder="Conte o que precisa corrigir, saber ou excluir"></textarea>
             </div>
-            <div><button type="button" class="priv-btn priv-btn--secondary" data-act="enviar">
+            <div><button type="button" class="ui-btn ui-btn--secondary" data-act="enviar">
               <i class="ti ti-send" aria-hidden="true"></i><span>Enviar solicitação</span></button></div>
           </div>
           <h4 class="priv-sub">Suas solicitações</h4>
@@ -269,13 +209,13 @@ export async function renderMeusDados(container) {
         <section class="priv-card priv-card--wide" aria-labelledby="priv-h-pol">
           <div class="priv-card__head"><span class="priv-card__icon"><i class="ti ti-shield-lock" aria-hidden="true"></i></span>
             <h3 id="priv-h-pol">Política de Privacidade</h3></div>
-          <p class="priv-text">${aceite
+          <p class="ui-text">${aceite
             ? 'Você confirmou a leitura em ' + fmtData(aceite.aceito_em) + '.'
             : 'Ainda não há confirmação de leitura registrada para a versão atual.'}</p>
           <div class="priv-actions">
-            <button type="button" class="priv-btn priv-btn--secondary" data-act="politica">
+            <button type="button" class="ui-btn ui-btn--secondary" data-act="politica">
               <i class="ti ti-file-text" aria-hidden="true"></i><span>Ler a política</span></button>
-            <a class="priv-btn priv-btn--ghost" href="mailto:${EMAIL_CONTATO}">
+            <a class="ui-btn ui-btn--ghost" href="mailto:${EMAIL_CONTATO}">
               <i class="ti ti-mail" aria-hidden="true"></i><span>Falar com o encarregado</span></a>
           </div>
         </section>

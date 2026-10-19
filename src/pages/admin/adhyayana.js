@@ -10,6 +10,7 @@
  * agendamento do jnana.js.
  */
 
+import { confirmarModal } from '../../modules/dialogs.js'
 import { toast } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 
@@ -631,7 +632,7 @@ Regras:
   }
 
   window.excluirAdhyayana = async function(id, nome) {
-    if (!confirm(`Excluir "${nome}"? Esta ação não pode ser desfeita.`)) return
+    if (!(await confirmarModal({ titulo: 'Excluir?', texto: `Excluir "${nome}"? Esta ação não pode ser desfeita.`, confirmar: 'Excluir', perigo: true }))) return
     const { error: err } = await sb.from('adhyayana_asanas').delete().eq('id', id)
     if (err) { toast('Erro: ' + err.message); return }
     toast('✓ Āsana excluído.')

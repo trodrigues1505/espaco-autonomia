@@ -257,7 +257,7 @@ async function _abrirModalCriarTermo(textoSelecionado) {
     if (error) {
       btnSalvar.disabled = false
       btnSalvar.textContent = '✓ Salvar'
-      alert('Erro ao salvar: ' + error.message)
+      window.toast('Erro ao salvar: ' + error.message, 4000)
       return
     }
     invalidarCacheVocabulario()

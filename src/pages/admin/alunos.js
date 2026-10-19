@@ -2,6 +2,7 @@
  * src/pages/admin/alunos.js
  */
 
+import { confirmarModal } from '../../modules/dialogs.js'
 import { sb }         from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
@@ -435,7 +436,7 @@ export async function renderAlunos(container, page) {
   // rode por algum motivo. Chama a mesma RPC de lote; é seguro repetir pois
   // creditar_aulas_mes usa "on conflict (aluno_id, mes_ref) do nothing".
   window.executarCreditoMensal = async function() {
-    if (!confirm('Isso vai gerar o crédito de aulas do mês atual para todos os alunos com matrícula ativa. Alunos que já têm o crédito deste mês não serão duplicados. Continuar?')) return
+    if (!(await confirmarModal({ titulo: 'Gerar crédito do mês?', texto: 'Isso vai gerar o crédito de aulas do mês atual para todos os alunos com matrícula ativa. Alunos que já têm o crédito deste mês não serão duplicados. Continuar?', confirmar: 'Gerar crédito', perigo: false }))) return
 
     const btn = document.querySelector('button[onclick="window.executarCreditoMensal()"]')
     const btnHtmlOriginal = btn ? btn.innerHTML : null

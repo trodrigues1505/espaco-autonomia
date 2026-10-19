@@ -9,7 +9,9 @@
 import { sb } from '../lib/supabase.js'
 import { toast, esc } from './utils.js'
 
-const CONTRATO_VERSAO = 'v2'
+// v3 (19/10/2026): CPF/RG dos representantes substituídos pelo CNPJ; cláusula 3 passa a
+// exigir maioridade (alinhada à Política de Privacidade). Subir a versão obriga nova assinatura.
+const CONTRATO_VERSAO = 'v3'
 
 const CONTRATO_TEXTO = `
 <div style="font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.8;color:#1F381F">
@@ -22,15 +24,15 @@ const CONTRATO_TEXTO = `
     Eu, <strong>[NOME]</strong>, declaro que li e concordo com os termos abaixo para utilização dos serviços do
     <strong>Espaço Autonomia</strong>, CNPJ 18.300.737/0001-95, situado na Av. Liberdade, 179, 1º andar,
     salas 3 e 4, Centro, Franco da Rocha – SP, representado pelo instrutor
-    <strong>Thiago Rodrigues do Nascimento</strong> (CPF ***.***.***-**, RG **.***.***-*)
-    e pela diretora <strong>Regiane da Silva Rocha</strong> (CPF ***.***.***-**, CRT 47582).
+    <strong>Thiago Rodrigues do Nascimento</strong> (CNPJ 60.456.737/0001-45)
+    e pela diretora <strong>Regiane da Silva Rocha</strong> (CRT 47582).
   </p>
 
   <div style="margin-bottom:10px"><strong>1. OBJETO:</strong> Contratação de serviços de Yoga nas modalidades disponíveis no Espaço Autonomia (Hatha Yoga, Acro Yoga e/ou Raja Yoga), conforme plano escolhido.</div>
 
   <div style="margin-bottom:10px"><strong>2. APTIDÃO FÍSICA:</strong> Declaro estar apto(a) a praticar Yoga e assumo total responsabilidade pela realização de avaliações médicas que julgar necessárias. Em caso de condição de saúde relevante, comunicarei previamente ao instrutor.</div>
 
-  <div style="margin-bottom:10px"><strong>3. MENORES DE IDADE:</strong> Alunos menores de 18 anos devem ter autorização do responsável legal, que responde solidariamente por seus atos e obrigações decorrentes deste contrato.</div>
+  <div style="margin-bottom:10px"><strong>3. MAIORIDADE:</strong> Os serviços do Espaço Autonomia são destinados exclusivamente a maiores de 18 anos. Ao aceitar este contrato, declaro ter 18 anos ou mais.</div>
 
   <div style="margin-bottom:10px"><strong>4. PRAZO DE VIGÊNCIA:</strong> Este contrato tem vigência por tempo <strong>indeterminado</strong>, a partir do aceite, permanecendo ativo até a <strong>desistência formal comunicada pelo WhatsApp</strong> ao Espaço Autonomia. Enquanto não houver comunicação formal de desistência, as mensalidades continuam sendo cobradas integralmente, independentemente da frequência de comparecimento.</div>
 
@@ -245,4 +247,4 @@ export async function verContratoAceito(userId, nomeAluno) {
     </div>`
 
   document.body.appendChild(div)
-}
+}   

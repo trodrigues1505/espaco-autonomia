@@ -2,6 +2,7 @@
  * src/pages/timeline.js
  */
 
+import { confirmarModal } from '../modules/dialogs.js'
 import { toast } from '../modules/utils.js'
 import { uiAnimar } from '../modules/ui.js'
 import { aplicarVocabulario } from '../modules/vocabulario.js'
@@ -361,7 +362,7 @@ export async function renderTimeline(container, page) {
   }
 
   async function encerrarEnquete(enqId) {
-    if (!confirm('Encerrar esta enquete? Ninguém mais poderá votar.')) return
+    if (!(await confirmarModal({ titulo: 'Encerrar enquete?', texto: 'Encerrar esta enquete? Ninguém mais poderá votar.', confirmar: 'Encerrar', perigo: false }))) return
     const { error } = await sb.rpc('encerrar_enquete', { p_enquete_id: enqId })
     if (error) { toast('Erro: ' + error.message); return }
     toast('Enquete encerrada')
@@ -369,7 +370,7 @@ export async function renderTimeline(container, page) {
   }
 
   async function excluirEnquete(enqId) {
-    if (!confirm('Excluir esta enquete e todos os votos? Não pode ser desfeito.')) return
+    if (!(await confirmarModal({ titulo: 'Excluir?', texto: 'Excluir esta enquete e todos os votos? Não pode ser desfeito.', confirmar: 'Excluir', perigo: true }))) return
     const { error } = await sb.rpc('excluir_enquete', { p_enquete_id: enqId })
     if (error) { toast('Erro: ' + error.message); return }
     toast('Enquete excluída')
@@ -869,7 +870,7 @@ export async function renderTimeline(container, page) {
   }
 
   async function excluirPost(postId) {
-    if (!confirm('Excluir este post? Esta ação não pode ser desfeita.')) return
+    if (!(await confirmarModal({ titulo: 'Excluir?', texto: 'Excluir este post? Esta ação não pode ser desfeita.', confirmar: 'Excluir', perigo: true }))) return
     const { error } = await sb.rpc('excluir_post_timeline', { p_post_id: postId })
     if (error) { toast('Erro ao excluir: ' + error.message); return }
     document.getElementById(`tl-post-${postId}`)?.remove()
@@ -878,7 +879,7 @@ export async function renderTimeline(container, page) {
   }
 
   async function excluirComentario(comentarioId, postId) {
-    if (!confirm('Excluir este comentário?')) return
+    if (!(await confirmarModal({ titulo: 'Excluir?', texto: 'Excluir este comentário?', confirmar: 'Excluir', perigo: true }))) return
     const { error } = await sb.rpc('excluir_comentario_timeline', { p_comentario_id: comentarioId })
     if (error) { toast('Erro ao excluir: ' + error.message); return }
     await carregarComentarios(postId)

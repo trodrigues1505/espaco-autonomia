@@ -5,6 +5,7 @@
  * → API Anthropic interpreta os blocos de texto → admin confirma capítulo/número/data → salva.
  */
 
+import { confirmarModal } from '../../modules/dialogs.js'
 import { toast } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 
@@ -568,7 +569,7 @@ try {
   }
 
   window.excluirSutra = async function(id, nome) {
-    if (!confirm(`Excluir "${nome}"? Esta ação não pode ser desfeita.`)) return
+    if (!(await confirmarModal({ titulo: 'Excluir?', texto: `Excluir "${nome}"? Esta ação não pode ser desfeita.`, confirmar: 'Excluir', perigo: true }))) return
     const { error: err } = await sb.from('jnana_sutras').delete().eq('id', id)
     if (err) { toast('Erro: ' + err.message); return }
     toast('✓ Sutra excluído.')

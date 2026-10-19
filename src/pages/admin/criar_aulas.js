@@ -3,6 +3,7 @@
  * Criar aulas fixas e avulsas
  */
 
+import { confirmarModal, formularioModal } from '../../modules/dialogs.js'
 import { sb }         from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
@@ -380,15 +381,19 @@ uiAnimar(container)
 
     window.editarAula = async function(id) {
       const { data: a } = await sb.from('aulas').select('*, horarios:aulas_horarios(*)').eq('id', id).single()
-      const novasVagas = prompt('Vagas por aula:', a.vagas)
-      if (novasVagas === null) return
-      await sb.from('aulas').update({ vagas: Number(novasVagas) }).eq('id', id)
+      const v = await formularioModal({
+        titulo: 'Editar aula',
+        campos: [{ id: 'vagas', label: 'Vagas por aula', tipo: 'number', valor: a.vagas, min: 1, max: 99, obrigatorio: true }],
+        confirmar: 'Salvar',
+      })
+      if (!v) return
+      await sb.from('aulas').update({ vagas: Number(v.vagas) }).eq('id', id)
       toast('✓ Aula atualizada')
       navigate('criar-aulas')
     }
 
     window.excluirAula = async function(id) {
-      if (!confirm('Excluir esta aula e todas as suas ocorrências futuras?')) return
+      if (!(await confirmarModal({ titulo: 'Excluir?', texto: 'Excluir esta aula e todas as suas ocorrências futuras?', confirmar: 'Excluir', perigo: true }))) return
       const hoje = new Date().toISOString()
       const { data: ocs } = await sb.from('ocorrencias').select('id').eq('aula_id', id).gte('data_hora', hoje)
       if (ocs?.length) {
@@ -443,7 +448,7 @@ uiAnimar(container)
     }
 
     window.excluirAulaRedundante = async function(id) {
-      if (!confirm('Excluir esta aula e suas ocorrências futuras?')) return
+      if (!(await confirmarModal({ titulo: 'Excluir?', texto: 'Excluir esta aula e suas ocorrências futuras?', confirmar: 'Excluir', perigo: true }))) return
       const hoje = new Date().toISOString()
       const { data: ocs } = await sb.from('ocorrencias').select('id').eq('aula_id', id).gte('data_hora', hoje)
       if (ocs?.length) {
@@ -460,7 +465,7 @@ uiAnimar(container)
     window.gerarTodasPendentes = async function() {
       const pendentes = aulas.filter(a => a.tipo==='fixa' && a.ativa && !ocsFuturas[a.id])
       if (!pendentes.length) { toast('Nenhuma aula pendente'); return }
-      if (!confirm(`Gerar ocorrências para ${pendentes.length} aula(s) sem datas futuras? Período: hoje até 3 anos.`)) return
+      if (!(await confirmarModal({ titulo: 'Gerar ocorrências?', texto: `Gerar ocorrências para ${pendentes.length} aula(s) sem datas futuras? Período: hoje até 3 anos.`, confirmar: 'Gerar', perigo: false }))) return
 
       const de  = new Date().toISOString().slice(0,10)
       const ate = (() => { const d = new Date(); d.setFullYear(d.getFullYear()+3); return d.toISOString().slice(0,10) })()

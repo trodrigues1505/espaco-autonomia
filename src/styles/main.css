@@ -467,6 +467,9 @@ a[style*="background"]:hover { filter: brightness(1.06); transform: translateY(-
   }
 }
 
+/* Botão do menu: só aparece no mobile (regra dentro do @media abaixo) */
+.sb-toggle { display: none; }
+
 /* ── Responsive — Mobile ─────────────────────────────────────── */
 @media (max-width: 768px) {
   .app { flex-direction: column; height: auto; min-height: 100vh; }
@@ -487,11 +490,15 @@ a[style*="background"]:hover { filter: brightness(1.06); transform: translateY(-
   .ni:hover { padding-left: 18px; }
   .ni.on    { padding-left: 18px; }
 
-  .sb::after {
-    content: '☰';
-    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-    color: rgba(242,236,206,.7); font-size: 20px; cursor: pointer;
+  .sb { padding-right: 56px; }
+  .sb-toggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    width: 44px; height: 44px; z-index: 201;   /* acima do menu em tela cheia (z-index 200) */
+    background: transparent; border: none; border-radius: 10px;
+    color: rgba(242,236,206,.9); font-size: 24px; cursor: pointer;
   }
+  .sb-toggle:hover { background: rgba(242,236,206,.1); }
   .nav.mobile-open {
     display: flex; flex-direction: column;
     position: fixed; inset: 0;
@@ -722,51 +729,51 @@ a[style*="background"]:hover { filter: brightness(1.06); transform: translateY(-
 }
 .priv-card h3 { font-family: 'Cormorant Garamond', serif; font-size: 21px; font-weight: 600; color: var(--txt); }
 .priv-sub { font-size: 13px; font-weight: 600; color: var(--txt2); letter-spacing: .02em; margin-top: 6px; }
-.priv-text { font-size: 14px; line-height: 1.6; color: var(--txt); white-space: pre-line; }
-.priv-help { font-size: 13px; line-height: 1.5; color: var(--txt2); }
+.ui-text { font-size: 14px; line-height: 1.6; color: var(--txt); white-space: pre-line; }
+.ui-help { font-size: 13px; line-height: 1.5; color: var(--txt2); }
 .priv-dl { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 10px 12px; font-size: 14px; }
 .priv-dl dt { color: var(--txt2); }
 .priv-dl dd { color: var(--txt); word-break: break-word; }
 .priv-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 
 .priv-form { display: flex; flex-direction: column; gap: 14px; max-width: 560px; }
-.priv-field { display: flex; flex-direction: column; gap: 6px; }
-.priv-label { font-size: 13px; font-weight: 500; color: var(--txt); }
-.priv-input {
+.ui-field { display: flex; flex-direction: column; gap: 6px; }
+.ui-label { font-size: 13px; font-weight: 500; color: var(--txt); }
+.ui-input {
   width: 100%; min-height: 44px; padding: 10px 14px; font: inherit; font-size: 14px;
   background: var(--superficie); color: var(--txt);
   border: 1px solid var(--borda); border-radius: 10px;
   transition: border-color var(--t-fast) var(--ease-out), box-shadow var(--t-fast) var(--ease-out);
 }
-textarea.priv-input { min-height: 96px; line-height: 1.5; resize: vertical; }
-.priv-input:hover { border-color: var(--verde-cl); }
+textarea.ui-input { min-height: 96px; line-height: 1.5; resize: vertical; }
+.ui-input:hover { border-color: var(--verde-cl); }
 
-.priv-btn {
+.ui-btn {
   min-height: 44px; padding: 0 20px; border-radius: 10px; border: 1px solid transparent;
   font: inherit; font-size: 14px; font-weight: 500; text-decoration: none; cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   transition: background var(--t-fast) var(--ease-out), border-color var(--t-fast) var(--ease-out), transform var(--t-fast) var(--ease-out);
 }
-.priv-btn:active:not(:disabled) { transform: scale(.98); }
-.priv-btn:disabled { opacity: .55; cursor: not-allowed; }
-.priv-btn--primary   { background: var(--verde); color: var(--bege); }
-.priv-btn--primary:hover:not(:disabled)   { background: var(--verde-med); }
-.priv-btn--secondary { background: transparent; color: var(--txt); border-color: var(--borda); }
-.priv-btn--secondary:hover:not(:disabled) { background: var(--fundo); border-color: var(--verde-cl); }
-.priv-btn--ghost     { background: transparent; color: var(--txt2); }
-.priv-btn--ghost:hover:not(:disabled)     { color: var(--txt); background: var(--fundo); }
-.priv-btn--danger    { background: #c0392b; color: #fff; }
-.priv-btn--danger:hover:not(:disabled)    { background: #a93226; }
-.priv-icon-btn {
+.ui-btn:active:not(:disabled) { transform: scale(.98); }
+.ui-btn:disabled { opacity: .55; cursor: not-allowed; }
+.ui-btn--primary   { background: var(--verde); color: var(--bege); }
+.ui-btn--primary:hover:not(:disabled)   { background: var(--verde-med); }
+.ui-btn--secondary { background: transparent; color: var(--txt); border-color: var(--borda); }
+.ui-btn--secondary:hover:not(:disabled) { background: var(--fundo); border-color: var(--verde-cl); }
+.ui-btn--ghost     { background: transparent; color: var(--txt2); }
+.ui-btn--ghost:hover:not(:disabled)     { color: var(--txt); background: var(--fundo); }
+.ui-btn--danger    { background: #c0392b; color: #fff; }
+.ui-btn--danger:hover:not(:disabled)    { background: #a93226; }
+.ui-icon-btn {
   width: 44px; height: 44px; border-radius: 10px; border: none; background: transparent;
   color: var(--txt2); font-size: 20px; cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center;
 }
-.priv-icon-btn:hover { background: var(--fundo); color: var(--txt); }
-.priv-btn:focus-visible, .priv-input:focus-visible, .priv-icon-btn:focus-visible, .priv-link:focus-visible {
+.ui-icon-btn:hover { background: var(--fundo); color: var(--txt); }
+.ui-btn:focus-visible, .ui-input:focus-visible, .ui-icon-btn:focus-visible, .ui-link:focus-visible {
   outline: 2px solid var(--verde-cl); outline-offset: 2px;
 }
-.priv-link { color: var(--verde-med); text-decoration: underline; }
+.ui-link { color: var(--verde-med); text-decoration: underline; }
 
 .priv-list { list-style: none; display: flex; flex-direction: column; }
 .priv-item {
@@ -775,35 +782,35 @@ textarea.priv-input { min-height: 96px; line-height: 1.5; resize: vertical; }
 }
 .priv-item:first-child { border-top: none; }
 .priv-item__t { font-size: 14px; font-weight: 500; color: var(--txt); }
-.priv-badge {
+.ui-badge {
   display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
   padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500;
 }
-.priv-badge--aberta   { background: rgba(232,188,79,.2);  color: #8a6a10; }
-.priv-badge--atendida { background: rgba(74,138,74,.18);  color: #2d6a2d; }
-.priv-badge--recusada { background: rgba(192,57,43,.14);  color: #a93226; }
-.priv-empty {
+.ui-badge--aberta   { background: rgba(232,188,79,.2);  color: #8a6a10; }
+.ui-badge--atendida { background: rgba(74,138,74,.18);  color: #2d6a2d; }
+.ui-badge--recusada { background: rgba(192,57,43,.14);  color: #a93226; }
+.ui-empty {
   display: flex; align-items: center; gap: 10px; padding: 16px; border-radius: 12px;
   background: var(--fundo); color: var(--txt2); font-size: 13px; line-height: 1.5;
 }
-.priv-empty i { font-size: 20px; flex-shrink: 0; }
+.ui-empty i { font-size: 20px; flex-shrink: 0; }
 
 /* Diálogo */
-.priv-overlay {
+.ui-overlay {
   position: fixed; inset: 0; z-index: 10001; padding: 16px;
   display: flex; align-items: center; justify-content: center;
   background: rgba(15,25,15,.55); animation: page-in var(--t-mid) var(--ease-out);
 }
-.priv-dialog {
+.ui-dialog {
   background: var(--superficie); color: var(--txt); border-radius: 16px;
   width: min(720px, 100%); max-height: min(88vh, 760px);
   display: flex; flex-direction: column; box-shadow: var(--sombra-media);
   animation: card-in var(--t-mid) var(--ease-out);
 }
-.priv-dialog__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 16px 12px 24px; border-bottom: 1px solid var(--borda); }
-.priv-dialog__title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; }
-.priv-dialog__body { padding: 20px 24px; overflow-y: auto; }
-.priv-dialog__foot { padding: 14px 24px; border-top: 1px solid var(--borda); display: flex; justify-content: flex-end; gap: 10px; }
+.ui-dialog__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 16px 12px 24px; border-bottom: 1px solid var(--borda); }
+.ui-dialog__title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; }
+.ui-dialog__body { padding: 20px 24px; overflow-y: auto; }
+.ui-dialog__foot { padding: 14px 24px; border-top: 1px solid var(--borda); display: flex; justify-content: flex-end; gap: 10px; }
 .priv-doc__meta { font-size: 13px; color: var(--txt2); margin-bottom: 16px; }
 .priv-doc__sec { margin-bottom: 20px; }
 .priv-doc__sec h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; color: var(--txt); }
@@ -828,6 +835,26 @@ textarea.priv-input { min-height: 96px; line-height: 1.5; resize: vertical; }
   .priv-dl { grid-template-columns: 1fr; gap: 2px 0; }
   .priv-dl dd { margin-bottom: 10px; }
   .priv-row { grid-template-columns: 1fr; gap: 10px; }
-  .priv-dialog__head { padding-left: 18px; }
-  .priv-dialog__body, .priv-dialog__foot { padding-left: 18px; padding-right: 18px; }
+  .ui-dialog__head { padding-left: 18px; }
+  .ui-dialog__body, .ui-dialog__foot { padding-left: 18px; padding-right: 18px; }
 }
+
+/* ── Componentes de diálogo/formulário compartilhados (.ui-*) ── */
+.ui-form  { display: flex; flex-direction: column; gap: 14px; }
+.ui-error {
+  margin-top: 12px; padding: 10px 14px; border-radius: 10px; font-size: 13px; line-height: 1.5;
+  background: rgba(192,57,43,.12); color: #a93226;
+}
+.ui-error[hidden] { display: none; }
+
+/* ── Acessibilidade: foco visível em todo o app ─────────────────
+   Há dezenas de elementos com "outline:none" INLINE; só !important em
+   folha de estilo vence estilo inline, por isso o !important abaixo. */
+:focus-visible { outline: 2px solid var(--verde-cl); outline-offset: 2px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible,
+a:focus-visible, [tabindex]:focus-visible, [role="link"]:focus-visible, [role="button"]:focus-visible {
+  outline: 2px solid var(--verde-cl) !important;
+  outline-offset: 2px;
+}
+.sb :focus-visible, #lgpd-banner :focus-visible { outline-color: var(--dourado) !important; }
+.ni:focus-visible { outline-offset: -2px; }

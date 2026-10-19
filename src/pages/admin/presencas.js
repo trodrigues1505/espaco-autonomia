@@ -5,6 +5,7 @@
  * para evitar erro de cast do enum confirmacao_status.
  */
 
+import { confirmarModal } from '../../modules/dialogs.js'
 import { sb } from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
@@ -212,7 +213,7 @@ uiAnimar(container)
   }
 
   window.excluirPresenca = async function(confId, nomeAluno, alunoId) {
-    if (!confirm('Remover presença de ' + nomeAluno + '?\nSe o saldo foi debitado, ele será estornado.')) return
+    if (!(await confirmarModal({ titulo: 'Remover presença?', texto: 'Remover presença de ' + nomeAluno + '?\nSe o saldo foi debitado, ele será estornado.', confirmar: 'Remover', perigo: true }))) return
 
     const { data: conf } = await sb.from('confirmacoes')
       .select('aluno_id,ocorrencia_id,status').eq('id', confId).single()

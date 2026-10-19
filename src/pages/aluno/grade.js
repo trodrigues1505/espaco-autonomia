@@ -8,6 +8,7 @@
  * divergido em algum commit anterior.
  */
 
+import { confirmarModal, formularioModal } from '../../modules/dialogs.js'
 import { sb }         from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
@@ -230,32 +231,43 @@ export async function renderAlunoGrade(container, page) {
       </div>
     `
 
-    window.editarOcorrencia = async function(ocId) {
-      const { data: oc } = await sb.from('ocorrencias').select('*, aula:aulas(vagas,modalidade)').eq('id', ocId).single()
-      const dt = new Date(oc.data_hora)
-      const novaData = prompt('Data da aula (AAAA-MM-DD):', dt.toISOString().slice(0,10))
-      if (!novaData) return
-      const novaHora = prompt('Hora (HH:MM):', dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}))
-      if (!novaHora) return
-      const novasVagas = prompt('Vagas:', oc.vagas_override||oc.aula?.vagas||15)
-      const dtNova = novaData + 'T' + novaHora + ':00-03:00'
-      const { data: fer } = await sb.from('feriados').select('nome').eq('data', novaData)
-      await sb.from('ocorrencias').update({
-        data_hora: dtNova,
-        vagas_override: novasVagas ? Number(novasVagas) : null,
-        eh_feriado: !!(fer&&fer.length),
-        nome_feriado: fer?.[0]?.nome||null
-      }).eq('id', ocId)
-      toast('✓ Aula atualizada')
-      navigate(page)
-    }
+    // Ações de edição/exclusão: só para quem não é aluno (RLS continua sendo a barreira real)
+    if (!isAluno) {
+      window.editarOcorrencia = async function(ocId) {
+        const { data: oc } = await sb.from('ocorrencias').select('*, aula:aulas(vagas,modalidade)').eq('id', ocId).single()
+        const dt = new Date(oc.data_hora)
+        const dataAtual = dt.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' })
+        const horaAtual = dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })
+        const v = await formularioModal({
+          titulo: 'Editar aula',
+          campos: [
+            { id: 'data',  label: 'Data',  tipo: 'date',   valor: dataAtual, obrigatorio: true },
+            { id: 'hora',  label: 'Hora',  tipo: 'time',   valor: horaAtual, obrigatorio: true },
+            { id: 'vagas', label: 'Vagas', tipo: 'number', valor: oc.vagas_override || oc.aula?.vagas || 15, min: 1, max: 99, obrigatorio: true },
+          ],
+          confirmar: 'Salvar',
+        })
+        if (!v) return
+        const novaData = v.data, novaHora = v.hora, novasVagas = v.vagas
+        const dtNova = novaData + 'T' + novaHora + ':00-03:00'
+        const { data: fer } = await sb.from('feriados').select('nome').eq('data', novaData)
+        await sb.from('ocorrencias').update({
+          data_hora: dtNova,
+          vagas_override: novasVagas ? Number(novasVagas) : null,
+          eh_feriado: !!(fer&&fer.length),
+          nome_feriado: fer?.[0]?.nome||null
+        }).eq('id', ocId)
+        toast('✓ Aula atualizada')
+        navigate(page)
+      }
 
-    window.excluirOcorrencia = async function(ocId) {
-      if (!confirm('Excluir esta aula? As confirmações também serão removidas.')) return
-      await sb.from('confirmacoes').delete().eq('ocorrencia_id', ocId)
-      await sb.from('ocorrencias').delete().eq('id', ocId)
-      toast('Aula excluída')
-      navigate(page)
+      window.excluirOcorrencia = async function(ocId) {
+        if (!(await confirmarModal({ titulo: 'Excluir?', texto: 'Excluir esta aula? As confirmações também serão removidas.', confirmar: 'Excluir', perigo: true }))) return
+        await sb.from('confirmacoes').delete().eq('ocorrencia_id', ocId)
+        await sb.from('ocorrencias').delete().eq('id', ocId)
+        toast('Aula excluída')
+        navigate(page)
+      }
     }
 
     window.confirmarOcorrencia = async function(ocId) {

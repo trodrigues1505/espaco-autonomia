@@ -1,7 +1,7 @@
 /**
  * src/pages/index.js
  */
-const V = '?v=27'
+const V = '?v=28'
 const rotaMap = {
   'dashboard':          () => import('./admin/dashboard.js'  + V).then(m => m.renderDashboard),
   'timeline':           () => import('./timeline.js'         + V).then(m => m.renderTimeline),
@@ -49,8 +49,10 @@ const rotaMap = {
   'aluno-beneficio-naada-mandir':   () => import('./aluno/beneficios.js' + V).then(m => m.renderAlunosBeneficios),
 }
 export async function navigate(page) {
-  document.querySelectorAll('.ni').forEach(n => n.classList.remove('on'))
-  document.getElementById(`ni-${page}`)?.classList.add('on')
+  document.querySelectorAll('.ni').forEach(n => { n.classList.remove('on'); n.removeAttribute('aria-current') })
+  const niAtual = document.getElementById(`ni-${page}`)
+  niAtual?.classList.add('on')
+  niAtual?.setAttribute('aria-current', 'page')
   const container = document.getElementById('main-area')
   container.innerHTML = '<div class="loading-page"><div class="spin-big"></div></div>'
   const loader = rotaMap[page]
