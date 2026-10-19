@@ -338,6 +338,31 @@ const TIPOS = {
     },
   },
 
+  aluno_aula_remarcada: {
+    roles: ['aluno'],
+    paginas: ['aluno-home', 'aluno-grade', 'aluno-minhas'],
+    async checar(sb, perfil) {
+      // Avisos criados pelo admin quando uma aula em que o aluno está confirmado é remarcada
+      // (tabela avisos_aula, preenchida por agenda_mover_aula). Valem por 14 dias.
+      const desde = new Date(Date.now() - 14 * 86400000).toISOString()
+      const { data } = await sb
+        .from('avisos_aula')
+        .select('id, titulo, corpo, criado_em')
+        .eq('aluno_id', perfil.id)
+        .gte('criado_em', desde)
+        .order('criado_em', { ascending: false })
+        .limit(5)
+      return (data || []).map(a => ({
+        key: `aviso_aula_${a.id}`,
+        titulo: a.titulo,
+        corpo: a.corpo,
+        nivel: 'aviso',
+        acao: { label: 'Ver minhas aulas', page: 'aluno-minhas' },
+        menuIds: ['aluno-minhas'],
+      }))
+    },
+  },
+
   aluno_confirmar_semana: {
     roles: ['aluno'],
     paginas: ['aluno-home', 'aluno-grade'],

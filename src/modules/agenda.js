@@ -6,15 +6,17 @@
  *  • Arrastar: mouse (clique e arraste) e toque (segure ~0,3 s e arraste). Usa Pointer Events,
  *    não o drag nativo do HTML, que não funciona no celular.
  *  • Sem mouse: clique/Enter na aula abre "Mover aula" (data e hora).
- *  • Move UMA ocorrência (a mesma lógica da edição em Grade de Aulas); não altera a
- *    recorrência da aula. Passo de 15 min. Aulas que já começaram não se movem.
+ *  • Ao soltar, pergunta: "somente esta aula" ou "todas as aulas desta série" (esta e as próximas;
+ *    muda também o horário-modelo). A lógica roda no banco (agenda_mover_aula), de forma atômica.
+ *  • Os alunos confirmados recebem um aviso no app (desmarcável) e há botão para copiar o texto
+ *    para o WhatsApp. Passo de 15 min. Aulas que já começaram não se movem.
  *  • Pede confirmação só quando há conflito de professor ou o destino é feriado.
- *  • Todo movimento tem "Desfazer".
+ *  • Todo movimento tem "Desfazer" (também atômico).
  *  • Horários sempre em America/Sao_Paulo, independente do fuso do navegador.
  */
 
 import { esc, NOMES, CORES } from './utils.js'
-import { formularioModal, confirmarModal, avisoComAcao } from './dialogs.js'
+import { formularioModal, confirmarModal, escolhaModal, avisoComAcao } from './dialogs.js'
 
 const TZ = 'America/Sao_Paulo'
 const OFFSET = '-03:00'          // Brasil sem horário de verão desde 2019 (mesma convenção da Grade)
@@ -86,6 +88,7 @@ export function renderAgendaSemanal(root, { sb = window._sb, agora = () => Date.
   let eventos = []                 // aulas da semana já com ini/fim em minutos
   let feriados = {}                // data → nome
   let duracoes = {}                // aula_id → minutos
+  let tipos = {}                   // aula_id → 'fixa' | 'avulsa'
   let faixa = { inicioMin: 6 * 60, fimMin: 22 * 60 }
   const porId = new Map()
 
@@ -98,19 +101,22 @@ export function renderAgendaSemanal(root, { sb = window._sb, agora = () => Date.
     semana = Array.from({ length: 7 }, (_, i) => addDias(base, i))
     root.innerHTML = `<div class="ag"><div class="ag__head"><span class="ag__title">Agenda da semana</span></div>
       <div class="ag__hint">Carregando agenda...</div></div>`
-    const [oc, au, fe] = await Promise.all([
+    const [oc, au0, fe] = await Promise.all([
       sb.from('ocorrencias_vagas').select('*')
         .gte('data_hora', isoSP(semana[0], '00:00')).lt('data_hora', isoSP(addDias(semana[6], 1), '00:00'))
         .eq('cancelada', false).order('data_hora'),
-      sb.from('aulas').select('id, duracao_min'),
+      sb.from('aulas').select('id, duracao_min, tipo'),
       sb.from('feriados').select('data, nome').gte('data', semana[0]).lte('data', semana[6]),
     ])
+    // se a coluna "tipo" não existir neste banco, tenta só com a duração
+    const au = au0?.error ? await sb.from('aulas').select('id, duracao_min') : au0
     if (oc.error) {
       root.innerHTML = `<div class="ag"><div class="ag__head"><span class="ag__title">Agenda da semana</span></div>
         <div class="ag__hint">Não foi possível carregar a agenda: ${esc(oc.error.message)}</div></div>`
       return
     }
-    duracoes = {}; (au?.data || []).forEach(a => { duracoes[a.id] = a.duracao_min || 60 })
+    duracoes = {}; tipos = {}
+    ;(au?.data || []).forEach(a => { duracoes[a.id] = a.duracao_min || 60; if (a.tipo) tipos[a.id] = a.tipo })
     feriados = {}; (fe?.data || []).forEach(f => { feriados[f.data] = f.nome })
     porId.clear()
     eventos = (oc.data || []).map(o => {
@@ -202,6 +208,27 @@ export function renderAgendaSemanal(root, { sb = window._sb, agora = () => Date.
   }
 
   // ── Mover ──
+  const ddmm = d => `${d.slice(8)}/${d.slice(5, 7)}`
+
+  function erroRPC(error) {
+    const msg = error.code === '23505' ? (error.message?.includes('modelo') ? error.message : 'Essa aula já existe nesse horário.')
+      : error.code === '42501' ? 'Somente administradores podem mover aulas.'
+      : error.code === '22023' ? error.message
+      : 'Erro ao mover: ' + error.message
+    window.toast?.(msg, 5000)
+    return false
+  }
+
+  async function copiar(texto) {
+    try { await navigator.clipboard.writeText(texto); return true } catch { /* tenta o método antigo */ }
+    const ta = document.createElement('textarea')
+    ta.value = texto; ta.style.cssText = 'position:fixed;opacity:0'
+    document.body.appendChild(ta); ta.select()
+    let ok = false
+    try { ok = document.execCommand('copy') } catch { ok = false }
+    ta.remove(); return ok
+  }
+
   async function mover(ev, destino) {
     const novoISO = isoSP(destino.data, destino.hora)
     const novoMs = Date.parse(novoISO)
@@ -209,56 +236,65 @@ export function renderAgendaSemanal(root, { sb = window._sb, agora = () => Date.
     if (novoMs <= agora()) { window.toast?.('Não é possível mover uma aula para um horário que já passou.', 4000); return false }
     if (novoMs === Date.parse(ev.data_hora)) return false
 
-    const avisos = []
-    const { data: fer } = await sb.from('feriados').select('nome').eq('data', destino.data)
-    const feriado = fer?.[0]?.nome || null
-    if (feriado) avisos.push(`Esse dia é feriado (${feriado}). A aula ficará marcada como feriado.`)
-
-    if (ev.professor_id) {
-      const fimMs = novoMs + ev.dur * 60000
-      const { data: outras } = await sb.from('ocorrencias_vagas')
-        .select('id, aula_id, data_hora, modalidade')
-        .eq('professor_id', ev.professor_id).eq('cancelada', false).neq('id', ev.id)
-        .gte('data_hora', new Date(novoMs - 6 * 3600000).toISOString())
-        .lte('data_hora', new Date(fimMs).toISOString())
-      const conflito = (outras || []).find(o => {
-        const ini = Date.parse(o.data_hora), fim = ini + durDe(o.aula_id) * 60000
-        return ini < fimMs && fim > novoMs
-      })
-      if (conflito) {
-        const pc = partesSP(conflito.data_hora)
-        avisos.push(`${ev.professor_nome || 'O professor'} já tem ${NOMES[conflito.modalidade] || 'outra aula'} às ${hhmm(pc.hh * 60 + pc.mm)} nesse horário.`)
-      }
-    }
-    if (avisos.length) {
-      const ok = await confirmarModal({ titulo: 'Mover mesmo assim?', texto: avisos.join('\n\n'), confirmar: 'Mover aula' })
-      if (!ok) return false
-    }
-
-    const anterior = { data_hora: ev.data_hora, eh_feriado: !!ev.eh_feriado, nome_feriado: ev.nome_feriado ?? null }
-    const { data, error } = await sb.from('ocorrencias')
-      .update({ data_hora: novoISO, eh_feriado: !!feriado, nome_feriado: feriado })
-      .eq('id', ev.id).select('id')
-    if (error) {
-      window.toast?.(error.code === '23505' ? 'Essa aula já existe nesse horário.' : 'Erro ao mover: ' + error.message, 4500)
-      return false
-    }
-    if (!data?.length) { window.toast?.('Não foi possível mover (sem permissão ou aula não encontrada).', 4500); return false }
-
-    const conf = Number(ev.confirmados || 0)
     const nome = NOMES[ev.modalidade] || ev.modalidade
+    const conf = Number(ev.confirmados || 0)
+    const fixa = tipos[ev.aula_id] !== 'avulsa'            // desconhecido conta como fixa; o banco confere
+    const origem = `${DIAS_LONGO[dowDe(ev.dia)]} ${hhmm(ev.ini)}`
+    const alvo = `${DIAS_LONGO[dowDe(destino.data)]} ${destino.hora}`
+
+    // 1) Escopo e aviso aos alunos
+    let escopo = 'esta', avisar = true
+    if (fixa || conf > 0) {
+      const r = await escolhaModal({
+        titulo: 'Mover aula',
+        texto: `${nome}: ${origem} → ${alvo}`,
+        opcoes: fixa ? [
+          { valor: 'esta', rotulo: 'Somente esta aula',
+            descricao: `Só a aula de ${ddmm(ev.dia)} muda. As outras continuam no horário de sempre.` },
+          { valor: 'serie', rotulo: 'Todas as aulas desta série',
+            descricao: `Esta e todas as próximas aulas de ${DIAS_LONGO[dowDe(ev.dia)]}s às ${hhmm(ev.ini)} passam para ${DIAS_LONGO[dowDe(destino.data)]}s às ${destino.hora}. O horário-modelo da aula também muda. Aulas já dadas não são alteradas.` },
+        ] : null,
+        marcar: { rotulo: conf > 0 ? `Avisar no app os ${conf} aluno(s) confirmado(s)` : 'Avisar no app os alunos confirmados', marcado: true },
+        confirmar: 'Mover',
+      })
+      if (!r) return false
+      escopo = r.opcao || 'esta'; avisar = r.marcado
+    }
+
+    // 2) Banco: valida, mede conflitos e aplica (1ª chamada sem confirmar)
+    const chamar = confirmado => sb.rpc('agenda_mover_aula', {
+      p_ocorrencia: ev.id, p_novo: novoISO, p_escopo: escopo, p_avisar: avisar, p_confirmado: confirmado,
+    })
+    let { data, error } = await chamar(false)
+    if (error) return erroRPC(error)
+    if (data?.precisa_confirmar) {
+      const ok = await confirmarModal({ titulo: 'Mover mesmo assim?', texto: data.avisos.join('\n\n'), confirmar: 'Mover aula' })
+      if (!ok) return false
+      ;({ data, error } = await chamar(true))
+      if (error) return erroRPC(error)
+    }
+    if (!data?.ok) { window.toast?.('Não foi possível mover a aula.', 4000); return false }
+
+    // 3) Aviso com Desfazer e texto para o WhatsApp
     const hoje = hojeSP()
     const tocaHoje = ev.dia === hoje || destino.data === hoje
+    const avisados = Number(data.alunos_avisados || 0)
     avisoComAcao({
-      texto: `${nome} movida para ${DIAS_LONGO[dowDe(destino.data)]} ${destino.hora}.`
-        + (conf > 0 ? ` ${conf} aluno(s) confirmado(s): avise a turma.` : ''),
+      texto: (escopo === 'serie'
+          ? `Série de ${nome}: ${data.movidas} aula(s) movida(s) para ${DIAS_LONGO[dowDe(destino.data)]}s às ${destino.hora}.`
+          : `${nome} movida para ${alvo}.`)
+        + (avisados > 0 ? ` ${avisados} aluno(s) avisado(s) no app.`
+           : conf > 0 && !avisar ? ' Os confirmados não foram avisados.' : ''),
       acao: 'Desfazer',
       aoClicar: async () => {
-        const { data: d2, error: e2 } = await sb.from('ocorrencias').update(anterior).eq('id', ev.id).select('id')
-        if (e2 || !d2?.length) { window.toast?.('Não foi possível desfazer.', 4000); return }
+        const { data: d2, error: e2 } = await sb.rpc('agenda_desfazer_mover', { p_desfazer: data.desfazer })
+        if (e2 || !d2?.ok) { window.toast?.('Não foi possível desfazer.', 4000); return }
         window.toast?.('Movimento desfeito.')
         await carregar(); if (tocaHoje) onAlterou?.()
       },
+      acao2: data.texto_whatsapp ? 'Copiar aviso' : undefined,
+      aoClicar2: async () => ((await copiar(data.texto_whatsapp)) ? 'Copiado' : 'Não foi possível copiar'),
+      duracao: 12000,
     })
     await carregar()
     if (tocaHoje) onAlterou?.()

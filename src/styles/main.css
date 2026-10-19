@@ -933,3 +933,19 @@ body.ag-arrastando, body.ag-arrastando * { cursor: grabbing !important; -webkit-
   .ag__hint { padding: 8px 14px 4px; }
   .ag__scroll { padding: 4px 6px 14px; }
 }
+
+/* ── Diálogo de escolha (rádio + caixa de seleção) ──────────── */
+.ui-choices { border: none; display: flex; flex-direction: column; gap: 10px; margin: 4px 0 14px; padding: 0; }
+.ui-choices .ui-label { margin-bottom: 2px; }
+.ui-choice {
+  display: grid; grid-template-columns: 22px 1fr; column-gap: 10px; row-gap: 2px; align-items: start;
+  padding: 12px 14px; border: 1px solid var(--borda); border-radius: 12px; cursor: pointer;
+  transition: border-color var(--t-fast) var(--ease-out), background var(--t-fast) var(--ease-out);
+}
+.ui-choice:hover { border-color: var(--verde-cl); }
+.ui-choice:has(input:checked) { border-color: var(--verde-cl); background: color-mix(in srgb, var(--verde-cl) 10%, var(--superficie)); }
+.ui-choice input { grid-row: 1 / span 2; margin-top: 3px; width: 18px; height: 18px; accent-color: var(--verde); }
+.ui-choice__t { font-size: 14px; font-weight: 600; color: var(--txt); }
+.ui-choice__d { grid-column: 2; font-size: 13px; line-height: 1.5; color: var(--txt2); }
+.ui-check { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; line-height: 1.5; color: var(--txt); cursor: pointer; }
+.ui-check input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--verde); flex-shrink: 0; }

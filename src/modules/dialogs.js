@@ -130,10 +130,56 @@ export function formularioModal({ titulo, texto = '', campos, confirmar = 'Salva
 }
 
 /**
+ * Diálogo de escolha: opções (rádio) e/ou uma caixa de seleção.
+ *   opcoes: [{ valor, rotulo, descricao }]   (a primeira vem marcada; null = sem rádios)
+ *   marcar: { rotulo, marcado }               (caixa de seleção opcional)
+ * Resolve com { opcao, marcado } ou null se cancelado.
+ */
+export function escolhaModal({ titulo, texto = '', opcoes = null, marcar = null, confirmar = 'Confirmar', cancelar = 'Cancelar', legenda = 'Aplicar a' }) {
+  return new Promise(resolve => {
+    let decidido = false
+    const nome = 'ui-r-' + Math.random().toString(36).slice(2, 7)
+    const radios = opcoes ? `
+      <fieldset class="ui-choices">
+        <legend class="ui-label">${esc(legenda)}</legend>
+        ${opcoes.map((o, i) => `
+          <label class="ui-choice">
+            <input type="radio" name="${nome}" value="${esc(o.valor)}" ${i === 0 ? 'checked' : ''}>
+            <span class="ui-choice__t">${esc(o.rotulo)}</span>
+            ${o.descricao ? `<span class="ui-choice__d">${esc(o.descricao)}</span>` : ''}
+          </label>`).join('')}
+      </fieldset>` : ''
+    const caixa = marcar ? `
+      <label class="ui-check">
+        <input type="checkbox" data-marcar ${marcar.marcado ? 'checked' : ''}>
+        <span>${esc(marcar.rotulo)}</span>
+      </label>` : ''
+    const d = abrirDialogo({
+      titulo,
+      corpoHTML: `${texto ? `<p class="ui-text">${esc(texto)}</p>` : ''}${radios}${caixa}`,
+      rodapeHTML: `
+        <button type="button" class="ui-btn ui-btn--ghost" data-nao>${esc(cancelar)}</button>
+        <button type="button" class="ui-btn ui-btn--primary" data-sim>${esc(confirmar)}</button>`,
+      onFechar: () => { if (!decidido) resolve(null) },
+      foco: 'input[type=radio]:checked',
+    })
+    d.root.querySelector('[data-nao]').addEventListener('click', () => d.fechar())
+    d.root.querySelector('[data-sim]').addEventListener('click', () => {
+      decidido = true
+      resolve({
+        opcao: d.root.querySelector('input[type=radio]:checked')?.value ?? null,
+        marcado: !!d.root.querySelector('[data-marcar]')?.checked,
+      })
+      d.fechar()
+    })
+  })
+}
+
+/**
  * Aviso temporário com ação (ex.: "Desfazer"), anunciado por leitores de tela.
  * Só um por vez. Retorna uma função para fechar manualmente.
  */
-export function avisoComAcao({ texto, acao, aoClicar, duracao = 8000 }) {
+export function avisoComAcao({ texto, acao, aoClicar, acao2, aoClicar2, duracao = 8000 }) {
   document.querySelector('.ui-snack')?.remove()
   const el = document.createElement('div')
   el.className = 'ui-snack'
@@ -142,11 +188,18 @@ export function avisoComAcao({ texto, acao, aoClicar, duracao = 8000 }) {
   el.innerHTML = `
     <span class="ui-snack__txt">${esc(texto)}</span>
     ${acao ? `<button type="button" class="ui-snack__btn" data-acao>${esc(acao)}</button>` : ''}
+    ${acao2 ? `<button type="button" class="ui-snack__btn" data-acao2>${esc(acao2)}</button>` : ''}
     <button type="button" class="ui-snack__x" data-x aria-label="Fechar aviso"><i class="ti ti-x" aria-hidden="true"></i></button>`
   document.body.appendChild(el)
   const fechar = () => { clearTimeout(timer); el.remove() }
   const timer = setTimeout(fechar, duracao)
   el.querySelector('[data-x]').addEventListener('click', fechar)
   el.querySelector('[data-acao]')?.addEventListener('click', () => { fechar(); aoClicar?.() })
+  // segunda ação não fecha o aviso; se devolver um texto, ele vira o novo rótulo do botão
+  el.querySelector('[data-acao2]')?.addEventListener('click', async e => {
+    const btn = e.currentTarget          // currentTarget vira null depois do primeiro await
+    const rot = await aoClicar2?.()
+    if (typeof rot === 'string' && btn) btn.textContent = rot
+  })
   return fechar
 }

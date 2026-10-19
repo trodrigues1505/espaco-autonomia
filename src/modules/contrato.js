@@ -9,9 +9,10 @@
 import { sb } from '../lib/supabase.js'
 import { toast, esc } from './utils.js'
 
-// v3 (19/10/2026): CPF/RG dos representantes substituídos pelo CNPJ; cláusula 3 passa a
-// exigir maioridade (alinhada à Política de Privacidade). Subir a versão obriga nova assinatura.
-const CONTRATO_VERSAO = 'v3'
+// v4 (19/10/2026): CNPJ do Espaço Autonomia corrigido para 60.456.737/0001-45 (o texto anterior citava
+// outro número); sem CPF/RG dos representantes; cláusula 3 exige maioridade (alinhada à Política de
+// Privacidade). Subir a versão obriga nova assinatura de todos os alunos.
+const CONTRATO_VERSAO = 'v4'
 
 const CONTRATO_TEXTO = `
 <div style="font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.8;color:#1F381F">
@@ -22,9 +23,9 @@ const CONTRATO_TEXTO = `
 
   <p style="margin-bottom:14px">
     Eu, <strong>[NOME]</strong>, declaro que li e concordo com os termos abaixo para utilização dos serviços do
-    <strong>Espaço Autonomia</strong>, CNPJ 18.300.737/0001-95, situado na Av. Liberdade, 179, 1º andar,
+    <strong>Espaço Autonomia</strong>, CNPJ 60.456.737/0001-45, situado na Av. Liberdade, 179, 1º andar,
     salas 3 e 4, Centro, Franco da Rocha – SP, representado pelo instrutor
-    <strong>Thiago Rodrigues do Nascimento</strong> (CNPJ 60.456.737/0001-45)
+    <strong>Thiago Rodrigues do Nascimento</strong>
     e pela diretora <strong>Regiane da Silva Rocha</strong> (CRT 47582).
   </p>
 
