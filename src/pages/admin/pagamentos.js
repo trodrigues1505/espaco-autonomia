@@ -10,7 +10,7 @@
  * montada — funciona tanto embutida quanto acessada isoladamente.
  */
 
-import { SUPABASE_ANON } from '../../lib/supabase.js'
+import { sb as _sbAuth } from '../../lib/supabase.js'
 import { toast } from '../../modules/utils.js'
 
 import { uiAnimar } from '../../modules/ui.js'
@@ -38,9 +38,12 @@ const STATUS_BG    = {RECEIVED:'#e8f4e8',CONFIRMED:'#e8f4e8',OVERDUE:'#fceaea',P
 const STATUS_COR   = {RECEIVED:'#1a5a1a',CONFIRMED:'#1a5a1a',OVERDUE:'#8a1a1a',PENDING:'#7a5a10',CANCELLED:'#5a5a4a',REFUNDED:'#5a5a4a'}
 
 async function asaasProxy(path, apiKey) {
+  // O proxy exige o token do usuário logado (admin) — não mais a anon key.
+  const { data: { session } } = await _sbAuth.auth.getSession()
+  if (!session?.access_token) throw new Error('Sessão expirada. Faça login novamente.')
   const r = await fetch(FN_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
     body: JSON.stringify({ apiKey, path })
   })
   if (!r.ok) throw new Error('Asaas proxy ' + r.status)
@@ -510,4 +513,4 @@ uiAnimar(container)
       prog.style.display = 'none'
     }
   }
-}   
+}
