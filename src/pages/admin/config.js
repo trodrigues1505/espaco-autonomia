@@ -6,7 +6,7 @@
 import { sb }         from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
-          calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
+          calcularNivel, NIVEL_LABELS, esc } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 
 export async function renderConfig(container, page) {
@@ -85,10 +85,8 @@ export async function renderConfig(container, page) {
           Busca todos os clientes cadastrados no Asaas e cria perfis de aluno no app.<br>
           Alunos já existentes (mesmo e-mail) são atualizados. O aluno só terá acesso ao app após fazer o primeiro login.
         </div>
-        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
-          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">API Key do Asaas</label>
-          <input id="asaas-apikey" type="password" placeholder="\$aact_..." style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">
-          <div style="font-size:10px;color:var(--txt2)">Encontre em Minha Conta → Integrações → Gerar chave de API</div>
+        <div style="font-size:12px;color:var(--txt2);line-height:1.5;margin-bottom:12px">
+          A chave de API do Asaas fica guardada com segurança no servidor — não é mais necessário informá-la aqui.
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <button onclick="previewImportAsaas()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#fff;color:var(--verde);border:1px solid var(--borda);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500">👁 Pré-visualizar</button>
@@ -146,8 +144,8 @@ export async function renderConfig(container, page) {
             : '—'
           return `
             <div style="display:grid;grid-template-columns:1fr 1fr 80px 120px;padding:8px 12px;border-top:1px solid rgba(212,200,158,.25);align-items:center">
-              <div style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px">${c.perfis?.nome || '—'}</div>
-              <div style="color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px;font-size:11px">${c.perfis?.email || '—'}</div>
+              <div style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px">${esc(c.perfis?.nome || '—')}</div>
+              <div style="color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px;font-size:11px">${esc(c.perfis?.email || '—')}</div>
               <div><span style="background:rgba(31,56,31,.1);color:var(--verde);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600">${c.versao}</span></div>
               <div style="color:var(--txt2);font-size:11px">${dt}</div>
             </div>`
@@ -176,7 +174,7 @@ export async function renderConfig(container, page) {
   }
 
   // ── Importação do Asaas ──────────────────────────────────────
-  async function buscarClientesAsaas(apiKey) {
+  async function buscarClientesAsaas() {
     const FN_URL = 'https://kctgcjvfsuinwlbgljdw.supabase.co/functions/v1/asaas-proxy'
     const { sb: sbAuth } = await import('../../lib/supabase.js')
     const { data: { session } } = await sbAuth.auth.getSession()
@@ -189,7 +187,7 @@ export async function renderConfig(container, page) {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + session.access_token,
         },
-        body: JSON.stringify({ apiKey, offset })
+        body: JSON.stringify({ offset })
       })
       if (!r.ok) throw new Error(`Proxy erro ${r.status}: ${await r.text()}`)
       const json = await r.json()
@@ -201,24 +199,22 @@ export async function renderConfig(container, page) {
   }
 
   window.previewImportAsaas = async function() {
-    const apiKey = document.getElementById('asaas-apikey').value.trim()
-    if (!apiKey) { toast('Informe a API Key do Asaas'); return }
     const status = document.getElementById('asaas-status')
     const preview = document.getElementById('asaas-preview')
     status.textContent = '⏳ Buscando...'
     try {
-      const clientes = await buscarClientesAsaas(apiKey)
+      const clientes = await buscarClientesAsaas()
       status.textContent = `${clientes.length} clientes encontrados`
       preview.innerHTML = `
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);margin-bottom:6px;font-weight:500">Prévia (${clientes.length} clientes)</div>
         <div style="max-height:220px;overflow-y:auto;border:1px solid var(--borda);border-radius:6px">
           ${clientes.map(c=>`<div style="display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid rgba(212,200,158,.25);font-size:12px">
-            <div style="width:28px;height:28px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:var(--verde);flex-shrink:0">${(c.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()}</div>
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:var(--verde);flex-shrink:0">${esc((c.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase())}</div>
             <div style="flex:1;min-width:0">
-              <div style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name||'—'}</div>
-              <div style="font-size:10px;color:var(--txt2)">${c.email||'sem e-mail'} · ${c.mobilePhone||c.phone||'sem tel'}</div>
+              <div style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.name||'—')}</div>
+              <div style="font-size:10px;color:var(--txt2)">${esc(c.email||'sem e-mail')} · ${esc(c.mobilePhone||c.phone||'sem tel')}</div>
             </div>
-            <div style="font-size:10px;color:var(--txt2);flex-shrink:0">${c.id}</div>
+            <div style="font-size:10px;color:var(--txt2);flex-shrink:0">${esc(c.id)}</div>
           </div>`).join('')}
         </div>`
     } catch(e) {
@@ -228,13 +224,11 @@ export async function renderConfig(container, page) {
   }
 
   window.executarImportAsaas = async function() {
-    const apiKey = document.getElementById('asaas-apikey').value.trim()
-    if (!apiKey) { toast('Informe a API Key do Asaas'); return }
     if (!confirm('Confirmar importação? Perfis existentes serão atualizados com dados do Asaas.')) return
     const status = document.getElementById('asaas-status')
     status.textContent = '⏳ Importando...'
     try {
-      const clientes = await buscarClientesAsaas(apiKey)
+      const clientes = await buscarClientesAsaas()
       let criados = 0, atualizados = 0, erros = 0
       for (const c of clientes) {
         if (!c.email) continue
