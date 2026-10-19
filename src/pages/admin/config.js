@@ -178,14 +178,16 @@ export async function renderConfig(container, page) {
   // ── Importação do Asaas ──────────────────────────────────────
   async function buscarClientesAsaas(apiKey) {
     const FN_URL = 'https://kctgcjvfsuinwlbgljdw.supabase.co/functions/v1/asaas-proxy'
-    const { SUPABASE_ANON: anonKey } = await import('../../lib/supabase.js')
+    const { sb: sbAuth } = await import('../../lib/supabase.js')
+    const { data: { session } } = await sbAuth.auth.getSession()
+    if (!session?.access_token) throw new Error('Sessão expirada. Faça login novamente.')
     let todos = [], offset = 0
     while (true) {
       const r = await fetch(FN_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + anonKey,
+          'Authorization': 'Bearer ' + session.access_token,
         },
         body: JSON.stringify({ apiKey, offset })
       })
