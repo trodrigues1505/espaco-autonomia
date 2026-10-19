@@ -21,7 +21,6 @@ import { carregarNotificacoes, renderPainelNotif, initNotifHandlers,
          calcularBadgesMenu, aplicarBadgesMenu } from '../../modules/notificacoes.js'
 
 const FN_URL   = 'https://kctgcjvfsuinwlbgljdw.supabase.co/functions/v1/asaas-proxy'
-const ASAAS_KEY_STORAGE = 'ea_asaas_key'
 
 let _ultimoContainer = null
 
@@ -37,34 +36,34 @@ const STATUS_LABEL = {RECEIVED:'Recebido',CONFIRMED:'Confirmado',OVERDUE:'Vencid
 const STATUS_BG    = {RECEIVED:'#e8f4e8',CONFIRMED:'#e8f4e8',OVERDUE:'#fceaea',PENDING:'rgba(232,188,79,.15)',CANCELLED:'#f0ede4',REFUNDED:'#f0ede4'}
 const STATUS_COR   = {RECEIVED:'#1a5a1a',CONFIRMED:'#1a5a1a',OVERDUE:'#8a1a1a',PENDING:'#7a5a10',CANCELLED:'#5a5a4a',REFUNDED:'#5a5a4a'}
 
-async function asaasProxy(path, apiKey) {
+async function asaasProxy(path) {
   // O proxy exige o token do usuário logado (admin) — não mais a anon key.
   const { data: { session } } = await _sbAuth.auth.getSession()
   if (!session?.access_token) throw new Error('Sessão expirada. Faça login novamente.')
   const r = await fetch(FN_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-    body: JSON.stringify({ apiKey, path })
+    body: JSON.stringify({ path })
   })
   if (!r.ok) throw new Error('Asaas proxy ' + r.status)
   return r.json()
 }
 
-async function syncAsaas(apiKey, sbClient) {
+async function syncAsaas(sbClient) {
   const hoje = new Date()
   const de  = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1).toISOString().slice(0,10)
   const ate = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString().slice(0,10)
 
   let todos = [], offset = 0
   while (true) {
-    const data = await asaasProxy(`/payments?limit=100&offset=${offset}&dueDateStart=${de}&dueDateFinish=${ate}`, apiKey)
+    const data = await asaasProxy(`/payments?limit=100&offset=${offset}&dueDateStart=${de}&dueDateFinish=${ate}`)
     todos = todos.concat(data.data || [])
     if (!data.hasMore) break
     offset += 100
   }
 
   // Vencidos históricos
-  const vencRes = await asaasProxy('/payments?limit=100&offset=0&status=OVERDUE', apiKey)
+  const vencRes = await asaasProxy('/payments?limit=100&offset=0&status=OVERDUE')
   const idsVistos = new Set(todos.map(p => p.id))
   for (const p of (vencRes.data || [])) {
     if (!idsVistos.has(p.id)) { todos.push(p); idsVistos.add(p.id) }
@@ -83,7 +82,7 @@ async function syncAsaas(apiKey, sbClient) {
     const perfilPorEmail = Object.fromEntries((perfisSemId || []).map(p => [p.email.toLowerCase(), p.id]))
     for (const customerId of novosIds) {
       try {
-        const clienteAsaas = await asaasProxy(`/customers/${customerId}`, apiKey)
+        const clienteAsaas = await asaasProxy(`/customers/${customerId}`)
         if (clienteAsaas?.email) {
           const emailNorm = clienteAsaas.email.toLowerCase()
           const perfilId = perfilPorEmail[emailNorm]
@@ -104,7 +103,7 @@ async function syncAsaas(apiKey, sbClient) {
   if (Object.keys(perfilPorEmailGlobal).length > 0) {
     let offsetCustomers = 0
     while (true) {
-      const clientesPage = await asaasProxy(`/customers?limit=100&offset=${offsetCustomers}`, apiKey)
+      const clientesPage = await asaasProxy(`/customers?limit=100&offset=${offsetCustomers}`)
       for (const cliente of (clientesPage.data || [])) {
         if (!cliente.email) continue
         const emailNorm = cliente.email.toLowerCase()
@@ -152,7 +151,7 @@ const registros = todos
 
   let saldo = null
   try {
-    const bal = await asaasProxy('/finance/balance', apiKey)
+    const bal = await asaasProxy('/finance/balance')
     saldo = bal.balance ?? null
   } catch(e) {}
 
@@ -242,14 +241,11 @@ export async function renderPagamentos(container, page) {
     return (a.vencimento||'').localeCompare(b.vencimento||'')
   })
 
-  const savedKey = localStorage.getItem(ASAAS_KEY_STORAGE) || ''
   let saldoConta = null
-  if (savedKey) {
-    try {
-      const bal = await asaasProxy('/finance/balance', savedKey)
-      saldoConta = bal.balance ?? null
-    } catch(e) {}
-  }
+  try {
+    const bal = await asaasProxy('/finance/balance')
+    saldoConta = bal.balance ?? null
+  } catch(e) {}
 
   const semNome = pgs.filter(p => !p.aluno?.nome && p.asaas_customer &&
   p.vencimento >= new Date().toISOString().slice(0,10)
@@ -398,14 +394,8 @@ export async function renderPagamentos(container, page) {
             <div style="font-size:11px;color:rgba(242,236,206,.7);margin-top:2px">Importa cobranças dos últimos 2 meses + vencidas · vincula todos os alunos por e-mail automaticamente</div>
           </div>
           <div style="padding:20px">
-            <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px">
-              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">API Key do Asaas</label>
-              <input id="sync-apikey" type="password" placeholder="$aact_prod_..." value="${savedKey}"
-                style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">
-              <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--txt2);margin-top:4px;cursor:pointer">
-                <input type="checkbox" id="sync-salvar" checked style="accent-color:var(--verde)">
-                Lembrar chave neste dispositivo
-              </label>
+            <div style="font-size:12px;color:var(--txt2);line-height:1.5;margin-bottom:14px">
+              A chave de API do Asaas fica guardada com segurança no servidor — não é mais necessário informá-la aqui.
             </div>
             <div id="sync-progress" style="display:none;font-size:12px;color:var(--txt2);margin-bottom:10px">⏳ Sincronizando e vinculando alunos...</div>
           </div>
@@ -492,18 +482,13 @@ uiAnimar(container)
   }
 
   window.executarSyncAsaas = async function() {
-    const apiKey = document.getElementById('sync-apikey').value.trim()
-    if (!apiKey) { toast('Informe a API Key do Asaas'); return }
-    if (document.getElementById('sync-salvar').checked) {
-      localStorage.setItem(ASAAS_KEY_STORAGE, apiKey)
-    }
     const btn  = document.getElementById('btn-executar-sync')
     const prog = document.getElementById('sync-progress')
     btn.disabled = true; btn.textContent = 'Sincronizando...'
     prog.style.display = 'block'
     try {
       await sbClient.from('pagamentos').delete().like('asaas_id', 'teste_%')
-      const { total } = await syncAsaas(apiKey, sbClient)
+      const { total } = await syncAsaas(sbClient)
       document.getElementById('modal-sync-asaas').style.display = 'none'
       toast('✓ ' + total + ' cobranças sincronizadas')
       window._rerenderPagamentos()
