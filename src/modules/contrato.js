@@ -7,7 +7,7 @@
  */
 
 import { sb } from '../lib/supabase.js'
-import { toast } from './utils.js'
+import { toast, esc } from './utils.js'
 
 const CONTRATO_VERSAO = 'v2'
 
@@ -110,7 +110,7 @@ export async function verificarContrato(userId, nomeAluno) {
         </div>
 
         <div style="overflow-y:auto;flex:1;padding:22px 24px" id="contrato-scroll">
-          ${CONTRATO_TEXTO.replace('[NOME]', nomeAluno)}
+          ${CONTRATO_TEXTO.replace('[NOME]', () => esc(nomeAluno))}
         </div>
 
         <div style="padding:16px 22px;border-top:1px solid var(--borda);background:#fafaf7;flex-shrink:0">
@@ -233,7 +233,7 @@ export async function verContratoAceito(userId, nomeAluno) {
       </div>
 
       <div style="overflow-y:auto;flex:1;padding:22px 24px">
-        ${CONTRATO_TEXTO.replace('[NOME]', nomeAluno)}
+        ${CONTRATO_TEXTO.replace('[NOME]', () => esc(nomeAluno))}
       </div>
 
       <div style="padding:14px 22px;border-top:1px solid var(--borda);background:#fafaf7;flex-shrink:0;text-align:center">
@@ -245,4 +245,4 @@ export async function verContratoAceito(userId, nomeAluno) {
     </div>`
 
   document.body.appendChild(div)
-}   
+}
