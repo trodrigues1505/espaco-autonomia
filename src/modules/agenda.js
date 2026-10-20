@@ -303,9 +303,18 @@ export function renderAgendaSemanal(root, { sb = window._sb, agora = () => Date.
 
   async function abrirMover(ev) {
     if (ev.passada) { window.toast?.('Aulas que já começaram não podem ser movidas.', 3500); return }
+    // quem está inscrito (mesma consulta da tela de chamada): ajuda a ver quem será afetado
+    let inscritos = ''
+    try {
+      const { data: turma } = await sb.from('confirmacoes')
+        .select('status, aluno:perfis!aluno_id(nome)')
+        .eq('ocorrencia_id', ev.id).neq('status', 'cancelado').order('confirmado_em')
+      const nomes = (turma || []).map(c => c.aluno?.nome || 'Aluno removido')
+      if (nomes.length) inscritos = `\nInscritos: ${nomes.slice(0, 12).join(', ')}${nomes.length > 12 ? ` e mais ${nomes.length - 12}` : ''}`
+    } catch { /* sem a lista, o diálogo continua funcionando */ }
     const v = await formularioModal({
       titulo: 'Mover aula',
-      texto: `${NOMES[ev.modalidade] || ev.modalidade} · ${ev.professor_nome || 'sem professor'} · ${Number(ev.confirmados || 0)} confirmado(s)`,
+      texto: `${NOMES[ev.modalidade] || ev.modalidade} · ${ev.professor_nome || 'sem professor'} · ${Number(ev.confirmados || 0)} confirmado(s)${inscritos}`,
       campos: [
         { id: 'data', label: 'Data', tipo: 'date', valor: ev.dia, obrigatorio: true },
         { id: 'hora', label: 'Hora', tipo: 'time', valor: hhmm(ev.ini), obrigatorio: true },

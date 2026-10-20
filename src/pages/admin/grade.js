@@ -4,6 +4,7 @@
  */
 
 import { confirmarModal, formularioModal } from '../../modules/dialogs.js'
+import { renderAgendaSemanal } from '../../modules/agenda.js'
 import { sb }         from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel, PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS, calcularNivel, NIVEL_LABELS, esc } from '../../modules/utils.js'
 
@@ -19,14 +20,26 @@ export async function renderAlunoGrade(container, page) {
     // A rota 'criar-aulas' continua existindo em index.js para
     // compatibilidade — mesmo padrão já usado em alunos.js.
     if (!isAluno) {
-      const abaGrade = window._abaGrade || 'grade'
+      const abaGrade = window._abaGrade || 'agenda'
       const barraAbasGrade = `
         <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
-          ${[{id:'grade',label:'Grade'},{id:'aulas',label:'Aulas Fixas & Avulsas'}].map(t => `
+          ${[{id:'agenda',label:'Agenda'},{id:'grade',label:'Grade'},{id:'aulas',label:'Aulas Fixas & Avulsas'}].map(t => `
             <button onclick="window._abaGrade='${t.id}';navigate('${page}')" style="padding:6px 16px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${abaGrade===t.id?'var(--verde)':'var(--borda)'};background:${abaGrade===t.id?'var(--verde)':'#fff'};color:${abaGrade===t.id?'var(--bege)':'var(--txt2)'}">
               ${t.label}
             </button>`).join('')}
         </div>`
+
+      if (abaGrade === 'agenda') {
+        // Agenda semanal arrastável: trocar dia/horário de uma aula ou de toda a série
+        container.innerHTML = `
+          <div class="topbar"><div class="topbar-t">Grade de Aulas</div></div>
+          <div class="content">
+            ${barraAbasGrade}
+            <div id="agenda-semana"></div>
+          </div>`
+        await renderAgendaSemanal(document.getElementById('agenda-semana'), { sb })
+        return
+      }
 
       if (abaGrade === 'aulas') {
         container.innerHTML = `
