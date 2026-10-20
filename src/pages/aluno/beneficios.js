@@ -152,7 +152,7 @@ function _imprimirHTML(titulo, html) {
   win.document.write(`<!DOCTYPE html><html lang="pt-BR"><head>
     <meta charset="UTF-8">
     <title>${esc(titulo)} — Espaço Autonomia</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <link href="${new URL('vendor/fonts/fonts.css', document.baseURI).href}" rel="stylesheet">
     <style>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
       body { font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--txt);

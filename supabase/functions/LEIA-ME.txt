@@ -1,0 +1,29 @@
+EDGE FUNCTIONS REVISADAS — anthropic-proxy e asaas-webhook
+==========================================================
+Testadas no Deno 2.9.6 (55 verificações); a mesma suíte contra as versões ORIGINAIS falha em 35.
+
+1) anthropic-proxy  (era: função ABERTA ao público)
+   Deploy:   supabase functions deploy anthropic-proxy --no-verify-jwt
+   Secrets:  GROQ_API_KEY (já existe) · ALLOWED_ORIGINS (opcional; padrão https://trodrigues1505.github.io)
+             SUPABASE_URL e SUPABASE_ANON_KEY são automáticos nas Edge Functions.
+   O que mudou: exige login E perfil admin (as 3 telas de IA são de admin e já enviam o token);
+     limita max_tokens (4000), tamanho (60 mil caracteres/mensagem), nº de mensagens (6);
+     reconstrói as mensagens (campos extras do cliente não passam); 20 requisições/10 min por admin;
+     timeout de 55 s; erros sem vazar detalhes; CORS só para o seu site; falha clara sem GROQ_API_KEY.
+   Teste após o deploy (deve dar 401):
+     curl -s -o /dev/null -w "%{http_code}\n" -X POST https://kctgcjvfsuinwlbgljdw.supabase.co/functions/v1/anthropic-proxy \
+       -H "Content-Type: application/json" -d '{"messages":[{"role":"user","content":"oi"}]}'
+   IMPORTANTE: até agora qualquer pessoa podia gastar a sua cota da Groq. Confira o painel de uso da Groq
+     e, se houver consumo estranho, gere uma chave nova e atualize o secret.
+
+2) asaas-webhook
+   Deploy:   supabase functions deploy asaas-webhook --no-verify-jwt
+   Secrets:  ASAAS_WEBHOOK_TOKEN (valor longo e aleatório: openssl rand -hex 32; o MESMO do painel do Asaas)
+   O que mudou: token comparado em tempo constante; sem CORS; campos validados (status, valor, datas, ids);
+     um evento "vencida" que chega ATRASADO não rebaixa uma cobrança já paga; vínculo Asaas duplicado
+     em 2 perfis não é adivinhado; erros internos não vazam (500 genérico: o Asaas reenvia).
+   Se o token atual for curto/previsível, gere um novo, atualize o secret E o painel do Asaas juntos.
+
+NÃO verificado: o formato real dos eventos do Asaas em produção (a validação aceita qualquer status em
+MAIÚSCULAS_COM_UNDERSCORE e qualquer valor numérico ≥ 0), o getUser() com JWT real do Supabase, e o limite de
+uso é por instância da função (melhor esforço; várias instâncias somam mais que 20).
