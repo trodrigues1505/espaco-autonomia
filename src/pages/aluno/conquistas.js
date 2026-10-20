@@ -24,25 +24,25 @@ export async function renderConquistas(container, page) {
         <div style="font-size:40px;margin-bottom:6px">${NIVEL_LABELS[nivel]}</div>
         <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500">${gam?.prana_points||0} Prana Points</div>
         ${proxNivel
-          ? `<div style="font-size:11px;color:rgba(242,236,206,.7);margin-top:6px">Próximo: ${NIVEL_LABELS[nivel+1]} · faltam ${proxNivel-(gam?.prana_points||0)} pts</div>
+          ? `<div style="font-size:12px;color:rgba(242,236,206,.7);margin-top:6px">Próximo: ${NIVEL_LABELS[nivel+1]} · faltam ${proxNivel-(gam?.prana_points||0)} pts</div>
              <div style="background:rgba(242,236,206,.2);border-radius:20px;height:6px;margin:8px auto 0;width:80%;overflow:hidden">
                <div style="background:var(--dourado);height:6px;border-radius:20px;width:${progresso}%"></div>
              </div>`
-          : '<div style="color:var(--dourado);margin-top:6px">🎉 Nível máximo!</div>'
+          : '<div style="color:var(--dourado-texto);margin-top:6px"><i class="ti ti-confetti" aria-hidden="true"></i> Nível máximo!</div>'
         }
         <div style="display:flex;justify-content:center;gap:24px;margin-top:14px;font-size:12px">
-          <div><div style="font-size:10px;opacity:.7">Sequência atual</div><div style="font-size:20px">${gam?.streak_atual||0}🔥</div></div>
-          <div><div style="font-size:10px;opacity:.7">Recorde</div><div style="font-size:20px">${gam?.streak_max||0}</div></div>
+          <div><div style="font-size:12px;opacity:.7">Sequência atual</div><div style="font-size:20px">${gam?.streak_atual||0}<i class="ti ti-flame" aria-hidden="true"></i></div></div>
+          <div><div style="font-size:12px;opacity:.7">Recorde</div><div style="font-size:20px">${gam?.streak_max||0}</div></div>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
         ${conquistas.map(c=>`
-          <div style="background:#fff;border:${c.desbloqueada?'2px solid var(--dourado)':'1px solid var(--borda)'};border-radius:var(--r);padding:13px;display:flex;align-items:center;gap:10px;${!c.desbloqueada?'opacity:.45':''}">
+          <div style="background:var(--superficie);border:${c.desbloqueada?'2px solid var(--dourado)':'1px solid var(--borda)'};border-radius:var(--r);padding:13px;display:flex;align-items:center;gap:10px;${!c.desbloqueada?'opacity:.45':''}">
             <div style="font-size:26px;flex-shrink:0">${c.icone}</div>
             <div>
-              <div style="font-weight:500;font-size:12px;color:var(--verde)">${esc(c.nome)}</div>
-              <div style="font-size:10px;color:var(--txt2);margin-top:1px">${esc(c.descricao)}</div>
-              <div style="font-size:10px;color:var(--dourado);margin-top:2px;font-weight:500">+${c.pontos} pts${c.desbloqueada&&c.quando?' · '+new Date(c.quando).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):''}</div>
+              <div style="font-weight:500;font-size:12px;color:var(--titulo)">${esc(c.nome)}</div>
+              <div style="font-size:12px;color:var(--txt2);margin-top:1px">${esc(c.descricao)}</div>
+              <div style="font-size:12px;color:var(--dourado-texto);margin-top:2px;font-weight:500">+${c.pontos} pts${c.desbloqueada&&c.quando?' · '+new Date(c.quando).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):''}</div>
             </div>
           </div>`).join('')}
       </div>

@@ -23,7 +23,7 @@ function mesRefAtual() {
 
 function montarListaAlunosHTML(alunos, saldoPorAluno) {
   return card('Lista de Alunos ('+alunos.length+')', '',
-    `<div style="display:grid;grid-template-columns:1fr 80px 60px 60px 80px 160px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
+    `<div style="display:grid;grid-template-columns:1fr 80px 60px 60px 80px 160px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
       <span>Aluno</span><span>Plano</span><span>Freq.</span><span>Saldo</span><span>Validade</span><span></span>
     </div>
     ${alunos.length===0?'<div style="padding:18px;font-size:12px;color:var(--txt2)">Nenhum aluno encontrado.</div>':
@@ -35,24 +35,24 @@ function montarListaAlunosHTML(alunos, saldoPorAluno) {
         const saldo = saldoPorAluno[a.id] ?? null
         const ehLivre = mat?.plano_tipo === 'vishnu_livre' || mat?.opcao_aulas === 99
         const saldoLabel = ehLivre ? '∞' : saldo !== null ? String(saldo) : '—'
-        const saldoCor = ehLivre ? 'var(--verde)' : saldo === 0 ? '#c0392b' : (saldo !== null && saldo <= 1) ? '#e67e22' : 'var(--verde)'
+        const saldoCor = ehLivre ? 'var(--titulo)' : saldo === 0 ? 'var(--err-vivo)' : (saldo !== null && saldo <= 1) ? 'var(--warn-vivo)' : 'var(--verde)'
         const temDesconto = mat && ((mat.desconto_fixo||0) > 0 || (mat.desconto_avulso_meses > mat.desconto_avulso_usado && (mat.desconto_avulso_valor||0) > 0))
         return `<div style="display:grid;grid-template-columns:1fr 80px 60px 60px 80px 160px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
           <div style="display:flex;align-items:center;gap:8px">
-            <div style="width:28px;height:28px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:var(--verde);flex-shrink:0">${esc(initials)}</div>
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--titulo);flex-shrink:0">${esc(initials)}</div>
             <div>
               <div style="font-weight:500">${esc(a.nome)}</div>
-              <div style="font-size:10px;color:var(--txt2)">${esc(a.email)}</div>
-              ${temDesconto?`<div style="font-size:10px;color:#e67e22">🏷 com desconto</div>`:''}
+              <div style="font-size:12px;color:var(--txt2)">${esc(a.email)}</div>
+              ${temDesconto?`<div style="font-size:12px;color:var(--warn-vivo)"><i class="ti ti-tag" aria-hidden="true"></i> com desconto</div>`:''}
             </div>
           </div>
-          <span>${mat?PLANO_BADGES[mat?.plano_tipo]||esc(mat?.plano_tipo)||'—':badge('Sem plano','#fceaea','#8a1a1a')}</span>
-          <span style="font-size:11px;color:var(--txt2)">${opcaoLabel}</span>
+          <span>${mat?PLANO_BADGES[mat?.plano_tipo]||esc(mat?.plano_tipo)||'—':badge('Sem plano','var(--err-bg)','var(--err-fg)')}</span>
+          <span style="font-size:12px;color:var(--txt2)">${opcaoLabel}</span>
           <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:${saldoCor}">${saldoLabel}</span>
-          <span style="font-size:11px;color:${vencida?'#c0392b':'var(--txt2)'}">${mat?.fim?new Date(mat.fim+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):vencida?'Vencida':'—'}</span>
+          <span style="font-size:12px;color:${vencida?'var(--err-vivo)':'var(--txt2)'}">${mat?.fim?new Date(mat.fim+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):vencida?'Vencida':'—'}</span>
           <div style="display:flex;gap:4px">
-            <button onclick="editarAluno('${a.id}')" style="padding:3px 10px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:11px;cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif">Editar</button>
-            <button data-nome="${esc(a.nome)}" onclick="confirmarExcluirAluno('${a.id}', this.dataset.nome)" style="padding:3px 8px;background:transparent;border:1px solid #f5c1c1;border-radius:5px;font-size:11px;cursor:pointer;color:#c0392b;font-family:'DM Sans',sans-serif" title="Remover aluno (volta a visitante)">✕</button>
+            <button onclick="editarAluno('${a.id}')" style="padding:3px 10px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:12px;cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif">Editar</button>
+            <button data-nome="${esc(a.nome)}" onclick="confirmarExcluirAluno('${a.id}', this.dataset.nome)" style="padding:3px 8px;background:transparent;border:1px solid var(--err-borda);border-radius:5px;font-size:12px;cursor:pointer;color:var(--err-vivo);font-family:'DM Sans',sans-serif" title="Remover aluno (volta a visitante)"><i class="ti ti-x" aria-hidden="true"></i></button>
           </div>
         </div>`
       }).join('')
@@ -62,7 +62,7 @@ function montarListaAlunosHTML(alunos, saldoPorAluno) {
 
 function montarListaVisitantesHTML(visitantes) {
   return card('Visitantes / Leads ('+visitantes.length+')', '',
-    `<div style="display:grid;grid-template-columns:1fr 130px 110px 120px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
+    `<div style="display:grid;grid-template-columns:1fr 130px 110px 120px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
       <span>Visitante</span><span>Telefone</span><span>Lead desde</span><span></span>
     </div>
     ${visitantes.length===0?'<div style="padding:18px;font-size:12px;color:var(--txt2)">Nenhum visitante no momento.</div>':
@@ -70,16 +70,16 @@ function montarListaVisitantesHTML(visitantes) {
         const initials = (v.nome||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()
         return `<div style="display:grid;grid-template-columns:1fr 130px 110px 120px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
           <div style="display:flex;align-items:center;gap:8px">
-            <div style="width:28px;height:28px;border-radius:50%;background:rgba(58,110,165,.12);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:#3a6ea5;flex-shrink:0">${esc(initials)}</div>
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(58,110,165,.12);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--info-fg);flex-shrink:0">${esc(initials)}</div>
             <div>
               <div style="font-weight:500">${esc(v.nome||'—')}</div>
-              <div style="font-size:10px;color:var(--txt2)">${esc(v.email)}</div>
+              <div style="font-size:12px;color:var(--txt2)">${esc(v.email)}</div>
             </div>
           </div>
-          <span style="font-size:11px;color:var(--txt2)">${esc(v.telefone||'—')}</span>
-          <span style="font-size:11px;color:var(--txt2)">${fmtDataHora(v.criado_em)}</span>
+          <span style="font-size:12px;color:var(--txt2)">${esc(v.telefone||'—')}</span>
+          <span style="font-size:12px;color:var(--txt2)">${fmtDataHora(v.criado_em)}</span>
           <div>
-            <button onclick="abrirPromoverVisitante('${v.id}')" style="padding:4px 10px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">↑ Promover a Aluno</button>
+            <button onclick="abrirPromoverVisitante('${v.id}')" style="padding:4px 10px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap"><i class="ti ti-arrow-up" aria-hidden="true"></i> Promover a Aluno</button>
           </div>
         </div>`
       }).join('')
@@ -168,8 +168,8 @@ export async function renderAlunos(container, page) {
       ${professores.map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('')}
     </select>`)}
     ${fi('','ID no Asaas (opcional)',`<input type="text" id="ca-asaas" ${inputStyle} placeholder="cus_...">`)}
-    <div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.3);border-radius:6px;padding:10px;font-size:11px;color:#7a5a10">
-      ⚠ O aluno precisa entrar no app pelo menos uma vez com Google usando este e-mail <strong>antes</strong> de ser cadastrado aqui — o login cria o registro de autenticação necessário. Se ele já é visitante no app, use a aba <strong>Visitantes (Leads)</strong> para promover diretamente.
+    <div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.3);border-radius:6px;padding:10px;font-size:12px;color:var(--warn-fg)">
+      <i class="ti ti-alert-triangle" aria-hidden="true"></i> O aluno precisa entrar no app pelo menos uma vez com Google usando este e-mail <strong>antes</strong> de ser cadastrado aqui — o login cria o registro de autenticação necessário. Se ele já é visitante no app, use a aba <strong>Visitantes (Leads)</strong> para promover diretamente.
     </div>`,
     `<button onclick="document.getElementById('modal-cad-aluno').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
      <button onclick="salvarNovoAluno()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Cadastrar</button>`
@@ -227,7 +227,7 @@ export async function renderAlunos(container, page) {
       <div class="topbar-t">Alunos</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         ${aba==='alunos'||aba==='visitantes'?`<input id="input-busca-aluno" placeholder="Buscar..." value="${esc(busca)}" oninput="window.filtrarAlunosDebounced(this.value)" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;width:140px;font-family:'DM Sans',sans-serif;outline:none">`:''}
-        ${aba==='alunos'?`<select onchange="window._filtroPlanoAlunos=this.value;window.aplicarFiltroAlunos()" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;background:#fff;color:var(--txt)">
+        ${aba==='alunos'?`<select onchange="window._filtroPlanoAlunos=this.value;window.aplicarFiltroAlunos()" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;background:var(--superficie);color:var(--txt)">
           <option value="" ${!filtroPlanok?'selected':''}>Todos os planos</option>
           <option value="brahma"       ${filtroPlanok==='brahma'      ?'selected':''}>Brahma</option>
           <option value="shiva_1x"     ${filtroPlanok==='shiva_1x'    ?'selected':''}>Shiva 1x</option>
@@ -235,7 +235,7 @@ export async function renderAlunos(container, page) {
           <option value="vishnu_2x"    ${filtroPlanok==='vishnu_2x'   ?'selected':''}>Vishnu 2x</option>
           <option value="vishnu_livre" ${filtroPlanok==='vishnu_livre'?'selected':''}>Vishnu Livre</option>
         </select>`:''}
-        ${aba==='alunos'?`<button onclick="window.executarCreditoMensal()" title="Gera o crédito de aulas do mês atual para todos os alunos com matrícula ativa. É seguro rodar mais de uma vez — alunos que já têm o crédito deste mês não são duplicados." style="padding:6px 13px;background:#fff;color:var(--verde);border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-refresh"></i> Creditar aulas do mês</button>`:''}
+        ${aba==='alunos'?`<button onclick="window.executarCreditoMensal()" title="Gera o crédito de aulas do mês atual para todos os alunos com matrícula ativa. É seguro rodar mais de uma vez — alunos que já têm o crédito deste mês não são duplicados." style="padding:6px 13px;background:var(--superficie);color:var(--titulo);border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-refresh"></i> Creditar aulas do mês</button>`:''}
         ${aba==='alunos'?`<button onclick="document.getElementById('modal-cad-aluno').style.display='flex'" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-user-plus"></i> Cadastrar</button>`:''}
       </div>
     </div>
@@ -244,31 +244,31 @@ export async function renderAlunos(container, page) {
       ${aba==='alunos'?`
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:10px">
         <div style="background:var(--verde);border-radius:var(--r);padding:14px 16px">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.7);margin-bottom:4px">Total de Alunos</div>
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.7);margin-bottom:4px">Total de Alunos</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;color:var(--bege)">${todos?.length||0}</div>
-          <div style="font-size:10px;color:rgba(242,236,206,.6);margin-top:2px">${(todos||[]).filter(a=>a.ativo).length} ativos</div>
+          <div style="font-size:12px;color:rgba(242,236,206,.6);margin-top:2px">${(todos||[]).filter(a=>a.ativo).length} ativos</div>
         </div>
-        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Receita Mensal Est.</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:#1a5a1a">R$${(todos||[]).reduce((s,a)=>{const m=(a.matriculas||[]).find(m=>m.ativa);if(!m) return s; const desc = (m.desconto_fixo||0) + (m.desconto_avulso_meses>m.desconto_avulso_usado ? (m.desconto_avulso_valor||0) : 0); return s+Math.max(0,(m.valor_mensal||0)-desc)},0).toFixed(0)}</div>
-          <div style="font-size:10px;color:var(--txt2);margin-top:2px">soma das mensalidades líquidas</div>
+        <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Receita Mensal Est.</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--ok-fg)">R$${(todos||[]).reduce((s,a)=>{const m=(a.matriculas||[]).find(m=>m.ativa);if(!m) return s; const desc = (m.desconto_fixo||0) + (m.desconto_avulso_meses>m.desconto_avulso_usado ? (m.desconto_avulso_valor||0) : 0); return s+Math.max(0,(m.valor_mensal||0)-desc)},0).toFixed(0)}</div>
+          <div style="font-size:12px;color:var(--txt2);margin-top:2px">soma das mensalidades líquidas</div>
         </div>
-        <div id="card-sem-asaas" onclick="window.toggleFiltroSemAsaas()" title="Clique para filtrar a lista pelos alunos sem Asaas vinculado" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:box-shadow .15s;box-shadow:${filtroSemAsaas?'0 0 0 2px #e67e22 inset':'none'}">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Sem Asaas</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;color:#e67e22">${(todos||[]).filter(a=>!a.asaas_customer_id).length}</div>
-          <div style="font-size:10px;color:var(--txt2);margin-top:2px">não vinculados · clique p/ filtrar</div>
+        <div id="card-sem-asaas" onclick="window.toggleFiltroSemAsaas()" title="Clique para filtrar a lista pelos alunos sem Asaas vinculado" style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:box-shadow .15s;box-shadow:${filtroSemAsaas?'0 0 0 2px var(--warn-vivo) inset':'none'}">
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Sem Asaas</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;color:var(--warn-vivo)">${(todos||[]).filter(a=>!a.asaas_customer_id).length}</div>
+          <div style="font-size:12px;color:var(--txt2);margin-top:2px">não vinculados · clique p/ filtrar</div>
         </div>
-        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Vencendo em 7d</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;color:${(()=>{const em7=new Date();em7.setDate(em7.getDate()+7);return (todos||[]).filter(a=>{const m=(a.matriculas||[]).find(m=>m.ativa);return m?.fim&&new Date(m.fim+'T12:00')<=em7&&new Date(m.fim+'T12:00')>=new Date()}).length})()>0?'#c0392b':'var(--verde)'}">
+        <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Vencendo em 7d</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;color:${(()=>{const em7=new Date();em7.setDate(em7.getDate()+7);return (todos||[]).filter(a=>{const m=(a.matriculas||[]).find(m=>m.ativa);return m?.fim&&new Date(m.fim+'T12:00')<=em7&&new Date(m.fim+'T12:00')>=new Date()}).length})()>0?'var(--err-vivo)':'var(--verde)'}">
             ${(()=>{const em7=new Date();em7.setDate(em7.getDate()+7);return (todos||[]).filter(a=>{const m=(a.matriculas||[]).find(m=>m.ativa);return m?.fim&&new Date(m.fim+'T12:00')<=em7&&new Date(m.fim+'T12:00')>=new Date()}).length})()}
           </div>
-          <div style="font-size:10px;color:var(--txt2);margin-top:2px">planos vencendo</div>
+          <div style="font-size:12px;color:var(--txt2);margin-top:2px">planos vencendo</div>
         </div>
-        <div id="card-visitantes" onclick="window.trocarAbaAlunos('visitantes')" title="Clique para ver os visitantes (leads)" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:box-shadow .15s">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Visitantes (Leads)</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;color:#3a6ea5">${visitantesTodos.length}</div>
-          <div style="font-size:10px;color:var(--txt2);margin-top:2px">usando o app · clique p/ ver</div>
+        <div id="card-visitantes" onclick="window.trocarAbaAlunos('visitantes')" title="Clique para ver os visitantes (leads)" style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:box-shadow .15s">
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Visitantes (Leads)</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;color:var(--info-fg)">${visitantesTodos.length}</div>
+          <div style="font-size:12px;color:var(--txt2);margin-top:2px">usando o app · clique p/ ver</div>
         </div>
       </div>
       `:''}
@@ -277,11 +277,11 @@ export async function renderAlunos(container, page) {
 
       ${aba==='alunos'?`
       <div style="margin-bottom:14px">
-        <button onclick="window.toggleDistribPlano()" style="width:100%;text-align:left;background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:10px 18px;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px">
+        <button onclick="window.toggleDistribPlano()" style="width:100%;text-align:left;background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:10px 18px;font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px">
           <i id="icon-toggle-distrib" class="ti ti-chevron-${distribAberta?'down':'right'}" style="font-size:13px"></i> Distribuição por Plano
         </button>
         <div id="distribuicao-plano-wrap" data-aberto="${distribAberta?'true':'false'}" style="max-height:${distribAberta?'2000px':'0px'};overflow:hidden;transition:max-height .3s ease">
-          <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 18px;margin-top:8px">
+          <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 18px;margin-top:8px">
             ${[
               {k:'brahma',l:'Brahma',c:'#8a9a7a'},
               {k:'shiva_1x',l:'Shiva 1x',c:'#5a8a5a'},
@@ -297,7 +297,7 @@ export async function renderAlunos(container, page) {
                   <span style="font-weight:500">${l}</span>
                   <span style="color:var(--txt2)">${n} aluno${n!==1?'s':''} · R$${recMes}/mês · ${pct}%</span>
                 </div>
-                <div style="height:6px;background:#f0ede4;border-radius:4px;overflow:hidden">
+                <div style="height:6px;background:var(--neutro-bg);border-radius:4px;overflow:hidden">
                   <div style="height:6px;background:${c};border-radius:4px;width:${pct}%;transition:width .5s"></div>
                 </div>
               </div>`
@@ -320,13 +320,13 @@ export async function renderAlunos(container, page) {
     ${modalEditar}
     ${modalPromover}
     <div id="modal-excluir-aluno" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.6);z-index:200;align-items:center;justify-content:center;padding:16px">
-      <div style="background:#fff;border-radius:12px;width:400px;max-width:100%;overflow:hidden">
+      <div style="background:var(--superficie);border-radius:12px;width:400px;max-width:100%;overflow:hidden">
         <div style="background:#c0392b;padding:16px 20px">
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:#fff">Remover Aluno</div>
         </div>
         <div style="padding:20px">
           <div id="excluir-aluno-msg" style="font-size:13px;color:var(--txt);margin-bottom:8px"></div>
-          <div style="font-size:11px;color:#7a5a10;background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.3);border-radius:6px;padding:10px;margin-top:10px">
+          <div style="font-size:12px;color:var(--warn-fg);background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.3);border-radius:6px;padding:10px;margin-top:10px">
             ℹ O aluno volta ao status de <strong>visitante</strong>, a matrícula atual é encerrada e o vínculo com o professor (se houver) é fechado. Histórico de presenças, pagamentos e matrículas é preservado.
           </div>
         </div>
@@ -400,7 +400,7 @@ export async function renderAlunos(container, page) {
   window.toggleFiltroSemAsaas = function() {
     window._filtroSemAsaasAlunos = !window._filtroSemAsaasAlunos
     const cardEl = document.getElementById('card-sem-asaas')
-    if (cardEl) cardEl.style.boxShadow = window._filtroSemAsaasAlunos ? '0 0 0 2px #e67e22 inset' : 'none'
+    if (cardEl) cardEl.style.boxShadow = window._filtroSemAsaasAlunos ? '0 0 0 2px var(--warn-vivo) inset' : 'none'
     window.aplicarFiltroAlunos()
   }
 
@@ -512,7 +512,7 @@ export async function renderAlunos(container, page) {
 
     if (asaasNovo) await _sb.from('perfis').update({ asaas_customer_id: asaasNovo }).eq('id', alunoId)
     document.getElementById('modal-cad-aluno').style.display = 'none'
-    toast('✓ Aluno cadastrado!')
+    toast('Aluno cadastrado!')
     navigate('alunos')
   }
 
@@ -588,7 +588,7 @@ export async function renderAlunos(container, page) {
       }
 
       document.getElementById('modal-promover-visitante').style.display = 'none'
-      toast('✓ Visitante promovido a aluno!')
+      toast('Visitante promovido a aluno!')
       window._abaAlunos = 'alunos'
       navigate('alunos')
     } finally {
@@ -603,10 +603,10 @@ export async function renderAlunos(container, page) {
     const descAvulsoAtivo = mat && mat.desconto_avulso_meses > mat.desconto_avulso_usado
     document.getElementById('edit-aluno-body').innerHTML = `
       <div style="background:rgba(242,236,206,.3);border:1px solid var(--borda);border-radius:8px;padding:12px;margin-bottom:14px">
-        <div style="font-size:11px;font-weight:500;color:var(--verde);margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px">Dados Pessoais</div>
+        <div style="font-size:12px;font-weight:500;color:var(--titulo);margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px">Dados Pessoais</div>
         ${fi('','Nome completo',`<input type="text" id="ea-nome" ${inputStyle} value="${esc(a.nome)}">`)}
         ${fi('','Telefone',`<input type="tel" id="ea-tel" ${inputStyle} value="${esc(a.telefone)}" placeholder="(11) 99999-9999">`)}
-        <div style="font-size:11px;color:var(--txt2);margin-top:4px">E-mail: <strong>${esc(a.email)}</strong> (não editável — usado para login)</div>
+        <div style="font-size:12px;color:var(--txt2);margin-top:4px">E-mail: <strong>${esc(a.email)}</strong> (não editável — usado para login)</div>
       </div>
       ${fi('','Plano',`<select id="ea-plano" ${inputStyle} onchange="updateValorEdicao()">
         <option value="brahma" ${mat?.plano_tipo==='brahma'?'selected':''}>Brahma</option>
@@ -615,45 +615,45 @@ export async function renderAlunos(container, page) {
         <option value="vishnu_2x" ${mat?.plano_tipo==='vishnu_2x'?'selected':''}>Vishnu 2x</option>
         <option value="vishnu_livre" ${mat?.plano_tipo==='vishnu_livre'?'selected':''}>Vishnu Livre</option>
       </select>`)}
-      <div style="font-size:11px;color:var(--txt2);margin:-6px 0 12px">
+      <div style="font-size:12px;color:var(--txt2);margin:-6px 0 12px">
         Professor responsável agora é gerenciado na aba
-        <a href="#" onclick="document.getElementById('modal-edit-aluno').style.display='none';window._abaAlunos='vinculos';navigate('alunos');return false" style="color:var(--verde);text-decoration:underline;text-underline-offset:2px">Vínculos</a>.
+        <a href="#" onclick="document.getElementById('modal-edit-aluno').style.display='none';window._abaAlunos='vinculos';navigate('alunos');return false" style="color:var(--titulo);text-decoration:underline;text-underline-offset:2px">Vínculos</a>.
       </div>
       ${fi('','Valor mensal (R$)',`<input type="number" id="ea-valor" ${inputStyle} value="${mat?.valor_mensal||0}">`)}
       ${fi('','Vencimento',`<input type="date" id="ea-fim" ${inputStyle} value="${mat?.fim||''}">`)}
       ${fi('','Status',`<select id="ea-ativo" ${inputStyle}><option value="true" ${a.ativo?'selected':''}>Ativo</option><option value="false" ${!a.ativo?'selected':''}>Inativo</option></select>`)}
       <div style="background:rgba(232,188,79,.08);border:1px solid rgba(232,188,79,.25);border-radius:8px;padding:12px;margin-bottom:12px">
-        <div style="font-size:11px;font-weight:500;color:var(--verde);margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px">🏷 Descontos</div>
+        <div style="font-size:12px;font-weight:500;color:var(--titulo);margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px"><i class="ti ti-tag" aria-hidden="true"></i> Descontos</div>
         <div style="display:flex;flex-direction:column;gap:3px;margin-bottom:10px">
-          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Desconto fixo mensal (R$)</label>
+          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Desconto fixo mensal (R$)</label>
           <input type="number" id="ea-desconto-fixo" min="0" step="0.01" value="${mat?.desconto_fixo||0}" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div style="display:flex;flex-direction:column;gap:3px">
-            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Desconto avulso (R$)</label>
+            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Desconto avulso (R$)</label>
             <input type="number" id="ea-desconto-avulso-valor" min="0" step="0.01" value="${mat?.desconto_avulso_valor||0}" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
           <div style="display:flex;flex-direction:column;gap:3px">
-            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Por quantos meses</label>
+            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Por quantos meses</label>
             <input type="number" id="ea-desconto-avulso-meses" min="0" max="24" value="${mat?.desconto_avulso_meses||0}" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
         </div>
-        ${descAvulsoAtivo?`<div style="margin-top:8px;font-size:11px;color:#e67e22">⏳ ${mat.desconto_avulso_meses - mat.desconto_avulso_usado} mês(es) restante(s)</div>`:''}
+        ${descAvulsoAtivo?`<div style="margin-top:8px;font-size:12px;color:var(--warn-vivo)"><i class="ti ti-hourglass" aria-hidden="true"></i> ${mat.desconto_avulso_meses - mat.desconto_avulso_usado} mês(es) restante(s)</div>`:''}
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
-        <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">ID no Asaas (cus_...)</label>
+        <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">ID no Asaas (cus_...)</label>
         <input id="ea-asaas" placeholder="cus_000..." style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none" value="${esc(a.asaas_customer_id)}">
-        <div style="font-size:10px;color:${a.asaas_customer_id?'#1a5a1a':'#c0392b'};margin-top:3px">${a.asaas_customer_id?'✓ Vinculado ao Asaas':'⚠ Não vinculado'}</div>
+        <div style="font-size:12px;color:${a.asaas_customer_id?'var(--ok-fg)':'var(--err-vivo)'};margin-top:3px">${a.asaas_customer_id?'<i class="ti ti-check" aria-hidden="true"></i> Vinculado ao Asaas':'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Não vinculado'}</div>
       </div>
       <div style="background:rgba(242,236,206,.4);border:1px solid var(--borda);border-radius:8px;padding:12px;margin-bottom:4px">
-        <div style="font-size:11px;font-weight:500;color:var(--verde);margin-bottom:6px">➕ Créditos manuais de aulas</div>
+        <div style="font-size:12px;font-weight:500;color:var(--titulo);margin-bottom:6px"><i class="ti ti-plus" aria-hidden="true"></i> Créditos manuais de aulas</div>
         <div style="display:flex;align-items:flex-end;gap:8px">
           <div style="display:flex;flex-direction:column;gap:3px;flex:1">
-            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Qtd</label>
+            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Qtd</label>
             <input type="number" id="ea-creditos" min="1" max="50" value="1" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
           <div style="display:flex;flex-direction:column;gap:3px;flex:2">
-            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Motivo</label>
+            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Motivo</label>
             <input type="text" id="ea-credito-motivo" placeholder="Ex: aulas a repor de maio" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
           <button onclick="creditarAulasManual('${a.id}')" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Creditar</button>
@@ -735,7 +735,7 @@ export async function renderAlunos(container, page) {
     }
 
     document.getElementById('modal-edit-aluno').style.display = 'none'
-    toast(asaasId ? '✓ Aluno atualizado! Asaas vinculado.' : '✓ Aluno atualizado!')
+    toast(asaasId ? 'Aluno atualizado! Asaas vinculado.' : 'Aluno atualizado!')
     navigate('alunos')
   }
 
@@ -761,7 +761,7 @@ export async function renderAlunos(container, page) {
         throw new Error('Nenhuma linha foi atualizada em perfis. Provável bloqueio de RLS (falta policy de UPDATE para admin) — verifique pg_policies.')
       }
       document.getElementById('modal-excluir-aluno').style.display = 'none'
-      toast('✓ Aluno removido — voltou ao status de visitante.')
+      toast('Aluno removido — voltou ao status de visitante.')
       navigate('alunos')
     } catch(e) { toast('Erro: ' + e.message); btn.disabled = false; btn.textContent = 'Remover' }
   }

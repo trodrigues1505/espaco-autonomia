@@ -95,15 +95,15 @@ export async function renderAlunoGrade(container, page) {
     // id="tour-grade-table": alvo do tour guiado (aponta a tabela inteira da semana)
     let gradeHTML = `<div id="tour-grade-table" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:600px">`
     // Cabeçalho
-    gradeHTML += `<tr><th style="background:var(--verde);color:var(--bege);padding:8px;font-size:11px;font-weight:500;width:60px">Hora</th>`
+    gradeHTML += `<tr><th style="background:var(--verde);color:var(--bege);padding:8px;font-size:12px;font-weight:500;width:60px">Hora</th>`
     diasDaSemana.forEach(d => {
       const dStr = d.toISOString().slice(0,10)
       const isHoje = d.toDateString() === hoje.toDateString()
       const isFeriado = feriadosDatas.has(dStr)
-      gradeHTML += `<th style="background:${isHoje?'#2d5a2d':'var(--verde)'};color:var(--bege);padding:8px;font-size:10px;font-weight:500;text-align:center;${isFeriado?'opacity:.6':''}">
+      gradeHTML += `<th style="background:${isHoje?'#2d5a2d':'var(--verde)'};color:var(--bege);padding:8px;font-size:12px;font-weight:500;text-align:center;${isFeriado?'opacity:.6':''}">
         ${d.toLocaleDateString('pt-BR',{weekday:'short'})}<br>
-        <span style="font-size:11px;font-weight:400">${d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</span>
-        ${isFeriado?'<br><span style="font-size:9px;color:var(--dourado)">feriado</span>':''}
+        <span style="font-size:12px;font-weight:400">${d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</span>
+        ${isFeriado?'<br><span style="font-size:12px;color:var(--dourado)">feriado</span>':''}
       </th>`
     })
     gradeHTML += '</tr>'
@@ -113,13 +113,13 @@ export async function renderAlunoGrade(container, page) {
       gradeHTML += `<tr><td colspan="8" style="text-align:center;padding:30px;font-size:13px;color:var(--txt2)">Nenhuma aula agendada esta semana.</td></tr>`
     }
     horas.forEach(hora => {
-      gradeHTML += `<tr><td style="background:rgba(242,236,206,.5);padding:6px 8px;font-size:11px;font-weight:500;color:var(--txt2);text-align:center;border:1px solid var(--borda)">${hora}</td>`
+      gradeHTML += `<tr><td style="background:rgba(242,236,206,.5);padding:6px 8px;font-size:12px;font-weight:500;color:var(--txt2);text-align:center;border:1px solid var(--borda)">${hora}</td>`
       diasDaSemana.forEach(d => {
         const dStr = d.toISOString().slice(0,10)
         const oc = grade[dStr]?.[hora]
         const isFeriado = feriadosDatas.has(dStr)
         if (!oc) {
-          gradeHTML += `<td style="border:1px solid rgba(212,200,158,.3);background:#fafaf7;min-height:48px"></td>`
+          gradeHTML += `<td style="border:1px solid rgba(212,200,158,.3);background:var(--superficie-2);min-height:48px"></td>`
         } else {
           const confirmado = minhasConfs.has(oc.id)
           const lotada = oc.vagas_livres <= 0
@@ -131,38 +131,38 @@ export async function renderAlunoGrade(container, page) {
           const passada = dtAula < agora
           const cancelada = !!oc.cancelada
 
-          let bgCell = '#fff'
+          let bgCell = 'var(--superficie)'
           let borderCell = `border-left:3px solid ${CORES[oc.modalidade]||'#888'}`
-          if (confirmado) bgCell = 'rgba(232,188,79,.08)'
-          if (!permitida) bgCell = '#f8f8f8'
-          if (cancelada) bgCell = '#f3f3f3'
+          if (confirmado) bgCell = 'var(--ok-bg)'
+          if (!permitida) bgCell = 'var(--superficie-2)'
+          if (cancelada) bgCell = 'var(--neutro-bg)'
 
           let actionHtml = ''
           if (cancelada) {
-            actionHtml = `<div style="font-size:9px;color:#8a1a1a;font-weight:600;margin-top:3px">🚫 Cancelada${oc.eh_feriado?' — feriado':''}</div>`
+            actionHtml = `<div style="font-size:12px;color:var(--err-fg);font-weight:600;margin-top:3px"><i class="ti ti-ban" aria-hidden="true"></i> Cancelada${oc.eh_feriado?' — feriado':''}</div>`
           } else if (isAluno && !passada) {
             if (!permitida) {
-              actionHtml = `<div style="font-size:9px;color:#ccc;margin-top:3px">🔒 ${esc(planoAluno)}</div>`
+              actionHtml = `<div style="font-size:12px;color:var(--txt2);margin-top:3px"><i class="ti ti-lock" aria-hidden="true"></i> ${esc(planoAluno)}</div>`
             } else if (confirmado) {
-              actionHtml = `<div style="font-size:9px;color:var(--dourado);font-weight:500;margin-top:3px">✓ Confirmado</div>`
+              actionHtml = `<div style="font-size:12px;color:var(--ok-fg);font-weight:600;margin-top:3px"><i class="ti ti-check" aria-hidden="true"></i> Confirmado</div>`
             } else if (foraPrazo) {
-              actionHtml = `<div style="font-size:9px;color:#c0392b;margin-top:3px">Prazo enc.</div>`
+              actionHtml = `<div style="font-size:12px;color:var(--err-vivo);margin-top:3px">Prazo enc.</div>`
             } else if (lotada) {
-              actionHtml = `<div style="font-size:9px;color:#c0392b;margin-top:3px">Lotada</div>`
+              actionHtml = `<div style="font-size:12px;color:var(--err-vivo);margin-top:3px">Lotada</div>`
             } else {
-              actionHtml = `<button onclick="confirmarOcorrencia('${oc.id}')" style="margin-top:3px;padding:2px 7px;background:var(--dourado);color:var(--verde);border:none;border-radius:4px;font-size:9px;cursor:pointer;font-weight:500;font-family:'DM Sans',sans-serif">Confirmar</button>`
+              actionHtml = `<button onclick="confirmarOcorrencia('${oc.id}')" style="margin-top:3px;padding:2px 7px;background:var(--dourado);color:var(--verde);border:none;border-radius:4px;font-size:12px;cursor:pointer;font-weight:500;font-family:'DM Sans',sans-serif">Confirmar</button>`
             }
           }
 
           const adminActions = !isAluno ? `<div style="display:flex;gap:2px;margin-top:3px">
-            <button onclick="event.stopPropagation();editarOcorrencia('${oc.id}')" style="padding:1px 5px;background:rgba(31,56,31,.1);color:var(--verde);border:none;border-radius:3px;font-size:9px;cursor:pointer" title="Editar">✎</button>
-            <button onclick="event.stopPropagation();excluirOcorrencia('${oc.id}')" style="padding:1px 5px;background:rgba(255,0,0,.08);color:#c0392b;border:none;border-radius:3px;font-size:9px;cursor:pointer" title="Excluir">✕</button>
+            <button onclick="event.stopPropagation();editarOcorrencia('${oc.id}')" style="padding:1px 5px;background:rgba(31,56,31,.1);color:var(--titulo);border:none;border-radius:3px;font-size:12px;cursor:pointer" title="Editar"><i class="ti ti-pencil" aria-hidden="true"></i></button>
+            <button onclick="event.stopPropagation();excluirOcorrencia('${oc.id}')" style="padding:1px 5px;background:rgba(255,0,0,.08);color:var(--err-vivo);border:none;border-radius:3px;font-size:12px;cursor:pointer" title="Excluir"><i class="ti ti-x" aria-hidden="true"></i></button>
           </div>` : ''
           gradeHTML += `<td style="border:1px solid rgba(212,200,158,.3);background:${bgCell};padding:5px 7px;vertical-align:top;cursor:${isAluno?'default':'pointer'}${cancelada?';opacity:.75':''}" ${!isAluno?`onclick="verDetalhesOcorrencia('${oc.id}')"`:''}">
-            <div style="font-size:10px;font-weight:500;${borderCell};padding-left:4px;line-height:1.3;color:${cancelada?'#999':!permitida?'#ccc':'var(--txt)'}${cancelada?';text-decoration:line-through':''}">${NOMES[oc.modalidade]}</div>
-            <div style="font-size:9px;color:var(--txt2);margin-top:1px">${oc.confirmados||0}/${oc.vagas_total}</div>
-            ${oc.professor_nome?`<div style="font-size:9px;color:var(--txt2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px" title="${esc(oc.professor_nome)}">👤 ${esc(oc.professor_nome.split(' ')[0])}</div>`:''}
-            ${isFeriado&&!isAluno&&!cancelada?`<div style="font-size:9px;color:#8a6b1a;margin-top:1px">⚠ feriado</div>`:''}
+            <div style="font-size:12px;font-weight:500;${borderCell};padding-left:4px;line-height:1.3;color:${cancelada?'var(--txt2)':!permitida?'var(--txt2)':'var(--txt)'}${cancelada?';text-decoration:line-through':''}">${NOMES[oc.modalidade]}</div>
+            <div style="font-size:12px;color:var(--txt2);margin-top:1px">${oc.confirmados||0}/${oc.vagas_total}</div>
+            ${oc.professor_nome?`<div style="font-size:12px;color:var(--txt2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px" title="${esc(oc.professor_nome)}"><i class="ti ti-user" aria-hidden="true"></i> ${esc(oc.professor_nome.split(' ')[0])}</div>`:''}
+            ${isFeriado&&!isAluno&&!cancelada?`<div style="font-size:12px;color:var(--warn-fg);margin-top:1px"><i class="ti ti-alert-triangle" aria-hidden="true"></i> feriado</div>`:''}
             ${actionHtml}
             ${adminActions}
           </td>`
@@ -174,9 +174,9 @@ export async function renderAlunoGrade(container, page) {
 
     // Legenda
     const legendaHtml = `<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px">
-      ${['hatha','acro','raja'].map(m=>`<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--txt2)">${dot(m)}${NOMES[m]}</span>`).join('')}
-      ${temCanceladaNaSemana?`<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:#8a1a1a">🚫 Cancelada</span>`:''}
-      ${isAluno?`<span style="font-size:11px;color:var(--txt2)">· Prazo: <strong>${prazoMin>=60?prazoMin/60+'h':prazoMin+'min'}</strong> antes</span>`:''}
+      ${['hatha','acro','raja'].map(m=>`<span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--txt2)">${dot(m)}${NOMES[m]}</span>`).join('')}
+      ${temCanceladaNaSemana?`<span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--err-fg)"><i class="ti ti-ban" aria-hidden="true"></i> Cancelada</span>`:''}
+      ${isAluno?`<span style="font-size:12px;color:var(--txt2)">· Prazo: <strong>${prazoMin>=60?prazoMin/60+'h':prazoMin+'min'}</strong> antes</span>`:''}
     </div>`
 
     // Navegação de semana
@@ -188,17 +188,17 @@ export async function renderAlunoGrade(container, page) {
 
     const navHtml = `<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <button onclick="window._gradeOffset=(window._gradeOffset||0)-1;navigate('${page}')" style="padding:5px 10px;background:#fff;color:var(--txt);border:1px solid var(--borda);border-radius:5px;font-size:13px;cursor:pointer">‹</button>
-        <button onclick="window._gradeOffset=0;navigate('${page}')" style="padding:5px 12px;background:${(window._gradeOffset||0)===0?'var(--verde)':'#fff'};color:${(window._gradeOffset||0)===0?'var(--bege)':'var(--txt)'};border:1px solid ${(window._gradeOffset||0)===0?'var(--verde)':'var(--borda)'};border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">Hoje</button>
-        <button onclick="window._gradeOffset=(window._gradeOffset||0)+1;navigate('${page}')" style="padding:5px 10px;background:#fff;color:var(--txt);border:1px solid var(--borda);border-radius:5px;font-size:13px;cursor:pointer">›</button>
+        <button onclick="window._gradeOffset=(window._gradeOffset||0)-1;navigate('${page}')" style="padding:5px 10px;background:var(--superficie);color:var(--txt);border:1px solid var(--borda);border-radius:5px;font-size:13px;cursor:pointer"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+        <button onclick="window._gradeOffset=0;navigate('${page}')" style="padding:5px 12px;background:${(window._gradeOffset||0)===0?'var(--verde)':'var(--superficie)'};color:${(window._gradeOffset||0)===0?'var(--bege)':'var(--txt)'};border:1px solid ${(window._gradeOffset||0)===0?'var(--verde)':'var(--borda)'};border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Hoje</button>
+        <button onclick="window._gradeOffset=(window._gradeOffset||0)+1;navigate('${page}')" style="padding:5px 10px;background:var(--superficie);color:var(--txt);border:1px solid var(--borda);border-radius:5px;font-size:13px;cursor:pointer"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
         <span style="font-size:12px;color:var(--txt2);font-weight:500">${seg.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})} – ${dom.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})}</span>
-        ${fAtivo?`<button onclick="window._gradeFiltrosAluno={};navigate('${page}')" style="padding:4px 10px;background:#fceaea;color:#8a1a1a;border:1px solid #f0c0c0;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">✕ Limpar filtros</button>`:''}
+        ${fAtivo?`<button onclick="window._gradeFiltrosAluno={};navigate('${page}')" style="padding:4px 10px;background:var(--err-bg);color:var(--err-fg);border:1px solid var(--err-borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="ti ti-x" aria-hidden="true"></i> Limpar filtros</button>`:''}
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;padding:10px 12px;background:rgba(242,236,206,.4);border:1px solid var(--borda);border-radius:7px;align-items:flex-end">
         <div style="display:flex;flex-direction:column;gap:3px">
-          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Modalidade</label>
+          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Modalidade</label>
           <select onchange="(window._gradeFiltrosAluno=window._gradeFiltrosAluno||{}).modalidade=this.value||'';navigate('${page}')"
-            style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff;color:var(--txt);cursor:pointer;min-width:130px">
+            style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie);color:var(--txt);cursor:pointer;min-width:130px">
             <option value="" ${!(window._gradeFiltrosAluno?.modalidade)?'selected':''}>Todas</option>
             <option value="hatha" ${window._gradeFiltrosAluno?.modalidade==='hatha'?'selected':''}>Hatha Yoga</option>
             <option value="acro"  ${window._gradeFiltrosAluno?.modalidade==='acro' ?'selected':''}>Acro Yoga</option>
@@ -206,9 +206,9 @@ export async function renderAlunoGrade(container, page) {
           </select>
         </div>
         <div style="display:flex;flex-direction:column;gap:3px">
-          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Horário</label>
+          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Horário</label>
           <select onchange="(window._gradeFiltrosAluno=window._gradeFiltrosAluno||{}).horario=this.value||'';navigate('${page}')"
-            style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff;color:var(--txt);cursor:pointer;min-width:100px">
+            style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie);color:var(--txt);cursor:pointer;min-width:100px">
             <option value="" ${!(window._gradeFiltrosAluno?.horario)?'selected':''}>Todos</option>
             ${horasUnicas.map(h=>`<option value="${h}" ${window._gradeFiltrosAluno?.horario===h?'selected':''}>${h}</option>`).join('')}
           </select>
@@ -219,10 +219,10 @@ export async function renderAlunoGrade(container, page) {
     container.innerHTML = `
       <div class="topbar">
         <div class="topbar-t">Grade de Aulas</div>
-        ${isAluno?`<div>${badge('Plano '+planoAluno,'#e8f4e8','#1a5a1a')}</div>`:''}
+        ${isAluno?`<div>${badge('Plano '+planoAluno,'var(--ok-bg)','var(--ok-fg)')}</div>`:''}
       </div>
       <div class="content">
-        ${feriados?.length?`<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:9px 13px;display:flex;align-items:center;gap:8px;font-size:12px;color:#7a5a10;margin-bottom:12px"><i class="ti ti-alert-triangle" style="color:var(--dourado)"></i><span>Há feriados esta semana: ${(feriados||[]).map(f=>esc(f.nome)).join(', ')}</span></div>`:''}
+        ${feriados?.length?`<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:9px 13px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--warn-fg);margin-bottom:12px"><i class="ti ti-alert-triangle" style="color:var(--dourado-texto)"></i><span>Há feriados esta semana: ${(feriados||[]).map(f=>esc(f.nome)).join(', ')}</span></div>`:''}
         ${navHtml}
         ${legendaHtml}
         ${gradeHTML}
@@ -255,7 +255,7 @@ export async function renderAlunoGrade(container, page) {
           eh_feriado: !!(fer&&fer.length),
           nome_feriado: fer?.[0]?.nome||null
         }).eq('id', ocId)
-        toast('✓ Aula atualizada')
+        toast('Aula atualizada')
         navigate(page)
       }
 
@@ -271,7 +271,7 @@ export async function renderAlunoGrade(container, page) {
     window.confirmarOcorrencia = async function(ocId) {
       const { data, error } = await sb.rpc('confirmar_presenca', { p_aluno_id: window._perfil.id, p_ocorrencia_id: ocId })
       if (error || !data?.ok) { toast('❌ '+(data?.motivo||error?.message)); return }
-      toast('✓ Presença confirmada!')
+      toast('Presença confirmada!')
       navigate(page)
     }
 }   

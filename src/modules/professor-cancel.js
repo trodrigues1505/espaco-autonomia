@@ -33,7 +33,7 @@ export function abrirModalCancelarAula(ocorrenciaId, infoObj) {
     infoEl.innerHTML = `
       <strong>${nomes[infoObj.modalidade] || esc(infoObj.modalidade)}</strong> —
       ${dia}, ${hora}
-      <span style="margin-left:8px;font-size:11px;color:var(--txt2)">
+      <span style="margin-left:8px;font-size:12px;color:var(--txt2)">
         ${infoObj.confirmados || 0} aluno(s) confirmado(s)
       </span>`
   }
@@ -64,7 +64,7 @@ export function abrirModalCancelarEmMassa(infosArray) {
       <div style="max-height:140px;overflow-y:auto;display:flex;flex-direction:column;gap:4px">
         ${infosArray.map(i => {
           const dt = new Date(i.data_hora)
-          return `<div style="font-size:11px">
+          return `<div style="font-size:12px">
             ${nomes[i.modalidade] || esc(i.modalidade)} —
             ${dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}
             ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
@@ -120,7 +120,7 @@ async function _confirmarCancelamentoIndividual() {
       })
       .then(r => { if (r.error) console.warn('estornar_confirmacoes_ocorrencia:', r.error.message) })
 
-    window.toast('✓ Aula cancelada.')
+    window.toast('Aula cancelada.')
     if (btn) { btn.textContent = 'Cancelar Aula'; btn.disabled = false }
     fecharModalCancelarAula()
     const destino = window._cancelReturnPage || 'prof-aulas'
@@ -173,9 +173,9 @@ async function _confirmarCancelamentoEmMassa() {
   }
 
   if (falhas === 0) {
-    window.toast(`✓ ${ok} aula(s) cancelada(s).`)
+    window.toast(`${ok}aula(s) cancelada(s).`)
   } else {
-    window.toast(`⚠ ${ok} cancelada(s), ${falhas} falharam. Veja o console.`)
+    window.toast(`${ok}cancelada(s), ${falhas}falharam. Veja o console.`)
   }
 
   if (btn) { btn.textContent = 'Cancelar Aula'; btn.disabled = false }

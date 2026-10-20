@@ -51,7 +51,7 @@ const MENUS = {
   admin: [
     { sec: 'Visão Geral' },
     { id: 'dashboard',          label: 'Dashboard',           icon: 'ti-layout-dashboard' },
-    { id: 'timeline',           label: 'Timeline',            icone: '💬'                  },
+    { id: 'timeline',           label: 'Timeline',            icon: 'ti-messages'                  },
     { id: 'grade',              label: 'Grade de Aulas',      icon: 'ti-calendar'         },
     { sec: 'Gestão' },
     // 'criar-aulas' agora vive como aba dentro de 'grade' (unificação
@@ -85,7 +85,7 @@ const MENUS = {
   professor: [
     { sec: 'Minhas Aulas' },
     { id: 'prof-home',    label: 'Dashboard',    icon: 'ti-layout-dashboard' },
-    { id: 'timeline',     label: 'Timeline',     icone: '💬'                  },
+    { id: 'timeline',     label: 'Timeline',     icon: 'ti-messages'                  },
     { id: 'prof-aulas',   label: 'Minhas Aulas', icon: 'ti-calendar'         },
     { id: 'prof-chamada', label: 'Chamada',      icon: 'ti-checkbox'         },
     { id: 'prof-repasse', label: 'Meu Repasse',  icon: 'ti-calculator'       },
@@ -94,7 +94,7 @@ const MENUS = {
   aluno: [
     { sec: 'Meu Espaço' },
     { id: 'aluno-home',   label: 'Início',         icon: 'ti-home'     },
-    { id: 'timeline',     label: 'Timeline',       icone: '💬'          },
+    { id: 'timeline',     label: 'Timeline',       icon: 'ti-messages'          },
     { id: 'aluno-grade',  label: 'Grade de Aulas', icon: 'ti-calendar' },
     { id: 'aluno-minhas', label: 'Minhas Aulas',   icon: 'ti-bookmark' },
     { id: 'aluno-plano',  label: 'Meu Plano',      icon: 'ti-award'    },
@@ -103,7 +103,7 @@ const MENUS = {
   visitante: [
     { sec: 'Meu Espaço' },
     { id: 'aluno-home', label: 'Início', icon: 'ti-home' },
-    { id: 'timeline',   label: 'Timeline', icone: '💬'    },
+    { id: 'timeline',   label: 'Timeline', icon: 'ti-messages'    },
     ...ITENS_SOBRE,
   ],
 }
@@ -130,8 +130,8 @@ export function buildMenu(tipo, badges = {}) {
     }
     // Śabda Kośa não é um benefício de plano — sempre liberado, mas mora
     // visualmente na seção Dharma Phala por ser conteúdo de estudo.
-    itens.push({ id: 'vocabulario-aluno', label: 'Śabda Kośa', icone: '📖', _bloqueado: false })
-    itens.push({ id: 'grantha-aluno', label: 'Grantha Mandir', icone: '📚', _bloqueado: false })
+    itens.push({ id: 'vocabulario-aluno', label: 'Śabda Kośa', icon: 'ti-book', _bloqueado: false })
+    itens.push({ id: 'grantha-aluno', label: 'Grantha Mandir', icon: 'ti-books', _bloqueado: false })
   }
 
   if (tipo === 'visitante') {
@@ -139,8 +139,8 @@ export function buildMenu(tipo, badges = {}) {
     for (const b of DHARMA_PHALA) {
       itens.push({ ...b, _bloqueado: !DHARMA_VISITANTE.includes(b.beneficio) })
     }
-    itens.push({ id: 'vocabulario-aluno', label: 'Śabda Kośa', icone: '📖', _bloqueado: false })
-    itens.push({ id: 'grantha-aluno', label: 'Grantha Mandir', icone: '📚', _bloqueado: false })
+    itens.push({ id: 'vocabulario-aluno', label: 'Śabda Kośa', icon: 'ti-book', _bloqueado: false })
+    itens.push({ id: 'grantha-aluno', label: 'Grantha Mandir', icon: 'ti-books', _bloqueado: false })
   }
 
   for (const item of itens) {
@@ -159,11 +159,11 @@ export function buildMenu(tipo, badges = {}) {
     d.style.alignItems = 'center'
 
     const iconHtml = item.icone
-      ? `<span style="font-size:14px;flex-shrink:0;width:20px;text-align:center;${item._bloqueado ? 'filter:grayscale(1);opacity:.4' : ''}">${item.icone}</span>`
+      ? `<span style="font-size:14px;flex-shrink:0;width:20px;text-align:center;${item._bloqueado ? 'filter:grayscale(1);opacity:.62' : ''}">${item.icone}</span>`
       : `<i class="ti ${item.icon}" style="flex-shrink:0"></i>`
 
     const labelStyle = item._bloqueado
-      ? 'flex:1;color:var(--txt2);opacity:.5'
+      ? 'flex:1;color:rgba(242,236,206,.74)'
       : 'flex:1'
 
     d.innerHTML = `${iconHtml}<span style="${labelStyle}">${item.label}</span>`
@@ -175,7 +175,7 @@ export function buildMenu(tipo, badges = {}) {
       badge.textContent = count
       badge.style.cssText = `
         background:#c0392b;color:#fff;border-radius:10px;padding:1px 6px;
-        font-size:10px;font-weight:600;margin-left:auto;flex-shrink:0;
+        font-size:12px;font-weight:600;margin-left:auto;flex-shrink:0;
         font-family:'DM Sans',sans-serif;line-height:1.4
       `
       d.appendChild(badge)
@@ -228,11 +228,11 @@ async function _abrirModalImpersonar(tipo) {
   div.id = 'modal-impersonar'
   div.style.cssText = 'position:fixed;inset:0;background:rgba(31,56,31,.7);z-index:400;display:flex;align-items:center;justify-content:center;padding:16px'
   div.innerHTML = `
-    <div style="background:#fff;border-radius:12px;width:420px;max-width:100%;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="background:var(--superficie);border-radius:12px;width:420px;max-width:100%;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
       <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
         <div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)">Ver como ${tipo === 'professor' ? 'Professor' : 'Aluno'}</div>
-          <div style="font-size:11px;color:rgba(242,236,206,.7);margin-top:2px">Escolha quem deseja visualizar</div>
+          <div style="font-size:12px;color:rgba(242,236,206,.7);margin-top:2px">Escolha quem deseja visualizar</div>
         </div>
         <button onclick="document.getElementById('modal-impersonar').remove()" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
       </div>
@@ -244,12 +244,12 @@ async function _abrirModalImpersonar(tipo) {
               style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;cursor:pointer;margin-bottom:4px;transition:background .15s"
               onmouseover="this.style.background='rgba(31,56,31,.06)'"
               onmouseout="this.style.background='transparent'">
-              <div style="width:34px;height:34px;border-radius:50%;background:rgba(31,56,31,.12);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--verde);flex-shrink:0">
+              <div style="width:34px;height:34px;border-radius:50%;background:rgba(31,56,31,.12);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--titulo);flex-shrink:0">
                 ${esc(p.nome.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase())}
               </div>
               <div>
                 <div style="font-size:13px;font-weight:500;color:var(--txt)">${esc(p.nome)}</div>
-                <div style="font-size:11px;color:var(--txt2)">${esc(p.email)}${p.tipo==='visitante'?' · Visitante':''}</div>
+                <div style="font-size:12px;color:var(--txt2)">${esc(p.email)}${p.tipo==='visitante'?' · Visitante':''}</div>
               </div>
             </div>`).join('')
         }
@@ -343,7 +343,7 @@ function _ativarImpersonar(tipo, pessoa) {
   if (!aviso) {
     aviso = document.createElement('div')
     aviso.id = 'impersonar-aviso'
-    aviso.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:300;background:var(--dourado);color:var(--verde);text-align:center;padding:5px;font-size:11px;font-family:"DM Sans",sans-serif;font-weight:500;pointer-events:none'
+    aviso.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:300;background:var(--dourado);color:var(--titulo);text-align:center;padding:5px;font-size:12px;font-family:"DM Sans",sans-serif;font-weight:500;pointer-events:none'
     document.body.appendChild(aviso)
   }
   aviso.textContent = `👁 Visualizando como: ${pessoa.nome} · `

@@ -522,9 +522,9 @@ export function calcularBadgesMenu(notifs) {
 // ─────────────────────────────────────────────────────────────
 
 const COR_NIVEL = {
-  urgente: { bg: '#fceaea',             borda: '#f5c1c1',             txt: '#8a1a1a',      icon: '⚠️' },
-  aviso:   { bg: 'rgba(232,188,79,.1)', borda: 'rgba(232,188,79,.4)', txt: '#7a5a10',      icon: '💡' },
-  info:    { bg: 'rgba(31,56,31,.05)',  borda: 'rgba(31,56,31,.15)',  txt: 'var(--verde)', icon: 'ℹ️' },
+  urgente: { bg: 'var(--err-bg)',             borda: 'var(--err-borda)',             txt: 'var(--err-fg)',      icon: 'alert-triangle' },
+  aviso:   { bg: 'rgba(232,188,79,.1)', borda: 'rgba(232,188,79,.4)', txt: 'var(--warn-fg)',      icon: 'bulb' },
+  info:    { bg: 'rgba(31,56,31,.05)',  borda: 'rgba(31,56,31,.15)',  txt: 'var(--titulo)', icon: 'info-circle' },
 }
 
 export function renderPainelNotif(notifs, opts = {}) {
@@ -539,21 +539,21 @@ export function renderPainelNotif(notifs, opts = {}) {
     const acaoBtn = n.acao
       ? `<button onclick="${_acaoOnclick(n.acao)}"
            style="padding:3px 10px;background:transparent;border:1px solid ${cor.txt};border-radius:4px;
-                  font-size:11px;cursor:pointer;color:${cor.txt};font-family:'DM Sans',sans-serif;white-space:nowrap">
+                  font-size:12px;cursor:pointer;color:${cor.txt};font-family:'DM Sans',sans-serif;white-space:nowrap">
            ${_esc(n.acao.label)}</button>` : ''
     const dispensarBtn = !n.lida
       ? `<button onclick="window._notifMarcarLida('${_esc(n.key)}')"
-           style="padding:3px 8px;background:transparent;border:none;font-size:10px;
+           style="padding:3px 8px;background:transparent;border:none;font-size:12px;
                   cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif">dispensar</button>` : ''
     return `
       <div ${oculto} data-notif-key="${_esc(n.key)}"
-        style="background:${n.lida ? '#fafaf7' : cor.bg};border:1px solid ${n.lida ? 'var(--borda)' : cor.borda};
+        style="background:${n.lida ? 'var(--superficie-2)' : cor.bg};border:1px solid ${n.lida ? 'var(--borda)' : cor.borda};
                border-radius:8px;padding:11px 14px;display:flex;align-items:flex-start;gap:10px;
                opacity:${n.lida ? '.5' : '1'};transition:opacity .25s">
-        <span style="font-size:16px;flex-shrink:0;margin-top:1px">${n.lida ? '✓' : cor.icon}</span>
+        <span style="font-size:16px;flex-shrink:0;margin-top:1px">${n.lida ? '<i class="ti ti-check" aria-hidden="true"></i>' : `<i class="ti ti-${cor.icon}" aria-hidden="true"></i>`}</span>
         <div style="flex:1;min-width:0">
           <div style="font-size:12px;font-weight:600;color:${n.lida ? 'var(--txt2)' : cor.txt};margin-bottom:2px">${_esc(n.titulo)}</div>
-          <div style="font-size:11px;color:var(--txt2);line-height:1.45">${_esc(n.corpo)}</div>
+          <div style="font-size:12px;color:var(--txt2);line-height:1.45">${_esc(n.corpo)}</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0">
           ${acaoBtn}${dispensarBtn}
@@ -568,22 +568,22 @@ export function renderPainelNotif(notifs, opts = {}) {
   const temMais = notifs.length > maxVisiveis
 
   return `
-    <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-bottom:14px" id="painel-notif">
+    <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-bottom:14px" id="painel-notif">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">${_esc(titulo)}</span>
-          ${naoLidas.length ? `<span id="notif-badge-count" style="background:#c0392b;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:600">${naoLidas.length}</span>` : ''}
+          <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo)">${_esc(titulo)}</span>
+          ${naoLidas.length ? `<span id="notif-badge-count" style="background:#c0392b;color:#fff;border-radius:10px;padding:1px 7px;font-size:12px;font-weight:600">${naoLidas.length}</span>` : ''}
         </div>
         ${naoLidas.length > 1
           ? `<button onclick="window._notifMarcarTodasLidas()"
-               style="font-size:11px;color:var(--txt2);background:none;border:none;cursor:pointer;
+               style="font-size:12px;color:var(--txt2);background:none;border:none;cursor:pointer;
                       font-family:'DM Sans',sans-serif;text-decoration:underline">dispensar tudo</button>` : ''}
       </div>
       <div style="display:flex;flex-direction:column;gap:7px" id="notif-lista">${todasCards.join('')}</div>
       ${temMais
         ? `<button onclick="document.querySelectorAll('.notif-extra').forEach(el=>el.style.display='flex');this.style.display='none'"
              style="margin-top:10px;width:100%;padding:6px;background:transparent;border:1px solid var(--borda);
-                    border-radius:6px;font-size:11px;cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif">
+                    border-radius:6px;font-size:12px;cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif">
              Ver mais ${notifs.length - maxVisiveis} aviso(s)</button>` : ''}
     </div>`
 }
@@ -628,7 +628,7 @@ export function aplicarBadgesMenu(badges) {
     badge.textContent = count
     badge.style.cssText = `
       background:#c0392b;color:#fff;border-radius:10px;padding:1px 6px;
-      font-size:10px;font-weight:600;margin-left:auto;flex-shrink:0;
+      font-size:12px;font-weight:600;margin-left:auto;flex-shrink:0;
       font-family:'DM Sans',sans-serif;line-height:1.4
     `
     niEl.style.display = 'flex'

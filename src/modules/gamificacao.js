@@ -108,7 +108,7 @@ export function mostrarToastConquista(conquista) {
   const t = document.createElement('div')
   t.style.cssText = [
     'position:fixed;top:20px;right:20px',
-    'background:#fff;border:2px solid var(--dourado)',
+    'background:var(--superficie);border:2px solid var(--dourado)',
     'border-radius:12px;padding:14px 18px',
     'z-index:9999;box-shadow:0 8px 30px rgba(0,0,0,.15)',
     'max-width:280px;animation:slideIn .3s ease',
@@ -117,9 +117,9 @@ export function mostrarToastConquista(conquista) {
     <div style="display:flex;align-items:center;gap:10px">
       <div style="font-size:28px">${conquista.icone}</div>
       <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--dourado);font-weight:500">Conquista desbloqueada!</div>
-        <div style="font-weight:500;font-size:13px;color:var(--verde);margin-top:2px">${esc(conquista.nome)}</div>
-        <div style="font-size:11px;color:var(--txt2)">${esc(conquista.descricao)} · +${conquista.pontos} pts</div>
+        <div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--dourado-texto);font-weight:500">Conquista desbloqueada!</div>
+        <div style="font-weight:500;font-size:13px;color:var(--titulo);margin-top:2px">${esc(conquista.nome)}</div>
+        <div style="font-size:12px;color:var(--txt2)">${esc(conquista.descricao)} · +${conquista.pontos} pts</div>
       </div>
     </div>`
   document.body.appendChild(t)

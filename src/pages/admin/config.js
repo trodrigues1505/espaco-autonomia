@@ -21,10 +21,10 @@ export async function renderConfig(container, page) {
   container.innerHTML = `
     <div class="topbar"><div class="topbar-t">Configurações</div></div>
     <div class="content">
-      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
-        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--borda)">Confirmação de Presença</div>
+      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--borda)">Confirmação de Presença</div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(212,200,158,.25)">
-          <div><div style="font-size:12px;font-weight:500">Prazo mínimo de confirmação</div><div style="font-size:10px;color:var(--txt2)">Minutos antes da aula para confirmar</div></div>
+          <div><div style="font-size:12px;font-weight:500">Prazo mínimo de confirmação</div><div style="font-size:12px;color:var(--txt2)">Minutos antes da aula para confirmar</div></div>
           <select id="cfg-prazo" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--txt)">
             <option value="30"   ${cfg.prazo_confirmacao_min=='30'  ?'selected':''}>30 minutos</option>
             <option value="60"   ${cfg.prazo_confirmacao_min=='60'  ?'selected':''}>1 hora</option>
@@ -48,9 +48,9 @@ export async function renderConfig(container, page) {
           <input type="number" id="cfg-vagas" value="${cfg.vagas_padrao||15}" min="1" max="100" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;width:80px;font-family:'DM Sans',sans-serif;color:var(--txt)">
         </div>
       </div>
-      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
-        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--borda)">Alertas de Feriado</div>
-        <div style="background:rgba(31,56,31,.04);border:1px solid rgba(31,56,31,.12);border-radius:6px;padding:9px 13px;font-size:11px;color:var(--verde);margin-bottom:12px">
+      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--borda)">Alertas de Feriado</div>
+        <div style="background:rgba(31,56,31,.04);border:1px solid rgba(31,56,31,.12);border-radius:6px;padding:9px 13px;font-size:12px;color:var(--titulo);margin-bottom:12px">
           <i class="ti ti-info-circle"></i>
           Ao sincronizar, aulas futuras já geradas que caem em feriado são canceladas automaticamente, e o crédito de quem já tinha confirmado presença nelas é estornado.
         </div>
@@ -77,11 +77,11 @@ export async function renderConfig(container, page) {
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
         <button onclick="salvarConfig()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500"><i class="ti ti-device-floppy"></i>Salvar configurações</button>
-        <button onclick="sincronizarFeriados()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:#fff;color:var(--verde);border:1px solid var(--borda);border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500"><i class="ti ti-calendar-event"></i>Sincronizar Feriados <span id="sync-feriado-status"></span></button>
+        <button onclick="sincronizarFeriados()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--superficie);color:var(--titulo);border:1px solid var(--borda);border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500"><i class="ti ti-calendar-event"></i>Sincronizar Feriados <span id="sync-feriado-status"></span></button>
       </div>
 
-      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
-        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid var(--borda)">Importar Alunos do Asaas</div>
+      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo);margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid var(--borda)">Importar Alunos do Asaas</div>
         <div style="font-size:12px;color:var(--txt2);margin-bottom:12px;line-height:1.5">
           Busca todos os clientes cadastrados no Asaas e cria perfis de aluno no app.<br>
           Alunos já existentes (mesmo e-mail) são atualizados. O aluno só terá acesso ao app após fazer o primeiro login.
@@ -90,16 +90,16 @@ export async function renderConfig(container, page) {
           A chave de API do Asaas fica guardada com segurança no servidor — não é mais necessário informá-la aqui.
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <button onclick="previewImportAsaas()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#fff;color:var(--verde);border:1px solid var(--borda);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500">👁 Pré-visualizar</button>
-          <button onclick="executarImportAsaas()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500">⬇ Importar alunos</button>
+          <button onclick="previewImportAsaas()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--superficie);color:var(--titulo);border:1px solid var(--borda);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500"><i class="ti ti-eye" aria-hidden="true"></i> Pré-visualizar</button>
+          <button onclick="executarImportAsaas()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500"><i class="ti ti-arrow-down" aria-hidden="true"></i> Importar alunos</button>
           <span id="asaas-status" style="font-size:12px;color:var(--txt2)"></span>
         </div>
         <div id="asaas-preview" style="margin-top:12px"></div>
       </div>
 
       <!-- Solicitações de titulares (LGPD Art. 18) -->
-      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
-        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid var(--borda)">
+      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo);margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid var(--borda)">
           Solicitações de titulares (LGPD)
         </div>
         <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">
@@ -109,8 +109,8 @@ export async function renderConfig(container, page) {
       </div>
 
       <!-- Retenção de dados (2 anos) -->
-      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
-        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid var(--borda)">
+      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo);margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid var(--borda)">
           Retenção de dados (2 anos)
         </div>
         <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">
@@ -120,8 +120,8 @@ export async function renderConfig(container, page) {
       </div>
 
       <!-- Aceites de Contrato -->
-      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
-        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid var(--borda)">
+      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo);margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid var(--borda)">
           Aceites de Contrato
         </div>
         <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">
@@ -155,7 +155,7 @@ export async function renderConfig(container, page) {
 
     el.innerHTML = `
       <div style="border:1px solid var(--borda);border-radius:6px;overflow:hidden">
-        <div style="display:grid;grid-template-columns:1fr 1fr 80px 120px;background:rgba(31,56,31,.06);padding:7px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">
+        <div style="display:grid;grid-template-columns:1fr 1fr 80px 120px;background:rgba(31,56,31,.06);padding:7px 12px;font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">
           <div>Aluno</div>
           <div>E-mail</div>
           <div>Versão</div>
@@ -168,13 +168,13 @@ export async function renderConfig(container, page) {
           return `
             <div style="display:grid;grid-template-columns:1fr 1fr 80px 120px;padding:8px 12px;border-top:1px solid rgba(212,200,158,.25);align-items:center">
               <div style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px">${esc(c.perfis?.nome || '—')}</div>
-              <div style="color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px;font-size:11px">${esc(c.perfis?.email || '—')}</div>
-              <div><span style="background:rgba(31,56,31,.1);color:var(--verde);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600">${c.versao}</span></div>
-              <div style="color:var(--txt2);font-size:11px">${dt}</div>
+              <div style="color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px;font-size:12px">${esc(c.perfis?.email || '—')}</div>
+              <div><span style="background:rgba(31,56,31,.1);color:var(--titulo);border-radius:4px;padding:2px 7px;font-size:12px;font-weight:600">${c.versao}</span></div>
+              <div style="color:var(--txt2);font-size:12px">${dt}</div>
             </div>`
         }).join('')}
       </div>
-      <div style="margin-top:8px;font-size:11px;color:var(--txt2)">${contratos.length} aceite(s) registrado(s)</div>
+      <div style="margin-top:8px;font-size:12px;color:var(--txt2)">${contratos.length} aceite(s) registrado(s)</div>
     `
   })()
 
@@ -338,20 +338,20 @@ export async function renderConfig(container, page) {
   window.previewImportAsaas = async function() {
     const status = document.getElementById('asaas-status')
     const preview = document.getElementById('asaas-preview')
-    status.textContent = '⏳ Buscando...'
+    status.textContent = 'Buscando...'
     try {
       const clientes = await buscarClientesAsaas()
       status.textContent = `${clientes.length} clientes encontrados`
       preview.innerHTML = `
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);margin-bottom:6px;font-weight:500">Prévia (${clientes.length} clientes)</div>
+        <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);margin-bottom:6px;font-weight:500">Prévia (${clientes.length} clientes)</div>
         <div style="max-height:220px;overflow-y:auto;border:1px solid var(--borda);border-radius:6px">
           ${clientes.map(c=>`<div style="display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid rgba(212,200,158,.25);font-size:12px">
-            <div style="width:28px;height:28px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:var(--verde);flex-shrink:0">${esc((c.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase())}</div>
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--titulo);flex-shrink:0">${esc((c.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase())}</div>
             <div style="flex:1;min-width:0">
               <div style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.name||'—')}</div>
-              <div style="font-size:10px;color:var(--txt2)">${esc(c.email||'sem e-mail')} · ${esc(c.mobilePhone||c.phone||'sem tel')}</div>
+              <div style="font-size:12px;color:var(--txt2)">${esc(c.email||'sem e-mail')} · ${esc(c.mobilePhone||c.phone||'sem tel')}</div>
             </div>
-            <div style="font-size:10px;color:var(--txt2);flex-shrink:0">${esc(c.id)}</div>
+            <div style="font-size:12px;color:var(--txt2);flex-shrink:0">${esc(c.id)}</div>
           </div>`).join('')}
         </div>`
     } catch(e) {
@@ -363,7 +363,7 @@ export async function renderConfig(container, page) {
   window.executarImportAsaas = async function() {
     if (!(await confirmarModal({ titulo: 'Importar do Asaas?', texto: 'Confirmar importação? Perfis existentes serão atualizados com dados do Asaas.', confirmar: 'Importar', perigo: false }))) return
     const status = document.getElementById('asaas-status')
-    status.textContent = '⏳ Importando...'
+    status.textContent = 'Importando...'
     try {
       const clientes = await buscarClientesAsaas()
       let criados = 0, atualizados = 0, erros = 0
@@ -396,7 +396,7 @@ export async function renderConfig(container, page) {
         }
       }
       status.textContent = ''
-      toast(`✓ ${atualizados} atualizados · ${criados} pré-cadastros criados${erros?` · ${erros} erros`:''}`)
+      toast(`${atualizados}atualizados · ${criados}pré-cadastros criados${erros?`· ${erros}erros`:''}`)
       document.getElementById('asaas-preview').innerHTML = ''
     } catch(e) {
       status.textContent = ''
@@ -440,9 +440,9 @@ export async function renderConfig(container, page) {
         }
       }
       if (status) status.textContent = ''
-      toast(`✓ ${total} feriados sincronizados (${ano} e ${ano+1})`
-        + (totalOcsCanceladas > 0 ? ` · ${totalOcsCanceladas} aula(s) cancelada(s) automaticamente` : '')
-        + (totalConfsEstornadas > 0 ? ` · ${totalConfsEstornadas} crédito(s) estornado(s)` : ''))
+      toast(`${total}feriados sincronizados (${ano}e ${ano+1})`
+        + (totalOcsCanceladas > 0 ? `· ${totalOcsCanceladas}aula(s) cancelada(s) automaticamente` : '')
+        + (totalConfsEstornadas > 0 ? `· ${totalConfsEstornadas}crédito(s) estornado(s)` : ''))
     } catch(e) {
       if (status) status.textContent = ''
       toast('Erro: ' + e.message)

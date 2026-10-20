@@ -142,36 +142,36 @@ function _renderPreviaHTML(a) {
   const tiposF   = acimaDe50(a.tipos_yoga || []).map(t => ({ ...t, termo: traduzirTipo(t.termo) }))
 
   return `
-    <div style="background:#fff;border-radius:12px;overflow:hidden">
+    <div style="background:var(--superficie);border-radius:12px;overflow:hidden">
       <div style="background:var(--verde);padding:16px 18px">
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-          ${a.numero ? `<span style="font-size:10px;background:rgba(242,236,206,.15);color:var(--bege);padding:2px 8px;border-radius:20px">Aula ${a.numero}</span>` : ''}
-          ${a.data_aula ? `<span style="font-size:10px;background:rgba(242,236,206,.15);color:var(--bege);padding:2px 8px;border-radius:20px">${new Date(a.data_aula+'T12:00').toLocaleDateString('pt-BR')}</span>` : ''}
-          ${a.modalidade ? `<span style="font-size:10px;background:rgba(242,236,206,.15);color:var(--bege);padding:2px 8px;border-radius:20px">${esc(a.modalidade)}</span>` : ''}
-          ${a.duracao ? `<span style="font-size:10px;background:rgba(242,236,206,.15);color:var(--bege);padding:2px 8px;border-radius:20px">${a.duracao}</span>` : ''}
+          ${a.numero ? `<span style="font-size:12px;background:rgba(242,236,206,.15);color:var(--bege);padding:2px 8px;border-radius:20px">Aula ${a.numero}</span>` : ''}
+          ${a.data_aula ? `<span style="font-size:12px;background:rgba(242,236,206,.15);color:var(--bege);padding:2px 8px;border-radius:20px">${new Date(a.data_aula+'T12:00').toLocaleDateString('pt-BR')}</span>` : ''}
+          ${a.modalidade ? `<span style="font-size:12px;background:rgba(242,236,206,.15);color:var(--bege);padding:2px 8px;border-radius:20px">${esc(a.modalidade)}</span>` : ''}
+          ${a.duracao ? `<span style="font-size:12px;background:rgba(242,236,206,.15);color:var(--bege);padding:2px 8px;border-radius:20px">${a.duracao}</span>` : ''}
         </div>
         <p style="font-size:13px;color:var(--bege);font-style:italic;margin:0;font-family:'Cormorant Garamond',serif">${esc(descricao)}</p>
       </div>
       <div style="padding:16px 18px">
         ${introItens.length ? `
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:8px">Abertura da prática</div>
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:8px">Abertura da prática</div>
           <div style="margin-bottom:16px">
             ${introItens.map((it,i) => `<div style="display:flex;gap:8px;padding:6px 0;border-bottom:${i<introItens.length-1?'1px solid rgba(212,200,158,.3)':'none'};font-size:12px">
               <span style="font-weight:500;min-width:110px;flex-shrink:0">${esc(it.termo)}</span><span>${linkify(it.desc)}</span>
             </div>`).join('')}
           </div>` : ''}
-        ${a.link_tummee ? `<div style="background:#f9f7f0;border-radius:8px;padding:10px 12px;margin-bottom:16px;font-size:11px;word-break:break-all">🔗 ${linkify(a.link_tummee)}</div>` : ''}
+        ${a.link_tummee ? `<div style="background:var(--superficie-2);border-radius:8px;padding:10px 12px;margin-bottom:16px;font-size:12px;word-break:break-all"><i class="ti ti-link" aria-hidden="true"></i> ${linkify(a.link_tummee)}</div>` : ''}
         ${(a.pranayama||[]).length ? `
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:8px">Prāṇāyāma</div>
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:8px">Prāṇāyāma</div>
           <div style="margin-bottom:16px">${a.pranayama.map(it=>`<div style="font-size:12px;padding:4px 0"><strong>${esc(it.termo)}</strong>: ${linkify(it.desc)}</div>`).join('')}</div>` : ''}
         ${(a.mantra||[]).length ? `
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:8px">Mantra</div>
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:8px">Mantra</div>
           <div style="margin-bottom:16px">${a.mantra.map(it=>`<div style="font-size:12px;padding:4px 0"><strong>${esc(it.termo)}</strong>: ${linkify(it.desc)}</div>`).join('')}</div>` : ''}
-        ${musculosF.length ? `<div style="font-size:11px;margin-bottom:6px"><strong>Músculos Principais:</strong> ${musculosF.map(m=>`${esc(m.termo)} (${m.percentual}%)`).join(' · ')}</div>` : ''}
-        ${tiposF.length ? `<div style="font-size:11px;margin-bottom:6px"><strong>Tipos de Āsana:</strong> ${tiposF.map(t=>`${esc(t.termo)} (${t.percentual}%)`).join(' · ')}</div>` : ''}
-        ${koshas.length ? `<div style="font-size:11px;margin-bottom:6px"><strong>Koshas Principais:</strong> ${koshas.map(k=>`${esc(k.termo)} (${k.percentual}%)`).join(' · ')}</div>` : ''}
-        ${chakras.length ? `<div style="font-size:11px;margin-bottom:6px"><strong>Chakras Principais:</strong> ${chakras.map(k=>`${esc(k.termo)} (${k.percentual}%)`).join(' · ')}</div>` : ''}
-        ${gunasF.length ? `<div style="font-size:11px"><strong>Gunas:</strong> ${gunasF.map(k=>`${esc(k.termo)} (${k.percentual}%)`).join(' · ')}</div>` : ''}
+        ${musculosF.length ? `<div style="font-size:12px;margin-bottom:6px"><strong>Músculos Principais:</strong> ${musculosF.map(m=>`${esc(m.termo)} (${m.percentual}%)`).join(' · ')}</div>` : ''}
+        ${tiposF.length ? `<div style="font-size:12px;margin-bottom:6px"><strong>Tipos de Āsana:</strong> ${tiposF.map(t=>`${esc(t.termo)} (${t.percentual}%)`).join(' · ')}</div>` : ''}
+        ${koshas.length ? `<div style="font-size:12px;margin-bottom:6px"><strong>Koshas Principais:</strong> ${koshas.map(k=>`${esc(k.termo)} (${k.percentual}%)`).join(' · ')}</div>` : ''}
+        ${chakras.length ? `<div style="font-size:12px;margin-bottom:6px"><strong>Chakras Principais:</strong> ${chakras.map(k=>`${esc(k.termo)} (${k.percentual}%)`).join(' · ')}</div>` : ''}
+        ${gunasF.length ? `<div style="font-size:12px"><strong>Gunas:</strong> ${gunasF.map(k=>`${esc(k.termo)} (${k.percentual}%)`).join(' · ')}</div>` : ''}
       </div>
     </div>`
 }
@@ -186,7 +186,7 @@ export async function renderAsanaAdmin(container, page) {
 
   if (error) {
     container.innerHTML = `<div class="topbar"><div class="topbar-t">Āsana Mārga</div></div>
-      <div class="content"><p style="color:#c0392b">Erro: ${esc(error.message)}</p></div>`
+      <div class="content"><p style="color:var(--err-vivo)">Erro: ${esc(error.message)}</p></div>`
     return
   }
 
@@ -196,19 +196,19 @@ export async function renderAsanaAdmin(container, page) {
     const a = porSlot[slot]
     const vazio = !a || !a.modalidade
     return `
-      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px 20px;margin-bottom:16px">
+      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:18px 20px;margin-bottom:16px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <div>
-            <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${SLOT_INFO[slot].label}</div>
-            <div style="font-size:11px;color:var(--txt2)">${esc(SLOT_INFO[slot].sub)}</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--titulo)">${SLOT_INFO[slot].label}</div>
+            <div style="font-size:12px;color:var(--txt2)">${esc(SLOT_INFO[slot].sub)}</div>
           </div>
           <div style="display:flex;gap:6px">
             ${!vazio ? `<button onclick="previaAsana(${slot})"
-              style="padding:6px 12px;background:rgba(31,56,31,.08);color:var(--verde);border:none;
-                     border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Ver como o aluno vê">👁 Prévia</button>` : ''}
+              style="padding:6px 12px;background:rgba(31,56,31,.08);color:var(--titulo);border:none;
+                     border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Ver como o aluno vê"><i class="ti ti-eye" aria-hidden="true"></i> Prévia</button>` : ''}
             ${!vazio ? `<button onclick="abrirEdicaoAsana(${slot})"
-              style="padding:6px 12px;background:#e8f4e8;color:#1a5a1a;border:none;
-                     border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Editar os dados já salvos, sem novo PDF">✎ Editar</button>` : ''}
+              style="padding:6px 12px;background:var(--ok-bg);color:var(--ok-fg);border:none;
+                     border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Editar os dados já salvos, sem novo PDF"><i class="ti ti-pencil" aria-hidden="true"></i> Editar</button>` : ''}
             <button onclick="abrirFormAsana(${slot})"
               style="padding:6px 14px;background:var(--verde);color:var(--bege);border:none;
                      border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
@@ -220,9 +220,9 @@ export async function renderAsanaAdmin(container, page) {
         ${vazio
           ? `<div style="font-size:13px;color:var(--txt2)">Nenhum conteúdo cadastrado ainda.</div>`
           : `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-               <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">Aula ${a.numero || '—'}</span>
-               ${a.data_aula ? `<span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${new Date(a.data_aula+'T12:00').toLocaleDateString('pt-BR')}</span>` : ''}
-               ${a.modalidade ? `<span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${esc(a.modalidade)}</span>` : ''}
+               <span style="font-size:12px;background:rgba(31,56,31,.07);color:var(--titulo);padding:3px 10px;border-radius:20px">Aula ${a.numero || '—'}</span>
+               ${a.data_aula ? `<span style="font-size:12px;background:rgba(31,56,31,.07);color:var(--titulo);padding:3px 10px;border-radius:20px">${new Date(a.data_aula+'T12:00').toLocaleDateString('pt-BR')}</span>` : ''}
+               ${a.modalidade ? `<span style="font-size:12px;background:rgba(31,56,31,.07);color:var(--titulo);padding:3px 10px;border-radius:20px">${esc(a.modalidade)}</span>` : ''}
              </div>
              <div style="font-size:12px;color:var(--txt2);line-height:1.6">${gerarDescricao(a)}</div>`
         }
@@ -243,7 +243,7 @@ export async function renderAsanaAdmin(container, page) {
       <div style="width:560px;max-width:100%;margin:auto">
         <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
           <button onclick="document.getElementById('modal-previa-asana').style.display='none'"
-            style="background:#fff;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:18px">×</button>
+            style="background:var(--superficie);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:18px">×</button>
         </div>
         <div id="previa-asana-body"></div>
       </div>
@@ -253,14 +253,14 @@ export async function renderAsanaAdmin(container, page) {
     <div id="modal-asana" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.6);
                                    z-index:200;align-items:flex-start;justify-content:center;
                                    padding:16px;overflow-y:auto">
-      <div style="background:#fff;border-radius:12px;width:680px;max-width:100%;margin:auto">
+      <div style="background:var(--superficie);border-radius:12px;width:680px;max-width:100%;margin:auto">
         <div style="background:var(--verde);padding:16px 20px;border-radius:12px 12px 0 0;
                     display:flex;align-items:center;justify-content:space-between;
                     position:sticky;top:0;z-index:1">
           <div>
             <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;
                         color:var(--bege)" id="asana-modal-titulo">Cadastrar aula</div>
-            <div style="font-size:11px;color:rgba(242,236,206,.6);margin-top:2px">
+            <div style="font-size:12px;color:rgba(242,236,206,.6);margin-top:2px">
               Envie o PDF de estatísticas do Tummee — a IA extrai e interpreta os campos
             </div>
           </div>
@@ -272,31 +272,31 @@ export async function renderAsanaAdmin(container, page) {
           <div id="am-etapa-1">
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px">
               <div style="display:flex;flex-direction:column;gap:4px">
-                <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Nº da aula</label>
+                <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Nº da aula</label>
                 <input type="number" id="am-numero" min="1"
                   style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">
               </div>
               <div style="display:flex;flex-direction:column;gap:4px">
-                <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Duração</label>
+                <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Duração</label>
                 <input id="am-duracao" placeholder="ex: 60 minutos"
                   style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">
               </div>
               <div style="display:flex;flex-direction:column;gap:4px">
-                <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Link Tummee</label>
+                <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Link Tummee</label>
                 <input id="am-link" placeholder="https://tummee.com/..."
                   style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">
               </div>
             </div>
 
             <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
-              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">PDF do Tummee</label>
+              <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">PDF do Tummee</label>
               <input type="file" id="am-pdf-file" accept="application/pdf"
                 style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:12px;font-family:'DM Sans',sans-serif">
-              <div id="am-pdf-status" style="font-size:10px;color:var(--txt2)"></div>
+              <div id="am-pdf-status" style="font-size:12px;color:var(--txt2)"></div>
             </div>
 
             <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:16px">
-              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">
+              <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">
                 Texto extraído (revise antes de interpretar, se quiser)
               </label>
               <textarea id="am-texto-bruto" rows="10" placeholder="Envie o PDF acima, ou cole o texto manualmente aqui..."
@@ -448,7 +448,7 @@ Regras:
       document.getElementById('am-etapa-1').style.display = 'none'
       document.getElementById('am-etapa-2').style.display = 'block'
       _mostrarBotaoSalvar()
-      toast('✓ Campos extraídos — revise e salve')
+      toast('Campos extraídos — revise e salve')
     } catch(e) {
       toast('Erro: ' + e.message)
       btn.disabled = false
@@ -459,9 +459,9 @@ Regras:
   function _montarCamposRevisao(p) {
     const f = (label, el, dica = '') => `
       <div style="display:flex;flex-direction:column;gap:4px">
-        <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">${label}</label>
+        <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">${label}</label>
         ${el}
-        ${dica ? `<div style="font-size:10px;color:var(--txt2)">${dica}</div>` : ''}
+        ${dica ? `<div style="font-size:12px;color:var(--txt2)">${dica}</div>` : ''}
       </div>`
     const inp = (id, val = '', ph = '') =>
       `<input id="${id}" value="${esc(val)}" placeholder="${esc(ph)}"
@@ -478,12 +478,12 @@ Regras:
 
     document.getElementById('am-etapa-2').innerHTML = `
       <div style="background:rgba(31,56,31,.04);border-radius:8px;padding:10px 14px;margin-bottom:16px;
-                  font-size:12px;color:var(--verde)">
+                  font-size:12px;color:var(--titulo)">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
           <i class="ti ti-sparkles"></i>
           <span>Estatísticas extraídas. Descrição gerada automaticamente a partir delas (abaixo).</span>
         </div>
-        <p style="margin:0;font-style:italic;color:var(--verde)">${gerarDescricao(dadosPreview)}</p>
+        <p style="margin:0;font-style:italic;color:var(--titulo)">${gerarDescricao(dadosPreview)}</p>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -492,22 +492,22 @@ Regras:
         </div>
 
         <div style="border-top:1px solid var(--borda);padding-top:14px">
-          <div style="font-size:11px;font-weight:500;color:var(--verde);margin-bottom:10px">Abertura da prática · Kriya · Aquecimento (itens 13/14)</div>
+          <div style="font-size:12px;font-weight:500;color:var(--titulo);margin-bottom:10px">Abertura da prática · Kriya · Aquecimento (itens 13/14)</div>
           ${f('Uma linha por item — "Termo: descrição"', ta('am-introducao', introducaoTexto, 6), 'Pré-preenchido com o padrão semanal. Ajuste o Kriya e o Aquecimento conforme a aula.')}
         </div>
 
         <div style="border-top:1px solid var(--borda);padding-top:14px">
-          <div style="font-size:11px;font-weight:500;color:var(--verde);margin-bottom:10px">Prāṇāyāma (item 16)</div>
+          <div style="font-size:12px;font-weight:500;color:var(--titulo);margin-bottom:10px">Prāṇāyāma (item 16)</div>
           ${f('', ta('am-pranayama', _fmtListaTermoDesc(porSlot[window._asanaSlotAtual]?.pranayama), 3))}
         </div>
 
         <div style="border-top:1px solid var(--borda);padding-top:14px">
-          <div style="font-size:11px;font-weight:500;color:var(--verde);margin-bottom:10px">Mantra adicional (opcional)</div>
+          <div style="font-size:12px;font-weight:500;color:var(--titulo);margin-bottom:10px">Mantra adicional (opcional)</div>
           ${f('', ta('am-mantra', _fmtListaTermoDesc(porSlot[window._asanaSlotAtual]?.mantra), 2))}
         </div>
 
         <div style="border-top:1px solid var(--borda);padding-top:14px">
-          <div style="font-size:11px;font-weight:500;color:var(--verde);margin-bottom:10px">Estatísticas extraídas do PDF (uma linha = termo: percentual). Só as acima de 50% aparecem para o aluno.</div>
+          <div style="font-size:12px;font-weight:500;color:var(--titulo);margin-bottom:10px">Estatísticas extraídas do PDF (uma linha = termo: percentual). Só as acima de 50% aparecem para o aluno.</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             ${f('Músculos', ta('am-musculos', _fmtListaPercentual(p.musculos), 6))}
             ${f('Tipos de Āsana', ta('am-tipos-yoga', _fmtListaPercentual(p.tipos_yoga), 5))}
@@ -524,7 +524,7 @@ Regras:
     document.getElementById('asana-modal-footer').innerHTML = `
       <button onclick="voltarEtapa1Asana()"
         style="padding:8px 16px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer;margin-right:auto">
-        ← Novo PDF
+        <i class="ti ti-arrow-left" aria-hidden="true"></i> Novo PDF
       </button>
       <button onclick="fecharFormAsana()"
         style="padding:8px 16px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
@@ -570,7 +570,7 @@ Regras:
 
     const { error: err } = await sb.from('asana_praticas').upsert(payload, { onConflict: 'slot' })
     if (err) { toast('Erro: ' + err.message); return }
-    toast('✓ Salvo!')
+    toast('Salvo!')
     fecharFormAsana()
     navigate('asana-admin')
   }

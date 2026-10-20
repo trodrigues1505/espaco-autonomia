@@ -62,44 +62,44 @@ export async function renderTimeline(container, page) {
     <div class="content">
       ${podePostar ? renderComposeBox(perfil, isAdmin, isProf) : ''}
       ${(isAdmin || isProf) ? `
-        <button id="btn-criar-enquete" style="width:100%;padding:10px 14px;background:#fff;border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12px;color:var(--verde);cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;margin-bottom:14px">
-          📊 Criar enquete
+        <button id="btn-criar-enquete" style="width:100%;padding:10px 14px;background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12px;color:var(--titulo);cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;margin-bottom:14px">
+          <i class="ti ti-chart-bar" aria-hidden="true"></i> Criar enquete
         </button>` : ''}
       ${isAdmin ? `
-        <button id="btn-moderacao" style="width:100%;padding:10px 14px;background:#fff8f0;border:1px solid #f0d9b5;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12px;color:#e67e22;cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-          <span>📋 Posts aguardando moderação</span>
-          <span id="mod-count" style="background:#e67e22;color:#fff;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:600">0</span>
+        <button id="btn-moderacao" style="width:100%;padding:10px 14px;background:var(--superficie-2);border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12px;color:var(--warn-vivo);cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <span><i class="ti ti-clipboard-list" aria-hidden="true"></i> Posts aguardando moderação</span>
+          <span id="mod-count" style="background:#b0510d;color:#fff;border-radius:10px;padding:1px 8px;font-size:12px;font-weight:600">0</span>
         </button>` : ''}
       <div id="tl-enquetes-container"></div>
       <div id="tl-feed-container">
         <div class="loading-page" style="padding:40px 0"><div class="spin-big"></div></div>
       </div>
       <div id="tl-load-more" style="text-align:center;margin-top:14px;display:none">
-        <button id="btn-carregar-mais" style="padding:8px 18px;background:#fff;border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12px;color:var(--txt2);cursor:pointer">Carregar mais</button>
+        <button id="btn-carregar-mais" style="padding:8px 18px;background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12px;color:var(--txt2);cursor:pointer">Carregar mais</button>
       </div>
     </div>
     <div id="modal-criar-enquete" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.7);z-index:400;align-items:center;justify-content:center;padding:16px">
-      <div style="background:#fff;border-radius:12px;width:460px;max-width:100%;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">
+      <div style="background:var(--superficie);border-radius:12px;width:460px;max-width:100%;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">
         <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)">Nova enquete</div>
           <button onclick="document.getElementById('modal-criar-enquete').style.display='none'" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
         </div>
         <div style="overflow-y:auto;flex:1;padding:18px 20px">
-          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Pergunta</label>
+          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Pergunta</label>
           <textarea id="enq-pergunta" rows="2" placeholder="Ex: Qual horário vocês preferem para a aula extra de sábado?"
             style="width:100%;margin-top:5px;margin-bottom:14px;border:1px solid var(--borda);border-radius:6px;padding:9px 11px;font-size:13px;font-family:'DM Sans',sans-serif;resize:none"></textarea>
-          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Opções</label>
+          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Opções</label>
           <div id="enq-opcoes-lista" style="display:flex;flex-direction:column;gap:6px;margin-top:5px"></div>
-          <button id="btn-enq-add-opcao" style="margin-top:8px;padding:7px 12px;background:rgba(31,56,31,.06);color:var(--verde);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">+ Adicionar opção</button>
+          <button id="btn-enq-add-opcao" style="margin-top:8px;padding:7px 12px;background:rgba(31,56,31,.06);color:var(--titulo);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">+ Adicionar opção</button>
         </div>
         <div style="padding:14px 20px;border-top:1px solid var(--borda);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0">
-          <button onclick="document.getElementById('modal-criar-enquete').style.display='none'" style="padding:8px 16px;background:#fff;border:1px solid var(--borda);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;color:var(--txt2)">Cancelar</button>
+          <button onclick="document.getElementById('modal-criar-enquete').style.display='none'" style="padding:8px 16px;background:var(--superficie);border:1px solid var(--borda);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;color:var(--txt2)">Cancelar</button>
           <button id="btn-enq-publicar" style="padding:8px 18px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500">Publicar enquete</button>
         </div>
       </div>
     </div>
     <div id="modal-votos-enquete" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.7);z-index:400;align-items:center;justify-content:center;padding:16px">
-      <div style="background:#fff;border-radius:12px;width:440px;max-width:100%;max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
+      <div style="background:var(--superficie);border-radius:12px;width:440px;max-width:100%;max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
         <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)">Votos individuais</div>
           <button onclick="document.getElementById('modal-votos-enquete').style.display='none'" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
@@ -108,7 +108,7 @@ export async function renderTimeline(container, page) {
       </div>
     </div>
     <div id="modal-lista-pessoas" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.7);z-index:400;align-items:center;justify-content:center;padding:16px">
-      <div style="background:#fff;border-radius:12px;width:400px;max-width:100%;max-height:75vh;display:flex;flex-direction:column;overflow:hidden">
+      <div style="background:var(--superficie);border-radius:12px;width:400px;max-width:100%;max-height:75vh;display:flex;flex-direction:column;overflow:hidden">
         <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)" id="lista-pessoas-titulo">—</div>
           <button onclick="document.getElementById('modal-lista-pessoas').style.display='none'" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
@@ -156,7 +156,7 @@ export async function renderTimeline(container, page) {
       salvos:         { tabela: 'timeline_salvos',        campoData: 'criado_em' },
       visualizacoes:  { tabela: 'timeline_visualizacoes', campoData: 'visualizado_em' },
     }[tipo]
-    if (!config) { body.innerHTML = '<p style="font-size:12px;color:#c0392b">Tipo inválido.</p>'; return }
+    if (!config) { body.innerHTML = '<p style="font-size:12px;color:var(--err-vivo)">Tipo inválido.</p>'; return }
 
     const { data, error } = await sb
       .from(config.tabela)
@@ -164,13 +164,13 @@ export async function renderTimeline(container, page) {
       .eq('post_id', postId)
       .order(config.campoData, { ascending: true })
 
-    if (error) { body.innerHTML = `<p style="font-size:12px;color:#c0392b">Erro: ${escapeHtml(error.message)}</p>`; return }
+    if (error) { body.innerHTML = `<p style="font-size:12px;color:var(--err-vivo)">Erro: ${escapeHtml(error.message)}</p>`; return }
     if (!data?.length) { body.innerHTML = '<p style="font-size:12px;color:var(--txt2)">Ninguém ainda.</p>'; return }
 
     body.innerHTML = data.map(r => `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(212,200,158,.3)">
         <span style="font-size:13px;font-weight:500;color:var(--txt)">${escapeHtml(r.perfil?.nome || '—')}</span>
-        <span style="font-size:11px;color:var(--txt2)">${new Date(r[config.campoData]).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })}</span>
+        <span style="font-size:12px;color:var(--txt2)">${new Date(r[config.campoData]).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })}</span>
       </div>`).join('')
   }
 
@@ -254,7 +254,7 @@ export async function renderTimeline(container, page) {
 
     if (error) { toast('Erro: ' + error.message); return }
     document.getElementById('modal-criar-enquete').style.display = 'none'
-    toast('✓ Enquete publicada')
+    toast('Enquete publicada')
     await carregarEnquetes()
   }
 
@@ -309,7 +309,7 @@ export async function renderTimeline(container, page) {
         return `
           <div style="margin-bottom:8px">
             <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
-              <span style="color:${marcada ? 'var(--verde)' : 'var(--txt)'};font-weight:${marcada ? '600' : '400'}">${marcada ? '✓ ' : ''}${escapeHtml(o.texto)}</span>
+              <span style="color:${marcada ? 'var(--titulo)' : 'var(--txt)'};font-weight:${marcada ? '600' : '400'}">${marcada ? '<i class="ti ti-check" aria-hidden="true"></i> ' : ''}${escapeHtml(o.texto)}</span>
               <span style="color:var(--txt2)">${pct}% · ${o.votos}</span>
             </div>
             <div style="height:8px;background:rgba(31,56,31,.07);border-radius:99px;overflow:hidden">
@@ -327,27 +327,27 @@ export async function renderTimeline(container, page) {
     const acaoVotar = (!enq.encerrada && !jaVotou) ? `
       <button id="btn-enq-votar-${enq.id}" style="width:100%;margin-top:6px;padding:9px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500">Confirmar voto</button>
     ` : (!enq.encerrada && jaVotou) ? `
-      <button id="btn-enq-votar-${enq.id}" style="width:100%;margin-top:6px;padding:8px;background:none;color:var(--txt2);border:1px solid var(--borda);border-radius:6px;font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer">Alterar meu voto</button>
+      <button id="btn-enq-votar-${enq.id}" style="width:100%;margin-top:6px;padding:8px;background:none;color:var(--txt2);border:1px solid var(--borda);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer">Alterar meu voto</button>
     ` : ''
 
     const rodapeGestao = podeGerenciar ? `
       <div style="display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--borda);flex-wrap:wrap">
-        <button id="btn-enq-votos-${enq.id}" style="padding:5px 10px;background:rgba(31,56,31,.06);color:var(--verde);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">🔍 Ver votos individuais</button>
-        ${!enq.encerrada ? `<button id="btn-enq-encerrar-${enq.id}" style="padding:5px 10px;background:none;color:var(--txt2);border:1px solid var(--borda);border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">Encerrar</button>` : ''}
-        ${isAdmin ? `<button id="btn-enq-excluir-${enq.id}" style="padding:5px 10px;background:none;color:#c0392b;border:1px solid #f0c0c0;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">Excluir</button>` : ''}
+        <button id="btn-enq-votos-${enq.id}" style="padding:5px 10px;background:rgba(31,56,31,.06);color:var(--titulo);border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="ti ti-search" aria-hidden="true"></i> Ver votos individuais</button>
+        ${!enq.encerrada ? `<button id="btn-enq-encerrar-${enq.id}" style="padding:5px 10px;background:none;color:var(--txt2);border:1px solid var(--borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Encerrar</button>` : ''}
+        ${isAdmin ? `<button id="btn-enq-excluir-${enq.id}" style="padding:5px 10px;background:none;color:var(--err-vivo);border:1px solid var(--err-borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Excluir</button>` : ''}
       </div>` : ''
 
     return `
-      <div class="tl-enquete-card" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+      <div class="tl-enquete-card" style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">
           <div>
-            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);margin-bottom:3px">📊 Enquete · ${escapeHtml(enq.criadoPorNome)}${enq.encerrada ? ' · encerrada' : ''}</div>
-            <div style="font-size:14px;font-weight:600;color:var(--verde);line-height:1.4">${escapeHtml(enq.pergunta)}</div>
+            <div style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);margin-bottom:3px"><i class="ti ti-chart-bar" aria-hidden="true"></i> Enquete · ${escapeHtml(enq.criadoPorNome)}${enq.encerrada ? ' · encerrada' : ''}</div>
+            <div style="font-size:14px;font-weight:600;color:var(--titulo);line-height:1.4">${escapeHtml(enq.pergunta)}</div>
           </div>
         </div>
         ${opcoesHtml}
         ${acaoVotar}
-        <div style="font-size:10px;color:var(--txt2);margin-top:8px">${enq.totalParticipantes} pessoa(s) votaram · pode marcar mais de uma opção</div>
+        <div style="font-size:12px;color:var(--txt2);margin-top:8px">${enq.totalParticipantes} pessoa(s) votaram · pode marcar mais de uma opção</div>
         ${rodapeGestao}
       </div>`
   }
@@ -357,7 +357,7 @@ export async function renderTimeline(container, page) {
     if (!checks.length) { toast('Marque pelo menos uma opção'); return }
     const { data, error } = await sb.rpc('votar_enquete_multipla', { p_enquete_id: enqId, p_opcoes_ids: checks })
     if (error || !data?.ok) { toast('❌ ' + (data?.motivo || error?.message)); return }
-    toast('✓ Voto registrado')
+    toast('Voto registrado')
     await carregarEnquetes()
   }
 
@@ -389,7 +389,7 @@ export async function renderTimeline(container, page) {
       .eq('enquete_id', enqId)
       .order('votado_em', { ascending: true })
 
-    if (error) { body.innerHTML = `<p style="color:#c0392b;font-size:12px">Erro: ${esc(error.message)}</p>`; return }
+    if (error) { body.innerHTML = `<p style="color:var(--err-vivo);font-size:12px">Erro: ${esc(error.message)}</p>`; return }
     if (!data?.length) { body.innerHTML = `<p style="font-size:12px;color:var(--txt2)">Ninguém votou ainda.</p>`; return }
 
     // Agrupa por aluno (múltipla escolha = várias linhas por pessoa)
@@ -401,11 +401,11 @@ export async function renderTimeline(container, page) {
     }
 
     body.innerHTML = `
-      <div style="font-size:11px;color:var(--txt2);margin-bottom:12px">${escapeHtml(pergunta)}</div>
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">${escapeHtml(pergunta)}</div>
       ${[...porAluno.entries()].map(([nome, opcoes]) => `
         <div style="padding:9px 12px;background:rgba(31,56,31,.03);border-radius:6px;margin-bottom:6px">
-          <div style="font-size:12px;font-weight:600;color:var(--verde)">${escapeHtml(nome)}</div>
-          <div style="font-size:11px;color:var(--txt2);margin-top:2px">${opcoes.map(escapeHtml).join(' · ')}</div>
+          <div style="font-size:12px;font-weight:600;color:var(--titulo)">${escapeHtml(nome)}</div>
+          <div style="font-size:12px;color:var(--txt2);margin-top:2px">${opcoes.map(escapeHtml).join(' · ')}</div>
         </div>`).join('')}
     `
   }
@@ -426,7 +426,7 @@ export async function renderTimeline(container, page) {
     if (!feedEl) return
 
     if (error) {
-      feedEl.innerHTML = `<div style="padding:24px;text-align:center;font-size:12px;color:#c0392b">Erro ao carregar feed: ${esc(error.message)}</div>`
+      feedEl.innerHTML = `<div style="padding:24px;text-align:center;font-size:12px;color:var(--err-vivo)">Erro ao carregar feed: ${esc(error.message)}</div>`
       return
     }
 
@@ -483,11 +483,11 @@ export async function renderTimeline(container, page) {
     modoModeracao = true
 
     if (!data?.length) {
-      feedEl.innerHTML = `<div style="padding:30px 20px;text-align:center;color:var(--txt2);font-size:13px">Nenhum post pendente. ✓</div>`
+      feedEl.innerHTML = `<div style="padding:30px 20px;text-align:center;color:var(--txt2);font-size:13px">Nenhum post pendente. <i class="ti ti-check" aria-hidden="true"></i></div>`
       return
     }
 
-    feedEl.innerHTML = `<div style="font-size:12px;font-weight:600;color:#e67e22;margin-bottom:10px">📋 ${data.length} post(s) pendente(s)</div>`
+    feedEl.innerHTML = `<div style="font-size:12px;font-weight:600;color:var(--warn-vivo);margin-bottom:10px"><i class="ti ti-clipboard-list" aria-hidden="true"></i> ${data.length} post(s) pendente(s)</div>`
     data.forEach(p => {
       const post = {
         id: p.id, autor_id: null, autor_nome: p.autor_nome, autor_tipo: 'aluno', autor_foto: null,
@@ -513,71 +513,71 @@ export async function renderTimeline(container, page) {
   function renderPostCard(post, emModeracao) {
     const fotoHtml = post.autor_foto
       ? `<img src="${urlSegura(post.autor_foto)}" referrerpolicy="no-referrer" style="width:38px;height:38px;border-radius:50%;object-fit:cover">`
-      : `<div style="width:38px;height:38px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--verde)">${esc((post.autor_nome || '?')[0].toUpperCase())}</div>`
+      : `<div style="width:38px;height:38px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--titulo)">${esc((post.autor_nome || '?')[0].toUpperCase())}</div>`
 
     const roleBadgeMap = {
       admin:     { bg: 'var(--verde)',          cor: 'var(--bege)',    label: 'Admin'     },
       professor: { bg: 'var(--dourado)',         cor: 'var(--verde)',   label: 'Professor' },
-      aluno:     { bg: 'rgba(31,56,31,.08)',     cor: 'var(--verde)',   label: 'Aluno'     },
+      aluno:     { bg: 'rgba(31,56,31,.08)',     cor: 'var(--titulo)',  label: 'Aluno'     },
     }
     const rb = roleBadgeMap[post.autor_tipo]
     const roleBadge = rb
-      ? `<span style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;padding:2px 7px;border-radius:10px;background:${rb.bg};color:${rb.cor};margin-left:6px">${rb.label}</span>`
+      ? `<span style="font-size:12px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;padding:2px 7px;border-radius:10px;background:${rb.bg};color:${rb.cor};margin-left:6px">${rb.label}</span>`
       : ''
 
     const pendBadge = post.status === 'pendente'
-      ? `<div style="font-size:11px;color:#e67e22;margin:6px 18px 0;display:flex;align-items:center;gap:5px">⏳ Aguardando aprovação</div>` : ''
+      ? `<div style="font-size:12px;color:var(--warn-vivo);margin:6px 18px 0;display:flex;align-items:center;gap:5px"><i class="ti ti-hourglass" aria-hidden="true"></i> Aguardando aprovação</div>` : ''
 
     const conteudoHtml = post.conteudo
       ? `<div style="padding:12px 18px 0;font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-word;color:var(--txt)">${escapeHtml(post.conteudo)}</div>` : ''
 
     const mediaHtml = renderMedia(post.midia_url, post.midia_tipo)
 
-    const curtidoColor = post.eu_curti  ? '#e74c3c'        : 'var(--txt2)'
+    const curtidoColor = post.eu_curti  ? 'var(--err-vivo)'        : 'var(--txt2)'
     const salvoColor   = post.eu_salvei ? 'var(--dourado)' : 'var(--txt2)'
 
     const btnCurtir = `<button class="tl-btn-curtir" data-post="${post.id}" data-curtido="${post.eu_curti}"
       style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;color:${curtidoColor}">
-      ❤️ ${post.total_curtidas ?? 0}</button>`
+      <i class="ti ti-heart" aria-hidden="true"></i> ${post.total_curtidas ?? 0}</button>`
 
     const btnComentar = podeComentar
       ? `<button class="tl-btn-comentar" data-post="${post.id}"
           style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--txt2)">
-          💬 ${post.total_comentarios ?? 0}</button>`
+          <i class="ti ti-message-circle" aria-hidden="true"></i> ${post.total_comentarios ?? 0}</button>`
       : `<button disabled title="Disponível a partir do plano Shiva"
           style="flex:1;padding:8px;border:none;background:none;font-size:12px;color:var(--txt2);opacity:.4">
-          💬 ${post.total_comentarios ?? 0}</button>`
+          <i class="ti ti-message-circle" aria-hidden="true"></i> ${post.total_comentarios ?? 0}</button>`
 
     const btnSalvar = podeSalvar
       ? `<button class="tl-btn-salvar" data-post="${post.id}" data-salvo="${post.eu_salvei}"
           style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;color:${salvoColor}">
-          🔖 ${post.eu_salvei ? 'Salvo' : 'Salvar'}</button>`
+          <i class="ti ti-bookmark" aria-hidden="true"></i> ${post.eu_salvei ? 'Salvo' : 'Salvar'}</button>`
       : `<button disabled title="Disponível a partir do plano Brahma"
           style="flex:1;padding:8px;border:none;background:none;font-size:12px;color:var(--txt2);opacity:.4">
-          🔖 Salvar</button>`
+          <i class="ti ti-bookmark" aria-hidden="true"></i> Salvar</button>`
 
     // Botão excluir: admin/prof sempre; autor do próprio post também pode
     const ehAutor = post.autor_id === perfil.id
     const btnExcluir = (podeExcluir || ehAutor)
       ? `<button class="tl-btn-excluir-post" data-post="${post.id}"
-          style="padding:4px 8px;border:none;background:none;cursor:pointer;font-size:11px;color:var(--txt2);border-radius:4px"
-          title="Excluir post">🗑</button>`
+          style="padding:4px 8px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--txt2);border-radius:4px"
+          title="Excluir post"><i class="ti ti-trash" aria-hidden="true"></i></button>`
       : ''
 
     // Linha admin-only: acesso rápido a "quem curtiu / salvou / visualizou" (item 2).
     // Não aparece pra professor nem aluno — só admin enxerga essas listas.
     const adminStatsRow = (isAdmin && post.status !== 'pendente') ? `
-      <div style="display:flex;gap:14px;padding:7px 18px;border-top:1px solid rgba(212,200,158,.2);font-size:10px;color:var(--txt2)">
-        <span style="cursor:pointer" onclick="window._abrirListaPessoas('curtidas','${post.id}','Quem curtiu')">❤️ ver quem curtiu</span>
-        <span style="cursor:pointer" onclick="window._abrirListaPessoas('salvos','${post.id}','Quem salvou')">🔖 ver quem salvou</span>
-        <span style="cursor:pointer" onclick="window._abrirListaPessoas('visualizacoes','${post.id}','Quem visualizou')">👁 ver quem visualizou</span>
+      <div style="display:flex;gap:14px;padding:7px 18px;border-top:1px solid rgba(212,200,158,.2);font-size:12px;color:var(--txt2)">
+        <span style="cursor:pointer" onclick="window._abrirListaPessoas('curtidas','${post.id}','Quem curtiu')"><i class="ti ti-heart" aria-hidden="true"></i> ver quem curtiu</span>
+        <span style="cursor:pointer" onclick="window._abrirListaPessoas('salvos','${post.id}','Quem salvou')"><i class="ti ti-bookmark" aria-hidden="true"></i> ver quem salvou</span>
+        <span style="cursor:pointer" onclick="window._abrirListaPessoas('visualizacoes','${post.id}','Quem visualizou')"><i class="ti ti-eye" aria-hidden="true"></i> ver quem visualizou</span>
       </div>` : ''
 
     const modBar = emModeracao ? `
-      <div style="display:flex;gap:8px;padding:10px 18px;border-top:1px solid var(--borda);background:#fff8f0">
-        <span style="flex:1;font-size:11px;color:#e67e22;display:flex;align-items:center">Moderar este post:</span>
-        <button class="tl-btn-aprovar" data-post="${post.id}" style="padding:6px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer">Aprovar</button>
-        <button class="tl-btn-rejeitar" data-post="${post.id}" style="padding:6px 14px;background:#fff;color:#c0392b;border:1px solid #f5c1c1;border-radius:6px;font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer">Rejeitar</button>
+      <div style="display:flex;gap:8px;padding:10px 18px;border-top:1px solid var(--borda);background:var(--superficie-2)">
+        <span style="flex:1;font-size:12px;color:var(--warn-vivo);display:flex;align-items:center">Moderar este post:</span>
+        <button class="tl-btn-aprovar" data-post="${post.id}" style="padding:6px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer">Aprovar</button>
+        <button class="tl-btn-rejeitar" data-post="${post.id}" style="padding:6px 14px;background:var(--superficie);color:var(--err-vivo);border:1px solid var(--err-borda);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer">Rejeitar</button>
       </div>` : ''
 
     // ── Comentários ──────────────────────────────────────────
@@ -597,12 +597,12 @@ export async function renderTimeline(container, page) {
 
     return `
       <div class="tl-post-card" id="tl-post-${post.id}"
-        style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);margin-bottom:14px;overflow:hidden;${post.status === 'pendente' ? 'border-left:3px solid #e67e22' : ''}">
+        style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);margin-bottom:14px;overflow:hidden;${post.status === 'pendente' ? 'border-left:3px solid var(--warn-vivo)' : ''}">
         <div style="display:flex;align-items:center;gap:10px;padding:14px 18px 0">
           ${fotoHtml}
           <div style="flex:1">
             <div><span style="font-size:13px;font-weight:600;color:var(--txt)">${escapeHtml(post.autor_nome || 'Usuário')}</span>${roleBadge}</div>
-            <div style="font-size:11px;color:var(--txt2);margin-top:1px">${formatarData(post.criado_em)}</div>
+            <div style="font-size:12px;color:var(--txt2);margin-top:1px">${formatarData(post.criado_em)}</div>
           </div>
           ${btnExcluir}
         </div>
@@ -632,7 +632,7 @@ export async function renderTimeline(container, page) {
     if (tipo === 'imagem') {
       return `<div style="margin-top:12px;cursor:zoom-in;position:relative" onclick="window._tlAbrirLightbox('${urlSegura(url)}')" title="Clique para ampliar">
         <img src="${urlSegura(url)}" referrerpolicy="no-referrer" style="width:100%;max-height:420px;object-fit:cover;display:block" loading="lazy" onerror="this.parentElement.remove()">
-        <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);border-radius:20px;padding:3px 8px;font-size:10px;color:#fff;display:flex;align-items:center;gap:4px;pointer-events:none">
+        <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);border-radius:20px;padding:3px 8px;font-size:12px;color:#fff;display:flex;align-items:center;gap:4px;pointer-events:none">
           <i class="ti ti-zoom-in" style="font-size:12px"></i> ampliar
         </div>
       </div>`
@@ -652,8 +652,8 @@ export async function renderTimeline(container, page) {
       return `<div style="margin-top:12px;border:1px solid var(--borda);border-radius:8px;overflow:hidden">
         <iframe src="${viewer}" style="width:100%;height:420px;border:none;display:block" loading="lazy"></iframe>
         <a href="${urlSegura(url)}" target="_blank" rel="noopener"
-          style="display:flex;align-items:center;gap:6px;padding:8px 12px;font-size:11px;color:var(--txt2);background:rgba(31,56,31,.03);text-decoration:none">
-          <span>📄</span><span>Abrir PDF em nova aba</span>
+          style="display:flex;align-items:center;gap:6px;padding:8px 12px;font-size:12px;color:var(--txt2);background:rgba(31,56,31,.03);text-decoration:none">
+          <span><i class="ti ti-file-text" aria-hidden="true"></i></span><span>Abrir PDF em nova aba</span>
         </a>
       </div>`
     }
@@ -661,7 +661,7 @@ export async function renderTimeline(container, page) {
     return `<div style="margin:12px 18px 0">
       <a href="${urlSegura(url)}" target="_blank" rel="noopener"
         style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(31,56,31,.04);border:1px solid var(--borda);border-radius:6px;text-decoration:none;color:var(--txt);font-size:12px">
-        <span>🔗</span><span style="word-break:break-all">${urlSegura(url)}</span>
+        <span><i class="ti ti-link" aria-hidden="true"></i></span><span style="word-break:break-all">${urlSegura(url)}</span>
       </a>
     </div>`
   }
@@ -776,7 +776,7 @@ export async function renderTimeline(container, page) {
     btn.style.color = !salvo ? 'var(--dourado)' : 'var(--txt2)'
     btn.innerHTML = `🔖 ${!salvo ? 'Salvo' : 'Salvar'}`
     btn.disabled = false
-    toast(salvo ? 'Removido dos salvos' : 'Post salvo 🔖')
+    toast(salvo ? 'Removido dos salvos' : 'Post salvo')
   }
 
   // Correção 1 (item 1 do bug report): ao abrir a seção de comentários,
@@ -807,7 +807,7 @@ export async function renderTimeline(container, page) {
   async function carregarComentarios(postId) {
     const list = document.getElementById(`tl-comments-list-${postId}`)
     if (!list) return
-    list.innerHTML = `<div style="font-size:11px;color:var(--txt2)">Carregando...</div>`
+    list.innerHTML = `<div style="font-size:12px;color:var(--txt2)">Carregando...</div>`
 
     const { data, error } = await sb.rpc('get_comentarios_post', { p_post_id: postId })
 
@@ -823,21 +823,21 @@ export async function renderTimeline(container, page) {
     listAfter.innerHTML = data.map(c => {
       const btnExcluirComentario = podeExcluir
         ? `<button class="tl-btn-excluir-comentario" data-comentario="${c.comentario_id}"
-            style="background:none;border:none;cursor:pointer;font-size:10px;color:var(--txt2);padding:0 0 0 6px"
-            title="Excluir comentário">🗑</button>`
+            style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--txt2);padding:0 0 0 6px"
+            title="Excluir comentário"><i class="ti ti-trash" aria-hidden="true"></i></button>`
         : ''
       return `
         <div style="display:flex;gap:8px;margin-bottom:10px">
-          <div style="width:26px;height:26px;border-radius:50%;background:rgba(31,56,31,.08);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--verde);flex-shrink:0">
+          <div style="width:26px;height:26px;border-radius:50%;background:rgba(31,56,31,.08);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--titulo);flex-shrink:0">
             ${esc((c.autor_nome || '?')[0].toUpperCase())}
           </div>
           <div style="flex:1;background:rgba(31,56,31,.03);border-radius:6px;padding:7px 10px">
             <div style="display:flex;align-items:center;gap:4px">
-              <span style="font-size:11px;font-weight:600;color:var(--verde)">${escapeHtml(c.autor_nome)}</span>
+              <span style="font-size:12px;font-weight:600;color:var(--titulo)">${escapeHtml(c.autor_nome)}</span>
               ${btnExcluirComentario}
             </div>
             <div style="font-size:12px;color:var(--txt);margin-top:2px;line-height:1.5;white-space:pre-wrap;word-break:break-word">${escapeHtml(c.comentario_text)}</div>
-            <div style="font-size:10px;color:var(--txt2);margin-top:3px">${formatarData(c.comentario_em)}</div>
+            <div style="font-size:12px;color:var(--txt2);margin-top:3px">${formatarData(c.comentario_em)}</div>
           </div>
         </div>`
     }).join('')
@@ -866,7 +866,7 @@ export async function renderTimeline(container, page) {
       .select('id', { count: 'exact', head: true }).eq('post_id', postId)
     const btn = document.querySelector(`.tl-btn-comentar[data-post="${postId}"]`)
     if (btn) btn.innerHTML = `💬 ${count ?? 0}`
-    toast('Comentário enviado 💬')
+    toast('Comentário enviado')
   }
 
   async function excluirPost(postId) {
@@ -894,7 +894,7 @@ export async function renderTimeline(container, page) {
   async function moderarPost(postId, acao) {
     const { error } = await sb.rpc('moderar_post_timeline', { p_post_id: postId, p_acao: acao })
     if (error) { toast('Erro: ' + error.message); return }
-    toast(acao === 'aprovar' ? 'Post aprovado ✓' : 'Post rejeitado')
+    toast(acao === 'aprovar' ? 'Post aprovado' : 'Post rejeitado')
     document.getElementById(`tl-post-${postId}`)?.remove()
     await atualizarContadorPendentes()
   }
@@ -925,7 +925,7 @@ export async function renderTimeline(container, page) {
       toast('Post publicado 🌿')
       await carregarFeed(false)
     } else {
-      toast('Post enviado para aprovação ⏳')
+      toast('Post enviado para aprovação')
     }
   }
 
@@ -966,14 +966,14 @@ export async function renderTimeline(container, page) {
 function renderComposeBox(perfil, isAdmin, isProf) {
   const fotoHtml = perfil.foto_url
     ? `<img src="${urlSegura(perfil.foto_url)}" referrerpolicy="no-referrer" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`
-    : `<div style="width:36px;height:36px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--verde)">${esc(perfil.nome[0].toUpperCase())}</div>`
+    : `<div style="width:36px;height:36px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--titulo)">${esc(perfil.nome[0].toUpperCase())}</div>`
 
   const noticeHtml = (!isAdmin && !isProf)
-    ? `<div style="font-size:11px;color:#e67e22;margin-top:8px;display:flex;align-items:center;gap:5px">⏳ Seu post passará por aprovação antes de aparecer no feed.</div>`
+    ? `<div style="font-size:12px;color:var(--warn-vivo);margin-top:8px;display:flex;align-items:center;gap:5px"><i class="ti ti-hourglass" aria-hidden="true"></i> Seu post passará por aprovação antes de aparecer no feed.</div>`
     : ''
 
   return `
-    <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px;margin-bottom:16px">
+    <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px;margin-bottom:16px">
       <div style="display:flex;gap:10px;align-items:flex-start">
         ${fotoHtml}
         <textarea id="tl-compose-texto" rows="3" placeholder="Compartilhe algo com a comunidade..."
@@ -983,7 +983,7 @@ function renderComposeBox(perfil, isAdmin, isProf) {
         style="width:100%;margin-top:10px;border:1px solid var(--borda);border-radius:6px;padding:8px 10px;font-size:12px;font-family:'DM Sans',sans-serif;box-sizing:border-box">
       ${noticeHtml}
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px">
-        <button id="btn-tl-cancelar" style="padding:7px 16px;background:#fff;border:1px solid var(--borda);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--txt2);cursor:pointer">Cancelar</button>
+        <button id="btn-tl-cancelar" style="padding:7px 16px;background:var(--superficie);border:1px solid var(--borda);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--txt2);cursor:pointer">Cancelar</button>
         <button id="btn-tl-postar" style="padding:7px 18px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500">Publicar</button>
       </div>
     </div>

@@ -33,7 +33,7 @@ export async function renderJnanaAdmin(container, page) {
 
   if (error) {
     container.innerHTML = `<div class="topbar"><div class="topbar-t">Jñāna Mārga</div></div>
-      <div class="content"><p style="color:#c0392b">Erro: ${esc(error.message)}</p></div>`
+      <div class="content"><p style="color:var(--err-vivo)">Erro: ${esc(error.message)}</p></div>`
     return
   }
 
@@ -70,9 +70,9 @@ export async function renderJnanaAdmin(container, page) {
   }
 
   function badgeStatus(iso) {
-    if (iso === hoje) return `<span style="background:#e8f4e8;color:#1a5a1a;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600">✓ Hoje</span>`
-    if (iso > hoje)  return `<span style="background:rgba(232,188,79,.15);color:#7a5a10;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500">⏳ Agendada</span>`
-    return `<span style="background:rgba(31,56,31,.07);color:var(--txt2);padding:2px 8px;border-radius:20px;font-size:10px">Publicado</span>`
+    if (iso === hoje) return `<span style="background:var(--ok-bg);color:var(--ok-fg);padding:2px 8px;border-radius:20px;font-size:12px;font-weight:600"><i class="ti ti-check" aria-hidden="true"></i> Hoje</span>`
+    if (iso > hoje)  return `<span style="background:rgba(232,188,79,.15);color:var(--warn-fg);padding:2px 8px;border-radius:20px;font-size:12px;font-weight:500"><i class="ti ti-hourglass" aria-hidden="true"></i> Agendada</span>`
+    return `<span style="background:rgba(31,56,31,.07);color:var(--txt2);padding:2px 8px;border-radius:20px;font-size:12px">Publicado</span>`
   }
 
   function selectCapitulo(id, ordemSelecionada) {
@@ -98,12 +98,12 @@ export async function renderJnanaAdmin(container, page) {
       ${!hojePublicado
         ? `<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);
                       border-radius:8px;padding:12px 16px;margin-bottom:16px;
-                      display:flex;align-items:center;gap:10px;font-size:13px;color:#7a5a10">
-             <i class="ti ti-alert-triangle" style="color:var(--dourado);font-size:18px"></i>
+                      display:flex;align-items:center;gap:10px;font-size:13px;color:var(--warn-fg)">
+             <i class="ti ti-alert-triangle" style="color:var(--dourado-texto);font-size:18px"></i>
              <span>Nenhum sutra publicado hoje. <strong>Cadastre o sutra do dia.</strong></span>
            </div>`
-        : `<div style="background:#e8f4e8;border:1px solid #b8ddb8;border-radius:8px;
-                      padding:12px 16px;margin-bottom:16px;font-size:13px;color:#1a5a1a;
+        : `<div style="background:var(--ok-bg);border:1px solid var(--ok-borda);border-radius:8px;
+                      padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--ok-fg);
                       display:flex;align-items:center;gap:10px">
              <i class="ti ti-check" style="font-size:18px"></i>
              <span>Sutra de hoje: <strong>${esc(hojePublicado.capitulo)} ${_labelNumero(hojePublicado)} — ${esc(hojePublicado.transliteracao)}</strong></span>
@@ -112,34 +112,34 @@ export async function renderJnanaAdmin(container, page) {
 
       <!-- Stats -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">
-        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Total publicados</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--verde)">${publicados.length}</div>
+        <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Total publicados</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--titulo)">${publicados.length}</div>
         </div>
-        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Agendados (futuros)</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:${futuros.length > 0 ? '#BA7517' : 'var(--txt2)'}">
+        <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Agendados (futuros)</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:${futuros.length > 0 ? 'var(--warn-fg)' : 'var(--txt2)'}">
             ${futuros.length}
           </div>
           ${futuros.length > 0
-            ? `<div style="font-size:10px;color:#BA7517;margin-top:2px">próximo: ${fmtDia(futuros[0].publicada_em)}</div>`
-            : `<div style="font-size:10px;color:var(--txt2);margin-top:2px">nenhum na fila</div>`}
+            ? `<div style="font-size:12px;color:var(--warn-fg);margin-top:2px">próximo: ${fmtDia(futuros[0].publicada_em)}</div>`
+            : `<div style="font-size:12px;color:var(--txt2);margin-top:2px">nenhum na fila</div>`}
         </div>
-        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Próx. dia útil livre</div>
-          <div style="font-size:13px;font-weight:500;color:var(--verde);margin-top:4px">${fmtDia(proximoLivre)}</div>
-          <div style="font-size:10px;color:var(--txt2);margin-top:2px">${proximoLivre}</div>
+        <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Próx. dia útil livre</div>
+          <div style="font-size:13px;font-weight:500;color:var(--titulo);margin-top:4px">${fmtDia(proximoLivre)}</div>
+          <div style="font-size:12px;color:var(--txt2);margin-top:2px">${proximoLivre}</div>
         </div>
       </div>
 
       <!-- Lista agrupada -->
       ${futuros.length > 0 ? `
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#BA7517;font-weight:500;margin-bottom:8px">
-          ⏳ Agendados — visíveis somente na data
+        <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--warn-fg);font-weight:500;margin-bottom:8px">
+          <i class="ti ti-hourglass" aria-hidden="true"></i> Agendados — visíveis somente na data
         </div>
-        <div style="background:#fff;border:1px solid rgba(232,188,79,.4);border-radius:var(--r);overflow:hidden;margin-bottom:18px">
+        <div style="background:var(--superficie);border:1px solid rgba(232,188,79,.4);border-radius:var(--r);overflow-x:auto;margin-bottom:18px">
           <div style="display:grid;grid-template-columns:1fr 150px 130px 110px;padding:8px 18px;
-                      background:rgba(232,188,79,.08);font-size:10px;text-transform:uppercase;
+                      background:rgba(232,188,79,.08);font-size:12px;text-transform:uppercase;
                       letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
             <span>Sutra</span><span>Capítulo</span><span>Data agendada</span><span>Ação</span>
           </div>
@@ -149,36 +149,36 @@ export async function renderJnanaAdmin(container, page) {
                         border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
               <div>
                 <div style="font-weight:500;color:var(--txt)">${esc(s.capitulo)} ${_labelNumero(s)}</div>
-                <div style="font-size:10px;color:var(--txt2);margin-top:1px;font-style:italic">${esc(s.transliteracao)}</div>
+                <div style="font-size:12px;color:var(--txt2);margin-top:1px;font-style:italic">${esc(s.transliteracao)}</div>
               </div>
-              <span style="color:var(--txt2);font-size:11px">${esc(s.capitulo)}</span>
+              <span style="color:var(--txt2);font-size:12px">${esc(s.capitulo)}</span>
               <div style="display:flex;flex-direction:column;gap:3px">
                 <input type="date" value="${s.publicada_em}" id="data-${s.id}"
                   style="border:1px solid var(--borda);border-radius:5px;padding:4px 8px;
-                         font-size:11px;font-family:'DM Sans',sans-serif;color:var(--txt);
+                         font-size:12px;font-family:'DM Sans',sans-serif;color:var(--txt);
                          width:130px">
                 <button onclick="reagendarSutra('${s.id}')"
-                  style="padding:2px 8px;background:rgba(232,188,79,.15);color:#7a5a10;
-                         border:1px solid rgba(232,188,79,.4);border-radius:4px;font-size:10px;
+                  style="padding:2px 8px;background:rgba(232,188,79,.15);color:var(--warn-fg);
+                         border:1px solid rgba(232,188,79,.4);border-radius:4px;font-size:12px;
                          cursor:pointer;font-family:'DM Sans',sans-serif">Reagendar</button>
               </div>
               <div style="display:flex;gap:4px">
                 <button onclick="previaSutra('${s.id}')"
-                  style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--verde);border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Prévia">👁</button>
+                  style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--titulo);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Prévia"><i class="ti ti-eye" aria-hidden="true"></i></button>
                 <button onclick="editarSutra('${s.id}')"
-                  style="padding:3px 8px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✎</button>
+                  style="padding:3px 8px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-pencil" aria-hidden="true"></i></button>
                 <button onclick="excluirSutra(this.dataset.id, this.dataset.rotulo)" data-id="${esc(s.id)}" data-rotulo="${esc(s.capitulo)} ${esc(_labelNumero(s))}"
-                  style="padding:3px 8px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✕</button>
+                  style="padding:3px 8px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-x" aria-hidden="true"></i></button>
               </div>
             </div>`).join('')}
         </div>` : ''}
 
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:8px">
+      <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:8px">
         Publicados (${publicados.length})
       </div>
-      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden">
+      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);overflow-x:auto">
         <div style="display:grid;grid-template-columns:1fr 150px 130px 80px;padding:8px 18px;
-                    background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;
+                    background:rgba(242,236,206,.45);font-size:12px;text-transform:uppercase;
                     letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
           <span>Sutra</span><span>Capítulo</span><span>Publicado em</span><span>Ação</span>
         </div>
@@ -192,17 +192,17 @@ export async function renderJnanaAdmin(container, page) {
                         background:${isHoje ? 'rgba(232,188,79,.05)' : 'transparent'}">
                 <div>
                   <div style="font-weight:500;color:var(--txt)">${esc(s.capitulo)} ${_labelNumero(s)}</div>
-                  <div style="font-size:10px;color:var(--txt2);margin-top:1px;font-style:italic">${esc(s.transliteracao)}</div>
+                  <div style="font-size:12px;color:var(--txt2);margin-top:1px;font-style:italic">${esc(s.transliteracao)}</div>
                 </div>
-                <span style="color:var(--txt2);font-size:11px">${esc(s.capitulo)}</span>
-                <div>${badgeStatus(s.publicada_em)}<div style="font-size:10px;color:var(--txt2);margin-top:2px">${fmtDia(s.publicada_em)}</div></div>
+                <span style="color:var(--txt2);font-size:12px">${esc(s.capitulo)}</span>
+                <div>${badgeStatus(s.publicada_em)}<div style="font-size:12px;color:var(--txt2);margin-top:2px">${fmtDia(s.publicada_em)}</div></div>
                 <div style="display:flex;gap:4px">
                   <button onclick="previaSutra('${s.id}')"
-                    style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--verde);border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Prévia">👁</button>
+                    style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--titulo);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Prévia"><i class="ti ti-eye" aria-hidden="true"></i></button>
                   <button onclick="editarSutra('${s.id}')"
-                    style="padding:3px 8px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✎</button>
+                    style="padding:3px 8px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-pencil" aria-hidden="true"></i></button>
                   <button onclick="excluirSutra(this.dataset.id, this.dataset.rotulo)" data-id="${esc(s.id)}" data-rotulo="${esc(s.capitulo)} ${esc(_labelNumero(s))}"
-                    style="padding:3px 8px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✕</button>
+                    style="padding:3px 8px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-x" aria-hidden="true"></i></button>
                 </div>
               </div>`
             }).join('')
@@ -214,7 +214,7 @@ export async function renderJnanaAdmin(container, page) {
     <div id="modal-jnana" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.6);
                                    z-index:200;align-items:flex-start;justify-content:center;
                                    padding:16px;overflow-y:auto">
-      <div style="background:#fff;border-radius:12px;width:680px;max-width:100%;margin:auto">
+      <div style="background:var(--superficie);border-radius:12px;width:680px;max-width:100%;margin:auto">
 
         <div style="background:var(--verde);padding:16px 20px;border-radius:12px 12px 0 0;
                     display:flex;align-items:center;justify-content:space-between;
@@ -222,7 +222,7 @@ export async function renderJnanaAdmin(container, page) {
           <div>
             <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;
                         color:var(--bege)" id="jnana-modal-titulo">Novo Sutra</div>
-            <div style="font-size:11px;color:rgba(242,236,206,.6);margin-top:2px">
+            <div style="font-size:12px;color:rgba(242,236,206,.6);margin-top:2px">
               Cole o texto (ONDE ESTAMOS / sânscrito / COMENTÁRIO / NA PRÁTICA) e a IA extrai os campos
             </div>
           </div>
@@ -234,12 +234,12 @@ export async function renderJnanaAdmin(container, page) {
           <div id="jn-etapa-1">
             <div style="display:grid;grid-template-columns:1fr 100px;gap:12px;margin-bottom:12px">
               <div style="display:flex;flex-direction:column;gap:4px">
-                <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;
+                <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;
                                color:var(--txt2);font-weight:500">Capítulo</label>
                 ${selectCapitulo('jn-capitulo', capituloSugerido)}
               </div>
               <div style="display:flex;flex-direction:column;gap:4px">
-                <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;
+                <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;
                                color:var(--txt2);font-weight:500">Nº sutra</label>
                 <input type="number" id="jn-numero" min="1" value="${numeroSugerido}"
                   style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
@@ -247,7 +247,7 @@ export async function renderJnanaAdmin(container, page) {
               </div>
             </div>
             <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
-              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;
+              <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;
                              color:var(--txt2);font-weight:500">Cole o texto completo do sutra</label>
               <textarea id="jn-texto-bruto" rows="14" placeholder="Cole aqui: ONDE ESTAMOS / sânscrito+transliteração+tradução / COMENTÁRIO / NA PRÁTICA..."
                 style="border:1px solid var(--borda);border-radius:6px;padding:10px 12px;font-size:13px;
@@ -255,12 +255,12 @@ export async function renderJnanaAdmin(container, page) {
                        line-height:1.6"></textarea>
             </div>
             <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:16px">
-              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;
+              <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;
                              color:var(--txt2);font-weight:500">Data de publicação</label>
               <input type="date" id="jn-data-pub" value="${proximoLivre}"
                 style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
                        font-family:'DM Sans',sans-serif;outline:none;width:200px">
-              <div style="font-size:10px;color:var(--txt2)">
+              <div style="font-size:12px;color:var(--txt2)">
                 Próximo dia útil livre: <strong>${fmtDia(proximoLivre)}</strong>.
                 Sutras com data futura ficam invisíveis para alunos até lá.
               </div>
@@ -294,7 +294,7 @@ export async function renderJnanaAdmin(container, page) {
     if (!novaData) { toast('Selecione uma data'); return }
     const { error: err } = await sb.from('jnana_sutras').update({ publicada_em: novaData }).eq('id', id)
     if (err) { toast('Erro: ' + err.message); return }
-    toast('✓ Data atualizada para ' + fmtDia(novaData))
+    toast('Data atualizada para' + fmtDia(novaData))
     navigate('jnana-admin')
   }
 
@@ -324,7 +324,7 @@ export async function renderJnanaAdmin(container, page) {
     div.style.cssText = 'position:fixed;inset:0;background:rgba(31,56,31,.7);z-index:300;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto'
     const comentarioHtml = (s.comentario||'').split(/\n\s*\n/).map(p => `<p style="margin:0 0 10px">${p}</p>`).join('')
     div.innerHTML = `
-      <div style="background:#fff;border-radius:12px;width:560px;max-width:100%;margin:auto;overflow:hidden">
+      <div style="background:var(--superficie);border-radius:12px;width:560px;max-width:100%;margin:auto;overflow:hidden">
         <div style="background:var(--verde);padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
           <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--bege)">Prévia — visão do aluno</div>
           <button onclick="document.getElementById('modal-previa-jnana').remove()"
@@ -332,20 +332,20 @@ export async function renderJnanaAdmin(container, page) {
         </div>
         <div style="padding:18px">
           <div style="background:var(--verde);border-radius:10px;padding:16px;margin-bottom:14px">
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:rgba(242,236,206,.55);margin-bottom:8px">✦ ${esc(s.capitulo)} · sutra ${_labelNumero(s)} · ${fmtDia(s.publicada_em)}</div>
+            <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:rgba(242,236,206,.55);margin-bottom:8px"><i class="ti ti-sparkles" aria-hidden="true"></i> ${esc(s.capitulo)} · sutra ${_labelNumero(s)} · ${fmtDia(s.publicada_em)}</div>
             ${s.contexto_capitulo ? `<div style="font-size:12px;color:rgba(242,236,206,.75);line-height:1.6;margin-bottom:12px;font-style:italic">${esc(s.contexto_capitulo)}</div>` : ''}
             <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--bege);direction:ltr">${esc(s.texto_devanagari)}</div>
             <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:rgba(242,236,206,.8);margin-top:4px">${esc(s.transliteracao)}</div>
             <div style="font-size:13px;color:rgba(242,236,206,.9);margin-top:8px">${esc(s.traducao)}</div>
           </div>
           ${s.comentario ? `
-            <div style="margin-bottom:12px;background:#f9f7f0;border-radius:8px;padding:12px 14px">
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Comentário</div>
+            <div style="margin-bottom:12px;background:var(--superficie-2);border-radius:8px;padding:12px 14px">
+              <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Comentário</div>
               <div style="font-size:13px;color:var(--txt);line-height:1.7">${esc(comentarioHtml)}</div>
             </div>` : ''}
           ${s.pratica ? `
-            <div style="background:#f9f7f0;border-radius:8px;padding:12px 14px">
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Na prática</div>
+            <div style="background:var(--superficie-2);border-radius:8px;padding:12px 14px">
+              <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Na prática</div>
               <p style="font-size:13px;color:var(--txt);line-height:1.7;margin:0">${esc(s.pratica)}</p>
             </div>` : ''}
         </div>
@@ -440,7 +440,7 @@ try {
       document.getElementById('jn-etapa-1').style.display = 'none'
       document.getElementById('jn-etapa-2').style.display = 'block'
       _mostrarBotaoSalvar()
-      toast('✓ Campos extraídos — revise e salve')
+      toast('Campos extraídos — revise e salve')
     } catch(e) {
       toast('Erro: ' + e.message)
       btn.disabled = false
@@ -451,10 +451,10 @@ try {
   function _montarCamposRevisao(s) {
     const f = (label, el, dica = '') => `
       <div style="display:flex;flex-direction:column;gap:4px">
-        <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;
+        <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;
                        color:var(--txt2);font-weight:500">${label}</label>
         ${el}
-        ${dica ? `<div style="font-size:10px;color:var(--txt2)">${dica}</div>` : ''}
+        ${dica ? `<div style="font-size:12px;color:var(--txt2)">${dica}</div>` : ''}
       </div>`
     const inp = (id, val = '', ph = '') =>
       `<input id="${id}" value="${esc(val)}" placeholder="${esc(ph)}"
@@ -467,7 +467,7 @@ try {
 
     document.getElementById('jn-etapa-2').innerHTML = `
       <div style="background:rgba(31,56,31,.04);border-radius:8px;padding:10px 14px;
-                  margin-bottom:16px;font-size:12px;color:var(--verde);
+                  margin-bottom:16px;font-size:12px;color:var(--titulo);
                   display:flex;align-items:center;gap:8px">
         <i class="ti ti-sparkles"></i>
         <span>Campos extraídos pela IA. Revise e corrija se necessário antes de salvar.</span>
@@ -502,7 +502,7 @@ try {
       <button onclick="voltarEtapa1()"
         style="padding:8px 16px;background:transparent;border:1px solid var(--borda);
                border-radius:6px;font-size:12px;cursor:pointer;margin-right:auto">
-        ← Novo texto
+        <i class="ti ti-arrow-left" aria-hidden="true"></i> Novo texto
       </button>
       <button onclick="fecharFormJnana()"
         style="padding:8px 16px;background:transparent;border:1px solid var(--borda);
@@ -563,7 +563,7 @@ try {
       ;({ error: err } = await sb.from('jnana_sutras').insert(payload))
     }
     if (err) { toast('Erro: ' + err.message); return }
-    toast('✓ Sutra salvo!')
+    toast('Sutra salvo!')
     fecharFormJnana()
     navigate('jnana-admin')
   }
@@ -572,7 +572,7 @@ try {
     if (!(await confirmarModal({ titulo: 'Excluir?', texto: `Excluir "${nome}"? Esta ação não pode ser desfeita.`, confirmar: 'Excluir', perigo: true }))) return
     const { error: err } = await sb.from('jnana_sutras').delete().eq('id', id)
     if (err) { toast('Erro: ' + err.message); return }
-    toast('✓ Sutra excluído.')
+    toast('Sutra excluído.')
     navigate('jnana-admin')
   }
 }   

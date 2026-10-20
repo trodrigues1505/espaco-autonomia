@@ -139,7 +139,7 @@ function _btnSalvar(onclick) {
   return `
     <button onclick="${onclick}"
       style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;
-             background:#fff;color:var(--verde);border:1px solid var(--borda);
+             background:var(--superficie);color:var(--titulo);border:1px solid var(--borda);
              border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
              font-weight:500">
       <i class="ti ti-download"></i> Salvar PDF
@@ -155,42 +155,42 @@ function _imprimirHTML(titulo, html) {
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
     <style>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
-      body { font-family: 'DM Sans', sans-serif; font-size: 11px; color: #1F381F;
-             background: #fff; padding: 20px 28px; max-width: 700px; margin: 0 auto }
+      body { font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--txt);
+             background: var(--superficie); padding: 20px 28px; max-width: 700px; margin: 0 auto }
       h1 { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 500;
-           color: #1F381F; margin-bottom: 4px }
+           color: var(--txt); margin-bottom: 4px }
       h2 { font-family: 'Cormorant Garamond', serif; font-size: 14px; font-weight: 500;
-           color: #1F381F; margin: 10px 0 5px; border-bottom: 1px solid #d4c89e; padding-bottom: 3px }
-      p  { line-height: 1.6; color: #444; margin-bottom: 6px; font-size: 11px }
-      .meta { font-size: 10px; color: #7a7a6a; margin-bottom: 12px; display: flex; gap: 8px; flex-wrap: wrap }
-      .meta span { background: #f0ede4; padding: 2px 7px; border-radius: 20px }
-      .secao { margin-bottom: 8px; padding: 8px 12px; background: #fafaf7;
+           color: var(--txt); margin: 10px 0 5px; border-bottom: 1px solid var(--borda); padding-bottom: 3px }
+      p  { line-height: 1.6; color: var(--txt); margin-bottom: 6px; font-size: 12px }
+      .meta { font-size: 12px; color: var(--txt2); margin-bottom: 12px; display: flex; gap: 8px; flex-wrap: wrap }
+      .meta span { background: var(--neutro-bg); padding: 2px 7px; border-radius: 20px }
+      .secao { margin-bottom: 8px; padding: 8px 12px; background: var(--superficie-2);
                border-left: 3px solid #1F381F; border-radius: 0 6px 6px 0 }
       .item { display: flex; gap: 8px; padding: 3px 0;
-              border-bottom: 1px solid #e8e4d8; font-size: 11px; line-height: 1.4 }
+              border-bottom: 1px solid var(--borda); font-size: 12px; line-height: 1.4 }
       .item:last-child { border-bottom: none }
-      .item-termo { font-weight: 500; min-width: 110px; flex-shrink: 0; color: #1F381F }
-      .item-desc  { color: #555 }
-      .citacao { border-left: 3px solid #e8bc4f; background: #fdf8ec;
+      .item-termo { font-weight: 500; min-width: 110px; flex-shrink: 0; color: var(--txt) }
+      .item-desc  { color: var(--txt2) }
+      .citacao { border-left: 3px solid #e8bc4f; background: var(--superficie-2);
                  padding: 8px 12px; border-radius: 0 8px 8px 0; margin: 10px 0;
                  font-family: 'Cormorant Garamond', serif; font-size: 13px;
-                 font-style: italic; color: #1F381F; line-height: 1.5 }
-      .reflexao { background: #1F381F; color: #f2ecce; padding: 12px 16px;
+                 font-style: italic; color: var(--txt); line-height: 1.5 }
+      .reflexao { background: var(--verde); color: #f2ecce; padding: 12px 16px;
                   border-radius: 8px; margin-top: 14px; font-style: italic;
                   font-family: 'Cormorant Garamond', serif; font-size: 13px; line-height: 1.6 }
-      .reflexao-label { font-size: 9px; text-transform: uppercase; letter-spacing: .8px;
+      .reflexao-label { font-size: 12px; text-transform: uppercase; letter-spacing: .8px;
                         color: rgba(242,236,206,.55); margin-bottom: 4px; font-style: normal;
                         font-family: 'DM Sans', sans-serif }
-      .rodape { margin-top: 16px; padding-top: 8px; border-top: 1px solid #d4c89e;
-                font-size: 9px; color: #aaa; text-align: center }
-      .tummee-link { background: #1F381F; color: #f2ecce; padding: 8px 12px;
-                     border-radius: 6px; margin: 8px 0; font-size: 11px; word-break: break-all }
+      .rodape { margin-top: 16px; padding-top: 8px; border-top: 1px solid var(--borda);
+                font-size: 12px; color: var(--txt2); text-align: center }
+      .tummee-link { background: var(--verde); color: #f2ecce; padding: 8px 12px;
+                     border-radius: 6px; margin: 8px 0; font-size: 12px; word-break: break-all }
       img.postura { width: 100%; max-height: 160px; object-fit: cover;
                     object-position: center top; border-radius: 6px; margin-bottom: 10px;
                     display: block; page-break-inside: avoid }
       @media print {
         @page { margin: 1cm; size: A4 }
-        body { padding: 0; font-size: 10px }
+        body { padding: 0; font-size: 12px }
         h1 { font-size: 20px }
         h2 { font-size: 13px; margin: 8px 0 4px }
         .secao { padding: 6px 10px; margin-bottom: 6px }
@@ -233,7 +233,7 @@ function _renderIntro(campo, onContinuar) {
     animation:_ya-slide-in .3s ease
   `
   div.innerHTML = `
-    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;
+    <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;
                 color:rgba(242,236,206,.55);margin-bottom:8px;font-weight:500">O que é este benefício</div>
     <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;
                 color:var(--bege);margin-bottom:10px">${esc(intro.titulo)}</div>
@@ -242,7 +242,7 @@ function _renderIntro(campo, onContinuar) {
       style="padding:10px 22px;background:var(--bege);color:var(--verde);border:none;
              border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;
              font-family:'DM Sans',sans-serif">
-      Continuar →
+      Continuar <i class="ti ti-arrow-right" aria-hidden="true"></i>
     </button>
   `
   const content = document.querySelector('.content') || document.getElementById('main-area')
@@ -263,7 +263,7 @@ export async function renderAlunosBeneficios(container, page) {
 
   if (!b) {
     container.innerHTML = `<div class="topbar"><div class="topbar-t">Dharma Phala</div></div>
-      <div class="content"><p style="color:#c0392b;font-size:13px">Benefício não encontrado: ${slug}</p></div>`
+      <div class="content"><p style="color:var(--err-vivo);font-size:13px">Benefício não encontrado: ${slug}</p></div>`
     return
   }
 
@@ -309,7 +309,7 @@ export async function renderAlunosBeneficios(container, page) {
       div.innerHTML = `
         <div style="background:var(--verde);border-radius:12px;padding:24px 20px;
                     animation:_ya-slide-in .3s ease">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;
                       color:rgba(242,236,206,.55);margin-bottom:8px;font-weight:500">O que é este benefício</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;
                       color:var(--bege);margin-bottom:10px">${esc(intro.titulo)}</div>
@@ -318,7 +318,7 @@ export async function renderAlunosBeneficios(container, page) {
             style="padding:10px 22px;background:var(--bege);color:var(--verde);border:none;
                    border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;
                    font-family:'DM Sans',sans-serif">
-            Continuar →
+            Continuar <i class="ti ti-arrow-right" aria-hidden="true"></i>
           </button>
         </div>`
       container.querySelector('.content').appendChild(div)
@@ -359,7 +359,7 @@ function _stepper(secoes, prefixo) {
           <div style="flex:1">
             <div onclick="window._step_${prefixo}(${idx})" style="cursor:pointer;padding:5px 0 ${aberta?'12px':'16px'}">
               <div style="font-size:13px;font-weight:500;color:${aberta?s.cor:passada?'var(--txt2)':'var(--txt)'};transition:color .3s">${esc(s.titulo)}</div>
-              ${!aberta ? `<div style="font-size:11px;color:var(--txt2);margin-top:2px">${s.itens.length} itens</div>` : ''}
+              ${!aberta ? `<div style="font-size:12px;color:var(--txt2);margin-top:2px">${s.itens.length} itens</div>` : ''}
             </div>
             ${aberta ? `
               <div style="animation:_ya-slide-in .25s ease">
@@ -378,11 +378,11 @@ function _stepper(secoes, prefixo) {
                        style="margin-top:14px;width:100%;padding:9px;background:${s.cor};color:#fff;
                               border:none;border-radius:7px;font-size:12px;font-weight:500;
                               cursor:pointer;font-family:'DM Sans',sans-serif">
-                       Próximo: ${esc(secoes[idx+1].titulo)} →
+                       Próximo: ${esc(secoes[idx+1].titulo)} <i class="ti ti-arrow-right" aria-hidden="true"></i>
                      </button>`
                   : `<div style="margin-top:14px;padding:12px;background:rgba(31,56,31,.06);
                                  border-radius:7px;text-align:center;font-size:12px;color:var(--txt2)">
-                       ✓ Completo
+                       <i class="ti ti-check" aria-hidden="true"></i> Completo
                      </div>`
                 }
               </div>` : ''}
@@ -433,14 +433,14 @@ async function _renderYogaAdhyayana(container) {
     .lte('publicada_em', hoje)
     .order('publicada_em', { ascending: false })
   if (error) {
-    container.querySelector('.content').innerHTML = `<p style="color:#c0392b;font-size:13px">Erro: ${esc(error.message)}</p>`
+    container.querySelector('.content').innerHTML = `<p style="color:var(--err-vivo);font-size:13px">Erro: ${esc(error.message)}</p>`
     return
   }
   if (!linhas || linhas.length === 0) {
     container.querySelector('.content').innerHTML = `
       <div style="text-align:center;padding:48px 24px">
-        <div style="font-size:40px;margin-bottom:12px">📖</div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--verde);margin-bottom:8px">Em breve</div>
+        <div style="font-size:40px;margin-bottom:12px"><i class="ti ti-book" aria-hidden="true"></i></div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--titulo);margin-bottom:8px">Em breve</div>
         <div style="font-size:13px;color:var(--txt2)">O estudo do Yoga Adhyayana chegará em breve.</div>
       </div>`
     return
@@ -452,7 +452,7 @@ async function _renderYogaAdhyayana(container) {
   // Estado de ordenação da tabela de histórico (mantido em closure, sobrevive a re-renders parciais).
   let ordenacao = { campo: 'data', direcao: 'desc' }
 
-  const NIVEL_COR = { 'Iniciante': '#2d7a2d', 'Intermediário': '#c8a020', 'Avançado': '#8a1a1a', 'Novato': '#2d7a2d' }
+  const NIVEL_COR = { 'Iniciante': '#2d7a2d', 'Intermediário': '#c8a020', 'Avançado': 'var(--err-fg)', 'Novato': '#2d7a2d' }
   const NIVEL_BG  = { 'Iniciante': 'rgba(45,122,45,.1)', 'Intermediário': 'rgba(200,160,32,.1)', 'Avançado': 'rgba(138,26,26,.1)', 'Novato': 'rgba(45,122,45,.1)' }
 
   // Monta as seções do stepper a partir dos campos de texto cadastrados no wizard admin.
@@ -460,7 +460,7 @@ async function _renderYogaAdhyayana(container) {
   function _montarSecoes(aula) {
     const secoes = []
     if (aula.origem_simbolismo)
-      secoes.push({ id:'origem', titulo:'Origem e simbolismo', icone:'ti-book', cor:'#BA7517',
+      secoes.push({ id:'origem', titulo:'Origem e simbolismo', icone:'ti-book', cor:'var(--warn-fg)',
         itens: [{ termo: null, desc: aula.origem_simbolismo }] })
 
     const corpoEnergetico = []
@@ -481,7 +481,7 @@ async function _renderYogaAdhyayana(container) {
     if (aula.beneficios_sutis)        beneficios.push({ termo:'Benefícios sutis',           desc: aula.beneficios_sutis })
     if (aula.observacoes_terapeuticas) beneficios.push({ termo:'Observações terapêuticas',  desc: aula.observacoes_terapeuticas })
     if (beneficios.length)
-      secoes.push({ id:'beneficios', titulo:'Benefícios', icone:'ti-heart-filled', cor:'#c0392b', itens: beneficios })
+      secoes.push({ id:'beneficios', titulo:'Benefícios', icone:'ti-heart-filled', cor:'var(--err-vivo)', itens: beneficios })
 
     return secoes
   }
@@ -497,7 +497,7 @@ async function _renderYogaAdhyayana(container) {
     const imgTag = aula.imagem_url ? `<img src="${urlSegura(aula.imagem_url)}" alt="${esc(aula.nome)}" class="postura" referrerpolicy="no-referrer">` : ''
     _imprimirHTML(`Yoga Adhyayana — ${aula.nome}`, `
       <h1>${esc(aula.nome)}</h1>
-      ${aula.nome_alternativo ? `<p style="font-family:'Cormorant Garamond',serif;font-size:14px;font-style:italic;color:#5a7a5a;margin-bottom:6px">${esc(aula.nome_alternativo)}</p>` : ''}
+      ${aula.nome_alternativo ? `<p style="font-family:'Cormorant Garamond',serif;font-size:14px;font-style:italic;color:var(--txt2);margin-bottom:6px">${esc(aula.nome_alternativo)}</p>` : ''}
       <div class="meta"><span>${dataFmt}</span>${aula.nivel ? `<span>${esc(aula.nivel)}</span>` : ''}</div>
       ${imgTag}
       ${secoesHtml}
@@ -522,10 +522,10 @@ async function _renderYogaAdhyayana(container) {
                     background:linear-gradient(to top,rgba(31,56,31,.92) 0%,transparent 100%)">
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;
                       color:var(--bege);line-height:1.2">${esc(aula.nome)}</div>
-          ${aula.nome_alternativo ? `<div style="font-size:11px;color:rgba(242,236,206,.75);margin-top:3px;font-style:italic">${esc(aula.nome_alternativo)}</div>` : ''}
+          ${aula.nome_alternativo ? `<div style="font-size:12px;color:rgba(242,236,206,.75);margin-top:3px;font-style:italic">${esc(aula.nome_alternativo)}</div>` : ''}
         </div>
         <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);
-                    border-radius:20px;padding:3px 8px;font-size:10px;color:#fff;
+                    border-radius:20px;padding:3px 8px;font-size:12px;color:#fff;
                     display:flex;align-items:center;gap:4px">
           <i class="ti ti-zoom-in" style="font-size:12px"></i> ampliar
         </div>
@@ -540,26 +540,26 @@ async function _renderYogaAdhyayana(container) {
     return `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px">
         <div style="display:flex;align-items:center;gap:10px">
-          <span style="font-size:26px">📖</span>
+          <span style="font-size:26px"><i class="ti ti-book" aria-hidden="true"></i></span>
           <div>
-            <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">Yoga Adhyayana</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--titulo)">Yoga Adhyayana</div>
             <div style="font-size:12px;color:var(--txt2)">${isSemana ? 'Postura da semana' : 'Consultando āsana do histórico'}</div>
           </div>
         </div>
         ${_btnSalvar('window._salvarYA()')}
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-        ${isSemana ? `<span style="font-size:11px;background:var(--dourado);color:#4a3300;padding:3px 10px;border-radius:20px;font-weight:500">★ Postura da semana</span>` : ''}
-        <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${dataFmt}</span>
-        ${aula.nivel ? `<span style="font-size:11px;background:${bg};color:${cor};padding:3px 10px;border-radius:20px;font-weight:500">${esc(aula.nivel)}</span>` : ''}
+        ${isSemana ? `<span style="font-size:12px;background:var(--dourado);color:var(--warn-fg);padding:3px 10px;border-radius:20px;font-weight:500"><i class="ti ti-star" aria-hidden="true"></i> Postura da semana</span>` : ''}
+        <span style="font-size:12px;background:rgba(31,56,31,.07);color:var(--titulo);padding:3px 10px;border-radius:20px">${dataFmt}</span>
+        ${aula.nivel ? `<span style="font-size:12px;background:${bg};color:${cor};padding:3px 10px;border-radius:20px;font-weight:500">${esc(aula.nivel)}</span>` : ''}
       </div>
       ${imgHtml}
-      <div id="${containerId}" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px 16px;margin-bottom:16px">
+      <div id="${containerId}" style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:18px 16px;margin-bottom:16px">
         ${secoes.length ? renderStepper() : '<p style="font-size:13px;color:var(--txt2)">Ainda não há conteúdo detalhado cadastrado para este āsana.</p>'}
       </div>
       ${aula.fechamento ? `
       <div style="background:var(--verde);border-radius:12px;padding:20px;margin-bottom:20px">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.55);margin-bottom:8px;font-weight:500">Reflexão</div>
+        <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.55);margin-bottom:8px;font-weight:500">Reflexão</div>
         <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--bege);line-height:1.7;margin:0;font-style:italic;white-space:pre-line">${esc(aula.fechamento)}</p>
       </div>` : ''}
     `
@@ -590,19 +590,19 @@ async function _renderYogaAdhyayana(container) {
       return `
         <button onclick="window._yaSelPostura('${l.id}')" id="ya-linha-${l.id}"
           style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;
-                 padding:11px 14px;background:${isAtiva ? 'rgba(31,56,31,.06)' : '#fff'};
+                 padding:11px 14px;background:${isAtiva ? 'rgba(31,56,31,.06)' : 'var(--superficie)'};
                  border:1px solid ${isAtiva ? 'var(--verde)' : 'var(--borda)'};border-radius:8px;
                  cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif;margin-bottom:6px">
           <div style="min-width:0">
             <div style="font-size:13px;font-weight:500;color:var(--txt);display:flex;align-items:center;gap:6px">
-              ${isSemana ? '<span style="color:var(--dourado)">★</span>' : ''}
+              ${isSemana ? '<span style="color:var(--dourado-texto)"><i class="ti ti-star" aria-hidden="true"></i></span>' : ''}
               <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.nome)}</span>
             </div>
-            ${l.nome_alternativo ? `<div style="font-size:11px;color:var(--txt2);font-style:italic">${esc(l.nome_alternativo)}</div>` : ''}
+            ${l.nome_alternativo ? `<div style="font-size:12px;color:var(--txt2);font-style:italic">${esc(l.nome_alternativo)}</div>` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-            ${l.nivel ? `<span style="font-size:10px;color:${NIVEL_COR[l.nivel] || 'var(--txt2)'}">${esc(l.nivel)}</span>` : ''}
-            <span style="font-size:11px;color:var(--txt2)">${dataFmt}</span>
+            ${l.nivel ? `<span style="font-size:12px;color:${NIVEL_COR[l.nivel] || 'var(--txt2)'}">${esc(l.nivel)}</span>` : ''}
+            <span style="font-size:12px;color:var(--txt2)">${dataFmt}</span>
           </div>
         </button>`
     }).join('')
@@ -610,19 +610,19 @@ async function _renderYogaAdhyayana(container) {
     return `
       <div style="margin-top:8px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500">
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500">
             Todas as posturas (${linhas.length})
           </div>
           <div style="display:flex;gap:6px">
             <button onclick="window._yaOrdenar('nome')"
-              style="display:flex;align-items:center;gap:4px;padding:5px 10px;background:#fff;
-                     border:1px solid var(--borda);border-radius:6px;font-size:11px;color:var(--txt2);
+              style="display:flex;align-items:center;gap:4px;padding:5px 10px;background:var(--superficie);
+                     border:1px solid var(--borda);border-radius:6px;font-size:12px;color:var(--txt2);
                      cursor:pointer;font-family:'DM Sans',sans-serif">
               Nome ${_iconeOrdenacao('nome')}
             </button>
             <button onclick="window._yaOrdenar('data')"
-              style="display:flex;align-items:center;gap:4px;padding:5px 10px;background:#fff;
-                     border:1px solid var(--borda);border-radius:6px;font-size:11px;color:var(--txt2);
+              style="display:flex;align-items:center;gap:4px;padding:5px 10px;background:var(--superficie);
+                     border:1px solid var(--borda);border-radius:6px;font-size:12px;color:var(--txt2);
                      cursor:pointer;font-family:'DM Sans',sans-serif">
               Data ${_iconeOrdenacao('data')}
             </button>
@@ -710,8 +710,8 @@ function _linkify(texto) {
 function _blocoIntroducao(itens) {
   if (!itens || !itens.length) return ''
   return `
-    <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:16px">
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:10px">Abertura da prática</div>
+    <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:16px">
+      <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:10px">Abertura da prática</div>
       ${itens.map((it,i) => `
         <div style="display:flex;gap:10px;padding:8px 0;border-bottom:${i<itens.length-1?'1px solid rgba(212,200,158,.3)':'none'}">
           <span style="font-weight:500;color:var(--txt);min-width:120px;flex-shrink:0;font-size:13px">${esc(it.termo)}</span>
@@ -728,7 +728,7 @@ function _secoesAsana(aula) {
     secoes.push({ id:'pranayama', titulo:'Prāṇāyāma', icone:'ti-wind', cor:'#378ADD',
       itens: aula.pranayama.map(i => ({ termo: i.termo, desc: _linkify(i.desc) })) })
   if ((aula.mantra||[]).length)
-    secoes.push({ id:'mantra', titulo:'Mantra', icone:'ti-music', cor:'#BA7517',
+    secoes.push({ id:'mantra', titulo:'Mantra', icone:'ti-music', cor:'var(--warn-fg)',
       itens: aula.mantra.map(i => ({ termo: i.termo, desc: _linkify(i.desc) })) })
 
   const koshas   = _acimaDe50(aula.koshas).map(k => ({ ...k, termo: _normalizarKosha(k.termo) }))
@@ -742,7 +742,7 @@ function _secoesAsana(aula) {
 
   const musculos = _acimaDe50(aula.musculos)
   if (musculos.length)
-    secoes.push({ id:'musculos', titulo:'Músculos Principais', icone:'ti-heart-filled', cor:'#c0392b',
+    secoes.push({ id:'musculos', titulo:'Músculos Principais', icone:'ti-heart-filled', cor:'var(--err-vivo)',
       itens: musculos.map(m => ({ termo: m.termo, desc: `${m.percentual}%` })) })
 
   const tipos = _acimaDe50(aula.tipos_yoga).map(t => ({ ...t, termo: _traduzirTipoAsana(t.termo) }))
@@ -767,10 +767,10 @@ function _ehImagemUrl(url) {
 function _blocoAulaPratica(aula, secoes, sufixo) {
   const { renderStepper, containerId } = _stepper(secoes, 'am' + sufixo)
   const badges = [
-    aula.numero      ? `<span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">Aula ${aula.numero}</span>` : '',
-    aula.data_aula   ? `<span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${new Date(aula.data_aula+'T12:00').toLocaleDateString('pt-BR')}</span>` : '',
-    aula.modalidade  ? `<span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${esc(aula.modalidade)}</span>` : '',
-    aula.duracao     ? `<span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.duracao}</span>` : '',
+    aula.numero      ? `<span style="font-size:12px;background:rgba(31,56,31,.07);color:var(--titulo);padding:3px 10px;border-radius:20px">Aula ${aula.numero}</span>` : '',
+    aula.data_aula   ? `<span style="font-size:12px;background:rgba(31,56,31,.07);color:var(--titulo);padding:3px 10px;border-radius:20px">${new Date(aula.data_aula+'T12:00').toLocaleDateString('pt-BR')}</span>` : '',
+    aula.modalidade  ? `<span style="font-size:12px;background:rgba(31,56,31,.07);color:var(--titulo);padding:3px 10px;border-radius:20px">${esc(aula.modalidade)}</span>` : '',
+    aula.duracao     ? `<span style="font-size:12px;background:rgba(31,56,31,.07);color:var(--titulo);padding:3px 10px;border-radius:20px">${aula.duracao}</span>` : '',
   ].filter(Boolean).join('')
 
   const descricaoGerada = _gerarDescricaoAsana(aula)
@@ -779,23 +779,23 @@ function _blocoAulaPratica(aula, secoes, sufixo) {
 
   const iframeHtml = aula.link_tummee ? (
     linkEhImagem ? `
-    <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:16px">
-      <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:4px">Sequência de Āsanas</div>
+    <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:16px">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo);margin-bottom:4px">Sequência de Āsanas</div>
       <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">Faça-os devagar, sem forçar — de 30s a 1min cada āsana. Clique na imagem para ampliar.</div>
       <div style="position:relative;border-radius:8px;overflow:hidden;cursor:zoom-in"
            onclick="_abrirLightbox('${urlSegura(aula.link_tummee)}','Sequência de āsanas')" title="Clique para ampliar">
         <img src="${urlSegura(aula.link_tummee)}" alt="Sequência de āsanas" referrerpolicy="no-referrer"
-          style="width:100%;max-height:480px;object-fit:contain;display:block;background:#f7f5ee"
+          style="width:100%;max-height:480px;object-fit:contain;display:block;background:var(--superficie-2)"
           onerror="this.parentElement.parentElement.style.display='none'">
         <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);
-                    border-radius:20px;padding:3px 8px;font-size:10px;color:#fff;
+                    border-radius:20px;padding:3px 8px;font-size:12px;color:#fff;
                     display:flex;align-items:center;gap:4px;pointer-events:none">
           <i class="ti ti-zoom-in" style="font-size:12px"></i> ampliar
         </div>
       </div>
     </div>` : `
-    <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:16px">
-      <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:4px">Sequência de Āsanas</div>
+    <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:16px">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo);margin-bottom:4px">Sequência de Āsanas</div>
       <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">Faça-os devagar, sem forçar — de 30s a 1min cada āsana.</div>
       <button onclick="window._amToggleIframe${sufixo}()" id="btn-am-iframe${sufixo}"
         style="width:100%;padding:11px;background:var(--verde);color:var(--bege);border:none;
@@ -815,13 +815,13 @@ function _blocoAulaPratica(aula, secoes, sufixo) {
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">${badges}</div>
     <div style="border-left:3px solid var(--dourado);background:rgba(232,188,79,.07);
                 border-radius:0 8px 8px 0;padding:13px 16px;margin-bottom:16px">
-      <p style="font-size:14px;font-style:italic;color:var(--verde);line-height:1.6;margin:0;
+      <p style="font-size:14px;font-style:italic;color:var(--titulo);line-height:1.6;margin:0;
                 font-family:'Cormorant Garamond',serif">${descricaoGerada}</p>
     </div>
     ${_blocoIntroducao(aula.introducao)}
     ${iframeHtml}
     ${secoes.length ? `
-      <div id="${containerId}" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px 16px">
+      <div id="${containerId}" style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:18px 16px">
         ${renderStepper()}
       </div>` : ''}
   `
@@ -831,8 +831,8 @@ function _bloqueadaAula2Html() {
   const msg = encodeURIComponent('Olá! Sou aluno(a) do Espaço Autonomia e gostaria de saber mais sobre os planos Shiva/Vishnu para desbloquear a segunda aula do Āsana Mārga.')
   return `
     <div style="background:rgba(232,188,79,.06);border:1px solid rgba(232,188,79,.25);border-radius:var(--r);padding:20px;text-align:center">
-      <div style="font-size:28px;margin-bottom:8px">🔒</div>
-      <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--verde);margin-bottom:6px">Segunda aula exclusiva</div>
+      <div style="font-size:28px;margin-bottom:8px"><i class="ti ti-lock" aria-hidden="true"></i></div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--titulo);margin-bottom:6px">Segunda aula exclusiva</div>
       <p style="font-size:13px;color:var(--txt2);line-height:1.6;margin:0 0 14px">Disponível nos planos Shiva e Vishnu.</p>
       <a href="https://wa.me/${ESTUDIO_WA}?text=${msg}" target="_blank" rel="noopener"
         style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;
@@ -845,9 +845,9 @@ function _bloqueadaAula2Html() {
 
 function _emBreveAsanaHtml() {
   return `
-    <div style="text-align:center;padding:32px 24px;background:#fff;border:1px solid var(--borda);border-radius:var(--r)">
+    <div style="text-align:center;padding:32px 24px;background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r)">
       <div style="font-size:32px;margin-bottom:10px">🧘</div>
-      <div style="font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--verde);margin-bottom:6px">Em breve</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--titulo);margin-bottom:6px">Em breve</div>
       <div style="font-size:13px;color:var(--txt2)">Esta aula ainda não foi cadastrada.</div>
     </div>`
 }
@@ -858,7 +858,7 @@ async function _renderAsanaMarga(container) {
   const sb = window._sb
   const { data: linhas, error } = await sb.from('asana_praticas').select('*').order('slot', { ascending: true })
   if (error) {
-    container.querySelector('.content').innerHTML = `<p style="color:#c0392b;font-size:13px">Erro: ${esc(error.message)}</p>`
+    container.querySelector('.content').innerHTML = `<p style="color:var(--err-vivo);font-size:13px">Erro: ${esc(error.message)}</p>`
     return
   }
   const aula1 = linhas?.find(l => l.slot === 1)
@@ -877,17 +877,17 @@ async function _renderAsanaMarga(container) {
       <div style="display:flex;align-items:center;gap:10px">
         <span style="font-size:26px">🧘</span>
         <div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">Āsana Mārga</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--titulo)">Āsana Mārga</div>
           <div style="font-size:12px;color:var(--txt2)">Aulas práticas da semana</div>
         </div>
       </div>
       ${temConteudo1 ? _btnSalvar('window._salvarAM1()') : ''}
     </div>
 
-    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:10px">Aula 1 · livre para todos os planos</div>
+    <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:10px">Aula 1 · livre para todos os planos</div>
     ${temConteudo1 ? _blocoAulaPratica(aula1, secoes1, '1') : _emBreveAsanaHtml()}
 
-    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin:24px 0 10px">Aula 2 · Shiva e Vishnu</div>
+    <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin:24px 0 10px">Aula 2 · Shiva e Vishnu</div>
     ${!temAula2 ? _bloqueadaAula2Html() : (temConteudo2 ? _blocoAulaPratica(aula2, secoes2, '2') : _emBreveAsanaHtml())}
   `
 
@@ -956,14 +956,14 @@ async function _renderJnanaMarga(container) {
     .lte('publicada_em', hoje)
     .order('publicada_em', { ascending: false })
   if (error) {
-    container.querySelector('.content').innerHTML = `<p style="color:#c0392b;font-size:13px">Erro: ${esc(error.message)}</p>`
+    container.querySelector('.content').innerHTML = `<p style="color:var(--err-vivo);font-size:13px">Erro: ${esc(error.message)}</p>`
     return
   }
   if (!sutras || sutras.length === 0) {
     container.querySelector('.content').innerHTML = `
       <div style="text-align:center;padding:48px 24px">
-        <div style="font-size:40px;margin-bottom:12px">📜</div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--verde);margin-bottom:8px">Em breve</div>
+        <div style="font-size:40px;margin-bottom:12px"><i class="ti ti-file-text" aria-hidden="true"></i></div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--titulo);margin-bottom:8px">Em breve</div>
         <div style="font-size:13px;color:var(--txt2)">O estudo dos Yoga Sūtras chegará em breve.</div>
       </div>`
     return
@@ -988,7 +988,7 @@ async function _renderJnanaMarga(container) {
     const comentarioHtml = (s.comentario||'').split(/\n\s*\n/).map(p => `<p>${p}</p>`).join('')
     _imprimirHTML(`Jñāna Mārga — ${s.capitulo} ${_labelNumeroSutra(s)}`, `
       <h1>${esc(s.capitulo)} — Sutra ${_labelNumeroSutra(s)}</h1>
-      <p style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:#5a7a5a;margin-bottom:4px">${esc(s.transliteracao)}</p>
+      <p style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:var(--txt2);margin-bottom:4px">${esc(s.transliteracao)}</p>
       <div class="meta"><span>Jñāna Mārga · Yoga Sūtras</span><span>${dataFmt}</span></div>
       ${s.contexto_capitulo ? `<div class="citacao">${esc(s.contexto_capitulo)}</div>` : ''}
       <h2>Texto</h2>
@@ -1008,8 +1008,8 @@ async function _renderJnanaMarga(container) {
     const comentarioHtml = (s.comentario||'').split(/\n\s*\n/).map(p => `<p style="margin:0 0 12px;line-height:1.8">${p}</p>`).join('')
     return `
       <div style="background:var(--verde);border-radius:12px;padding:20px;margin-bottom:16px">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.55);margin-bottom:8px">
-          ${isHoje ? '✦ Sutra de hoje' : dataFmt} · ${esc(s.capitulo)} ${_labelNumeroSutra(s)}
+        <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.55);margin-bottom:8px">
+          ${isHoje ? '<i class="ti ti-sparkles" aria-hidden="true"></i> Sutra de hoje' : dataFmt} · ${esc(s.capitulo)} ${_labelNumeroSutra(s)}
         </div>
         ${s.contexto_capitulo ? `<p style="font-size:12px;color:rgba(242,236,206,.75);line-height:1.6;margin-bottom:14px;font-style:italic">${esc(s.contexto_capitulo)}</p>` : ''}
         <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:var(--bege);line-height:1.3">${esc(s.texto_devanagari)}</div>
@@ -1017,48 +1017,48 @@ async function _renderJnanaMarga(container) {
         <div style="font-size:14px;color:rgba(242,236,206,.92);margin-top:10px">${esc(s.traducao)}</div>
       </div>
       ${s.comentario ? `
-        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px;margin-bottom:16px">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:10px">Comentário</div>
+        <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:18px;margin-bottom:16px">
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:10px">Comentário</div>
           <div style="font-size:13px;color:var(--txt)">${esc(comentarioHtml)}</div>
         </div>` : ''}
       ${s.pratica ? `
         <div style="background:rgba(232,188,79,.07);border-left:3px solid var(--dourado);border-radius:0 8px 8px 0;padding:14px 16px;margin-bottom:16px">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#7a5a10;font-weight:500;margin-bottom:6px">Na prática</div>
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--warn-fg);font-weight:500;margin-bottom:6px">Na prática</div>
           <p style="font-size:13px;color:var(--txt);line-height:1.7;margin:0">${esc(s.pratica)}</p>
         </div>` : ''}
       <div style="display:flex;gap:8px;margin-bottom:8px">
         <button onclick="window._jnAnterior()" ${_jnTemAnterior(s) ? '' : 'disabled'}
-          style="flex:1;padding:10px;background:#fff;color:${_jnTemAnterior(s) ? 'var(--verde)' : 'var(--txt2)'};
+          style="flex:1;padding:10px;background:var(--superficie);color:${_jnTemAnterior(s) ? 'var(--titulo)' : 'var(--txt2)'};
                  border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;
                  font-size:12px;cursor:${_jnTemAnterior(s) ? 'pointer' : 'default'};opacity:${_jnTemAnterior(s) ? '1' : '.4'};
                  display:flex;align-items:center;justify-content:center;gap:6px">
           <i class="ti ti-chevron-left"></i> Anterior
         </button>
         <button onclick="window._jnProximo()" ${_jnTemProximo(s) ? '' : 'disabled'}
-          style="flex:1;padding:10px;background:#fff;color:${_jnTemProximo(s) ? 'var(--verde)' : 'var(--txt2)'};
+          style="flex:1;padding:10px;background:var(--superficie);color:${_jnTemProximo(s) ? 'var(--titulo)' : 'var(--txt2)'};
                  border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;
                  font-size:12px;cursor:${_jnTemProximo(s) ? 'pointer' : 'default'};opacity:${_jnTemProximo(s) ? '1' : '.4'};
                  display:flex;align-items:center;justify-content:center;gap:6px">
           Próximo <i class="ti ti-chevron-right"></i>
         </button>
       </div>
-      <button onclick="window._salvarJN()" style="width:100%;margin-bottom:16px;padding:10px;background:#fff;color:var(--verde);border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:500">
+      <button onclick="window._salvarJN()" style="width:100%;margin-bottom:16px;padding:10px;background:var(--superficie);color:var(--titulo);border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:500">
         <i class="ti ti-download"></i> Salvar este sutra em PDF
       </button>`
   }
 
   const historicoHtml = sutras.length > 1 ? `
     <div style="margin-top:6px">
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:10px">Sutras anteriores (${sutras.length - 1})</div>
+      <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:10px">Sutras anteriores (${sutras.length - 1})</div>
       <div style="display:flex;flex-direction:column;gap:6px">
         ${sutras.filter(s => s.id !== sutra_hoje.id).map(s => `
           <button onclick="window._jnSelSutra('${s.id}')" id="jn-hist-${s.id}"
-            style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:#fff;border:1px solid var(--borda);border-radius:8px;cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif">
+            style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--superficie);border:1px solid var(--borda);border-radius:8px;cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif">
             <div>
               <div style="font-size:13px;font-weight:500;color:var(--txt)">${esc(s.capitulo)} ${_labelNumeroSutra(s)}</div>
-              <div style="font-size:11px;color:var(--txt2);font-style:italic">${esc(s.transliteracao)}</div>
+              <div style="font-size:12px;color:var(--txt2);font-style:italic">${esc(s.transliteracao)}</div>
             </div>
-            <div style="font-size:11px;color:var(--txt2);flex-shrink:0;margin-left:12px">${new Date(s.publicada_em + 'T12:00').toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})}</div>
+            <div style="font-size:12px;color:var(--txt2);flex-shrink:0;margin-left:12px">${new Date(s.publicada_em + 'T12:00').toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})}</div>
           </button>`).join('')}
       </div>
     </div>` : ''
@@ -1066,15 +1066,15 @@ async function _renderJnanaMarga(container) {
   container.querySelector('.content').innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px">
       <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:26px">📜</span>
+        <span style="font-size:26px"><i class="ti ti-file-text" aria-hidden="true"></i></span>
         <div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">Jñāna Mārga</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--titulo)">Jñāna Mārga</div>
           <div style="font-size:12px;color:var(--txt2)">Estudo dos Yoga Sūtras · diário</div>
         </div>
       </div>
     </div>
-    <div style="font-size:11px;color:var(--txt2);margin-bottom:16px">
-      <strong style="color:var(--verde)">${sutras.length}</strong> sutra${sutras.length !== 1 ? 's' : ''} publicado${sutras.length !== 1 ? 's' : ''} até hoje
+    <div style="font-size:12px;color:var(--txt2);margin-bottom:16px">
+      <strong style="color:var(--titulo)">${sutras.length}</strong> sutra${sutras.length !== 1 ? 's' : ''} publicado${sutras.length !== 1 ? 's' : ''} até hoje
     </div>
     <div id="jn-sutra-view">${renderSutra(sutraSel)}</div>
     ${historicoHtml}
@@ -1122,7 +1122,7 @@ async function _renderBeneficioGenerico(container, b, campo, temAcesso, planoTip
   }).join('')
 
   const listaPlanos = planosComAcesso.map(p =>
-    `<span style="font-size:11px;background:rgba(232,188,79,.15);color:#7a6010;
+    `<span style="font-size:12px;background:rgba(232,188,79,.15);color:#7a6010;
       padding:2px 8px;border-radius:20px;white-space:nowrap">${PLANO_LABELS[p]||p}</span>`
   ).join(' ')
 
@@ -1142,26 +1142,26 @@ async function _renderBeneficioGenerico(container, b, campo, temAcesso, planoTip
       <span style="font-size:36px;line-height:1;${temAcesso?'':'filter:grayscale(1);opacity:.4'}">${b.icone}</span>
       <div>
         <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;
-                    color:${temAcesso?'var(--verde)':'var(--txt2)'};line-height:1.2">${esc(b.nome)}</div>
+                    color:${temAcesso?'var(--titulo)':'var(--txt2)'};line-height:1.2">${esc(b.nome)}</div>
         <div style="font-size:12px;color:var(--txt2);margin-top:3px">${esc(b.subtitulo)}</div>
         ${temAcesso
-          ? `<span style="font-size:10px;background:rgba(31,56,31,.08);color:var(--verde);padding:2px 8px;border-radius:20px;font-weight:500;margin-top:4px;display:inline-block">Incluso no seu plano</span>`
-          : `<span style="font-size:10px;background:rgba(0,0,0,.06);color:var(--txt2);padding:2px 8px;border-radius:20px;margin-top:4px;display:inline-block">Não incluso no seu plano</span>`
+          ? `<span style="font-size:12px;background:rgba(31,56,31,.08);color:var(--titulo);padding:2px 8px;border-radius:20px;font-weight:500;margin-top:4px;display:inline-block">Incluso no seu plano</span>`
+          : `<span style="font-size:12px;background:rgba(0,0,0,.06);color:var(--txt2);padding:2px 8px;border-radius:20px;margin-top:4px;display:inline-block">Não incluso no seu plano</span>`
         }
       </div>
     </div>
-    <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px 20px;margin-bottom:16px">
+    <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:18px 20px;margin-bottom:16px">
       <p style="font-size:14px;color:var(--txt);line-height:1.8;margin:0;white-space:pre-line">${esc((b.descricao||'').trim())}</p>
       ${acaoHtml}
     </div>
     ${!temAcesso ? `
-      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:12px">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);margin-bottom:8px">Disponível nos planos</div>
+      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:12px">
+        <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);margin-bottom:8px">Disponível nos planos</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px">${listaPlanos}</div>
       </div>
       ${planosUpgrade.length > 0 ? `
         <div style="background:rgba(232,188,79,.06);border:1px solid rgba(232,188,79,.25);border-radius:var(--r);padding:16px 18px">
-          <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:4px">Quero ter acesso</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo);margin-bottom:4px">Quero ter acesso</div>
           <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">Escolha o plano e enviaremos as informações pelo WhatsApp.</div>
           <div style="display:flex;flex-wrap:wrap;gap:8px">${botoesUpgrade}</div>
         </div>` : ''}

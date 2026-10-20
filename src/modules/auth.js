@@ -19,7 +19,7 @@ export async function mostrarOnboarding(user, nomeGoogle, fotoGoogle) {
   onbDiv.id = 'onboarding'
   onbDiv.style.cssText = 'position:fixed;inset:0;background:var(--verde);display:flex;align-items:center;justify-content:center;z-index:200;overflow-y:auto;padding:20px'
   onbDiv.innerHTML = `
-    <div style="background:#fff;border-radius:16px;width:440px;max-width:95vw;overflow:hidden">
+    <div style="background:var(--superficie);border-radius:16px;width:440px;max-width:95vw;overflow:hidden">
       <div style="background:var(--verde);padding:28px 24px;text-align:center">
         <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:var(--bege)">Espaço Autonomia</div>
         <div style="font-size:12px;color:rgba(242,236,206,.7);margin-top:4px">Complete seus dados para começar</div>
@@ -27,11 +27,11 @@ export async function mostrarOnboarding(user, nomeGoogle, fotoGoogle) {
       <div style="padding:24px">
         <input type="hidden" id="onb-foto" value="${esc(fotoGoogle || '')}">
         <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
-          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Nome completo</label>
+          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Nome completo</label>
           <input id="onb-nome" value="${esc(nomeGoogle)}" style="border:1px solid var(--borda);border-radius:6px;padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:20px">
-          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Telefone / WhatsApp</label>
+          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Telefone / WhatsApp</label>
           <input id="onb-tel" placeholder="(11) 99999-9999" style="border:1px solid var(--borda);border-radius:6px;padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">
         </div>
         <p style="font-size:12px;color:var(--txt2);line-height:1.6;margin:0 0 20px">
@@ -39,7 +39,7 @@ export async function mostrarOnboarding(user, nomeGoogle, fotoGoogle) {
         </p>
         <button onclick="finalizarOnboarding(this.dataset.id, this.dataset.email)" data-id="${esc(user.id)}" data-email="${esc(user.email)}"
           style="width:100%;padding:12px;background:var(--verde);color:var(--bege);border:none;border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500">
-          Começar →
+          Começar <i class="ti ti-arrow-right" aria-hidden="true"></i>
         </button>
       </div>
     </div>`

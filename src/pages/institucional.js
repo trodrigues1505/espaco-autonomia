@@ -12,19 +12,19 @@ export async function renderEspaco(container, page) {
     <div class="topbar"><div class="topbar-t">O Espaço</div></div>
     <div class="content">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
-        <span style="font-size:26px">🏛</span>
+        <span style="font-size:26px"><i class="ti ti-building-bank" aria-hidden="true"></i></span>
         <div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">Espaço Autonomia</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--titulo)">Espaço Autonomia</div>
           <div style="font-size:12px;color:var(--txt2)">Sobre nós</div>
         </div>
       </div>
 
-      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:20px;margin-bottom:16px">
+      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:20px;margin-bottom:16px">
         <p style="font-size:14px;color:var(--txt);line-height:1.85;margin:0 0 14px">O Espaço Autonomia nasceu em 2013, fundado e dirigido por Regiane Rocha com um propósito definido: oferecer um método para que pessoas alcancem autonomia — não no sentido de independência, mas de autogovernabilidade. A capacidade de se conduzir com consciência, de ser quem se é de forma legítima e de contribuir com o mundo a partir disso.</p>
         <p style="font-size:14px;color:var(--txt);line-height:1.85;margin:0">Yoga foi escolhido como esse método porque oferece exatamente isso: um sistema estruturado de autoconhecimento que não para no corpo nem na respiração, mas vai até a raiz do que governa o comportamento humano — a mente.</p>
       </div>
 
-      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:20px;margin-bottom:16px">
+      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:20px;margin-bottom:16px">
         <p style="font-size:14px;color:var(--txt);line-height:1.85;margin:0 0 14px">Thiago Rodrigues atua no Espaço desde o início, como gerente administrativo. Alguns anos depois, tornou-se também professor. Mais recentemente, assumiu a gestão do espaço, coordenando as atividades e aprofundando o trabalho na direção do que o Espaço sempre foi: um lugar para o estudo e a difusão da tradição do yoga, ensinado como darshana — como visão de mundo — e não como atividade física ou tendência de bem-estar.</p>
         <p style="font-size:14px;color:var(--txt);line-height:1.85;margin:0">Hoje as aulas presenciais de Hatha Yoga, Raja Yoga e AcroYoga são conduzidas por Thiago Rodrigues e Carol Gimenes, no centro de Franco da Rocha.</p>
       </div>
@@ -34,7 +34,7 @@ export async function renderEspaco(container, page) {
       </div>
 
       <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--txt2)">
-        <i class="ti ti-map-pin" style="color:var(--verde)"></i>
+        <i class="ti ti-map-pin" style="color:var(--titulo)"></i>
         Av. Liberdade, 179 — Centro, Franco da Rocha, SP
       </div>
     </div>
@@ -103,7 +103,7 @@ function _renderSubpagina(idx) {
 
   const secoesHtml = s.secoes.map(sec => `
     <div style="margin-bottom:16px">
-      <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--verde);margin-bottom:6px">${esc(sec.titulo)}</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--titulo);margin-bottom:6px">${esc(sec.titulo)}</div>
       <p style="font-size:14px;color:var(--txt);line-height:1.85;margin:0">${esc(sec.texto)}</p>
     </div>
   `).join('')
@@ -115,7 +115,7 @@ function _renderSubpagina(idx) {
     : ''
 
   return `
-    <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:20px;margin-bottom:16px">
+    <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:20px;margin-bottom:16px">
       ${introHtml}
       ${s.secoes.length ? `<div style="border-top:1px solid var(--borda);margin-top:4px;padding-top:16px">${secoesHtml}</div>` : ''}
     </div>
@@ -131,7 +131,7 @@ export async function renderNossaPratica(container, page) {
       <button onclick="window._npMudarAba(${idx})"
         style="padding:8px 16px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;
                font-family:'DM Sans',sans-serif;white-space:nowrap;border:1px solid ${idx===abaAtiva?'var(--verde)':'var(--borda)'};
-               background:${idx===abaAtiva?'var(--verde)':'#fff'};color:${idx===abaAtiva?'var(--bege)':'var(--txt)'}">
+               background:${idx===abaAtiva?'var(--verde)':'var(--superficie)'};color:${idx===abaAtiva?'var(--bege)':'var(--txt)'}">
         ${s.icone} ${esc(s.titulo)}
       </button>
     `).join('')

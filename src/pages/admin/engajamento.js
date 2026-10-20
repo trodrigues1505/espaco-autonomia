@@ -58,7 +58,7 @@ export async function renderEngajamento(container, page) {
   const erroCritico = perfisRes.error || matriculasRes.error
   if (erroCritico) {
     container.innerHTML = `<div class="topbar"><div class="topbar-t">Engajamento</div></div>
-      <div class="content"><p style="color:#c0392b;font-size:13px">Erro: ${esc(erroCritico.message)}</p></div>`
+      <div class="content"><p style="color:var(--err-vivo);font-size:13px">Erro: ${esc(erroCritico.message)}</p></div>`
     return
   }
 
@@ -177,9 +177,9 @@ export async function renderEngajamento(container, page) {
 
   function corScore(v) {
     if (v === null) return 'var(--txt2)'
-    if (v >= 70) return '#1a5a1a'
-    if (v >= 40) return '#7a5a10'
-    return '#8a1a1a'
+    if (v >= 70) return 'var(--ok-fg)'
+    if (v >= 40) return 'var(--warn-fg)'
+    return 'var(--err-fg)'
   }
 
   container.innerHTML = `
@@ -191,14 +191,14 @@ export async function renderEngajamento(container, page) {
       </button>
     </div>
     <div class="content">
-      <div style="background:rgba(31,56,31,.04);border:1px solid rgba(31,56,31,.12);border-radius:6px;padding:9px 13px;font-size:11px;color:var(--verde);margin-bottom:14px;display:flex;align-items:center;gap:8px">
+      <div style="background:rgba(31,56,31,.04);border:1px solid rgba(31,56,31,.12);border-radius:6px;padding:9px 13px;font-size:12px;color:var(--titulo);margin-bottom:14px;display:flex;align-items:center;gap:8px">
         <i class="ti ti-info-circle"></i>
         <span>Score 0-100, últimos ${JANELA_DIAS} dias · Presença 30 · Timeline 20 · Saldo 20 · Benefícios 15 · Login 15</span>
       </div>
 
       <div style="overflow-x:auto">
-      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden;min-width:760px">
-        <div style="display:grid;grid-template-columns:1.4fr 90px 90px 90px 90px 90px 90px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:8px">
+      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);overflow-x:auto;min-width:760px">
+        <div style="display:grid;grid-template-columns:1.4fr 90px 90px 90px 90px 90px 90px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:8px">
           <span>${cabecalhoOrdenavel('Aluno', 'nome')}</span>
           <span>${cabecalhoOrdenavel('Presença', 'presenca')}</span>
           <span>${cabecalhoOrdenavel('Timeline', 'timeline')}</span>
@@ -226,7 +226,7 @@ export async function renderEngajamento(container, page) {
     </div>
 
     <div id="modal-detalhe-engajamento" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.6);z-index:200;align-items:center;justify-content:center;padding:16px">
-      <div style="background:#fff;border-radius:12px;width:480px;max-width:100%;max-height:85vh;overflow-y:auto">
+      <div style="background:var(--superficie);border-radius:12px;width:480px;max-width:100%;max-height:85vh;overflow-y:auto">
         <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0">
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)" id="det-eng-titulo">—</div>
           <button onclick="document.getElementById('modal-detalhe-engajamento').style.display='none'" style="background:none;border:none;color:var(--bege);font-size:22px;cursor:pointer;line-height:1">×</button>
@@ -244,27 +244,27 @@ export async function renderEngajamento(container, page) {
     document.getElementById('det-eng-body').innerHTML = `
       <div style="display:flex;flex-direction:column;gap:14px">
         <div>
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Presença (peso 30) — ${l.presencaScore === null ? 'sem dados no período' : l.presencaScore.toFixed(1) + ' pts'}</div>
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Presença (peso 30) — ${l.presencaScore === null ? 'sem dados no período' : l.presencaScore.toFixed(1) + ' pts'}</div>
           <div style="font-size:12px;color:var(--txt)">Confirmado: ${l.pres.confirmado} · Presente: ${l.pres.presente} · Ausente: ${l.pres.ausente}</div>
         </div>
         <div>
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Timeline (peso 20) — ${l.timelineScore.toFixed(1)} pts</div>
-          <div style="font-size:12px;color:var(--txt)">❤️ ${l.curtidas} curtidas · 💬 ${l.comentarios} comentários · 🔖 ${l.salvos} salvos · 👁 ${l.visualizacoes} visualizações</div>
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Timeline (peso 20) — ${l.timelineScore.toFixed(1)} pts</div>
+          <div style="font-size:12px;color:var(--txt)"><i class="ti ti-heart" aria-hidden="true"></i> ${l.curtidas} curtidas · <i class="ti ti-message-circle" aria-hidden="true"></i> ${l.comentarios} comentários · <i class="ti ti-bookmark" aria-hidden="true"></i> ${l.salvos} salvos · <i class="ti ti-eye" aria-hidden="true"></i> ${l.visualizacoes} visualizações</div>
         </div>
         <div>
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Uso de saldo (peso 20) — ${l.saldoScore === null ? 'sem dados' : l.saldoScore.toFixed(1) + ' pts'}</div>
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Uso de saldo (peso 20) — ${l.saldoScore === null ? 'sem dados' : l.saldoScore.toFixed(1) + ' pts'}</div>
           <div style="font-size:12px;color:var(--txt)">${l.ehLivre ? 'Plano livre — não se aplica' : `Saldo parado: ${l.saldoAtual ?? '—'} · Usadas: ${l.totalUsadas ?? '—'}`}</div>
         </div>
         <div>
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Benefícios (peso 15) — ${l.beneficioScore.toFixed(1)} pts</div>
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Benefícios (peso 15) — ${l.beneficioScore.toFixed(1)} pts</div>
           <div style="font-size:12px;color:var(--txt)">Āsana Mārga: ${l.acessos.asana_marga}d · Jñāna Mārga: ${l.acessos.jnana_marga}d · Yoga Adhyayana: ${l.acessos.yoga_adhyayana}d</div>
         </div>
         <div>
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Login recente (peso 15) — ${l.loginScore.toFixed(1)} pts</div>
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Login recente (peso 15) — ${l.loginScore.toFixed(1)} pts</div>
           <div style="font-size:12px;color:var(--txt)">Último acesso: ${fmtDataHora(l.ultimoAcesso)}${l.diasAcesso !== null ? ` (há ${l.diasAcesso} dia${l.diasAcesso !== 1 ? 's' : ''})` : ''}</div>
         </div>
         <div style="background:var(--verde);border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:11px;color:rgba(242,236,206,.7);text-transform:uppercase;letter-spacing:.7px">Score total</span>
+          <span style="font-size:12px;color:rgba(242,236,206,.7);text-transform:uppercase;letter-spacing:.7px">Score total</span>
           <span style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:var(--bege)">${l.total.toFixed(1)} / 100</span>
         </div>
       </div>
@@ -281,15 +281,15 @@ export async function renderEngajamento(container, page) {
       <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
       <style>
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-        body{font-family:'DM Sans',sans-serif;font-size:11px;color:#1F381F;background:#fff;padding:24px 28px;max-width:900px;margin:0 auto}
+        body{font-family:'DM Sans',sans-serif;font-size:12px;color:var(--txt);background:var(--superficie);padding:24px 28px;max-width:900px;margin:0 auto}
         h1{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;margin-bottom:4px}
-        .meta{font-size:10px;color:#7a7a6a;margin-bottom:18px}
-        table{width:100%;border-collapse:collapse;font-size:11px}
-        th{background:#f2ecce;text-align:left;padding:7px 10px;font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:#555}
-        td{padding:7px 10px;border-bottom:1px solid #e8e4d8}
-        tr:nth-child(even) td{background:#fafaf7}
+        .meta{font-size:12px;color:var(--txt2);margin-bottom:18px}
+        table{width:100%;border-collapse:collapse;font-size:12px}
+        th{background:#f2ecce;text-align:left;padding:7px 10px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2)}
+        td{padding:7px 10px;border-bottom:1px solid var(--borda)}
+        tr:nth-child(even) td{background:var(--superficie-2)}
         .total{font-weight:600}
-        .rodape{margin-top:18px;padding-top:8px;border-top:1px solid #d4c89e;font-size:9px;color:#aaa;text-align:center}
+        .rodape{margin-top:18px;padding-top:8px;border-top:1px solid var(--borda);font-size:12px;color:var(--txt2);text-align:center}
         @media print{ @page{margin:1cm;size:A4 landscape} body{padding:0} }
       </style>
     </head><body>

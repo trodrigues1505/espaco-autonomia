@@ -146,7 +146,7 @@ async function _mostrarPasso(el, texto, idx, total, onProximo, onVoltar, onPular
   bubble.id = '_tour-bubble'
   bubble.style.cssText = `
     position:fixed; z-index:602; max-width:min(300px, calc(100vw - 32px));
-    background:#fff; border-radius:14px; padding:16px 18px;
+    background:var(--superficie); border-radius:14px; padding:16px 18px;
     box-shadow:0 14px 34px rgba(0,0,0,.3); font-family:'DM Sans',sans-serif;
     animation:_tour-in .2s ease;
   `
@@ -155,15 +155,15 @@ async function _mostrarPasso(el, texto, idx, total, onProximo, onVoltar, onPular
   bubble.innerHTML = `
     <div style="font-size:13px;color:var(--txt);line-height:1.6;margin-bottom:14px">${esc(texto)}</div>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-      <button id="_tour-pular" style="background:none;border:none;font-size:11px;color:var(--txt2);
+      <button id="_tour-pular" style="background:none;border:none;font-size:12px;color:var(--txt2);
         cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:underline;padding:0">Pular tutorial</button>
       <div style="display:flex;align-items:center;gap:8px">
-        ${!isFirst ? `<button id="_tour-voltar" style="padding:7px 12px;background:none;color:var(--verde);
-          border:1px solid var(--borda);border-radius:7px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">← Voltar</button>` : ''}
-        <span style="font-size:11px;color:var(--txt2)">${idx + 1}/${total}</span>
+        ${!isFirst ? `<button id="_tour-voltar" style="padding:7px 12px;background:none;color:var(--titulo);
+          border:1px solid var(--borda);border-radius:7px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="ti ti-arrow-left" aria-hidden="true"></i> Voltar</button>` : ''}
+        <span style="font-size:12px;color:var(--txt2)">${idx + 1}/${total}</span>
         <button id="_tour-prox" style="padding:7px 16px;background:var(--verde);color:var(--bege);
           border:none;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif">
-          ${isLast ? 'Concluir' : 'Próximo →'}
+          ${isLast ? 'Concluir' : 'Próximo <i class="ti ti-arrow-right" aria-hidden="true"></i>'}
         </button>
       </div>
     </div>

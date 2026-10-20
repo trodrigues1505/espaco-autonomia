@@ -96,7 +96,7 @@ function _abrirModalVocab(entrada) {
   div.id = '_voc-modal'
   div.style.cssText = 'position:fixed;inset:0;background:rgba(31,56,31,.7);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px'
   div.innerHTML = `
-    <div style="background:#fff;border-radius:12px;width:380px;max-width:100%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="background:var(--superficie);border-radius:12px;width:380px;max-width:100%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
       <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
         <div style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--bege)">${_esc(entrada.termo)}</div>
         <button onclick="document.getElementById('_voc-modal').remove()" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
@@ -180,8 +180,8 @@ export function initSelecaoParaCriarTermo() {
     btn.textContent = '+ Śabda Kośa'
     btn.style.cssText = `
       position:fixed; top:${rect.top - 34}px; left:${Math.max(8, rect.left)}px;
-      z-index:700; background:var(--verde, #1F381F); color:var(--bege, #f2ecce);
-      border:none; border-radius:6px; padding:5px 10px; font-size:11px;
+      z-index:700; background:var(--verde, var(--verde)); color:var(--bege, #f2ecce);
+      border:none; border-radius:6px; padding:5px 10px; font-size:12px;
       font-family:'DM Sans',sans-serif; cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,.25);
     `
     btn.addEventListener('mousedown', (ev) => ev.preventDefault()) // não perde a seleção ao clicar
@@ -211,7 +211,7 @@ async function _abrirModalCriarTermo(textoSelecionado) {
   div.id = '_voc-modal-criar'
   div.style.cssText = 'position:fixed;inset:0;background:rgba(31,56,31,.7);z-index:700;display:flex;align-items:center;justify-content:center;padding:20px'
   div.innerHTML = `
-    <div style="background:#fff;border-radius:12px;width:420px;max-width:100%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="background:var(--superficie);border-radius:12px;width:420px;max-width:100%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
       <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
         <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)">
           ${existente ? 'Editar termo' : 'Novo termo no Śabda Kośa'}
@@ -220,21 +220,21 @@ async function _abrirModalCriarTermo(textoSelecionado) {
       </div>
       <div style="padding:20px;display:flex;flex-direction:column;gap:10px">
         <div style="display:flex;flex-direction:column;gap:4px">
-          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Termo</label>
+          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Termo</label>
           <input id="_voc-input-termo" value="${_esc(existente?.termo || textoSelecionado)}"
             style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
         </div>
         <div style="display:flex;flex-direction:column;gap:4px">
-          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Definição</label>
+          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Definição</label>
           <textarea id="_voc-input-def" rows="4" placeholder="O que significa este termo..."
             style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;resize:vertical">${_esc(existente?.definicao || '')}</textarea>
         </div>
-        ${existente ? '<div style="font-size:10px;color:#7a5a10">Este termo já existe — salvar aqui atualiza a definição.</div>' : ''}
+        ${existente ? '<div style="font-size:12px;color:var(--warn-fg)">Este termo já existe — salvar aqui atualiza a definição.</div>' : ''}
       </div>
       <div style="padding:0 20px 20px;display:flex;justify-content:flex-end;gap:8px">
         <button id="_voc-cancelar-criar" style="padding:8px 16px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
         <button id="_voc-salvar-criar" style="padding:8px 16px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500">
-          ✓ Salvar
+          <i class="ti ti-check" aria-hidden="true"></i> Salvar
         </button>
       </div>
     </div>`
@@ -256,7 +256,7 @@ async function _abrirModalCriarTermo(textoSelecionado) {
     )
     if (error) {
       btnSalvar.disabled = false
-      btnSalvar.textContent = '✓ Salvar'
+      btnSalvar.textContent = 'Salvar'
       window.toast('Erro ao salvar: ' + error.message, 4000)
       return
     }

@@ -69,9 +69,9 @@ export async function renderHistoricoRepasse(container, professorId, isAdmin) {
   sec.style.cssText = 'margin-top:20px'
 
   sec.innerHTML = `
-    <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden">
+    <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);overflow-x:auto">
       <div style="padding:13px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">
+        <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo)">
           Histórico de Repasses
         </span>
         ${isAdmin && professorId
@@ -90,7 +90,7 @@ export async function renderHistoricoRepasse(container, professorId, isAdmin) {
         : `<div style="overflow-x:auto">
              <div style="display:grid;
                          grid-template-columns:${isAdmin ? '1fr 100px 110px 110px 1fr 80px' : '100px 110px 110px 1fr'};
-                         padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;
+                         padding:8px 18px;background:rgba(242,236,206,.45);font-size:12px;
                          text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px;min-width:480px">
                ${isAdmin ? '<span>Professor</span>' : ''}
                <span>Mês</span>
@@ -102,7 +102,7 @@ export async function renderHistoricoRepasse(container, professorId, isAdmin) {
              ${lista.map(r => {
                const diff = r.valor_pago - (r.valor_previsto || r.valor_pago)
                const diffStr = diff !== 0 && r.valor_previsto
-                 ? `<span style="font-size:10px;color:${diff > 0 ? '#1a5a1a' : '#c0392b'};display:block">
+                 ? `<span style="font-size:12px;color:${diff > 0 ? 'var(--ok-fg)' : 'var(--err-vivo)'};display:block">
                       ${diff > 0 ? '+' : ''}${fmtR(diff)}
                     </span>`
                  : ''
@@ -122,23 +122,23 @@ export async function renderHistoricoRepasse(container, professorId, isAdmin) {
                              border-bottom:1px solid rgba(212,200,158,.3);font-size:12px;min-width:480px"
                       id="repasse-row-${r.id}">
                    ${isAdmin ? `<span style="font-weight:500">${esc(r.professor?.nome || '—')}</span>` : ''}
-                   <span style="font-size:11px;color:var(--txt2)">${nomeMes(r.mes_ref)}</span>
-                   <span style="font-size:11px;color:var(--txt2)">${r.valor_previsto ? fmtR(r.valor_previsto) : '—'}</span>
+                   <span style="font-size:12px;color:var(--txt2)">${nomeMes(r.mes_ref)}</span>
+                   <span style="font-size:12px;color:var(--txt2)">${r.valor_previsto ? fmtR(r.valor_previsto) : '—'}</span>
                    <div>
-                     <span style="font-weight:500;color:#1a5a1a">${fmtR(r.valor_pago)}</span>
+                     <span style="font-weight:500;color:var(--ok-fg)">${fmtR(r.valor_pago)}</span>
                      ${diffStr}
                    </div>
-                   <span style="font-size:11px;color:var(--txt2)">${esc(r.observacao || '—')}</span>
+                   <span style="font-size:12px;color:var(--txt2)">${esc(r.observacao || '—')}</span>
                    ${isAdmin
                      ? `<div style="display:flex;gap:4px">
                           <button
                             onclick="window._editarRepasse(this.dataset.id, this.dataset.prof, this.dataset.nome, this.dataset.mes, ${Number(r.valor_pago) || 0}, ${Number(r.valor_previsto) || 0}, this.dataset.obs)" data-id="${esc(r.id)}" data-prof="${esc(r.professor_id)}" data-nome="${esc(r.professor?.nome || '')}" data-mes="${esc(r.mes_ref)}" data-obs="${esc(r.observacao || '')}"
-                            style="padding:3px 7px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer"
-                            title="Editar">✎</button>
+                            style="padding:3px 7px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"
+                            title="Editar"><i class="ti ti-pencil" aria-hidden="true"></i></button>
                           <button
                             onclick="window._excluirRepasse('${r.id}')"
-                            style="padding:3px 7px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer"
-                            title="Excluir">✕</button>
+                            style="padding:3px 7px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"
+                            title="Excluir"><i class="ti ti-x" aria-hidden="true"></i></button>
                         </div>`
                      : ''}
                  </div>`
@@ -150,7 +150,7 @@ export async function renderHistoricoRepasse(container, professorId, isAdmin) {
     <!-- Modal registro / edição -->
     <div id="modal-repasse-pago"
       style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.6);z-index:200;align-items:center;justify-content:center;padding:16px">
-      <div style="background:#fff;border-radius:12px;width:460px;max-width:100%;overflow:hidden">
+      <div style="background:var(--superficie);border-radius:12px;width:460px;max-width:100%;overflow:hidden">
         <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)"
                id="modal-repasse-titulo">Registrar Pagamento</div>
@@ -162,12 +162,12 @@ export async function renderHistoricoRepasse(container, professorId, isAdmin) {
           <input type="hidden" id="rp-professor-id">
 
           <div style="display:flex;flex-direction:column;gap:3px">
-            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Professor</label>
-            <div id="rp-professor-nome" style="font-size:13px;font-weight:500;color:var(--verde);padding:4px 0"></div>
+            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Professor</label>
+            <div id="rp-professor-nome" style="font-size:13px;font-weight:500;color:var(--titulo);padding:4px 0"></div>
           </div>
 
           <div style="display:flex;flex-direction:column;gap:3px">
-            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Mês de referência</label>
+            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Mês de referência</label>
             <select id="rp-mes"
               style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
               ${mesesDisponiveis.map(m =>
@@ -178,25 +178,25 @@ export async function renderHistoricoRepasse(container, professorId, isAdmin) {
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div style="display:flex;flex-direction:column;gap:3px">
-              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Valor previsto (R$)</label>
+              <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Valor previsto (R$)</label>
               <input type="number" id="rp-valor-previsto" step="0.01" min="0" readonly
                 style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
-                       font-family:'DM Sans',sans-serif;outline:none;background:#f8f6f0;color:var(--txt2)"
+                       font-family:'DM Sans',sans-serif;outline:none;background:var(--superficie-2);color:var(--txt2)"
                 placeholder="0,00">
-              <div style="font-size:10px;color:var(--txt2)">Calculado pela previsão</div>
+              <div style="font-size:12px;color:var(--txt2)">Calculado pela previsão</div>
             </div>
             <div style="display:flex;flex-direction:column;gap:3px">
-              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Valor pago (R$) *</label>
+              <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Valor pago (R$) *</label>
               <input type="number" id="rp-valor-pago" step="0.01" min="0"
                 style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
                        font-family:'DM Sans',sans-serif;outline:none"
                 placeholder="0,00">
-              <div id="rp-diff" style="font-size:10px;color:var(--txt2);min-height:14px"></div>
+              <div id="rp-diff" style="font-size:12px;color:var(--txt2);min-height:14px"></div>
             </div>
           </div>
 
           <div style="display:flex;flex-direction:column;gap:3px">
-            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Observação (opcional)</label>
+            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Observação (opcional)</label>
             <textarea id="rp-obs" rows="2"
               style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
                      font-family:'DM Sans',sans-serif;outline:none;resize:vertical"
@@ -231,7 +231,7 @@ export async function renderHistoricoRepasse(container, professorId, isAdmin) {
     el.textContent = diff > 0
       ? `+${fmtR(diff)} acima do previsto`
       : `${fmtR(diff)} abaixo do previsto`
-    el.style.color = diff > 0 ? '#1a5a1a' : '#c0392b'
+    el.style.color = diff > 0 ? 'var(--ok-fg)' : 'var(--err-vivo)'
   })
 
   // ── Handler: botão "Novo repasse" ────────────────────────────
@@ -275,7 +275,7 @@ export async function renderHistoricoRepasse(container, professorId, isAdmin) {
     if (err) { toast('Erro: ' + err.message); return }
 
     document.getElementById('modal-repasse-pago').style.display = 'none'
-    toast(id ? '✓ Repasse atualizado!' : '✓ Repasse registrado!')
+    toast(id ? 'Repasse atualizado!' : 'Repasse registrado!')
 
     // Re-renderiza a seção sem recarregar a página inteira
     await renderHistoricoRepasse(container, professorId, isAdmin)

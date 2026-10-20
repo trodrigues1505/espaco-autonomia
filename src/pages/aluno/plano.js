@@ -87,7 +87,7 @@ export async function renderAlunoPlano(container, page) {
   const pgStatusOk = !pgAluno?.length || pgAtual?.status==='RECEIVED' || pgAtual?.status==='CONFIRMED'
 
   const pgStatusLabel = {RECEIVED:'Pago ✓',CONFIRMED:'Confirmado ✓',OVERDUE:'Em atraso ⚠',PENDING:'Aguardando pagamento',CANCELLED:'Cancelado',REFUNDED:'Devolvido'}
-  const pgStatusColor = {RECEIVED:'#1a5a1a',CONFIRMED:'#1a5a1a',OVERDUE:'#c0392b',PENDING:'#e67e22',CANCELLED:'#5a5a4a',REFUNDED:'#5a5a4a'}
+  const pgStatusColor = {RECEIVED:'var(--ok-fg)',CONFIRMED:'var(--ok-fg)',OVERDUE:'var(--err-vivo)',PENDING:'var(--warn-vivo)',CANCELLED:'var(--txt2)',REFUNDED:'var(--txt2)'}
 
   // lista de benefícios ativos no plano
   const beneficiosAtivos = Object.keys(FEAT_DESCRICOES).filter(f => plano?.[f])
@@ -97,28 +97,28 @@ export async function renderAlunoPlano(container, page) {
     <div class="content">
 
       <!-- Perfil -->
-      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">Meus Dados</div>
-          <button onclick="abrirEditarPerfil()" style="padding:5px 12px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:11px;cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif">✎ Editar</button>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo)">Meus Dados</div>
+          <button onclick="abrirEditarPerfil()" style="padding:5px 12px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:12px;cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif"><i class="ti ti-pencil" aria-hidden="true"></i> Editar</button>
         </div>
         <div style="display:flex;flex-direction:column;gap:6px">
           <div style="display:flex;gap:8px;font-size:13px">
-            <span style="color:var(--txt2);min-width:70px;font-size:11px;text-transform:uppercase;letter-spacing:.6px;padding-top:1px">Nome</span>
+            <span style="color:var(--txt2);min-width:70px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;padding-top:1px">Nome</span>
             <span id="perfil-nome-display" style="font-weight:500">${esc(perfil.nome)}</span>
           </div>
           <div style="display:flex;gap:8px;font-size:13px">
-            <span style="color:var(--txt2);min-width:70px;font-size:11px;text-transform:uppercase;letter-spacing:.6px;padding-top:1px">E-mail</span>
+            <span style="color:var(--txt2);min-width:70px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;padding-top:1px">E-mail</span>
             <span style="color:var(--txt2)">${esc(perfil.email)}</span>
           </div>
           ${perfil.telefone
             ? `<div style="display:flex;gap:8px;font-size:13px">
-                <span style="color:var(--txt2);min-width:70px;font-size:11px;text-transform:uppercase;letter-spacing:.6px;padding-top:1px">Telefone</span>
+                <span style="color:var(--txt2);min-width:70px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;padding-top:1px">Telefone</span>
                 <span id="perfil-tel-display">${esc(perfil.telefone)}</span>
                </div>`
             : `<div style="display:flex;gap:8px;font-size:13px">
-                <span style="color:var(--txt2);min-width:70px;font-size:11px;text-transform:uppercase;letter-spacing:.6px;padding-top:1px">Telefone</span>
-                <span id="perfil-tel-display" style="color:#c0392b;font-size:12px">Não cadastrado</span>
+                <span style="color:var(--txt2);min-width:70px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;padding-top:1px">Telefone</span>
+                <span id="perfil-tel-display" style="color:var(--err-vivo);font-size:12px">Não cadastrado</span>
                </div>`
           }
         </div>
@@ -128,7 +128,7 @@ export async function renderAlunoPlano(container, page) {
         ? `<div style="text-align:center;padding:40px;font-size:13px;color:var(--txt2)">Nenhuma matrícula ativa. Entre em contato com o Espaço Autonomia.</div>`
         : `
         <!-- Card do plano -->
-        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden;margin-bottom:16px">
+        <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);overflow-x:auto;margin-bottom:16px">
           <div style="padding:18px;background:var(--verde)">
             <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--bege)">Plano ${esc(plano?.nome||mat.plano_tipo)}</div>
             <div style="margin-top:8px">
@@ -137,8 +137,8 @@ export async function renderAlunoPlano(container, page) {
                     <span style="font-size:16px;font-family:'Cormorant Garamond',serif;color:rgba(242,236,206,.5);text-decoration:line-through">R$${mat.valor_mensal}</span>
                     <span style="font-size:28px;font-family:'Cormorant Garamond',serif;font-weight:600;color:var(--dourado)">R$${valorLiquido.toFixed(2).replace('.',',')}<span style="font-size:13px;font-weight:400;opacity:.8">/mês</span></span>
                   </div>
-                  <div style="font-size:11px;color:rgba(242,236,206,.7);margin-top:3px">
-                    🏷 ${descontoFixo > 0 ? 'Desconto fixo: R$' + descontoFixo.toFixed(2) : ''}
+                  <div style="font-size:12px;color:rgba(242,236,206,.7);margin-top:3px">
+                    <i class="ti ti-tag" aria-hidden="true"></i> ${descontoFixo > 0 ? 'Desconto fixo: R$' + descontoFixo.toFixed(2) : ''}
                     ${descontoAvulso > 0 ? (descontoFixo>0?' + ':'') + 'Desconto avulso: R$' + descontoAvulso.toFixed(2) + ' (' + (mat.desconto_avulso_meses - mat.desconto_avulso_usado) + ' mês(es) restante(s))' : ''}
                   </div>`
                 : `<div style="font-size:24px;font-family:'Cormorant Garamond',serif;font-weight:600;color:var(--dourado)">R$${mat.valor_mensal}<span style="font-size:13px;font-weight:400;opacity:.8">/mês</span></div>`
@@ -152,7 +152,7 @@ export async function renderAlunoPlano(container, page) {
 
           <!-- Benefícios -->
           <div style="padding:16px 18px">
-            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);margin-bottom:10px">Seus Benefícios</div>
+            <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);margin-bottom:10px">Seus Benefícios</div>
             ${beneficiosAtivos.length === 0
               ? `<div style="font-size:12px;color:var(--txt2)">Nenhum benefício especial neste plano.</div>`
               : beneficiosAtivos.map(f => {
@@ -161,16 +161,16 @@ export async function renderAlunoPlano(container, page) {
                   return `<div style="border:1px solid var(--borda);border-radius:8px;margin-bottom:8px;overflow:hidden">
                     <button onclick="toggleBeneficio('${f}')" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:none;border:none;cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif">
                       <div style="display:flex;align-items:center;gap:8px">
-                        <span style="color:var(--verde);font-weight:500;font-size:12px">✓</span>
+                        <span style="color:var(--titulo);font-weight:500;font-size:12px"><i class="ti ti-check" aria-hidden="true"></i></span>
                         <span style="font-size:12px;font-weight:500;color:var(--txt)">${esc(b.titulo)}</span>
                       </div>
-                      <span id="chevron-${f}" style="font-size:10px;color:var(--txt2);transition:transform .2s">▼</span>
+                      <span id="chevron-${f}" style="font-size:12px;color:var(--txt2);transition:transform .2s"><i class="ti ti-chevron-down" aria-hidden="true"></i></span>
                     </button>
                     <div id="desc-${f}" style="display:none;padding:0 14px 12px;font-size:12px;color:var(--txt2);line-height:1.6;border-top:1px solid rgba(212,200,158,.3)">
                       <div style="padding-top:10px">${esc(b.texto)}</div>
                       ${linkSangha
                         ? `<a href="${urlSegura(plano.whatsapp_sangha)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:8px 16px;background:#25d366;color:#fff;border-radius:6px;text-decoration:none;font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif">
-                            📱 Entrar no grupo WhatsApp
+                            <i class="ti ti-device-mobile" aria-hidden="true"></i> Entrar no grupo WhatsApp
                            </a>`
                         : ''
                       }
@@ -182,12 +182,12 @@ export async function renderAlunoPlano(container, page) {
             <!-- Benefícios não incluídos -->
             ${Object.keys(FEAT_DESCRICOES).filter(f => !plano?.[f]).length > 0
               ? `<details style="margin-top:8px">
-                  <summary style="font-size:11px;color:var(--txt2);cursor:pointer;list-style:none;display:flex;align-items:center;gap:4px">
-                    <span>▶</span> Ver benefícios não incluídos no seu plano
+                  <summary style="font-size:12px;color:var(--txt2);cursor:pointer;list-style:none;display:flex;align-items:center;gap:4px">
+                    <span><i class="ti ti-player-play" aria-hidden="true"></i></span> Ver benefícios não incluídos no seu plano
                   </summary>
                   <div style="margin-top:6px">
                     ${Object.keys(FEAT_DESCRICOES).filter(f => !plano?.[f]).map(f =>
-                      `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:11px;color:#ccc;text-decoration:line-through">
+                      `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;color:var(--txt2);text-decoration:line-through">
                         <span>—</span>${esc(FEAT_DESCRICOES[f].titulo)}
                        </div>`
                     ).join('')}
@@ -200,7 +200,7 @@ export async function renderAlunoPlano(container, page) {
 
         ${mat.plano_tipo !== 'vishnu_livre'
           ? `<div style="background:rgba(232,188,79,.08);border:1px solid rgba(232,188,79,.3);border-radius:var(--r);padding:16px 18px;margin-bottom:16px">
-              <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:6px">Quer mais?</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo);margin-bottom:6px">Quer mais?</div>
               <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">Faça upgrade e acesse mais modalidades e benefícios.</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
                 ${todos.filter(p=>p.tipo!==mat.plano_tipo&&(p.preco_1x||0)>(plano?.preco_1x||0)).map(p=>`
@@ -216,19 +216,19 @@ export async function renderAlunoPlano(container, page) {
 
       <!-- Histórico de pagamentos -->
       ${(pgAluno||[]).length
-        ? `<div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden;margin-bottom:14px">
+        ? `<div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);overflow-x:auto;margin-bottom:14px">
             <div style="padding:13px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
-              <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">Histórico de Pagamentos</span>
-              ${pgAtual?`<span style="background:${pgStatusOk?'#e8f4e8':'#fceaea'};color:${pgStatusOk?'#1a5a1a':'#8a1a1a'};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500">${pgStatusLabel[pgAtual?.status]||esc(pgAtual?.status)||'—'}</span>`:''}
+              <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo)">Histórico de Pagamentos</span>
+              ${pgAtual?`<span style="background:${pgStatusOk?'var(--ok-bg)':'var(--err-bg)'};color:${pgStatusOk?'var(--ok-fg)':'var(--err-fg)'};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:500">${pgStatusLabel[pgAtual?.status]||esc(pgAtual?.status)||'—'}</span>`:''}
             </div>
             ${(pgAluno||[]).map(p=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
               <div>
                 <div style="font-weight:500">${p.mes_ref?new Date(p.mes_ref+'T12:00').toLocaleDateString('pt-BR',{month:'long',year:'numeric'}):'—'}</div>
-                <div style="font-size:10px;color:var(--txt2);margin-top:1px">Venc: ${p.vencimento?new Date(p.vencimento+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):'-'}</div>
+                <div style="font-size:12px;color:var(--txt2);margin-top:1px">Venc: ${p.vencimento?new Date(p.vencimento+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):'-'}</div>
               </div>
               <div style="text-align:right">
                 <div style="font-weight:500">R$${(p.valor||0).toFixed(2).replace('.',',')}</div>
-                <div style="font-size:10px;color:${pgStatusColor[p.status]||'#888'};margin-top:1px">${pgStatusLabel[p.status]||esc(p.status)}</div>
+                <div style="font-size:12px;color:${pgStatusColor[p.status]||'var(--txt2)'};margin-top:1px">${pgStatusLabel[p.status]||esc(p.status)}</div>
               </div>
             </div>`).join('')}
           </div>`
@@ -239,20 +239,20 @@ export async function renderAlunoPlano(container, page) {
 
     <!-- Modal editar perfil -->
     <div id="modal-editar-perfil" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.6);z-index:200;align-items:center;justify-content:center;padding:16px">
-      <div style="background:#fff;border-radius:12px;width:400px;max-width:100%;overflow:hidden">
+      <div style="background:var(--superficie);border-radius:12px;width:400px;max-width:100%;overflow:hidden">
         <div style="background:var(--verde);padding:16px 20px">
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)">Editar Meus Dados</div>
         </div>
         <div style="padding:20px;display:flex;flex-direction:column;gap:12px">
           <div style="display:flex;flex-direction:column;gap:4px">
-            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Nome completo</label>
+            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Nome completo</label>
             <input id="edit-perfil-nome" type="text" value="${esc(perfil.nome.replace(/"/g,'&quot;'))}" style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
           <div style="display:flex;flex-direction:column;gap:4px">
-            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Telefone / WhatsApp</label>
+            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Telefone / WhatsApp</label>
             <input id="edit-perfil-tel" type="tel" value="${esc(perfil.telefone||'')}" placeholder="(11) 99999-9999" style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
-          <div style="font-size:11px;color:var(--txt2);background:rgba(242,236,206,.4);border-radius:6px;padding:8px 12px">
+          <div style="font-size:12px;color:var(--txt2);background:rgba(242,236,206,.4);border-radius:6px;padding:8px 12px">
             O e-mail não pode ser alterado pois é usado para o login com Google.
           </div>
         </div>
@@ -297,7 +297,7 @@ uiAnimar(container)
     if (telDisplay) telDisplay.textContent = tel || 'Não cadastrado'
 
     document.getElementById('modal-editar-perfil').style.display = 'none'
-    toast('✓ Dados atualizados!')
+    toast('Dados atualizados!')
   }
  
 }       

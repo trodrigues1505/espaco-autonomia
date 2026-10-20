@@ -91,7 +91,7 @@ export async function renderAdhyayanaAdmin(container, page) {
 
   if (error) {
     container.innerHTML = `<div class="topbar"><div class="topbar-t">Yoga Adhyayana</div></div>
-      <div class="content"><p style="color:#c0392b">Erro: ${esc(error.message)}</p></div>`
+      <div class="content"><p style="color:var(--err-vivo)">Erro: ${esc(error.message)}</p></div>`
     return
   }
 
@@ -117,9 +117,9 @@ export async function renderAdhyayanaAdmin(container, page) {
   }
 
   function badgeStatus(iso) {
-    if (iso === hoje) return `<span style="background:#e8f4e8;color:#1a5a1a;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600">✓ Hoje</span>`
-    if (iso > hoje)  return `<span style="background:rgba(232,188,79,.15);color:#7a5a10;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500">⏳ Agendada</span>`
-    return `<span style="background:rgba(31,56,31,.07);color:var(--txt2);padding:2px 8px;border-radius:20px;font-size:10px">Publicado</span>`
+    if (iso === hoje) return `<span style="background:var(--ok-bg);color:var(--ok-fg);padding:2px 8px;border-radius:20px;font-size:12px;font-weight:600"><i class="ti ti-check" aria-hidden="true"></i> Hoje</span>`
+    if (iso > hoje)  return `<span style="background:rgba(232,188,79,.15);color:var(--warn-fg);padding:2px 8px;border-radius:20px;font-size:12px;font-weight:500"><i class="ti ti-hourglass" aria-hidden="true"></i> Agendada</span>`
+    return `<span style="background:rgba(31,56,31,.07);color:var(--txt2);padding:2px 8px;border-radius:20px;font-size:12px">Publicado</span>`
   }
 
   container.innerHTML = `
@@ -137,12 +137,12 @@ export async function renderAdhyayanaAdmin(container, page) {
       ${!hojePublicado
         ? `<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);
                       border-radius:8px;padding:12px 16px;margin-bottom:16px;
-                      display:flex;align-items:center;gap:10px;font-size:13px;color:#7a5a10">
-             <i class="ti ti-alert-triangle" style="color:var(--dourado);font-size:18px"></i>
+                      display:flex;align-items:center;gap:10px;font-size:13px;color:var(--warn-fg)">
+             <i class="ti ti-alert-triangle" style="color:var(--dourado-texto);font-size:18px"></i>
              <span>Nenhum āsana publicado hoje. <strong>Cadastre o āsana do dia.</strong></span>
            </div>`
-        : `<div style="background:#e8f4e8;border:1px solid #b8ddb8;border-radius:8px;
-                      padding:12px 16px;margin-bottom:16px;font-size:13px;color:#1a5a1a;
+        : `<div style="background:var(--ok-bg);border:1px solid var(--ok-borda);border-radius:8px;
+                      padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--ok-fg);
                       display:flex;align-items:center;gap:10px">
              <i class="ti ti-check" style="font-size:18px"></i>
              <span>Āsana de hoje: <strong>${esc(hojePublicado.nome)}</strong></span>
@@ -150,33 +150,33 @@ export async function renderAdhyayanaAdmin(container, page) {
       }
 
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">
-        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Total publicados</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--verde)">${publicados.length}</div>
+        <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Total publicados</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--titulo)">${publicados.length}</div>
         </div>
-        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Agendados (futuros)</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:${futuros.length > 0 ? '#BA7517' : 'var(--txt2)'}">
+        <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Agendados (futuros)</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:${futuros.length > 0 ? 'var(--warn-fg)' : 'var(--txt2)'}">
             ${futuros.length}
           </div>
           ${futuros.length > 0
-            ? `<div style="font-size:10px;color:#BA7517;margin-top:2px">próximo: ${fmtDia(futuros[0].publicada_em)}</div>`
-            : `<div style="font-size:10px;color:var(--txt2);margin-top:2px">nenhum na fila</div>`}
+            ? `<div style="font-size:12px;color:var(--warn-fg);margin-top:2px">próximo: ${fmtDia(futuros[0].publicada_em)}</div>`
+            : `<div style="font-size:12px;color:var(--txt2);margin-top:2px">nenhum na fila</div>`}
         </div>
-        <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Próx. dia útil livre</div>
-          <div style="font-size:13px;font-weight:500;color:var(--verde);margin-top:4px">${fmtDia(proximoLivre)}</div>
-          <div style="font-size:10px;color:var(--txt2);margin-top:2px">${proximoLivre}</div>
+        <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Próx. dia útil livre</div>
+          <div style="font-size:13px;font-weight:500;color:var(--titulo);margin-top:4px">${fmtDia(proximoLivre)}</div>
+          <div style="font-size:12px;color:var(--txt2);margin-top:2px">${proximoLivre}</div>
         </div>
       </div>
 
       ${futuros.length > 0 ? `
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#BA7517;font-weight:500;margin-bottom:8px">
-          ⏳ Agendados — visíveis somente na data
+        <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--warn-fg);font-weight:500;margin-bottom:8px">
+          <i class="ti ti-hourglass" aria-hidden="true"></i> Agendados — visíveis somente na data
         </div>
-        <div style="background:#fff;border:1px solid rgba(232,188,79,.4);border-radius:var(--r);overflow:hidden;margin-bottom:18px">
+        <div style="background:var(--superficie);border:1px solid rgba(232,188,79,.4);border-radius:var(--r);overflow-x:auto;margin-bottom:18px">
           <div style="display:grid;grid-template-columns:1fr 130px 110px;padding:8px 18px;
-                      background:rgba(232,188,79,.08);font-size:10px;text-transform:uppercase;
+                      background:rgba(232,188,79,.08);font-size:12px;text-transform:uppercase;
                       letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
             <span>Āsana</span><span>Data agendada</span><span>Ação</span>
           </div>
@@ -188,36 +188,36 @@ export async function renderAdhyayanaAdmin(container, page) {
                 ${a.imagem_url ? `<img src="${urlSegura(a.imagem_url)}" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0">` : ''}
                 <div>
                   <div style="font-weight:500;color:var(--txt)">${esc(a.nome)}</div>
-                  ${a.nome_alternativo ? `<div style="font-size:10px;color:var(--txt2);margin-top:1px;font-style:italic">${esc(a.nome_alternativo)}</div>` : ''}
+                  ${a.nome_alternativo ? `<div style="font-size:12px;color:var(--txt2);margin-top:1px;font-style:italic">${esc(a.nome_alternativo)}</div>` : ''}
                 </div>
               </div>
               <div style="display:flex;flex-direction:column;gap:3px">
                 <input type="date" value="${a.publicada_em}" id="data-${a.id}"
                   style="border:1px solid var(--borda);border-radius:5px;padding:4px 8px;
-                         font-size:11px;font-family:'DM Sans',sans-serif;color:var(--txt);
+                         font-size:12px;font-family:'DM Sans',sans-serif;color:var(--txt);
                          width:130px">
                 <button onclick="reagendarAsanaAdhyayana('${a.id}')"
-                  style="padding:2px 8px;background:rgba(232,188,79,.15);color:#7a5a10;
-                         border:1px solid rgba(232,188,79,.4);border-radius:4px;font-size:10px;
+                  style="padding:2px 8px;background:rgba(232,188,79,.15);color:var(--warn-fg);
+                         border:1px solid rgba(232,188,79,.4);border-radius:4px;font-size:12px;
                          cursor:pointer;font-family:'DM Sans',sans-serif">Reagendar</button>
               </div>
               <div style="display:flex;gap:4px">
                 <button onclick="previaAdhyayana('${a.id}')"
-                  style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--verde);border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Prévia">👁</button>
+                  style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--titulo);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Prévia"><i class="ti ti-eye" aria-hidden="true"></i></button>
                 <button onclick="editarAdhyayana('${a.id}')"
-                  style="padding:3px 8px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✎</button>
+                  style="padding:3px 8px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-pencil" aria-hidden="true"></i></button>
                 <button onclick="excluirAdhyayana(this.dataset.id, this.dataset.nome)" data-id="${esc(a.id)}" data-nome="${esc(a.nome||'')}"
-                  style="padding:3px 8px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✕</button>
+                  style="padding:3px 8px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-x" aria-hidden="true"></i></button>
               </div>
             </div>`).join('')}
         </div>` : ''}
 
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:8px">
+      <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:8px">
         Publicados (${publicados.length})
       </div>
-      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden">
+      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);overflow-x:auto">
         <div style="display:grid;grid-template-columns:1fr 130px 80px;padding:8px 18px;
-                    background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;
+                    background:rgba(242,236,206,.45);font-size:12px;text-transform:uppercase;
                     letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
           <span>Āsana</span><span>Publicado em</span><span>Ação</span>
         </div>
@@ -233,17 +233,17 @@ export async function renderAdhyayanaAdmin(container, page) {
                   ${a.imagem_url ? `<img src="${urlSegura(a.imagem_url)}" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0">` : ''}
                   <div>
                     <div style="font-weight:500;color:var(--txt)">${esc(a.nome)}</div>
-                    ${a.nome_alternativo ? `<div style="font-size:10px;color:var(--txt2);margin-top:1px;font-style:italic">${esc(a.nome_alternativo)}</div>` : ''}
+                    ${a.nome_alternativo ? `<div style="font-size:12px;color:var(--txt2);margin-top:1px;font-style:italic">${esc(a.nome_alternativo)}</div>` : ''}
                   </div>
                 </div>
-                <div>${badgeStatus(a.publicada_em)}<div style="font-size:10px;color:var(--txt2);margin-top:2px">${fmtDia(a.publicada_em)}</div></div>
+                <div>${badgeStatus(a.publicada_em)}<div style="font-size:12px;color:var(--txt2);margin-top:2px">${fmtDia(a.publicada_em)}</div></div>
                 <div style="display:flex;gap:4px">
                   <button onclick="previaAdhyayana('${a.id}')"
-                    style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--verde);border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Prévia">👁</button>
+                    style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--titulo);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Prévia"><i class="ti ti-eye" aria-hidden="true"></i></button>
                   <button onclick="editarAdhyayana('${a.id}')"
-                    style="padding:3px 8px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✎</button>
+                    style="padding:3px 8px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-pencil" aria-hidden="true"></i></button>
                   <button onclick="excluirAdhyayana(this.dataset.id, this.dataset.nome)" data-id="${esc(a.id)}" data-nome="${esc(a.nome||'')}"
-                    style="padding:3px 8px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✕</button>
+                    style="padding:3px 8px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-x" aria-hidden="true"></i></button>
                 </div>
               </div>`
             }).join('')
@@ -257,7 +257,7 @@ export async function renderAdhyayanaAdmin(container, page) {
       <div style="width:560px;max-width:100%;margin:auto">
         <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
           <button onclick="document.getElementById('modal-previa-adhyayana').style.display='none'"
-            style="background:#fff;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:18px">×</button>
+            style="background:var(--superficie);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:18px">×</button>
         </div>
         <div id="previa-adhyayana-body"></div>
       </div>
@@ -266,7 +266,7 @@ export async function renderAdhyayanaAdmin(container, page) {
     <div id="modal-adhyayana" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.6);
                                    z-index:200;align-items:flex-start;justify-content:center;
                                    padding:16px;overflow-y:auto">
-      <div style="background:#fff;border-radius:12px;width:680px;max-width:100%;margin:auto">
+      <div style="background:var(--superficie);border-radius:12px;width:680px;max-width:100%;margin:auto">
 
         <div style="background:var(--verde);padding:16px 20px;border-radius:12px 12px 0 0;
                     display:flex;align-items:center;justify-content:space-between;
@@ -274,7 +274,7 @@ export async function renderAdhyayanaAdmin(container, page) {
           <div>
             <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;
                         color:var(--bege)" id="adhy-modal-titulo">Novo Āsana</div>
-            <div style="font-size:11px;color:rgba(242,236,206,.6);margin-top:2px" id="adhy-modal-subtitulo">
+            <div style="font-size:12px;color:rgba(242,236,206,.6);margin-top:2px" id="adhy-modal-subtitulo">
               Cole o texto completo do estudo do āsana e a IA extrai os campos
             </div>
           </div>
@@ -285,7 +285,7 @@ export async function renderAdhyayanaAdmin(container, page) {
         <div style="padding:20px" id="adhyayana-modal-body">
           <div id="adhy-etapa-1">
             <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
-              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;
+              <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;
                              color:var(--txt2);font-weight:500">Cole o texto completo do estudo do āsana</label>
               <textarea id="adhy-texto-bruto" rows="14" placeholder="Cole aqui: nome / origem e simbolismo / koshas / vāyus / chakras / doshas / tattvas / benefícios / observações terapêuticas / fechamento..."
                 style="border:1px solid var(--borda);border-radius:6px;padding:10px 12px;font-size:13px;
@@ -293,12 +293,12 @@ export async function renderAdhyayanaAdmin(container, page) {
                        line-height:1.6"></textarea>
             </div>
             <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:16px">
-              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;
+              <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;
                              color:var(--txt2);font-weight:500">Data de publicação</label>
               <input type="date" id="adhy-data-pub" value="${proximoLivre}"
                 style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
                        font-family:'DM Sans',sans-serif;outline:none;width:200px">
-              <div style="font-size:10px;color:var(--txt2)">
+              <div style="font-size:12px;color:var(--txt2)">
                 Próximo dia útil livre: <strong>${fmtDia(proximoLivre)}</strong>.
                 Āsanas com data futura ficam invisíveis para alunos até lá.
               </div>
@@ -331,7 +331,7 @@ export async function renderAdhyayanaAdmin(container, page) {
     if (!novaData) { toast('Selecione uma data'); return }
     const { error: err } = await sb.from('adhyayana_asanas').update({ publicada_em: novaData }).eq('id', id)
     if (err) { toast('Erro: ' + err.message); return }
-    toast('✓ Data atualizada para ' + fmtDia(novaData))
+    toast('Data atualizada para' + fmtDia(novaData))
     navigate('adhyayana-admin')
   }
 
@@ -376,7 +376,7 @@ export async function renderAdhyayanaAdmin(container, page) {
     ].filter(([, v]) => v)
 
     document.getElementById('previa-adhyayana-body').innerHTML = `
-      <div style="background:#fff;border-radius:12px;overflow:hidden">
+      <div style="background:var(--superficie);border-radius:12px;overflow:hidden">
         <div style="background:var(--verde);padding:16px 18px">
           ${a.imagem_url ? `
             <div style="position:relative;border-radius:8px;overflow:hidden;margin-bottom:12px;cursor:zoom-in"
@@ -384,13 +384,13 @@ export async function renderAdhyayanaAdmin(container, page) {
               <img src="${urlSegura(a.imagem_url)}" referrerpolicy="no-referrer"
                 style="width:100%;max-height:220px;object-fit:cover;display:block">
               <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);
-                          border-radius:20px;padding:3px 8px;font-size:10px;color:#fff;
+                          border-radius:20px;padding:3px 8px;font-size:12px;color:#fff;
                           display:flex;align-items:center;gap:4px;pointer-events:none">
                 <i class="ti ti-zoom-in" style="font-size:12px"></i> ampliar
               </div>
             </div>` : ''}
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:rgba(242,236,206,.55);margin-bottom:6px">
-            ✦ Yoga Adhyayana · ${fmtDia(a.publicada_em)}${esc(a.nivel ? ' · ' + a.nivel : '')}
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:rgba(242,236,206,.55);margin-bottom:6px">
+            <i class="ti ti-sparkles" aria-hidden="true"></i> Yoga Adhyayana · ${fmtDia(a.publicada_em)}${esc(a.nivel ? ' · ' + a.nivel : '')}
           </div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--bege)">${esc(a.nome)}</div>
           ${a.nome_alternativo ? `<div style="font-size:13px;font-style:italic;color:rgba(242,236,206,.8);margin-top:2px">${esc(a.nome_alternativo)}</div>` : ''}
@@ -398,12 +398,12 @@ export async function renderAdhyayanaAdmin(container, page) {
         <div style="padding:16px 18px">
           ${blocos.map(([titulo, texto]) => `
             <div style="margin-bottom:14px">
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">${esc(titulo)}</div>
+              <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">${esc(titulo)}</div>
               <div style="font-size:13px;color:var(--txt);line-height:1.7;white-space:pre-line">${esc(texto)}</div>
             </div>`).join('')}
           ${a.fechamento ? `
-            <div style="background:#f9f7f0;border-radius:8px;padding:12px 14px;margin-top:8px">
-              <p style="font-size:13px;font-style:italic;color:var(--verde);line-height:1.7;margin:0;white-space:pre-line">${esc(a.fechamento)}</p>
+            <div style="background:var(--superficie-2);border-radius:8px;padding:12px 14px;margin-top:8px">
+              <p style="font-size:13px;font-style:italic;color:var(--titulo);line-height:1.7;margin:0;white-space:pre-line">${esc(a.fechamento)}</p>
             </div>` : ''}
         </div>
       </div>`
@@ -488,7 +488,7 @@ Regras:
       document.getElementById('adhy-etapa-1').style.display = 'none'
       document.getElementById('adhy-etapa-2').style.display = 'block'
       _renderStepAtual()
-      toast('✓ Campos extraídos — revise e salve')
+      toast('Campos extraídos — revise e salve')
     } catch(e) {
       toast('Erro: ' + e.message)
       btn.disabled = false
@@ -531,7 +531,7 @@ Regras:
                    font-family:'DM Sans',sans-serif;outline:none;width:100%">`
       return `
         <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px">
-          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;
+          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;
                          color:var(--txt2);font-weight:500">${campo.label}</label>
           ${inputEl}
         </div>`
@@ -548,7 +548,7 @@ Regras:
       <button onclick="${ehPrimeiro ? 'voltarEtapa1Adhyayana()' : 'adhyVoltarStep()'}"
         style="padding:8px 16px;background:transparent;border:1px solid var(--borda);
                border-radius:6px;font-size:12px;cursor:pointer;margin-right:auto">
-        ← ${ehPrimeiro ? 'Novo texto' : 'Voltar'}
+        <i class="ti ti-arrow-left" aria-hidden="true"></i> ${ehPrimeiro ? 'Novo texto' : 'Voltar'}
       </button>
       <button onclick="fecharFormAdhyayana()"
         style="padding:8px 16px;background:transparent;border:1px solid var(--borda);
@@ -564,7 +564,7 @@ Regras:
              style="padding:8px 16px;background:var(--verde);color:var(--bege);border:none;
                     border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
                     font-weight:500">
-             Próximo →
+             Próximo <i class="ti ti-arrow-right" aria-hidden="true"></i>
            </button>`}
     `
   }
@@ -626,7 +626,7 @@ Regras:
       ;({ error: err } = await sb.from('adhyayana_asanas').insert(payload))
     }
     if (err) { toast('Erro: ' + err.message); return }
-    toast('✓ Āsana salvo!')
+    toast('Āsana salvo!')
     fecharFormAdhyayana()
     navigate('adhyayana-admin')
   }
@@ -635,7 +635,7 @@ Regras:
     if (!(await confirmarModal({ titulo: 'Excluir?', texto: `Excluir "${nome}"? Esta ação não pode ser desfeita.`, confirmar: 'Excluir', perigo: true }))) return
     const { error: err } = await sb.from('adhyayana_asanas').delete().eq('id', id)
     if (err) { toast('Erro: ' + err.message); return }
-    toast('✓ Āsana excluído.')
+    toast('Āsana excluído.')
     navigate('adhyayana-admin')
   }
 }   

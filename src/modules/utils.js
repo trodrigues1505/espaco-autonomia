@@ -38,11 +38,11 @@ export const PLANO_VALORES = { brahma: 100, shiva_1x: 150, shiva_2x: 200, vishnu
 export const PLANO_OPCOES  = { brahma: 1,   shiva_1x: 1,   shiva_2x: 2,   vishnu_2x: 2,   vishnu_livre: 99  }
 
 export const PLANO_BADGES = {
-  brahma:       `<span style="background:#f0ede4;color:#5a5a4a;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap">Brahma</span>`,
-  shiva_1x:     `<span style="background:#e8f4e8;color:#1a5a1a;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap">Shiva 1x</span>`,
-  shiva_2x:     `<span style="background:#d4edda;color:#155724;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap">Shiva 2x</span>`,
-  vishnu_2x:    `<span style="background:rgba(232,188,79,.15);color:#7a5a10;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;border:1px solid rgba(232,188,79,.3);white-space:nowrap">Vishnu 2x</span>`,
-  vishnu_livre: `<span style="background:rgba(232,188,79,.25);color:#5a3a00;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;border:1px solid rgba(232,188,79,.4);white-space:nowrap">Vishnu Livre</span>`,
+  brahma:       `<span style="background:var(--neutro-bg);color:var(--txt2);padding:2px 8px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap">Brahma</span>`,
+  shiva_1x:     `<span style="background:var(--ok-bg);color:var(--ok-fg);padding:2px 8px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap">Shiva 1x</span>`,
+  shiva_2x:     `<span style="background:var(--ok-bg);color:var(--ok-fg);padding:2px 8px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap">Shiva 2x</span>`,
+  vishnu_2x:    `<span style="background:rgba(232,188,79,.15);color:var(--warn-fg);padding:2px 8px;border-radius:20px;font-size:12px;font-weight:500;border:1px solid rgba(232,188,79,.3);white-space:nowrap">Vishnu 2x</span>`,
+  vishnu_livre: `<span style="background:rgba(232,188,79,.25);color:var(--warn-fg);padding:2px 8px;border-radius:20px;font-size:12px;font-weight:500;border:1px solid rgba(232,188,79,.4);white-space:nowrap">Vishnu Livre</span>`,
 }
 
 // ── Helpers de HTML ──────────────────────────────────────────
@@ -54,15 +54,15 @@ export function dot(mod) {
 
 /** Badge pill colorida */
 export function badge(txt, bg, color) {
-  return `<span style="background:${bg};color:${color};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap">${esc(txt)}</span>`
+  return `<span style="background:${bg};color:${color};padding:2px 8px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap">${esc(txt)}</span>`
 }
 
 /** Card com cabeçalho e corpo */
 export function card(title, rightHtml, bodyHtml) {
   return `
-    <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden;margin-bottom:16px">
+    <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);overflow-x:auto;margin-bottom:16px">
       <div style="padding:13px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
-        <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">${title}</span>
+        <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo)">${title}</span>
         <div>${rightHtml || ''}</div>
       </div>
       ${bodyHtml}
@@ -73,10 +73,10 @@ export function card(title, rightHtml, bodyHtml) {
 export function modal(id, title, bodyHtml, footHtml) {
   return `
     <div id="${id}" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.45);z-index:100;align-items:center;justify-content:center">
-      <div style="background:#fff;border-radius:10px;width:500px;max-width:95vw;max-height:90vh;overflow:auto">
+      <div style="background:var(--superficie);border-radius:10px;width:500px;max-width:95vw;max-height:90vh;overflow:auto">
         <div style="padding:18px 22px 14px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
-          <span style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--verde)">${title}</span>
-          <button onclick="document.getElementById('${id}').style.display='none'" style="background:none;border:1px solid var(--borda);border-radius:5px;padding:3px 8px;cursor:pointer;font-size:12px">✕</button>
+          <span style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--titulo)">${title}</span>
+          <button onclick="document.getElementById('${id}').style.display='none'" style="background:none;border:1px solid var(--borda);border-radius:5px;padding:3px 8px;cursor:pointer;font-size:12px"><i class="ti ti-x" aria-hidden="true"></i></button>
         </div>
         <div style="padding:18px 22px">${bodyHtml}</div>
         <div style="padding:12px 22px;border-top:1px solid var(--borda);display:flex;gap:8px;justify-content:flex-end">${footHtml}</div>
@@ -89,7 +89,7 @@ export function fi(idOrLabel, labelOrInput, inputHtmlOrUndef) {
   const label     = inputHtmlOrUndef !== undefined ? labelOrInput    : idOrLabel
   const inputHtml = inputHtmlOrUndef !== undefined ? inputHtmlOrUndef : labelOrInput
   return `<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
-    <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">${label}</label>
+    <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">${label}</label>
     ${inputHtml}
   </div>`
 }

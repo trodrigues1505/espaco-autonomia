@@ -31,7 +31,7 @@ export function abrirModalCancelarAula(ocorrenciaId, infoObj) {
     infoEl.innerHTML = `
       <strong>${nomes[infoObj.modalidade] || esc(infoObj.modalidade)}</strong> —
       ${dia}, ${hora}
-      <span style="margin-left:8px;font-size:11px;color:var(--txt2)">
+      <span style="margin-left:8px;font-size:12px;color:var(--txt2)">
         ${infoObj.confirmados || 0} aluno(s) confirmado(s)
       </span>`
   }
@@ -82,7 +82,7 @@ export async function confirmarCancelamentoAula() {
       })
       .then(r => { if (r.error) console.warn('estornar_confirmacoes_ocorrencia:', r.error.message) })
 
-    window.toast('✓ Aula cancelada. Alunos serão notificados.')
+    window.toast('Aula cancelada. Alunos serão notificados.')
     fecharModalCancelarAula()
     const destino = window._cancelReturnPage || 'prof-aulas'
     window._cancelReturnPage = null

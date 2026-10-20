@@ -33,51 +33,51 @@ export async function renderPlanos(container, page) {
   }
 
   const modalCriarPlano = `<div id="modal-criar-plano" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.45);z-index:100;align-items:center;justify-content:center">
-    <div style="background:#fff;border-radius:10px;width:520px;max-width:95vw;max-height:90vh;overflow:auto">
+    <div style="background:var(--superficie);border-radius:10px;width:520px;max-width:95vw;max-height:90vh;overflow:auto">
       <div style="padding:18px 22px 14px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
-        <span style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--verde)">Novo Plano</span>
-        <button onclick="document.getElementById('modal-criar-plano').style.display='none'" style="background:none;border:1px solid var(--borda);border-radius:5px;padding:3px 8px;cursor:pointer">✕</button>
+        <span style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--titulo)">Novo Plano</span>
+        <button onclick="document.getElementById('modal-criar-plano').style.display='none'" style="background:none;border:1px solid var(--borda);border-radius:5px;padding:3px 8px;cursor:pointer"><i class="ti ti-x" aria-hidden="true"></i></button>
       </div>
       <div style="padding:18px 22px">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
-            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Tipo (identificador)</label>
+            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Tipo (identificador)</label>
             <input id="np-tipo" placeholder="ex: gold" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--txt);width:100%;outline:none">
           </div>
           <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
-            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Nome exibido</label>
+            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Nome exibido</label>
             <input id="np-nome" placeholder="ex: Gold" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--txt);width:100%;outline:none">
           </div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
           <div style="display:flex;flex-direction:column;gap:4px">
-            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Preço 1×/sem (R$)</label>
+            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Preço 1×/sem (R$)</label>
             <input id="np-p1" type="number" placeholder="100" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
           </div>
           <div style="display:flex;flex-direction:column;gap:4px">
-            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Preço 2×/sem (R$)</label>
+            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Preço 2×/sem (R$)</label>
             <input id="np-p2" type="number" placeholder="150" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
           </div>
           <div style="display:flex;flex-direction:column;gap:4px">
-            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Preço livre (R$)</label>
+            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Preço livre (R$)</label>
             <input id="np-pl" type="number" placeholder="200" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px">
-          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Link WhatsApp — Sangha (opcional)</label>
+          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Link WhatsApp — Sangha (opcional)</label>
           <input id="np-sangha" type="url" placeholder="https://chat.whatsapp.com/..." style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
-          <div style="font-size:10px;color:var(--txt2)">Link do grupo específico deste plano. Exibido pro aluno na aba Meu Plano.</div>
+          <div style="font-size:12px;color:var(--txt2)">Link do grupo específico deste plano. Exibido pro aluno na aba Meu Plano.</div>
         </div>
         <div style="margin-bottom:12px">
-          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:6px">Modalidades incluídas</label>
+          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:6px">Modalidades incluídas</label>
           <div style="display:flex;gap:8px">
             ${['hatha','acro','raja'].map(m=>`<label style="display:flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--borda);border-radius:20px;font-size:12px;cursor:pointer"><input type="checkbox" name="np-mod" value="${m}" style="accent-color:var(--verde)"> ${NOMES[m]}</label>`).join('')}
           </div>
         </div>
         <div style="margin-bottom:4px">
-          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:8px">Benefícios incluídos</label>
+          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:8px">Benefícios incluídos</label>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
-            ${feats.map(f=>`<label style="display:flex;align-items:center;gap:6px;font-size:11px;padding:4px 0;cursor:pointer"><input type="checkbox" name="np-feat" value="${f}" style="accent-color:var(--verde)"> ${featLabels[f].split('—')[0].trim()}</label>`).join('')}
+            ${feats.map(f=>`<label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:4px 0;cursor:pointer"><input type="checkbox" name="np-feat" value="${f}" style="accent-color:var(--verde)"> ${featLabels[f].split('—')[0].trim()}</label>`).join('')}
           </div>
         </div>
       </div>
@@ -98,39 +98,39 @@ export async function renderPlanos(container, page) {
         Cada linha abaixo é uma opção de assinatura disponível. Os 5 planos base já estão configurados. Use "+ Novo Plano" apenas para criar planos especiais (ex: Gestante, Melhor Idade, Família).
       </div>
 
-      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden;margin-bottom:24px">
-        <div style="display:grid;grid-template-columns:180px 120px 1fr 120px 60px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
+      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);overflow-x:auto;margin-bottom:24px">
+        <div style="display:grid;grid-template-columns:180px 120px 1fr 120px 60px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
           <span>Plano</span><span>Frequência</span><span>Modalidades</span><span>Valor</span><span>Ação</span>
         </div>
         ${opcoes.map(o=>`<div style="display:grid;grid-template-columns:180px 120px 1fr 120px 60px;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
           <div>
             <span style="font-weight:500">${esc(o.plano.nome)}</span>
-            ${o.plano.sangha && o.plano.whatsapp_sangha?`<div style="font-size:10px;margin-top:2px"><a href="${urlSegura(o.plano.whatsapp_sangha)}" target="_blank" style="color:var(--verde);text-decoration:none">📱 Link Sangha</a></div>`:''}
+            ${o.plano.sangha && o.plano.whatsapp_sangha?`<div style="font-size:12px;margin-top:2px"><a href="${urlSegura(o.plano.whatsapp_sangha)}" target="_blank" style="color:var(--titulo);text-decoration:none"><i class="ti ti-device-mobile" aria-hidden="true"></i> Link Sangha</a></div>`:''}
           </div>
           <span style="color:var(--txt2)">${o.label}</span>
           <div style="display:flex;gap:4px;flex-wrap:wrap">
-            ${(o.plano.modalidades||[]).map(m=>`<span style="background:${CORES[m.modalidade]||'#888'}22;color:${CORES[m.modalidade]||'#888'};padding:1px 7px;border-radius:10px;font-size:10px;font-weight:500">${NOMES[m.modalidade]||esc(m.modalidade)}</span>`).join('')}
+            ${(o.plano.modalidades||[]).map(m=>`<span style="background:${CORES[m.modalidade]||'#888'}22;color:${CORES[m.modalidade]||'var(--txt2)'};padding:1px 7px;border-radius:10px;font-size:12px;font-weight:500">${NOMES[m.modalidade]||esc(m.modalidade)}</span>`).join('')}
           </div>
-          <span style="font-weight:500;color:var(--verde)">R$ ${o.preco}<span style="font-weight:400;color:var(--txt2);font-size:11px">/mês</span></span>
-          <button onclick="abrirEditarPlano(this.dataset.tipo)" data-tipo="${esc(o.plano.tipo)}" style="padding:3px 8px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Editar">✎</button>
+          <span style="font-weight:500;color:var(--titulo)">R$ ${o.preco}<span style="font-weight:400;color:var(--txt2);font-size:12px">/mês</span></span>
+          <button onclick="abrirEditarPlano(this.dataset.tipo)" data-tipo="${esc(o.plano.tipo)}" style="padding:3px 8px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Editar"><i class="ti ti-pencil" aria-hidden="true"></i></button>
         </div>`).join('')}
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
         ${(planos||[]).map(p => {
           const modsDoPLano = (p.modalidades||[]).map(m=>m.modalidade)
-          return `<div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden">
+          return `<div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);overflow-x:auto">
             <div style="padding:14px 18px;background:var(--fundo);border-bottom:1px solid var(--borda)">
-              <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${esc(p.nome)}</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--titulo)">${esc(p.nome)}</div>
               <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-                ${modsDoPLano.map(m=>`<span style="background:${CORES[m]||'#888'}22;color:${CORES[m]||'#888'};padding:2px 8px;border-radius:10px;font-size:10px;font-weight:500">${NOMES[m]||m}</span>`).join('')}
+                ${modsDoPLano.map(m=>`<span style="background:${CORES[m]||'#888'}22;color:${CORES[m]||'var(--txt2)'};padding:2px 8px;border-radius:10px;font-size:12px;font-weight:500">${NOMES[m]||m}</span>`).join('')}
               </div>
             </div>
             <div style="padding:12px 18px">
-              ${feats.map(f=>`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:11px;color:${p[f]?'var(--txt)':'#ccc'}${p[f]?'':';text-decoration:line-through'}">
-                <span>${p[f]?'✓':'—'}</span>${featLabels[f]}
+              ${feats.map(f=>`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;color:${p[f]?'var(--txt)':'var(--txt2)'}${p[f]?'':';text-decoration:line-through'}">
+                <span>${p[f]?'<i class="ti ti-check" aria-hidden="true"></i>':'—'}</span>${featLabels[f]}
               </div>`).join('')}
-              ${p.sangha && p.whatsapp_sangha?`<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--borda)"><a href="${urlSegura(p.whatsapp_sangha)}" target="_blank" style="font-size:11px;color:var(--verde);text-decoration:none;display:flex;align-items:center;gap:5px">📱 Grupo WhatsApp deste plano</a></div>`:''}
+              ${p.sangha && p.whatsapp_sangha?`<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--borda)"><a href="${urlSegura(p.whatsapp_sangha)}" target="_blank" style="font-size:12px;color:var(--titulo);text-decoration:none;display:flex;align-items:center;gap:5px"><i class="ti ti-device-mobile" aria-hidden="true"></i> Grupo WhatsApp deste plano</a></div>`:''}
             </div>
           </div>`
         }).join('')}
@@ -170,16 +170,16 @@ uiAnimar(container)
       if (errMod) console.warn('plano_modalidades insert:', errMod.message)
     }
     document.getElementById('modal-criar-plano').style.display = 'none'
-    toast('✓ Plano criado!')
+    toast('Plano criado!')
     navigate('planos')
   }
 
   // ── Modal de edição de plano ──────────────────────────────
   const modalEditarPlanoHtml = `<div id="modal-editar-plano" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.45);z-index:100;align-items:center;justify-content:center">
-    <div style="background:#fff;border-radius:10px;width:520px;max-width:95vw;max-height:90vh;overflow:auto">
+    <div style="background:var(--superficie);border-radius:10px;width:520px;max-width:95vw;max-height:90vh;overflow:auto">
       <div style="padding:18px 22px 14px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
-        <span style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--verde)" id="ep-titulo">Editar Plano</span>
-        <button onclick="document.getElementById('modal-editar-plano').style.display='none'" style="background:none;border:1px solid var(--borda);border-radius:5px;padding:3px 8px;cursor:pointer">✕</button>
+        <span style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--titulo)" id="ep-titulo">Editar Plano</span>
+        <button onclick="document.getElementById('modal-editar-plano').style.display='none'" style="background:none;border:1px solid var(--borda);border-radius:5px;padding:3px 8px;cursor:pointer"><i class="ti ti-x" aria-hidden="true"></i></button>
       </div>
       <div style="padding:18px 22px" id="ep-body">Carregando...</div>
       <div style="padding:12px 22px;border-top:1px solid var(--borda);display:flex;gap:8px;justify-content:flex-end">
@@ -202,41 +202,41 @@ uiAnimar(container)
     document.getElementById('ep-body').innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
-          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Nome exibido</label>
+          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Nome exibido</label>
           <input id="ep-nome" value="${esc(p.nome)}" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--txt);width:100%;outline:none">
         </div>
         <div></div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
         <div style="display:flex;flex-direction:column;gap:4px">
-          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Preço 1×/sem (R$)</label>
+          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Preço 1×/sem (R$)</label>
           <input id="ep-p1" type="number" value="${p.preco_1x||''}" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
         </div>
         <div style="display:flex;flex-direction:column;gap:4px">
-          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Preço 2×/sem (R$)</label>
+          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Preço 2×/sem (R$)</label>
           <input id="ep-p2" type="number" value="${p.preco_2x||''}" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
         </div>
         <div style="display:flex;flex-direction:column;gap:4px">
-          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Preço livre (R$)</label>
+          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Preço livre (R$)</label>
           <input id="ep-pl" type="number" value="${p.preco_livre||''}" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
         </div>
       </div>
       <!-- Link Sangha -->
       <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px">
-        <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Link WhatsApp — Sangha</label>
+        <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Link WhatsApp — Sangha</label>
         <input id="ep-sangha" type="url" value="${esc(p.whatsapp_sangha)}" placeholder="https://chat.whatsapp.com/..." style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
-        <div style="font-size:10px;color:var(--txt2)">Link exclusivo do grupo WhatsApp Sangha para alunos deste plano.</div>
+        <div style="font-size:12px;color:var(--txt2)">Link exclusivo do grupo WhatsApp Sangha para alunos deste plano.</div>
       </div>
       <div style="margin-bottom:12px">
-        <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:6px">Modalidades incluídas</label>
+        <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:6px">Modalidades incluídas</label>
         <div style="display:flex;gap:8px">
           ${['hatha','acro','raja'].map(m=>`<label style="display:flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--borda);border-radius:20px;font-size:12px;cursor:pointer"><input type="checkbox" name="ep-mod" value="${m}" ${modsSel.includes(m)?'checked':''} style="accent-color:var(--verde)"> ${NOMES[m]}</label>`).join('')}
         </div>
       </div>
       <div>
-        <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:8px">Benefícios</label>
+        <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:8px">Benefícios</label>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
-          ${feats.map(f=>`<label style="display:flex;align-items:center;gap:6px;font-size:11px;padding:4px 0;cursor:pointer"><input type="checkbox" name="ep-feat" value="${f}" ${p[f]?'checked':''} style="accent-color:var(--verde)"> ${featLabels[f].split('—')[0].trim()}</label>`).join('')}
+          ${feats.map(f=>`<label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:4px 0;cursor:pointer"><input type="checkbox" name="ep-feat" value="${f}" ${p[f]?'checked':''} style="accent-color:var(--verde)"> ${featLabels[f].split('—')[0].trim()}</label>`).join('')}
         </div>
       </div>`
     document.getElementById('modal-editar-plano').style.display = 'flex'
@@ -277,7 +277,7 @@ uiAnimar(container)
     }
 
     document.getElementById('modal-editar-plano').style.display = 'none'
-    toast('✓ Plano atualizado!')
+    toast('Plano atualizado!')
     navigate('planos')
   }
 }    

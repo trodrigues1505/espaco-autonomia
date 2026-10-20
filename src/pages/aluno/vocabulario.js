@@ -17,20 +17,20 @@ export async function renderVocabularioAluno(container, page) {
 
   if (error) {
     container.innerHTML = `<div class="topbar"><div class="topbar-t">Śabda Kośa</div></div>
-      <div class="content"><p style="color:#c0392b;font-size:13px">Erro: ${esc(error.message)}</p></div>`
+      <div class="content"><p style="color:var(--err-vivo);font-size:13px">Erro: ${esc(error.message)}</p></div>`
     return
   }
 
   function renderLista(lista) {
     if (!lista.length) {
       return `<div style="text-align:center;padding:40px 20px;color:var(--txt2)">
-        <div style="font-size:32px;margin-bottom:10px">📖</div>
+        <div style="font-size:32px;margin-bottom:10px"><i class="ti ti-book" aria-hidden="true"></i></div>
         <div style="font-size:13px">Nenhum termo encontrado.</div>
       </div>`
     }
     return lista.map(t => `
-      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-bottom:10px">
-        <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--verde);margin-bottom:4px">${_esc(t.termo)}</div>
+      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-bottom:10px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--titulo);margin-bottom:4px">${_esc(t.termo)}</div>
         <div style="font-size:13px;color:var(--txt);line-height:1.6;white-space:pre-line">${_esc(t.definicao)}</div>
       </div>`).join('')
   }
@@ -44,7 +44,7 @@ export async function renderVocabularioAluno(container, page) {
       <div class="topbar-t">Śabda Kośa</div>
     </div>
     <div class="content">
-      <div style="background:rgba(31,56,31,.04);border:1px solid rgba(31,56,31,.12);border-radius:6px;padding:9px 13px;font-size:12px;color:var(--verde);margin-bottom:14px;display:flex;align-items:center;gap:8px">
+      <div style="background:rgba(31,56,31,.04);border:1px solid rgba(31,56,31,.12);border-radius:6px;padding:9px 13px;font-size:12px;color:var(--titulo);margin-bottom:14px;display:flex;align-items:center;gap:8px">
         <i class="ti ti-info-circle"></i>
         <span>Glossário de termos usados no Dharma Phala. Esses mesmos termos também ficam clicáveis automaticamente onde aparecem nos textos do app.</span>
       </div>

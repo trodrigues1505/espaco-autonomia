@@ -27,7 +27,7 @@ export async function renderVocabularioAdmin(container, page) {
 
   if (error) {
     container.innerHTML = `<div class="topbar"><div class="topbar-t">Śabda Kośa</div></div>
-      <div class="content"><p style="color:#c0392b">Erro: ${esc(error.message)}</p></div>`
+      <div class="content"><p style="color:var(--err-vivo)">Erro: ${esc(error.message)}</p></div>`
     return
   }
 
@@ -42,28 +42,28 @@ export async function renderVocabularioAdmin(container, page) {
       </button>
     </div>
     <div class="content">
-      <div style="background:rgba(31,56,31,.04);border:1px solid rgba(31,56,31,.12);border-radius:6px;padding:9px 13px;font-size:12px;color:var(--verde);margin-bottom:14px;display:flex;align-items:center;gap:8px">
+      <div style="background:rgba(31,56,31,.04);border:1px solid rgba(31,56,31,.12);border-radius:6px;padding:9px 13px;font-size:12px;color:var(--titulo);margin-bottom:14px;display:flex;align-items:center;gap:8px">
         <i class="ti ti-info-circle"></i>
         <span>Termos ficam clicáveis automaticamente em qualquer texto do app. Reconhecimento ignora maiúscula/minúscula e diacríticos — "Sankalpa", "sankalpa" e "saṅkalpa" contam como o mesmo termo.</span>
       </div>
 
-      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-bottom:16px">
+      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-bottom:16px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px">
-          <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">Termos não catalogados</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo)">Termos não catalogados</div>
           <button onclick="escanearTermosNaoCatalogados()"
             style="padding:6px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px;white-space:nowrap">
             <i class="ti ti-search"></i> Escanear agora
           </button>
         </div>
-        <div style="font-size:11px;color:var(--txt2);margin-bottom:10px">
+        <div style="font-size:12px;color:var(--txt2);margin-bottom:10px">
           Varre Jñāna Mārga, Yoga Adhyayana e Āsana Mārga procurando palavras com diacríticos exclusivos de transliteração sânscrita (ā, ī, ū, ṛ, ṃ, ḥ, ṣ, ṭ, ḍ, ṇ, ś, ñ, ṅ) que ainda não estão cadastradas aqui.
         </div>
         <div id="termos-nao-catalogados-container"></div>
       </div>
 
-      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-bottom:16px">
-        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:4px">Importar JSON em lote</div>
-        <div style="font-size:11px;color:var(--txt2);margin-bottom:10px">
+      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-bottom:16px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo);margin-bottom:4px">Importar JSON em lote</div>
+        <div style="font-size:12px;color:var(--txt2);margin-bottom:10px">
           Cole um array JSON no formato <code>[{"termo": "...", "definicao": "..."}]</code>. Termos novos são inseridos direto; termos que já existem com definição diferente abrem uma comparação pra você escolher.
         </div>
         <textarea id="import-json-textarea" rows="6" placeholder='[{"termo": "Sankalpa", "definicao": "..."}]'
@@ -72,12 +72,12 @@ export async function renderVocabularioAdmin(container, page) {
           style="padding:6px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px">
           <i class="ti ti-upload"></i> Processar importação
         </button>
-        <div id="import-json-status" style="font-size:11px;color:var(--txt2);margin-top:8px"></div>
+        <div id="import-json-status" style="font-size:12px;color:var(--txt2);margin-top:8px"></div>
       </div>
 
-      <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden">
+      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);overflow-x:auto">
         <div style="display:grid;grid-template-columns:1fr 2fr 90px;padding:8px 18px;
-                    background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;
+                    background:rgba(242,236,206,.45);font-size:12px;text-transform:uppercase;
                     letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
           <span>Termo</span><span>Definição</span><span>Ação</span>
         </div>
@@ -90,9 +90,9 @@ export async function renderVocabularioAdmin(container, page) {
               <span style="color:var(--txt2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.definicao)}</span>
               <div style="display:flex;gap:4px">
                 <button onclick="editarVocab('${t.id}')"
-                  style="padding:3px 8px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✎</button>
+                  style="padding:3px 8px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-pencil" aria-hidden="true"></i></button>
                 <button onclick="excluirVocab(this.dataset.id, this.dataset.termo)" data-id="${esc(t.id)}" data-termo="${esc(t.termo||'')}"
-                  style="padding:3px 8px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✕</button>
+                  style="padding:3px 8px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-x" aria-hidden="true"></i></button>
               </div>
             </div>`).join('')
         }
@@ -101,7 +101,7 @@ export async function renderVocabularioAdmin(container, page) {
 
     <div id="modal-vocab" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.6);
                                    z-index:200;align-items:center;justify-content:center;padding:16px">
-      <div style="background:#fff;border-radius:12px;width:480px;max-width:100%">
+      <div style="background:var(--superficie);border-radius:12px;width:480px;max-width:100%">
         <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)" id="vocab-modal-titulo">Novo Termo</div>
           <button onclick="document.getElementById('modal-vocab').style.display='none'"
@@ -110,12 +110,12 @@ export async function renderVocabularioAdmin(container, page) {
         <div style="padding:20px;display:flex;flex-direction:column;gap:12px">
           <input type="hidden" id="voc-id">
           <div style="display:flex;flex-direction:column;gap:4px">
-            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Termo (forma de exibição)</label>
+            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Termo (forma de exibição)</label>
             <input id="voc-termo" placeholder="ex: Sankalpa"
               style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
           <div style="display:flex;flex-direction:column;gap:4px">
-            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Definição</label>
+            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Definição</label>
             <textarea id="voc-definicao" rows="5" placeholder="O que significa este termo..."
               style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;resize:vertical"></textarea>
           </div>
@@ -171,7 +171,7 @@ export async function renderVocabularioAdmin(container, page) {
     }
     if (err) { toast('Erro: ' + err.message); return }
     invalidarCacheVocabulario()
-    toast('✓ Termo salvo!')
+    toast('Termo salvo!')
     document.getElementById('modal-vocab').style.display = 'none'
     navigate('vocabulario-admin')
   }
@@ -181,7 +181,7 @@ export async function renderVocabularioAdmin(container, page) {
     const { error: err } = await sb.from('vocabulario').delete().eq('id', id)
     if (err) { toast('Erro: ' + err.message); return }
     invalidarCacheVocabulario()
-    toast('✓ Termo excluído.')
+    toast('Termo excluído.')
     navigate('vocabulario-admin')
   }
 
@@ -196,14 +196,14 @@ export async function renderVocabularioAdmin(container, page) {
       itens = JSON.parse(raw)
       if (!Array.isArray(itens)) throw new Error('não é um array')
     } catch (e) {
-      status.innerHTML = `<span style="color:#c0392b">JSON inválido: ${esc(e.message)}</span>`
+      status.innerHTML = `<span style="color:var(--err-vivo)">JSON inválido: ${esc(e.message)}</span>`
       return
     }
 
     status.textContent = 'Verificando termos existentes...'
 
     const { data: existentes, error: errBusca } = await sb.from('vocabulario').select('termo,termo_normalizado,definicao')
-    if (errBusca) { status.innerHTML = `<span style="color:#c0392b">Erro: ${esc(errBusca.message)}</span>`; return }
+    if (errBusca) { status.innerHTML = `<span style="color:var(--err-vivo)">Erro: ${esc(errBusca.message)}</span>`; return }
     const porNormalizado = Object.fromEntries((existentes || []).map(v => [v.termo_normalizado, v]))
 
     const novos = []
@@ -248,31 +248,31 @@ export async function renderVocabularioAdmin(container, page) {
     div.id = 'modal-conflito-vocab'
     div.style.cssText = 'position:fixed;inset:0;background:rgba(31,56,31,.7);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px'
     div.innerHTML = `
-      <div style="background:#fff;border-radius:12px;width:520px;max-width:100%;overflow:hidden">
+      <div style="background:var(--superficie);border-radius:12px;width:520px;max-width:100%;overflow:hidden">
         <div style="background:var(--verde);padding:16px 20px">
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)">${esc(item.termo)}</div>
-          <div style="font-size:11px;color:rgba(242,236,206,.7);margin-top:2px">Já existe com uma definição diferente — ${fila.length} restante(s)</div>
+          <div style="font-size:12px;color:rgba(242,236,206,.7);margin-top:2px">Já existe com uma definição diferente — ${fila.length} restante(s)</div>
         </div>
         <div style="padding:18px 20px;display:flex;flex-direction:column;gap:12px">
           <div>
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:5px">Texto atual (no banco)</div>
-            <div style="font-size:12px;color:var(--txt);background:var(--fundo,#f9f7f0);border-radius:6px;padding:10px;line-height:1.6">${_esc(item.definicaoAntiga)}</div>
+            <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:5px">Texto atual (no banco)</div>
+            <div style="font-size:12px;color:var(--txt);background:var(--fundo,var(--superficie-2));border-radius:6px;padding:10px;line-height:1.6">${_esc(item.definicaoAntiga)}</div>
           </div>
           <div>
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:5px">Texto novo (do JSON)</div>
+            <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:5px">Texto novo (do JSON)</div>
             <div style="font-size:12px;color:var(--txt);background:rgba(232,188,79,.08);border-radius:6px;padding:10px;line-height:1.6">${_esc(item.definicaoNova)}</div>
           </div>
           <div id="conflito-mesclar-wrap" style="display:none">
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:5px">Texto mesclado (edite como quiser)</div>
+            <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:5px">Texto mesclado (edite como quiser)</div>
             <textarea id="conflito-mesclar-texto" rows="4"
               style="width:100%;border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;resize:vertical;box-sizing:border-box">${_esc(item.definicaoAntiga)}\n\n${_esc(item.definicaoNova)}</textarea>
           </div>
         </div>
         <div style="padding:0 20px 20px;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end">
           <button id="btn-conflito-antiga" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Manter antiga</button>
-          <button id="btn-conflito-mesclar" style="padding:7px 14px;background:rgba(232,188,79,.15);border:1px solid rgba(232,188,79,.4);color:#7a5a10;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Mesclar</button>
+          <button id="btn-conflito-mesclar" style="padding:7px 14px;background:rgba(232,188,79,.15);border:1px solid rgba(232,188,79,.4);color:var(--warn-fg);border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Mesclar</button>
           <button id="btn-conflito-nova" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Usar nova</button>
-          <button id="btn-conflito-salvar-mescla" style="display:none;padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">✓ Salvar mesclagem</button>
+          <button id="btn-conflito-salvar-mescla" style="display:none;padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="ti ti-check" aria-hidden="true"></i> Salvar mesclagem</button>
         </div>
       </div>`
     document.body.appendChild(div)
@@ -307,17 +307,17 @@ export async function renderVocabularioAdmin(container, page) {
 
     if (novos.length) {
       const { error } = await sb.from('vocabulario').insert(novos)
-      if (error) { status.innerHTML = `<span style="color:#c0392b">Erro ao inserir novos: ${esc(error.message)}</span>`; return }
+      if (error) { status.innerHTML = `<span style="color:var(--err-vivo)">Erro ao inserir novos: ${esc(error.message)}</span>`; return }
     }
     if (resolvidos.length) {
       const { error } = await sb.from('vocabulario').upsert(resolvidos, { onConflict: 'termo_normalizado' })
-      if (error) { status.innerHTML = `<span style="color:#c0392b">Erro ao atualizar: ${esc(error.message)}</span>`; return }
+      if (error) { status.innerHTML = `<span style="color:var(--err-vivo)">Erro ao atualizar: ${esc(error.message)}</span>`; return }
     }
 
     invalidarCacheVocabulario()
-    status.innerHTML = `<span style="color:#1a5a1a">✓ ${novos.length} novo(s) inserido(s), ${resolvidos.length} atualizado(s).</span>`
+    status.innerHTML = `<span style="color:var(--ok-fg)"><i class="ti ti-check" aria-hidden="true"></i> ${novos.length} novo(s) inserido(s), ${resolvidos.length} atualizado(s).</span>`
     document.getElementById('import-json-textarea').value = ''
-    toast('✓ Importação concluída!')
+    toast('Importação concluída!')
     navigate('vocabulario-admin')
   }
 
@@ -401,7 +401,7 @@ export async function renderVocabularioAdmin(container, page) {
       window._tncLista = novos
       _renderTermosNaoCatalogados(novos)
     } catch (e) {
-      container.innerHTML = `<p style="color:#c0392b;font-size:12px">Erro ao escanear: ${esc(e.message)}</p>`
+      container.innerHTML = `<p style="color:var(--err-vivo);font-size:12px">Erro ao escanear: ${esc(e.message)}</p>`
     } finally {
       if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-search"></i> Escanear agora' }
     }
@@ -414,28 +414,28 @@ export async function renderVocabularioAdmin(container, page) {
       return
     }
     container.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:#7a5a10;background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:8px 12px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:var(--warn-fg);background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:8px 12px;margin-bottom:10px">
         <span>${lista.length} termo(s) encontrado(s), ainda não cadastrado(s). Revise o contexto e escreva a definição de cada um antes de salvar.</span>
         <button onclick="exportarTermosEscaneadosJson()"
-          style="padding:4px 10px;background:#fff;color:#7a5a10;border:1px solid rgba(232,188,79,.5);border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;display:flex;align-items:center;gap:4px">
+          style="padding:4px 10px;background:var(--superficie);color:var(--warn-fg);border:1px solid rgba(232,188,79,.5);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;display:flex;align-items:center;gap:4px">
           <i class="ti ti-download"></i> Exportar JSON
         </button>
       </div>
       ${lista.map((item, i) => `
         <div style="border:1px solid var(--borda);border-radius:8px;padding:12px 14px;margin-bottom:8px" id="tnc-${i}">
           <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">
-            <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">${esc(item.termo)}</span>
+            <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo)">${esc(item.termo)}</span>
           </div>
-          <div style="font-size:11px;color:var(--txt2);font-style:italic;margin-bottom:8px">"...${esc(item.contexto)}..."</div>
+          <div style="font-size:12px;color:var(--txt2);font-style:italic;margin-bottom:8px">"...${esc(item.contexto)}..."</div>
           <textarea id="tnc-def-${i}" rows="2" placeholder="Escreva a definição deste termo..."
             style="width:100%;border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;resize:vertical;box-sizing:border-box;margin-bottom:8px"></textarea>
           <div style="display:flex;gap:6px">
             <button onclick="salvarTermoEscaneado(${i}, this.dataset.termo)" data-termo="${esc(item.termo)}"
-              style="padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">
-              ✓ Cadastrar
+              style="padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">
+              <i class="ti ti-check" aria-hidden="true"></i> Cadastrar
             </button>
             <button onclick="document.getElementById('tnc-${i}').remove()"
-              style="padding:5px 12px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:11px;cursor:pointer;color:var(--txt2)">
+              style="padding:5px 12px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:12px;cursor:pointer;color:var(--txt2)">
               Ignorar
             </button>
           </div>
@@ -453,7 +453,7 @@ export async function renderVocabularioAdmin(container, page) {
     })
     if (err) { toast('Erro: ' + err.message); return }
     invalidarCacheVocabulario()
-    toast(`✓ "${termo}" cadastrado!`)
+    toast(`"${termo}" cadastrado!`)
     document.getElementById(`tnc-${idx}`)?.remove()
   }
 
@@ -474,6 +474,6 @@ export async function renderVocabularioAdmin(container, page) {
     a.click()
     a.remove()
     URL.revokeObjectURL(url)
-    toast(`✓ ${lista.length} termo(s) exportado(s)`)
+    toast(`${lista.length}termo(s) exportado(s)`)
   }
 }

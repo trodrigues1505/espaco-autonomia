@@ -63,7 +63,7 @@ export async function renderVinculos(container, page) {
       </select>`)}
     ${fi('', 'Data de início', `<input type="date" id="nv-data-inicio" ${inputStyle} value="${new Date().toISOString().slice(0,10)}">`)}
     ${fi('', 'Observação (opcional)', `<textarea id="nv-obs" rows="2" ${inputStyle} placeholder="Ex: aluno pediu troca de professor"></textarea>`)}
-    <div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.3);border-radius:6px;padding:9px 12px;font-size:11px;color:#7a5a10">
+    <div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.3);border-radius:6px;padding:9px 12px;font-size:12px;color:var(--warn-fg)">
       Se o aluno já tiver um vínculo em aberto, ele será encerrado automaticamente um dia antes desta data de início.
     </div>`,
     `<button onclick="document.getElementById('modal-novo-vinculo').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
@@ -71,7 +71,7 @@ export async function renderVinculos(container, page) {
   )
 
   const modalEditar = modal('modal-editar-vinculo', 'Editar Vínculo',
-    `<div id="ev-aluno-professor" style="font-size:13px;font-weight:500;color:var(--verde);margin-bottom:12px"></div>
+    `<div id="ev-aluno-professor" style="font-size:13px;font-weight:500;color:var(--titulo);margin-bottom:12px"></div>
     <input type="hidden" id="ev-id">
     ${fi('', 'Data de início', `<input type="date" id="ev-data-inicio" ${inputStyle}>`)}
     <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--txt2);margin:8px 0;cursor:pointer">
@@ -91,29 +91,29 @@ export async function renderVinculos(container, page) {
       <button onclick="document.getElementById('modal-novo-vinculo').style.display='flex'" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-link-plus"></i> Novo Vínculo</button>
     </div>
     <div class="content">
-      <div style="background:rgba(31,56,31,.04);border:1px solid rgba(31,56,31,.12);border-radius:6px;padding:9px 13px;font-size:12px;color:var(--verde);margin-bottom:12px">
+      <div style="background:rgba(31,56,31,.04);border:1px solid rgba(31,56,31,.12);border-radius:6px;padding:9px 13px;font-size:12px;color:var(--titulo);margin-bottom:12px">
         <i class="ti ti-info-circle"></i>
         O repasse de cada mês usa o vínculo que estava em vigor <strong>naquele mês</strong>, não o vínculo atual — trocar de professor hoje não altera meses já fechados.
       </div>
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:flex-end">
         <div style="display:flex;flex-direction:column;gap:3px">
-          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Professor</label>
-          <select onchange="window._vincFiltroProf=this.value;window._rerenderVinculos()" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff">
+          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Professor</label>
+          <select onchange="window._vincFiltroProf=this.value;window._rerenderVinculos()" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie)">
             <option value="" ${!filtroProf?'selected':''}>Todos</option>
             ${professores.map(p=>`<option value="${p.id}" ${filtroProf===p.id?'selected':''}>${esc(p.nome)}</option>`).join('')}
           </select>
         </div>
         <div style="display:flex;flex-direction:column;gap:3px">
-          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Buscar aluno</label>
+          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Buscar aluno</label>
           <input id="input-busca-vinc" value="${esc(buscaAluno)}" placeholder="Nome do aluno..." oninput="window._vincBusca=this.value;window._rerenderVinculos()" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;width:180px">
         </div>
-        <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--txt2);cursor:pointer;align-self:flex-end;padding:6px 0">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--txt2);cursor:pointer;align-self:flex-end;padding:6px 0">
           <input type="checkbox" ${somenteAtuais?'checked':''} onchange="window._vincSomenteAtuais=this.checked;window._rerenderVinculos()" style="accent-color:var(--verde)">
           Mostrar só vínculos em aberto
         </label>
       </div>
       ${card('Vínculos ('+listaFiltrada.length+')', '',
-        `<div style="display:grid;grid-template-columns:1fr 1fr 100px 100px 1fr 130px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
+        `<div style="display:grid;grid-template-columns:1fr 1fr 100px 100px 1fr 130px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
           <span>Aluno</span><span>Professor</span><span>Início</span><span>Fim</span><span>Obs.</span><span>Ações</span>
         </div>
         ${listaFiltrada.length===0?'<div style="padding:18px;font-size:12px;color:var(--txt2)">Nenhum vínculo encontrado.</div>':
@@ -122,13 +122,13 @@ export async function renderVinculos(container, page) {
             return `<div style="display:grid;grid-template-columns:1fr 1fr 100px 100px 1fr 130px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
               <span style="font-weight:500">${esc(v.aluno?.nome||'—')}</span>
               <span>${esc(v.professor?.nome||'—')}</span>
-              <span style="font-size:11px;color:var(--txt2)">${fmtData(v.data_inicio)}</span>
-              <span>${emAberto?badge('Atual','#e8f4e8','#1a5a1a'):`<span style="font-size:11px;color:var(--txt2)">${fmtData(v.data_fim)}</span>`}</span>
-              <span style="font-size:11px;color:var(--txt2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc((v.observacao||'').replace(/"/g,'&quot;'))}">${esc(v.observacao||'—')}</span>
+              <span style="font-size:12px;color:var(--txt2)">${fmtData(v.data_inicio)}</span>
+              <span>${emAberto?badge('Atual','var(--ok-bg)','var(--ok-fg)'):`<span style="font-size:12px;color:var(--txt2)">${fmtData(v.data_fim)}</span>`}</span>
+              <span style="font-size:12px;color:var(--txt2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc((v.observacao||'').replace(/"/g,'&quot;'))}">${esc(v.observacao||'—')}</span>
               <div style="display:flex;gap:4px">
-                <button onclick="abrirEditarVinculo('${v.id}')" style="padding:3px 8px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Editar datas">✎</button>
-                ${emAberto?`<button onclick="confirmarDesvincular('${v.id}')" style="padding:3px 8px;background:rgba(232,188,79,.15);color:#7a5a10;border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Desvincular (encerrar hoje)">Desvincular</button>`:''}
-                <button onclick="confirmarExcluirVinculo('${v.id}')" style="padding:3px 8px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Excluir registro">✕</button>
+                <button onclick="abrirEditarVinculo('${v.id}')" style="padding:3px 8px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Editar datas"><i class="ti ti-pencil" aria-hidden="true"></i></button>
+                ${emAberto?`<button onclick="confirmarDesvincular('${v.id}')" style="padding:3px 8px;background:rgba(232,188,79,.15);color:var(--warn-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Desvincular (encerrar hoje)">Desvincular</button>`:''}
+                <button onclick="confirmarExcluirVinculo('${v.id}')" style="padding:3px 8px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Excluir registro"><i class="ti ti-x" aria-hidden="true"></i></button>
               </div>
             </div>`
           }).join('')
@@ -138,7 +138,7 @@ export async function renderVinculos(container, page) {
     ${modalNovo}
     ${modalEditar}
     <div id="modal-confirmar-vinc" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.6);z-index:200;align-items:center;justify-content:center;padding:16px">
-      <div style="background:#fff;border-radius:12px;width:400px;max-width:100%;overflow:hidden">
+      <div style="background:var(--superficie);border-radius:12px;width:400px;max-width:100%;overflow:hidden">
         <div style="padding:20px">
           <div id="conf-vinc-msg" style="font-size:13px;color:var(--txt);margin-bottom:14px"></div>
           <div id="conf-vinc-data-wrap" style="display:none;margin-bottom:14px">
@@ -172,7 +172,7 @@ export async function renderVinculos(container, page) {
     })
     if (error) { toast('Erro: ' + error.message); return }
     document.getElementById('modal-novo-vinculo').style.display = 'none'
-    toast('✓ Vínculo criado!')
+    toast('Vínculo criado!')
     window._rerenderVinculos()
   }
 
@@ -211,7 +211,7 @@ export async function renderVinculos(container, page) {
     })
     if (error) { toast('Erro: ' + error.message); return }
     document.getElementById('modal-editar-vinculo').style.display = 'none'
-    toast('✓ Vínculo atualizado!')
+    toast('Vínculo atualizado!')
     window._rerenderVinculos()
   }
 
@@ -229,7 +229,7 @@ export async function renderVinculos(container, page) {
       const { error } = await _sb.rpc('admin_desvincular_aluno', { p_aluno_id: v.aluno_id, p_data_fim: dataFim })
       if (error) { toast('Erro: ' + error.message); return }
       document.getElementById('modal-confirmar-vinc').style.display = 'none'
-      toast('✓ Aluno desvinculado')
+      toast('Aluno desvinculado')
       window._rerenderVinculos()
     }
   }
@@ -246,7 +246,7 @@ export async function renderVinculos(container, page) {
       const { error } = await _sb.rpc('admin_excluir_vinculo', { p_vinculo_id: id })
       if (error) { toast('Erro: ' + error.message); return }
       document.getElementById('modal-confirmar-vinc').style.display = 'none'
-      toast('✓ Vínculo excluído')
+      toast('Vínculo excluído')
       window._rerenderVinculos()
     }
   }

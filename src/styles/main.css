@@ -15,7 +15,7 @@
   --bege2:     #e8e0b8;
   --fundo:     #F9F6EC;
   --txt:       #1F381F;
-  --txt2:      #5a7a5a;
+  --txt2:      #527052;
   --borda:     #d4c89e;
   --r:         10px;
   --rs:        6px;
@@ -25,6 +25,17 @@
      (inline sempre vence), mas ela existe pra podermos referenciar o mesmo
      tom em dark mode via seletor de atributo (ver seção DARK MODE). */
   --superficie: #ffffff;
+  --superficie-2: #faf8f0;   /* painéis internos / linhas alternadas */
+  --neutro-bg:    #f0ede4;   /* barras vazias, itens desabilitados */
+  --titulo:       #1F381F;   /* títulos e texto de destaque (no escuro vira bege) */
+  --verde-texto:  #2d5a2d;
+  --dourado-texto:#7a5c0c;   /* dourado usado COMO TEXTO sobre fundo claro (no escuro vira o próprio dourado) */   /* verde usado COMO TEXTO/link (no escuro fica claro) */
+
+  /* Estados semânticos: fundo, texto, destaque e borda (valor claro; ver bloco escuro) */
+  --ok-bg:   #e8f4e8;  --ok-fg:   #1a5a1a;  --ok-borda:   #b8ddb8;
+  --err-bg:  #fceaea;  --err-fg:  #8a1a1a;  --err-vivo:   #c0392b;  --err-borda: #f5c1c1;
+  --warn-bg: rgba(232,188,79,.18);  --warn-fg: #7a5a10;  --warn-vivo: #b05f10;
+  --info-fg: #2f5f94;
 
   /* Timing padronizado — muda o "ritmo" do app inteiro aqui */
   --t-fast:   .15s;
@@ -154,7 +165,7 @@ body {
   align-items: center;
 }
 .fg  { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
-.fl  { font-size: 10px; text-transform: uppercase; letter-spacing: .8px; color: var(--txt2); font-weight: 500; }
+.fl  { font-size: 12px; text-transform: uppercase; letter-spacing: .8px; color: var(--txt2); font-weight: 500; }
 .fi  {
   border: 1px solid var(--borda);
   border-radius: var(--rs);
@@ -182,12 +193,12 @@ body {
 .btn-login:hover  { background: var(--verde-med); box-shadow: 0 4px 16px rgba(31,56,31,.25); transform: translateY(-1px); }
 .btn-login:active { transform: scale(.98); }
 .login-err {
-  background: #fceaea;
-  border: 1px solid #f5c1c1;
+  background: var(--err-bg);
+  border: 1px solid var(--err-borda);
   border-radius: var(--rs);
   padding: 9px 12px;
   font-size: 12px;
-  color: #8a1a1a;
+  color: var(--err-fg);
   margin-bottom: 12px;
   display: none;
 }
@@ -224,19 +235,19 @@ body {
 .sb-user { padding: 12px 18px; border-bottom: 1px solid rgba(242,236,206,.08); }
 .sb-role {
   display: inline-block;
-  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
   background: rgba(232,188,79,.18); color: var(--dourado);
   border: 1px solid rgba(232,188,79,.25);
   border-radius: 20px; padding: 2px 9px; margin-bottom: 5px;
 }
 .sb-name      { font-size: 13px; color: var(--bege); font-weight: 500; }
-.sb-plan-txt  { font-size: 11px; color: rgba(242,236,206,.5); margin-top: 1px; }
+.sb-plan-txt  { font-size: 12px; color: rgba(242,236,206,.74); margin-top: 1px; }
 
 /* ── Nav ─────────────────────────────────────────────────────── */
 .nav { padding: 10px 0; flex: 1; overflow-y: auto; }
 .nav-sec {
-  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
-  color: rgba(242,236,206,.3);
+  font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: rgba(242,236,206,.66);
   padding: 14px 18px 5px;
 }
 
@@ -295,7 +306,7 @@ body {
 .sb-bottom { padding: 12px 18px; border-top: 1px solid rgba(242,236,206,.08); }
 .btn-logout {
   display: flex; align-items: center; gap: 7px;
-  font-size: 11px; color: rgba(242,236,206,.5);
+  font-size: 12px; color: rgba(242,236,206,.74);
   cursor: pointer; background: none; border: none;
   font-family: 'DM Sans', sans-serif; padding: 0;
   transition: color var(--t-fast);
@@ -314,7 +325,7 @@ body {
 .topbar-t {
   font-family: 'Cormorant Garamond', serif;
   font-size: 20px; font-weight: 500;
-  color: var(--verde); letter-spacing: .3px;
+  color: var(--titulo); letter-spacing: .3px;
 }
 .content { padding: 20px 24px; }
 
@@ -391,7 +402,7 @@ a[style*="background"]:hover { filter: brightness(1.06); transform: translateY(-
 .modal-cancel__title  { font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 500; color: var(--bege); }
 .modal-cancel__body   { padding: 20px 22px; }
 .modal-cancel__foot   { padding: 12px 22px; border-top: 1px solid var(--borda); display: flex; gap: 8px; justify-content: flex-end; }
-.modal-cancel__warn   { background: #fef9e7; border: 1px solid rgba(232,188,79,.4); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #7a5a10; margin-bottom: 14px; display: flex; align-items: flex-start; gap: 8px; }
+.modal-cancel__warn   { background: var(--warn-bg); border: 1px solid rgba(232,188,79,.4); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #7a5a10; margin-bottom: 14px; display: flex; align-items: flex-start; gap: 8px; }
 .btn-danger    { padding: 9px 18px; background: #c0392b; color: #fff; border: none; border-radius: 6px; font-size: 13px; font-family: 'DM Sans', sans-serif; cursor: pointer; font-weight: 500; transition: background var(--t-fast), box-shadow var(--t-fast); }
 .btn-danger:hover { background: #a93226; box-shadow: 0 4px 12px rgba(192,57,43,.3); }
 .btn-secondary { padding: 9px 18px; background: transparent; color: var(--txt2); border: 1px solid var(--borda); border-radius: 6px; font-size: 13px; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: background var(--t-fast), color var(--t-fast); }
@@ -412,7 +423,7 @@ a[style*="background"]:hover { filter: brightness(1.06); transform: translateY(-
 #pwa-banner img  { width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0; }
 #pwa-banner-txt  { flex: 1; font-size: 13px; line-height: 1.4; }
 #pwa-banner-txt strong { display: block; font-size: 14px; color: var(--bege); }
-#pwa-banner-txt span   { font-size: 11px; color: rgba(242,236,206,.7); }
+#pwa-banner-txt span   { font-size: 12px; color: rgba(242,236,206,.7); }
 #pwa-banner-btns { display: flex; gap: 8px; flex-shrink: 0; }
 .pwa-btn-inst { padding: 8px 16px; background: var(--dourado); color: var(--verde); border: none; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: box-shadow var(--t-fast), transform var(--t-fast); }
 .pwa-btn-inst:hover { box-shadow: 0 4px 12px rgba(232,188,79,.4); }
@@ -477,7 +488,7 @@ a[style*="background"]:hover { filter: brightness(1.06); transform: translateY(-
   .sb-logo { padding: 10px 14px; border-bottom: none; border-right: 1px solid rgba(242,236,206,.12); }
   .sb-logo img { max-width: 100px !important; }
   .sb-user { padding: 10px 14px; border-bottom: none; border-right: 1px solid rgba(242,236,206,.08); flex: 1; }
-  .sb-role { font-size: 8px; padding: 1px 7px; }
+  .sb-role { font-size: 12px; padding: 1px 7px; }
   .sb-name { font-size: 12px; }
   .nav { display: none; }
   .sb-bottom { padding: 8px 14px; border-top: none; margin-left: auto; }
@@ -546,9 +557,18 @@ a[style*="background"]:hover { filter: brightness(1.06); transform: translateY(-
   :root {
     --fundo:      #171F16;   /* verde-carvão orgânico, não preto puro */
     --superficie: #212B1F;   /* "branco" dos cards em dark mode */
+    --superficie-2: #1B2419;
+    --neutro-bg:  #2A331F;
+    --titulo:     #F2ECCE;
+    --verde-texto:#A8D8A8;
+    --dourado-texto:#E8BC4F;
+    --ok-bg:   rgba(74,138,74,.24);   --ok-fg:   #A8DCA8;  --ok-borda:   rgba(74,138,74,.5);
+    --err-bg:  rgba(192,57,43,.24);   --err-fg:  #F4B1A9;  --err-vivo:   #F08A80;  --err-borda: rgba(240,138,128,.45);
+    --warn-bg: rgba(232,188,79,.18);  --warn-fg: #EBCB7C;  --warn-vivo: #F2A862;
+    --info-fg: #9CC3EE;
     --borda:      #3A452F;
     --txt:        #EAE4D2;
-    --txt2:       #9CAB93;
+    --txt2:       #AEBDA5;
   }
 
   /* .fi/inputs/selects não tinham background explícito — no claro usam
@@ -560,12 +580,6 @@ a[style*="background"]:hover { filter: brightness(1.06); transform: translateY(-
   }
   ::placeholder { color: var(--txt2); opacity: .7; }
 
-  /* Cards inline "background:#fff" espalhados pelos módulos — inline
-     sempre vence CSS externo, então só o !important consegue sobrepor. */
-  [style*="background:#fff"] {
-    background: var(--superficie) !important;
-  }
-
   /* Divisórias/linhas usadas em listas, tabelas e históricos
      (beneficios.js, grade.js, plano.js) — tom bege translúcido fica
      quase invisível/estranho sobre fundo escuro. */
@@ -573,12 +587,6 @@ a[style*="background"]:hover { filter: brightness(1.06); transform: translateY(-
   [style*="rgba(212, 200, 158, .3)"] {
     border-color: rgba(154,171,147,.22) !important;
   }
-
-  /* Fundos neutros claros usados como "vazio"/"bloqueado"
-     (grade.js: célula sem permissão #f8f8f8; heatmap ausente em home.js: #f0ede4) */
-  [style*="#f8f8f8"] { background: #232B21 !important; }
-  [style*="#f0ede4"]  { background: #2A331F !important; }
-  [style*="#fafaf7"]  { background: #202A1E !important; }
 
   /* Chips/tints verdes claros (ex: "Incluso no seu plano" em beneficios.js,
      badge "Plano X" em grade.js, destaques suaves em home.js) */
@@ -588,8 +596,6 @@ a[style*="background"]:hover { filter: brightness(1.06); transform: translateY(-
   [style*="rgba(31,56,31,.08)"] {
     background: rgba(74,138,74,.20) !important;
   }
-  [style*="#e8f4e8"] { background: rgba(74,138,74,.20) !important; }
-  [style*="#1a5a1a"] { color: #8FD18F !important; }
 
   /* Chips dourados claros (ex: "Não incluso no seu plano" upgrade box em
      beneficios.js/plano.js, badge "★ Postura da semana") */
@@ -597,17 +603,6 @@ a[style*="background"]:hover { filter: brightness(1.06); transform: translateY(-
   [style*="rgba(232,188,79,.18)"] {
     background: rgba(232,188,79,.22) !important;
   }
-
-  /* Erro/cancelamento (login-err, botão "Cancelar" em home.js/grade.js) */
-  [style*="#fceaea"] { background: rgba(192,57,43,.18) !important; }
-  [style*="#f5c1c1"] { border-color: rgba(192,57,43,.4) !important; }
-  [style*="#8a1a1a"] { color: #FF9E90 !important; }
-  [style*="#c0392b"] { color: #FF9E90; }
-
-  /* Aviso amarelo (modal-cancel__warn, feriado na grade) */
-  [style*="#fef9e7"], [style*="#fdf8ec"] { background: rgba(232,188,79,.16) !important; }
-  [style*="#7a5a10"] { color: #E8C878 !important; }
-  [style*="#7a6010"] { color: #E8C878 !important; }
 
   /* Níveis do Yoga Adhyayana (NIVEL_COR/NIVEL_BG em beneficios.js) */
   [style*="rgba(45,122,45,.1)"]  { background: rgba(74,138,74,.22) !important; }
@@ -620,9 +615,6 @@ a[style*="background"]:hover { filter: brightness(1.06); transform: translateY(-
   .card-hover:hover {
     box-shadow: 0 4px 20px rgba(0,0,0,.45) !important;
   }
-
-  /* Texto cinza-neutro usado em telefone não cadastrado etc. (plano.js) */
-  [style*="#ccc"] { color: #6B7566 !important; }
 
   /* ── Ampliação de cobertura — arquivos admin/*.js ───────────────
      Catalogados em: adhyayana.js, alunos.js, asana.js, config.js,
@@ -647,20 +639,12 @@ a[style*="background"]:hover { filter: brightness(1.06); transform: translateY(-
   [style*="rgba(58,110,165,.08)"],
   [style*="rgba(58,110,165,.12)"] { background: rgba(90,140,190,.20) !important; }
   [style*="rgba(58,110,165,.25)"] { border-color: rgba(90,140,190,.45) !important; }
-  [style*="#3a6ea5"] { color: #8FB8DE !important; }
-
-  /* Aba "Engajamento" — roxo */
-  [style*="#8e44ad"] { color: #C89BDB !important; }
 
   /* "Aula já realizada" (presencas.js/previsao-professor.js) */
   [style*="rgba(230,126,34,.1)"] { background: rgba(232,158,79,.20) !important; }
-  [style*="#e67e22"] { color: #F0A860 !important; }
 
   /* Linha de aula redundante (criar_aulas.js) */
   [style*="rgba(255,180,180,.12)"] { background: rgba(192,57,43,.14) !important; }
-
-  /* Caixa clara de comentário/reflexão (adhyayana.js preview, asana.js) */
-  [style*="#f9f7f0"] { background: #202A1E !important; }
 
   /* Tint dourado mais fraco — badge "Agendada" (adhyayana.js/jnana.js) */
   [style*="rgba(232,188,79,.08)"] { background: rgba(232,188,79,.16) !important; }
@@ -668,32 +652,12 @@ a[style*="background"]:hover { filter: brightness(1.06); transform: translateY(-
   /* Borda de "Sem futuras"/aviso — rgba(232,188,79,.4) usado como border, não bg */
   [style*="rgba(232,188,79,.4)"] { border-color: rgba(232,188,79,.5) !important; }
 
-  /* ── Ampliação de cobertura — modules/utils.js, timeline.js,
-     contrato.js, navigation.js, professor/*.js ────────────────
-     Agora com card()/modal()/badge()/fi() de utils.js à vista. */
-
-  /* PLANO_BADGES (utils.js): Brahma e Shiva 2x usam cor própria,
-     fora do padrão dourado/verde já coberto */
-  [style*="#f0ede4"] { background: rgba(154,171,147,.16) !important; }
-  [style*="#5a5a4a"] { color: #A8B39E !important; }
-  [style*="#d4edda"] { background: rgba(74,138,74,.20) !important; }
-  [style*="#155724"] { color: #8FD18F !important; }
-
   /* Tint dourado do contrato (LGPD) */
   [style*="rgba(232,188,79,.12)"] { background: rgba(232,188,79,.18) !important; }
 
   /* Tints verdes mais fracos (timeline.js comentários, navigation.js iniciais) */
   [style*="rgba(31,56,31,.03)"],
   [style*="rgba(31,56,31,.12)"] { background: rgba(74,138,74,.18) !important; }
-
-  /* Banner de moderação (timeline.js) */
-  [style*="#fff8f0"] { background: rgba(232,158,79,.14) !important; }
-  [style*="#f0d9b5"] { border-color: rgba(232,158,79,.4) !important; }
-
-  /* Badge "Contrato aceito" (contrato.js) */
-  [style*="#f0faf0"] { background: rgba(74,138,74,.20) !important; }
-  [style*="#b6ddb6"] { border-color: rgba(74,138,74,.4) !important; }
-  [style*="#2e7d32"], [style*="#4a7a4a"] { color: #8FD18F !important; }
 
   /* Linha "ausente" na chamada do professor (professor/home.js) */
   [style*="rgba(255,0,0,.03)"] { background: rgba(192,57,43,.14) !important; }
@@ -704,6 +668,8 @@ a[style*="background"]:hover { filter: brightness(1.06); transform: translateY(-
   /* Nível "info": fundo e borda verdes bem fracos */
   [style*="rgba(31,56,31,.05)"] { background: rgba(74,138,74,.16) !important; }
   [style*="rgba(31,56,31,.15)"] { border-color: rgba(124,156,130,.3) !important; }
+  /* (removido) camada antiga de remendos [style*="#hex"]: as cores fixas agora são tokens (ver :root) e a camada
+     forçava a cor do TEXTO em elementos que só usavam o hex como fundo. */
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -773,7 +739,7 @@ textarea.ui-input { min-height: 96px; line-height: 1.5; resize: vertical; }
 .ui-btn:focus-visible, .ui-input:focus-visible, .ui-icon-btn:focus-visible, .ui-link:focus-visible {
   outline: 2px solid var(--verde-cl); outline-offset: 2px;
 }
-.ui-link { color: var(--verde-med); text-decoration: underline; }
+.ui-link { color: var(--verde-texto); text-decoration: underline; }
 
 .priv-list { list-style: none; display: flex; flex-direction: column; }
 .priv-item {
@@ -786,9 +752,9 @@ textarea.ui-input { min-height: 96px; line-height: 1.5; resize: vertical; }
   display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
   padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500;
 }
-.ui-badge--aberta   { background: rgba(232,188,79,.2);  color: #8a6a10; }
-.ui-badge--atendida { background: rgba(74,138,74,.18);  color: #2d6a2d; }
-.ui-badge--recusada { background: rgba(192,57,43,.14);  color: #a93226; }
+.ui-badge--aberta   { background: var(--warn-bg);  color: var(--warn-fg); }
+.ui-badge--atendida { background: var(--ok-bg);  color: var(--ok-fg); }
+.ui-badge--recusada { background: var(--err-bg);  color: var(--err-fg); }
 .ui-empty {
   display: flex; align-items: center; gap: 10px; padding: 16px; border-radius: 12px;
   background: var(--fundo); color: var(--txt2); font-size: 13px; line-height: 1.5;
@@ -881,7 +847,7 @@ a:focus-visible, [tabindex]:focus-visible, [role="link"]:focus-visible, [role="b
   display: inline-flex; align-items: center; justify-content: center;
   width: 36px; height: 36px; border-radius: 50%; background: var(--verde); color: var(--bege);
 }
-.ag__fer { display: block; margin-top: 2px; font-size: 12px; font-weight: 500; color: #8a6a10; }
+.ag__fer { display: block; margin-top: 2px; font-size: 12px; font-weight: 500; color: var(--warn-fg); }
 .ag__col {
   position: relative; border-left: 1px solid var(--borda);
   background-image: linear-gradient(to bottom, color-mix(in srgb, var(--borda) 70%, transparent) 1px, transparent 1px);
@@ -954,10 +920,10 @@ body.ag-arrastando, body.ag-arrastando * { cursor: grabbing !important; -webkit-
    DASHBOARD — "Aulas de hoje" com a turma (resumo do dia)
    ══════════════════════════════════════════════════════════════ */
 .ui-btn--sm { min-height: 36px; padding: 0 14px; font-size: 13px; }
-.ui-badge--confirmado { background: rgba(74,138,74,.16);  color: #2d6a2d; }
-.ui-badge--presente   { background: rgba(45,122,45,.22);  color: #1f5a1f; }
-.ui-badge--ausente    { background: rgba(192,57,43,.14);  color: #a93226; }
-.ui-badge--pendente   { background: rgba(232,188,79,.22); color: #8a6a10; }
+.ui-badge--confirmado { background: var(--ok-bg);   color: var(--ok-fg); }
+.ui-badge--presente   { background: var(--ok-bg);   color: var(--ok-fg); font-weight: 600; }
+.ui-badge--ausente    { background: var(--err-bg);  color: var(--err-fg); }
+.ui-badge--pendente   { background: var(--warn-bg); color: var(--warn-fg); }
 
 .dash-hoje { background: var(--superficie); border: 1px solid var(--borda); border-radius: 16px; overflow: hidden; }
 .dash-hoje__head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 16px 20px; }
@@ -985,7 +951,7 @@ body.ag-arrastando, body.ag-arrastando * { cursor: grabbing !important; -webkit-
   background: var(--superficie); border: 1px solid var(--borda); font-size: 12px; color: var(--txt);
 }
 .dash-chip__av, .dash-av {
-  width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; font-size: 10px; font-weight: 600;
+  width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; font-size: 12px; font-weight: 600;
   display: inline-flex; align-items: center; justify-content: center;
   background: color-mix(in srgb, var(--c, var(--verde-cl)) 24%, var(--superficie)); color: var(--txt);
 }
@@ -1004,4 +970,18 @@ button.dash-chip:hover { border-color: var(--verde-cl); color: var(--txt); }
   .dash-aula__hora strong { display: inline; margin-right: 8px; }
   .dash-aula__acoes { flex-direction: row; min-width: 0; }
   .dash-aula__acoes .ui-btn { flex: 1; }
+}
+
+/* Ícones Tabler inline (substituem emojis/símbolos): alinhados ao texto */
+i.ti { line-height: 1; vertical-align: -0.14em; }
+button > i.ti:only-child { vertical-align: middle; }
+
+/* ── Toque: alvos de pelo menos 44px (WCAG 2.5.5 / Apple HIG) ─────────────
+   Só em telas de toque. Fora: blocos da agenda (a altura É o horário) e chips da turma. */
+@media (pointer: coarse) {
+  button:not(.ag-ev):not(.dash-chip):not(.ui-snack__x),
+  [role="button"], select, .ni,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]) { min-height: 44px; }
+  button:not(.ag-ev):not(.dash-chip), [role="button"] { min-width: 44px; }
+  input[type="checkbox"], input[type="radio"] { width: 22px; height: 22px; }
 }

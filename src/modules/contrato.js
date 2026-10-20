@@ -15,10 +15,10 @@ import { toast, esc } from './utils.js'
 const CONTRATO_VERSAO = 'v4'
 
 const CONTRATO_TEXTO = `
-<div style="font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.8;color:#1F381F">
+<div style="font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.8;color:var(--txt)">
   <div style="text-align:center;margin-bottom:20px">
     <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500">Espaço Autonomia</div>
-    <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#5a7a5a">Contrato de Prestação de Serviços de Yoga</div>
+    <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--txt2)">Contrato de Prestação de Serviços de Yoga</div>
   </div>
 
   <p style="margin-bottom:14px">
@@ -47,8 +47,8 @@ const CONTRATO_TEXTO = `
 
   <div style="margin-bottom:14px"><strong>9. FORO:</strong> As partes elegem o foro da Comarca de Franco da Rocha – SP para dirimir quaisquer dúvidas decorrentes deste instrumento.</div>
 
-  <div style="background:rgba(232,188,79,.12);border:1px solid rgba(232,188,79,.45);border-radius:8px;padding:12px 14px;font-size:12px;color:#7a5a10;line-height:1.6">
-    ⚠️ <strong>Atenção:</strong> Ao confirmar uma aula e não comparecer sem cancelar com antecedência, a aula será descontada do seu saldo sem direito a reposição ou reembolso. O plano só é encerrado mediante <strong>desistência formal pelo WhatsApp</strong> — a simples ausência não cancela as cobranças.
+  <div style="background:rgba(232,188,79,.12);border:1px solid rgba(232,188,79,.45);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--warn-fg);line-height:1.6">
+    <i class="ti ti-alert-triangle" aria-hidden="true"></i> <strong>Atenção:</strong> Ao confirmar uma aula e não comparecer sem cancelar com antecedência, a aula será descontada do seu saldo sem direito a reposição ou reembolso. O plano só é encerrado mediante <strong>desistência formal pelo WhatsApp</strong> — a simples ausência não cancela as cobranças.
   </div>
 </div>`
 
@@ -103,20 +103,20 @@ export async function verificarContrato(userId, nomeAluno) {
     div.addEventListener('click', e => e.stopPropagation())
 
     div.innerHTML = `
-      <div style="background:#fff;border-radius:12px;width:600px;max-width:100%;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+      <div style="background:var(--superficie);border-radius:12px;width:600px;max-width:100%;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)">
         <div style="background:var(--verde);padding:18px 22px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between">
           <div>
             <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--bege)">Contrato de Adesão</div>
-            <div style="font-size:11px;color:rgba(242,236,206,.7);margin-top:2px">Leia com atenção — obrigatório para continuar</div>
+            <div style="font-size:12px;color:rgba(242,236,206,.7);margin-top:2px">Leia com atenção — obrigatório para continuar</div>
           </div>
-          <div style="background:rgba(242,236,206,.15);border-radius:6px;padding:4px 10px;font-size:10px;color:var(--bege);letter-spacing:.5px;text-transform:uppercase">Versão ${CONTRATO_VERSAO}</div>
+          <div style="background:rgba(242,236,206,.15);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--bege);letter-spacing:.5px;text-transform:uppercase">Versão ${CONTRATO_VERSAO}</div>
         </div>
 
         <div style="overflow-y:auto;flex:1;padding:22px 24px" id="contrato-scroll">
           ${CONTRATO_TEXTO.replace('[NOME]', () => esc(nomeAluno))}
         </div>
 
-        <div style="padding:16px 22px;border-top:1px solid var(--borda);background:#fafaf7;flex-shrink:0">
+        <div style="padding:16px 22px;border-top:1px solid var(--borda);background:var(--superficie-2);flex-shrink:0">
           <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-bottom:14px" id="label-check-contrato">
             <input type="checkbox" id="check-contrato"
               style="margin-top:3px;width:16px;height:16px;accent-color:var(--verde);flex-shrink:0;cursor:pointer">
@@ -130,7 +130,7 @@ export async function verificarContrato(userId, nomeAluno) {
             style="width:100%;padding:13px;background:#ccc;color:#fff;border:none;border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;cursor:not-allowed;font-weight:500;transition:background .2s,cursor .2s">
             Concordar e Acessar o App
           </button>
-          <div style="text-align:center;margin-top:8px;font-size:11px;color:var(--txt2)">
+          <div style="text-align:center;margin-top:8px;font-size:12px;color:var(--txt2)">
             Ao aceitar, seu consentimento é registrado com data, hora e dispositivo (LGPD Art. 8° §6).
           </div>
         </div>
@@ -215,23 +215,23 @@ export async function verContratoAceito(userId, nomeAluno) {
   ].join(';')
 
   div.innerHTML = `
-    <div style="background:#fff;border-radius:12px;width:600px;max-width:100%;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+    <div style="background:var(--superficie);border-radius:12px;width:600px;max-width:100%;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)">
       <div style="background:var(--verde);padding:18px 22px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between">
         <div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--bege)">Contrato de Adesão</div>
-          <div style="font-size:11px;color:rgba(242,236,206,.7);margin-top:2px">Versão ${data.versao}</div>
+          <div style="font-size:12px;color:rgba(242,236,206,.7);margin-top:2px">Versão ${data.versao}</div>
         </div>
         <button onclick="document.getElementById('modal-ver-contrato').remove()"
           style="background:rgba(242,236,206,.15);border:none;border-radius:6px;padding:6px 14px;font-size:13px;color:var(--bege);cursor:pointer;font-family:'DM Sans',sans-serif">
-          ✕ Fechar
+          <i class="ti ti-x" aria-hidden="true"></i> Fechar
         </button>
       </div>
 
-      <div style="background:#f0faf0;border-bottom:1px solid #b6ddb6;padding:10px 22px;display:flex;align-items:center;gap:10px;flex-shrink:0">
-        <span style="font-size:20px">✅</span>
+      <div style="background:var(--superficie-2);border-bottom:1px solid var(--ok-borda);padding:10px 22px;display:flex;align-items:center;gap:10px;flex-shrink:0">
+        <span style="font-size:20px"><i class="ti ti-circle-check" aria-hidden="true"></i></span>
         <div>
-          <div style="font-size:12px;font-weight:600;color:#2e7d32">Contrato aceito</div>
-          <div style="font-size:11px;color:#4a7a4a">Assinado em ${dtFormatada} · Registro LGPD Art. 8° §6</div>
+          <div style="font-size:12px;font-weight:600;color:var(--ok-fg)">Contrato aceito</div>
+          <div style="font-size:12px;color:var(--verde-texto)">Assinado em ${dtFormatada} · Registro LGPD Art. 8° §6</div>
         </div>
       </div>
 
@@ -239,8 +239,8 @@ export async function verContratoAceito(userId, nomeAluno) {
         ${CONTRATO_TEXTO.replace('[NOME]', () => esc(nomeAluno))}
       </div>
 
-      <div style="padding:14px 22px;border-top:1px solid var(--borda);background:#fafaf7;flex-shrink:0;text-align:center">
-        <div style="font-size:11px;color:var(--txt2)">
+      <div style="padding:14px 22px;border-top:1px solid var(--borda);background:var(--superficie-2);flex-shrink:0;text-align:center">
+        <div style="font-size:12px;color:var(--txt2)">
           Este é o contrato que você assinou em ${dtFormatada}.
           Para encerrar seu plano, envie uma mensagem formal pelo WhatsApp.
         </div>
