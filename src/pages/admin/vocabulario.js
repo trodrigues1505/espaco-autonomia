@@ -5,7 +5,7 @@
  */
 
 import { confirmarModal } from '../../modules/dialogs.js'
-import { toast } from '../../modules/utils.js'
+import { toast, esc } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 import { invalidarCacheVocabulario } from '../../modules/vocabulario.js'
 
@@ -27,7 +27,7 @@ export async function renderVocabularioAdmin(container, page) {
 
   if (error) {
     container.innerHTML = `<div class="topbar"><div class="topbar-t">Śabda Kośa</div></div>
-      <div class="content"><p style="color:#c0392b">Erro: ${error.message}</p></div>`
+      <div class="content"><p style="color:#c0392b">Erro: ${esc(error.message)}</p></div>`
     return
   }
 
@@ -86,12 +86,12 @@ export async function renderVocabularioAdmin(container, page) {
           : termos.map(t => `
             <div style="display:grid;grid-template-columns:1fr 2fr 90px;align-items:center;gap:10px;
                         padding:11px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
-              <span style="font-weight:500;color:var(--txt)">${t.termo}</span>
-              <span style="color:var(--txt2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.definicao}</span>
+              <span style="font-weight:500;color:var(--txt)">${esc(t.termo)}</span>
+              <span style="color:var(--txt2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.definicao)}</span>
               <div style="display:flex;gap:4px">
                 <button onclick="editarVocab('${t.id}')"
                   style="padding:3px 8px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✎</button>
-                <button onclick="excluirVocab('${t.id}','${(t.termo||'').replace(/'/g,"\\'")}')"
+                <button onclick="excluirVocab(this.dataset.id, this.dataset.termo)" data-id="${esc(t.id)}" data-termo="${esc(t.termo||'')}"
                   style="padding:3px 8px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✕</button>
               </div>
             </div>`).join('')
@@ -196,14 +196,14 @@ export async function renderVocabularioAdmin(container, page) {
       itens = JSON.parse(raw)
       if (!Array.isArray(itens)) throw new Error('não é um array')
     } catch (e) {
-      status.innerHTML = `<span style="color:#c0392b">JSON inválido: ${e.message}</span>`
+      status.innerHTML = `<span style="color:#c0392b">JSON inválido: ${esc(e.message)}</span>`
       return
     }
 
     status.textContent = 'Verificando termos existentes...'
 
     const { data: existentes, error: errBusca } = await sb.from('vocabulario').select('termo,termo_normalizado,definicao')
-    if (errBusca) { status.innerHTML = `<span style="color:#c0392b">Erro: ${errBusca.message}</span>`; return }
+    if (errBusca) { status.innerHTML = `<span style="color:#c0392b">Erro: ${esc(errBusca.message)}</span>`; return }
     const porNormalizado = Object.fromEntries((existentes || []).map(v => [v.termo_normalizado, v]))
 
     const novos = []
@@ -250,7 +250,7 @@ export async function renderVocabularioAdmin(container, page) {
     div.innerHTML = `
       <div style="background:#fff;border-radius:12px;width:520px;max-width:100%;overflow:hidden">
         <div style="background:var(--verde);padding:16px 20px">
-          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)">${item.termo}</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)">${esc(item.termo)}</div>
           <div style="font-size:11px;color:rgba(242,236,206,.7);margin-top:2px">Já existe com uma definição diferente — ${fila.length} restante(s)</div>
         </div>
         <div style="padding:18px 20px;display:flex;flex-direction:column;gap:12px">
@@ -307,11 +307,11 @@ export async function renderVocabularioAdmin(container, page) {
 
     if (novos.length) {
       const { error } = await sb.from('vocabulario').insert(novos)
-      if (error) { status.innerHTML = `<span style="color:#c0392b">Erro ao inserir novos: ${error.message}</span>`; return }
+      if (error) { status.innerHTML = `<span style="color:#c0392b">Erro ao inserir novos: ${esc(error.message)}</span>`; return }
     }
     if (resolvidos.length) {
       const { error } = await sb.from('vocabulario').upsert(resolvidos, { onConflict: 'termo_normalizado' })
-      if (error) { status.innerHTML = `<span style="color:#c0392b">Erro ao atualizar: ${error.message}</span>`; return }
+      if (error) { status.innerHTML = `<span style="color:#c0392b">Erro ao atualizar: ${esc(error.message)}</span>`; return }
     }
 
     invalidarCacheVocabulario()
@@ -401,7 +401,7 @@ export async function renderVocabularioAdmin(container, page) {
       window._tncLista = novos
       _renderTermosNaoCatalogados(novos)
     } catch (e) {
-      container.innerHTML = `<p style="color:#c0392b;font-size:12px">Erro ao escanear: ${e.message}</p>`
+      container.innerHTML = `<p style="color:#c0392b;font-size:12px">Erro ao escanear: ${esc(e.message)}</p>`
     } finally {
       if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-search"></i> Escanear agora' }
     }
@@ -424,13 +424,13 @@ export async function renderVocabularioAdmin(container, page) {
       ${lista.map((item, i) => `
         <div style="border:1px solid var(--borda);border-radius:8px;padding:12px 14px;margin-bottom:8px" id="tnc-${i}">
           <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">
-            <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">${item.termo}</span>
+            <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">${esc(item.termo)}</span>
           </div>
-          <div style="font-size:11px;color:var(--txt2);font-style:italic;margin-bottom:8px">"...${item.contexto}..."</div>
+          <div style="font-size:11px;color:var(--txt2);font-style:italic;margin-bottom:8px">"...${esc(item.contexto)}..."</div>
           <textarea id="tnc-def-${i}" rows="2" placeholder="Escreva a definição deste termo..."
             style="width:100%;border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;resize:vertical;box-sizing:border-box;margin-bottom:8px"></textarea>
           <div style="display:flex;gap:6px">
-            <button onclick="salvarTermoEscaneado(${i}, '${item.termo.replace(/'/g, "\\'")}')"
+            <button onclick="salvarTermoEscaneado(${i}, this.dataset.termo)" data-termo="${esc(item.termo)}"
               style="padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">
               ✓ Cadastrar
             </button>

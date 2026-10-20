@@ -2,6 +2,7 @@
  * src/modules/navigation.js
  */
 
+import { esc } from './utils.js'
 import { calcularBadgesMenu, aplicarBadgesMenu } from './notificacoes.js'
 
 // ── Descrições curtas dos benefícios (intro na primeira visita) ──
@@ -244,11 +245,11 @@ async function _abrirModalImpersonar(tipo) {
               onmouseover="this.style.background='rgba(31,56,31,.06)'"
               onmouseout="this.style.background='transparent'">
               <div style="width:34px;height:34px;border-radius:50%;background:rgba(31,56,31,.12);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--verde);flex-shrink:0">
-                ${p.nome.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()}
+                ${esc(p.nome.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase())}
               </div>
               <div>
-                <div style="font-size:13px;font-weight:500;color:var(--txt)">${p.nome}</div>
-                <div style="font-size:11px;color:var(--txt2)">${p.email}${p.tipo==='visitante'?' · Visitante':''}</div>
+                <div style="font-size:13px;font-weight:500;color:var(--txt)">${esc(p.nome)}</div>
+                <div style="font-size:11px;color:var(--txt2)">${esc(p.email)}${p.tipo==='visitante'?' · Visitante':''}</div>
               </div>
             </div>`).join('')
         }

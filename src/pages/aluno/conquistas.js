@@ -3,9 +3,7 @@
  */
 
 import { sb }         from '../../lib/supabase.js'
-import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
-          PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
-          calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
+import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel, PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS, calcularNivel, NIVEL_LABELS, NIVEL_PONTOS, esc } from '../../modules/utils.js'
 import { getConquistas, getGamificacao } from '../../modules/gamificacao.js'
 import { uiAnimar } from '../../modules/ui.js'
 
@@ -42,8 +40,8 @@ export async function renderConquistas(container, page) {
           <div style="background:#fff;border:${c.desbloqueada?'2px solid var(--dourado)':'1px solid var(--borda)'};border-radius:var(--r);padding:13px;display:flex;align-items:center;gap:10px;${!c.desbloqueada?'opacity:.45':''}">
             <div style="font-size:26px;flex-shrink:0">${c.icone}</div>
             <div>
-              <div style="font-weight:500;font-size:12px;color:var(--verde)">${c.nome}</div>
-              <div style="font-size:10px;color:var(--txt2);margin-top:1px">${c.descricao}</div>
+              <div style="font-weight:500;font-size:12px;color:var(--verde)">${esc(c.nome)}</div>
+              <div style="font-size:10px;color:var(--txt2);margin-top:1px">${esc(c.descricao)}</div>
               <div style="font-size:10px;color:var(--dourado);margin-top:2px;font-weight:500">+${c.pontos} pts${c.desbloqueada&&c.quando?' · '+new Date(c.quando).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):''}</div>
             </div>
           </div>`).join('')}

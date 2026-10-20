@@ -2,9 +2,7 @@
  * src/pages/professor/aulas.js
  */
 import { sb }         from '../../lib/supabase.js'
-import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
-          PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
-          calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
+import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel, PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS, calcularNivel, NIVEL_LABELS, esc } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 export async function renderProfAulas(container, page) {
   const sb = window._sb
@@ -62,7 +60,7 @@ export async function renderProfAulas(container, page) {
                   </div>
                   <div style="font-size:11px;color:var(--txt2)">${dt.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'})} · ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
                   <div style="font-size:11px;color:var(--txt2);margin-top:2px">${oc.confirmados||0}/${oc.vagas_total} confirmados · ${oc.vagas_livres||0} vagas livres</div>
-                  ${cancelada&&oc.motivo_cancel?`<div style="font-size:11px;color:#8a1a1a;margin-top:4px;font-style:italic">Motivo: ${oc.motivo_cancel}</div>`:''}
+                  ${cancelada&&oc.motivo_cancel?`<div style="font-size:11px;color:#8a1a1a;margin-top:4px;font-style:italic">Motivo: ${esc(oc.motivo_cancel)}</div>`:''}
                 </div>
               </div>
               <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">

@@ -144,7 +144,7 @@ export function escolhaModal({ titulo, texto = '', opcoes = null, marcar = null,
         <legend class="ui-label">${esc(legenda)}</legend>
         ${opcoes.map((o, i) => `
           <label class="ui-choice">
-            <input type="radio" name="${nome}" value="${esc(o.valor)}" ${i === 0 ? 'checked' : ''}>
+            <input type="radio" name="${esc(nome)}" value="${esc(o.valor)}" ${i === 0 ? 'checked' : ''}>
             <span class="ui-choice__t">${esc(o.rotulo)}</span>
             ${o.descricao ? `<span class="ui-choice__d">${esc(o.descricao)}</span>` : ''}
           </label>`).join('')}

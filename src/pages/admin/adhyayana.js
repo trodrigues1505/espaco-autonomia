@@ -11,7 +11,7 @@
  */
 
 import { confirmarModal } from '../../modules/dialogs.js'
-import { toast } from '../../modules/utils.js'
+import { toast, esc, urlSegura } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 
 // ── Lightbox de imagem (clique para ampliar) — mesmo padrão usado
@@ -91,7 +91,7 @@ export async function renderAdhyayanaAdmin(container, page) {
 
   if (error) {
     container.innerHTML = `<div class="topbar"><div class="topbar-t">Yoga Adhyayana</div></div>
-      <div class="content"><p style="color:#c0392b">Erro: ${error.message}</p></div>`
+      <div class="content"><p style="color:#c0392b">Erro: ${esc(error.message)}</p></div>`
     return
   }
 
@@ -145,7 +145,7 @@ export async function renderAdhyayanaAdmin(container, page) {
                       padding:12px 16px;margin-bottom:16px;font-size:13px;color:#1a5a1a;
                       display:flex;align-items:center;gap:10px">
              <i class="ti ti-check" style="font-size:18px"></i>
-             <span>Āsana de hoje: <strong>${hojePublicado.nome}</strong></span>
+             <span>Āsana de hoje: <strong>${esc(hojePublicado.nome)}</strong></span>
            </div>`
       }
 
@@ -185,10 +185,10 @@ export async function renderAdhyayanaAdmin(container, page) {
                         align-items:center;gap:10px;padding:11px 18px;
                         border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
               <div style="display:flex;align-items:center;gap:10px">
-                ${a.imagem_url ? `<img src="${a.imagem_url}" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0">` : ''}
+                ${a.imagem_url ? `<img src="${urlSegura(a.imagem_url)}" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0">` : ''}
                 <div>
-                  <div style="font-weight:500;color:var(--txt)">${a.nome}</div>
-                  ${a.nome_alternativo ? `<div style="font-size:10px;color:var(--txt2);margin-top:1px;font-style:italic">${a.nome_alternativo}</div>` : ''}
+                  <div style="font-weight:500;color:var(--txt)">${esc(a.nome)}</div>
+                  ${a.nome_alternativo ? `<div style="font-size:10px;color:var(--txt2);margin-top:1px;font-style:italic">${esc(a.nome_alternativo)}</div>` : ''}
                 </div>
               </div>
               <div style="display:flex;flex-direction:column;gap:3px">
@@ -206,7 +206,7 @@ export async function renderAdhyayanaAdmin(container, page) {
                   style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--verde);border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Prévia">👁</button>
                 <button onclick="editarAdhyayana('${a.id}')"
                   style="padding:3px 8px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✎</button>
-                <button onclick="excluirAdhyayana('${a.id}','${(a.nome||'').replace(/'/g,"\\'")}')"
+                <button onclick="excluirAdhyayana(this.dataset.id, this.dataset.nome)" data-id="${esc(a.id)}" data-nome="${esc(a.nome||'')}"
                   style="padding:3px 8px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✕</button>
               </div>
             </div>`).join('')}
@@ -230,10 +230,10 @@ export async function renderAdhyayanaAdmin(container, page) {
                         border-bottom:1px solid rgba(212,200,158,.3);font-size:12px;
                         background:${isHoje ? 'rgba(232,188,79,.05)' : 'transparent'}">
                 <div style="display:flex;align-items:center;gap:10px">
-                  ${a.imagem_url ? `<img src="${a.imagem_url}" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0">` : ''}
+                  ${a.imagem_url ? `<img src="${urlSegura(a.imagem_url)}" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0">` : ''}
                   <div>
-                    <div style="font-weight:500;color:var(--txt)">${a.nome}</div>
-                    ${a.nome_alternativo ? `<div style="font-size:10px;color:var(--txt2);margin-top:1px;font-style:italic">${a.nome_alternativo}</div>` : ''}
+                    <div style="font-weight:500;color:var(--txt)">${esc(a.nome)}</div>
+                    ${a.nome_alternativo ? `<div style="font-size:10px;color:var(--txt2);margin-top:1px;font-style:italic">${esc(a.nome_alternativo)}</div>` : ''}
                   </div>
                 </div>
                 <div>${badgeStatus(a.publicada_em)}<div style="font-size:10px;color:var(--txt2);margin-top:2px">${fmtDia(a.publicada_em)}</div></div>
@@ -242,7 +242,7 @@ export async function renderAdhyayanaAdmin(container, page) {
                     style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--verde);border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Prévia">👁</button>
                   <button onclick="editarAdhyayana('${a.id}')"
                     style="padding:3px 8px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✎</button>
-                  <button onclick="excluirAdhyayana('${a.id}','${(a.nome||'').replace(/'/g,"\\'")}')"
+                  <button onclick="excluirAdhyayana(this.dataset.id, this.dataset.nome)" data-id="${esc(a.id)}" data-nome="${esc(a.nome||'')}"
                     style="padding:3px 8px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✕</button>
                 </div>
               </div>`
@@ -380,8 +380,8 @@ export async function renderAdhyayanaAdmin(container, page) {
         <div style="background:var(--verde);padding:16px 18px">
           ${a.imagem_url ? `
             <div style="position:relative;border-radius:8px;overflow:hidden;margin-bottom:12px;cursor:zoom-in"
-                 onclick="_abrirLightboxAdhy('${a.imagem_url}','${(a.nome||'').replace(/'/g,"\\'")}')" title="Clique para ampliar">
-              <img src="${a.imagem_url}" referrerpolicy="no-referrer"
+                 onclick="_abrirLightboxAdhy(this.dataset.src, this.dataset.nome)" data-src="${urlSegura(a.imagem_url)}" data-nome="${esc(a.nome||'')}" title="Clique para ampliar">
+              <img src="${urlSegura(a.imagem_url)}" referrerpolicy="no-referrer"
                 style="width:100%;max-height:220px;object-fit:cover;display:block">
               <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);
                           border-radius:20px;padding:3px 8px;font-size:10px;color:#fff;
@@ -390,20 +390,20 @@ export async function renderAdhyayanaAdmin(container, page) {
               </div>
             </div>` : ''}
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:rgba(242,236,206,.55);margin-bottom:6px">
-            ✦ Yoga Adhyayana · ${fmtDia(a.publicada_em)}${a.nivel ? ' · ' + a.nivel : ''}
+            ✦ Yoga Adhyayana · ${fmtDia(a.publicada_em)}${esc(a.nivel ? ' · ' + a.nivel : '')}
           </div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--bege)">${a.nome}</div>
-          ${a.nome_alternativo ? `<div style="font-size:13px;font-style:italic;color:rgba(242,236,206,.8);margin-top:2px">${a.nome_alternativo}</div>` : ''}
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--bege)">${esc(a.nome)}</div>
+          ${a.nome_alternativo ? `<div style="font-size:13px;font-style:italic;color:rgba(242,236,206,.8);margin-top:2px">${esc(a.nome_alternativo)}</div>` : ''}
         </div>
         <div style="padding:16px 18px">
           ${blocos.map(([titulo, texto]) => `
             <div style="margin-bottom:14px">
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">${titulo}</div>
-              <div style="font-size:13px;color:var(--txt);line-height:1.7;white-space:pre-line">${texto}</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">${esc(titulo)}</div>
+              <div style="font-size:13px;color:var(--txt);line-height:1.7;white-space:pre-line">${esc(texto)}</div>
             </div>`).join('')}
           ${a.fechamento ? `
             <div style="background:#f9f7f0;border-radius:8px;padding:12px 14px;margin-top:8px">
-              <p style="font-size:13px;font-style:italic;color:var(--verde);line-height:1.7;margin:0;white-space:pre-line">${a.fechamento}</p>
+              <p style="font-size:13px;font-style:italic;color:var(--verde);line-height:1.7;margin:0;white-space:pre-line">${esc(a.fechamento)}</p>
             </div>` : ''}
         </div>
       </div>`
@@ -523,10 +523,10 @@ Regras:
     const camposHtml = step.campos.map(campo => {
       const val = (dados[campo.id] ?? '').toString().replace(/"/g, '&quot;')
       const inputEl = campo.tipo === 'textarea'
-        ? `<textarea id="adhy-f-${campo.id}" rows="${campo.rows || 4}" placeholder="${campo.ph || ''}"
+        ? `<textarea id="adhy-f-${campo.id}" rows="${campo.rows || 4}" placeholder="${esc(campo.ph || '')}"
             style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
                    font-family:'DM Sans',sans-serif;outline:none;width:100%;resize:vertical">${dados[campo.id] || ''}</textarea>`
-        : `<input type="${campo.tipo === 'date' ? 'date' : 'text'}" id="adhy-f-${campo.id}" value="${val}" placeholder="${campo.ph || ''}"
+        : `<input type="${campo.tipo === 'date' ? 'date' : 'text'}" id="adhy-f-${campo.id}" value="${val}" placeholder="${esc(campo.ph || '')}"
             style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
                    font-family:'DM Sans',sans-serif;outline:none;width:100%">`
       return `

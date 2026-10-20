@@ -7,7 +7,7 @@
  * completa os campos manuais (abertura, kriya, aquecimento, pranayama) → salva.
  */
 
-import { toast } from '../../modules/utils.js'
+import { toast, esc, urlSegura } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 
 const PDFJS_VERSION = '4.7.76'
@@ -72,9 +72,11 @@ Aquecimento: `
 
 // ── Linkify (item 17: qualquer campo de texto aceita links) ──
 function linkify(texto) {
-  if (!texto) return texto
-  return texto.replace(/(https?:\/\/[^\s<]+)/g, url =>
-    `<a href="${url}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">${url}</a>`)
+  if (texto == null || texto === '') return ''
+  // as partes ímpares do split são as URLs; o resto é texto e precisa ser escapado
+  return String(texto).split(/(https?:\/\/[^\s<>"']+)/g).map((parte, i) => i % 2
+    ? `<a href="${urlSegura(parte)}" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline">${esc(parte)}</a>`
+    : esc(parte)).join('')
 }
 
 async function _carregarPdfjs() {
@@ -145,31 +147,31 @@ function _renderPreviaHTML(a) {
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
           ${a.numero ? `<span style="font-size:10px;background:rgba(242,236,206,.15);color:var(--bege);padding:2px 8px;border-radius:20px">Aula ${a.numero}</span>` : ''}
           ${a.data_aula ? `<span style="font-size:10px;background:rgba(242,236,206,.15);color:var(--bege);padding:2px 8px;border-radius:20px">${new Date(a.data_aula+'T12:00').toLocaleDateString('pt-BR')}</span>` : ''}
-          ${a.modalidade ? `<span style="font-size:10px;background:rgba(242,236,206,.15);color:var(--bege);padding:2px 8px;border-radius:20px">${a.modalidade}</span>` : ''}
+          ${a.modalidade ? `<span style="font-size:10px;background:rgba(242,236,206,.15);color:var(--bege);padding:2px 8px;border-radius:20px">${esc(a.modalidade)}</span>` : ''}
           ${a.duracao ? `<span style="font-size:10px;background:rgba(242,236,206,.15);color:var(--bege);padding:2px 8px;border-radius:20px">${a.duracao}</span>` : ''}
         </div>
-        <p style="font-size:13px;color:var(--bege);font-style:italic;margin:0;font-family:'Cormorant Garamond',serif">${descricao}</p>
+        <p style="font-size:13px;color:var(--bege);font-style:italic;margin:0;font-family:'Cormorant Garamond',serif">${esc(descricao)}</p>
       </div>
       <div style="padding:16px 18px">
         ${introItens.length ? `
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:8px">Abertura da prática</div>
           <div style="margin-bottom:16px">
             ${introItens.map((it,i) => `<div style="display:flex;gap:8px;padding:6px 0;border-bottom:${i<introItens.length-1?'1px solid rgba(212,200,158,.3)':'none'};font-size:12px">
-              <span style="font-weight:500;min-width:110px;flex-shrink:0">${it.termo}</span><span>${linkify(it.desc)}</span>
+              <span style="font-weight:500;min-width:110px;flex-shrink:0">${esc(it.termo)}</span><span>${linkify(it.desc)}</span>
             </div>`).join('')}
           </div>` : ''}
         ${a.link_tummee ? `<div style="background:#f9f7f0;border-radius:8px;padding:10px 12px;margin-bottom:16px;font-size:11px;word-break:break-all">🔗 ${linkify(a.link_tummee)}</div>` : ''}
         ${(a.pranayama||[]).length ? `
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:8px">Prāṇāyāma</div>
-          <div style="margin-bottom:16px">${a.pranayama.map(it=>`<div style="font-size:12px;padding:4px 0"><strong>${it.termo}</strong>: ${linkify(it.desc)}</div>`).join('')}</div>` : ''}
+          <div style="margin-bottom:16px">${a.pranayama.map(it=>`<div style="font-size:12px;padding:4px 0"><strong>${esc(it.termo)}</strong>: ${linkify(it.desc)}</div>`).join('')}</div>` : ''}
         ${(a.mantra||[]).length ? `
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:8px">Mantra</div>
-          <div style="margin-bottom:16px">${a.mantra.map(it=>`<div style="font-size:12px;padding:4px 0"><strong>${it.termo}</strong>: ${linkify(it.desc)}</div>`).join('')}</div>` : ''}
-        ${musculosF.length ? `<div style="font-size:11px;margin-bottom:6px"><strong>Músculos Principais:</strong> ${musculosF.map(m=>`${m.termo} (${m.percentual}%)`).join(' · ')}</div>` : ''}
-        ${tiposF.length ? `<div style="font-size:11px;margin-bottom:6px"><strong>Tipos de Āsana:</strong> ${tiposF.map(t=>`${t.termo} (${t.percentual}%)`).join(' · ')}</div>` : ''}
-        ${koshas.length ? `<div style="font-size:11px;margin-bottom:6px"><strong>Koshas Principais:</strong> ${koshas.map(k=>`${k.termo} (${k.percentual}%)`).join(' · ')}</div>` : ''}
-        ${chakras.length ? `<div style="font-size:11px;margin-bottom:6px"><strong>Chakras Principais:</strong> ${chakras.map(k=>`${k.termo} (${k.percentual}%)`).join(' · ')}</div>` : ''}
-        ${gunasF.length ? `<div style="font-size:11px"><strong>Gunas:</strong> ${gunasF.map(k=>`${k.termo} (${k.percentual}%)`).join(' · ')}</div>` : ''}
+          <div style="margin-bottom:16px">${a.mantra.map(it=>`<div style="font-size:12px;padding:4px 0"><strong>${esc(it.termo)}</strong>: ${linkify(it.desc)}</div>`).join('')}</div>` : ''}
+        ${musculosF.length ? `<div style="font-size:11px;margin-bottom:6px"><strong>Músculos Principais:</strong> ${musculosF.map(m=>`${esc(m.termo)} (${m.percentual}%)`).join(' · ')}</div>` : ''}
+        ${tiposF.length ? `<div style="font-size:11px;margin-bottom:6px"><strong>Tipos de Āsana:</strong> ${tiposF.map(t=>`${esc(t.termo)} (${t.percentual}%)`).join(' · ')}</div>` : ''}
+        ${koshas.length ? `<div style="font-size:11px;margin-bottom:6px"><strong>Koshas Principais:</strong> ${koshas.map(k=>`${esc(k.termo)} (${k.percentual}%)`).join(' · ')}</div>` : ''}
+        ${chakras.length ? `<div style="font-size:11px;margin-bottom:6px"><strong>Chakras Principais:</strong> ${chakras.map(k=>`${esc(k.termo)} (${k.percentual}%)`).join(' · ')}</div>` : ''}
+        ${gunasF.length ? `<div style="font-size:11px"><strong>Gunas:</strong> ${gunasF.map(k=>`${esc(k.termo)} (${k.percentual}%)`).join(' · ')}</div>` : ''}
       </div>
     </div>`
 }
@@ -184,7 +186,7 @@ export async function renderAsanaAdmin(container, page) {
 
   if (error) {
     container.innerHTML = `<div class="topbar"><div class="topbar-t">Āsana Mārga</div></div>
-      <div class="content"><p style="color:#c0392b">Erro: ${error.message}</p></div>`
+      <div class="content"><p style="color:#c0392b">Erro: ${esc(error.message)}</p></div>`
     return
   }
 
@@ -198,7 +200,7 @@ export async function renderAsanaAdmin(container, page) {
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <div>
             <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${SLOT_INFO[slot].label}</div>
-            <div style="font-size:11px;color:var(--txt2)">${SLOT_INFO[slot].sub}</div>
+            <div style="font-size:11px;color:var(--txt2)">${esc(SLOT_INFO[slot].sub)}</div>
           </div>
           <div style="display:flex;gap:6px">
             ${!vazio ? `<button onclick="previaAsana(${slot})"
@@ -220,7 +222,7 @@ export async function renderAsanaAdmin(container, page) {
           : `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
                <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">Aula ${a.numero || '—'}</span>
                ${a.data_aula ? `<span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${new Date(a.data_aula+'T12:00').toLocaleDateString('pt-BR')}</span>` : ''}
-               ${a.modalidade ? `<span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${a.modalidade}</span>` : ''}
+               ${a.modalidade ? `<span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${esc(a.modalidade)}</span>` : ''}
              </div>
              <div style="font-size:12px;color:var(--txt2);line-height:1.6">${gerarDescricao(a)}</div>`
         }
@@ -462,11 +464,11 @@ Regras:
         ${dica ? `<div style="font-size:10px;color:var(--txt2)">${dica}</div>` : ''}
       </div>`
     const inp = (id, val = '', ph = '') =>
-      `<input id="${id}" value="${(val ?? '').toString().replace(/"/g,'&quot;')}" placeholder="${ph}"
+      `<input id="${id}" value="${esc(val)}" placeholder="${esc(ph)}"
         style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">`
     const ta = (id, val = '', rows = 3, ph = '') =>
-      `<textarea id="${id}" rows="${rows}" placeholder="${ph}"
-        style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:12px;font-family:monospace;outline:none;width:100%;resize:vertical">${val||''}</textarea>`
+      `<textarea id="${id}" rows="${rows}" placeholder="${esc(ph)}"
+        style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:12px;font-family:monospace;outline:none;width:100%;resize:vertical">${esc(val)}</textarea>`
 
     const dadosPreview = { gunas: p.gunas||[], tipos_yoga: p.tipos_yoga||[], musculos: p.musculos||[] }
     const introducaoAtual = porSlot[window._asanaSlotAtual]?.introducao

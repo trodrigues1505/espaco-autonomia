@@ -1,3 +1,4 @@
+import { esc } from './utils.js'
 /**
  * src/modules/professor-cancel.js
  * Responsabilidade: cancelamento de aula (individual e em massa),
@@ -30,7 +31,7 @@ export function abrirModalCancelarAula(ocorrenciaId, infoObj) {
     const dia  = dt.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' })
     const nomes = { hatha: 'Hatha Yoga', acro: 'Acro Yoga', raja: 'Raja Yoga' }
     infoEl.innerHTML = `
-      <strong>${nomes[infoObj.modalidade] || infoObj.modalidade}</strong> —
+      <strong>${nomes[infoObj.modalidade] || esc(infoObj.modalidade)}</strong> —
       ${dia}, ${hora}
       <span style="margin-left:8px;font-size:11px;color:var(--txt2)">
         ${infoObj.confirmados || 0} aluno(s) confirmado(s)
@@ -64,7 +65,7 @@ export function abrirModalCancelarEmMassa(infosArray) {
         ${infosArray.map(i => {
           const dt = new Date(i.data_hora)
           return `<div style="font-size:11px">
-            ${nomes[i.modalidade] || i.modalidade} —
+            ${nomes[i.modalidade] || esc(i.modalidade)} —
             ${dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}
             ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
             <span style="color:var(--txt2)">(${i.confirmados||0} confirmado(s))</span>

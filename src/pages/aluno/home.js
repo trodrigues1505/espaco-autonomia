@@ -3,9 +3,7 @@
  */
 
 import { sb }         from '../../lib/supabase.js'
-import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
-          PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
-          calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
+import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel, PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS, calcularNivel, NIVEL_LABELS, esc } from '../../modules/utils.js'
 import { getSaldoAluno, getGamificacao, getPagamentosAluno, verificarConquistas } from '../../modules/gamificacao.js'
 import { carregarNotificacoes, renderPainelNotif, initNotifHandlers,
          calcularBadgesMenu, aplicarBadgesMenu } from '../../modules/notificacoes.js'
@@ -85,7 +83,7 @@ export async function renderAlunoHome(container, page) {
 
   container.innerHTML = `
     <div class="topbar">
-      <div class="topbar-t" id="tour-saudacao">Olá, ${perfil.nome.split(' ')[0]}!</div>
+      <div class="topbar-t" id="tour-saudacao">Olá, ${esc(perfil.nome.split(' ')[0])}!</div>
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-size:18px">${nivelLabel?.split(' ')[0]||'🌱'}</span>
         <span style="font-size:12px;color:var(--txt2)">${gam?.prana_points||0} pts</span>

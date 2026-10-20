@@ -7,9 +7,7 @@
 
 import { confirmarModal } from '../../modules/dialogs.js'
 import { sb } from '../../lib/supabase.js'
-import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
-          PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
-          calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
+import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel, PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS, calcularNivel, NIVEL_LABELS, esc } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 // Correção (mesmo bug de previsao-professor.js / pagamentos.js / criar_aulas.js):
 // esta tela nunca integrou o painel de notificações, mesmo estando listada em
@@ -118,7 +116,7 @@ export async function renderPresencas(container, page) {
             <span style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500;white-space:nowrap">+ Adicionar aluno</span>
             <select id="sel-add-aluno" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff;color:var(--txt);flex:1;min-width:180px">
               <option value="">— selecionar aluno —</option>
-              ${alunosDisponiveis.map(a=>`<option value="${a.id}">${a.nome}</option>`).join('')}
+              ${alunosDisponiveis.map(a=>`<option value="${a.id}">${esc(a.nome)}</option>`).join('')}
             </select>
             <button onclick="adicionarAlunoPresenca('${ocSelecionadaId}')" style="padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Adicionar${aulaPassada?' (débita saldo)':''}</button>
           </div>
@@ -128,15 +126,15 @@ export async function renderPresencas(container, page) {
           ${confs.length===0?'<div style="padding:16px 18px;font-size:12px;color:var(--txt2)">Nenhuma confirmação para esta aula.</div>':
             confs.map(c=>`<div style="display:grid;grid-template-columns:1fr 90px 100px 120px;align-items:center;gap:10px;padding:9px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px" id="conf-row-${c.id}">
               <div style="display:flex;align-items:center;gap:8px">
-                <div style="width:26px;height:26px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:var(--verde)">${(c.aluno?.nome||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()}</div>
-                <span style="font-weight:500">${c.aluno?.nome||'—'}</span>
+                <div style="width:26px;height:26px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:var(--verde)">${esc((c.aluno?.nome||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase())}</div>
+                <span style="font-weight:500">${esc(c.aluno?.nome||'—')}</span>
               </div>
               <span style="font-size:10px;color:var(--txt2)">${c.confirmado_em?new Date(c.confirmado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'-'}</span>
               <span>${badge(statusMap[c.status]||c.status, statusBg[c.status]||'#f0ede4', statusColor[c.status]||'#5a5a4a')}</span>
               <div style="display:flex;gap:4px">
                 <button onclick="setPresenca('${c.id}',true)" style="padding:3px 7px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Presente">✓</button>
                 <button onclick="setPresenca('${c.id}',false)" style="padding:3px 7px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Ausente">✕</button>
-                <button onclick="excluirPresenca('${c.id}','${(c.aluno?.nome||'').replace(/'/g,"\\'")}','${c.aluno?.id||''}')" style="padding:3px 7px;background:#f0ede4;color:#5a5a4a;border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Remover presença">🗑</button>
+                <button onclick="excluirPresenca(this.dataset.id, this.dataset.nome, this.dataset.aluno)" data-id="${esc(c.id)}" data-nome="${esc(c.aluno?.nome||'')}" data-aluno="${esc(c.aluno?.id||'')}" style="padding:3px 7px;background:#f0ede4;color:#5a5a4a;border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Remover presença">🗑</button>
               </div>
             </div>`).join('')
           }`

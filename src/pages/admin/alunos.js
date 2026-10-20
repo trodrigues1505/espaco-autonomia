@@ -39,14 +39,14 @@ function montarListaAlunosHTML(alunos, saldoPorAluno) {
         const temDesconto = mat && ((mat.desconto_fixo||0) > 0 || (mat.desconto_avulso_meses > mat.desconto_avulso_usado && (mat.desconto_avulso_valor||0) > 0))
         return `<div style="display:grid;grid-template-columns:1fr 80px 60px 60px 80px 160px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
           <div style="display:flex;align-items:center;gap:8px">
-            <div style="width:28px;height:28px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:var(--verde);flex-shrink:0">${initials}</div>
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:var(--verde);flex-shrink:0">${esc(initials)}</div>
             <div>
               <div style="font-weight:500">${esc(a.nome)}</div>
               <div style="font-size:10px;color:var(--txt2)">${esc(a.email)}</div>
               ${temDesconto?`<div style="font-size:10px;color:#e67e22">🏷 com desconto</div>`:''}
             </div>
           </div>
-          <span>${mat?PLANO_BADGES[mat?.plano_tipo]||mat?.plano_tipo||'—':badge('Sem plano','#fceaea','#8a1a1a')}</span>
+          <span>${mat?PLANO_BADGES[mat?.plano_tipo]||esc(mat?.plano_tipo)||'—':badge('Sem plano','#fceaea','#8a1a1a')}</span>
           <span style="font-size:11px;color:var(--txt2)">${opcaoLabel}</span>
           <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:${saldoCor}">${saldoLabel}</span>
           <span style="font-size:11px;color:${vencida?'#c0392b':'var(--txt2)'}">${mat?.fim?new Date(mat.fim+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):vencida?'Vencida':'—'}</span>
@@ -70,7 +70,7 @@ function montarListaVisitantesHTML(visitantes) {
         const initials = (v.nome||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()
         return `<div style="display:grid;grid-template-columns:1fr 130px 110px 120px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
           <div style="display:flex;align-items:center;gap:8px">
-            <div style="width:28px;height:28px;border-radius:50%;background:rgba(58,110,165,.12);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:#3a6ea5;flex-shrink:0">${initials}</div>
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(58,110,165,.12);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:#3a6ea5;flex-shrink:0">${esc(initials)}</div>
             <div>
               <div style="font-weight:500">${esc(v.nome||'—')}</div>
               <div style="font-size:10px;color:var(--txt2)">${esc(v.email)}</div>
@@ -226,7 +226,7 @@ export async function renderAlunos(container, page) {
     <div class="topbar">
       <div class="topbar-t">Alunos</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        ${aba==='alunos'||aba==='visitantes'?`<input id="input-busca-aluno" placeholder="Buscar..." value="${busca}" oninput="window.filtrarAlunosDebounced(this.value)" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;width:140px;font-family:'DM Sans',sans-serif;outline:none">`:''}
+        ${aba==='alunos'||aba==='visitantes'?`<input id="input-busca-aluno" placeholder="Buscar..." value="${esc(busca)}" oninput="window.filtrarAlunosDebounced(this.value)" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;width:140px;font-family:'DM Sans',sans-serif;outline:none">`:''}
         ${aba==='alunos'?`<select onchange="window._filtroPlanoAlunos=this.value;window.aplicarFiltroAlunos()" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;background:#fff;color:var(--txt)">
           <option value="" ${!filtroPlanok?'selected':''}>Todos os planos</option>
           <option value="brahma"       ${filtroPlanok==='brahma'      ?'selected':''}>Brahma</option>
@@ -642,7 +642,7 @@ export async function renderAlunos(container, page) {
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
         <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">ID no Asaas (cus_...)</label>
-        <input id="ea-asaas" placeholder="cus_000..." style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none" value="${a.asaas_customer_id||''}">
+        <input id="ea-asaas" placeholder="cus_000..." style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none" value="${esc(a.asaas_customer_id)}">
         <div style="font-size:10px;color:${a.asaas_customer_id?'#1a5a1a':'#c0392b'};margin-top:3px">${a.asaas_customer_id?'✓ Vinculado ao Asaas':'⚠ Não vinculado'}</div>
       </div>
       <div style="background:rgba(242,236,206,.4);border:1px solid var(--borda);border-radius:8px;padding:12px;margin-bottom:4px">

@@ -3,9 +3,7 @@
  */
 
 import { sb }         from '../../lib/supabase.js'
-import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
-          PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
-          calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
+import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel, PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS, calcularNivel, NIVEL_LABELS, esc } from '../../modules/utils.js'
 import { carregarNotificacoes, renderPainelNotif, initNotifHandlers,
          calcularBadgesMenu, aplicarBadgesMenu } from '../../modules/notificacoes.js'
 import { uiAnimar } from '../../modules/ui.js'
@@ -32,7 +30,7 @@ export async function renderProfHome(container, page) {
     aplicarBadgesMenu(badges)
 
     container.innerHTML = `
-      <div class="topbar"><div class="topbar-t">Olá, ${perfil.nome.split(' ')[0]}</div></div>
+      <div class="topbar"><div class="topbar-t">Olá, ${esc(perfil.nome.split(' ')[0])}</div></div>
       <div class="content">
         ${renderPainelNotif(notifs)}
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
@@ -95,12 +93,12 @@ export async function renderProfHome(container, page) {
           confs.map(c=>{
             const presente = c.status==='presente'
             const ausente = c.status==='ausente'
-            return `<div onclick="togglePresencaProf('${c.id}','${c.status}')" style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid rgba(212,200,158,.3);cursor:pointer;background:${presente?'rgba(232,188,79,.06)':ausente?'rgba(255,0,0,.03)':'#fff'};transition:background .15s" id="prow-${c.id}">
+            return `<div onclick="togglePresencaProf(this.dataset.id, this.dataset.status)" data-id="${esc(c.id)}" data-status="${esc(c.status)}" style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid rgba(212,200,158,.3);cursor:pointer;background:${presente?'rgba(232,188,79,.06)':ausente?'rgba(255,0,0,.03)':'#fff'};transition:background .15s" id="prow-${c.id}">
               <div style="display:flex;align-items:center;gap:10px">
                 <div style="width:32px;height:32px;border-radius:50%;background:${presente?'var(--dourado)':ausente?'#fceaea':'rgba(31,56,31,.1)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:${presente?'var(--verde)':ausente?'#8a1a1a':'var(--verde)'}">
-                  ${(c.aluno?.nome||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()}
+                  ${esc((c.aluno?.nome||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase())}
                 </div>
-                <span style="font-size:13px;font-weight:500">${c.aluno?.nome||'—'}</span>
+                <span style="font-size:13px;font-weight:500">${esc(c.aluno?.nome||'—')}</span>
               </div>
               <div style="display:flex;align-items:center;gap:8px">
                 ${presente?badge('Presente','#e8f4e8','#1a5a1a'):ausente?badge('Ausente','#fceaea','#8a1a1a'):badge('Pendente','rgba(232,188,79,.15)','#7a5a10')}

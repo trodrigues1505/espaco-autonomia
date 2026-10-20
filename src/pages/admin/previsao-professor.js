@@ -3,7 +3,7 @@
  * Previsão de repasse — quanto cada professor vai receber no mês
  */
 
-import { toast } from '../../modules/utils.js'
+import { toast, esc } from '../../modules/utils.js'
 import { renderHistoricoRepasse, abrirModalRegistrarRepasse } from './repasse-pago.js'
 import { uiAnimar } from '../../modules/ui.js'
 // Correção: esta tela nunca integrou o painel de notificações, mesmo estando listada
@@ -90,7 +90,7 @@ export async function renderPrevisaoProfessor(container, page) {
           style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;background:#fff;color:var(--txt)">
           <option value="">— Selecionar professor —</option>
           ${(professores||[]).map(p=>
-            `<option value="${p.id}" ${profIdEfetivo===p.id?'selected':''}>${p.nome}</option>`
+            `<option value="${p.id}" ${profIdEfetivo===p.id?'selected':''}>${esc(p.nome)}</option>`
           ).join('')}
         </select>
       </div>
@@ -111,14 +111,14 @@ export async function renderPrevisaoProfessor(container, page) {
         ? `<div style="text-align:center;padding:48px;font-size:13px;color:var(--txt2)">Selecione um professor para ver a previsão.</div>`
         : errRpc
           ? `<div style="background:#fceaea;border:1px solid #f5c1c1;border-radius:8px;padding:16px;font-size:13px;color:#8a1a1a">
-               Erro ao carregar dados: ${errRpc.message}
+               Erro ao carregar dados: ${esc(errRpc.message)}
              </div>`
           : `
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">
           <div style="background:var(--verde);border-radius:var(--r);padding:16px 18px">
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.7);margin-bottom:6px">Repasse Total</div>
             <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--bege)">${fmtR(totalRepasse)}</div>
-            <div style="font-size:11px;color:rgba(242,236,206,.6);margin-top:3px">${nomeMes(mesSel)} · ${profSelecionado?.nome||''}</div>
+            <div style="font-size:11px;color:rgba(242,236,206,.6);margin-top:3px">${nomeMes(mesSel)} · ${esc(profSelecionado?.nome||'')}</div>
           </div>
           <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px">
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:6px">Alunos com presença</div>
@@ -134,7 +134,7 @@ export async function renderPrevisaoProfessor(container, page) {
 
         ${linhas.length === 0
           ? `<div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:32px;text-align:center;font-size:13px;color:var(--txt2)">
-               Nenhuma presença confirmada para ${profSelecionado?.nome||'este professor'} em ${nomeMes(mesSel)}.
+               Nenhuma presença confirmada para ${esc(profSelecionado?.nome||'este professor')} em ${nomeMes(mesSel)}.
                <br><span style="font-size:11px;margin-top:6px;display:block">O repasse é calculado com base nas presenças confirmadas no mês.</span>
              </div>`
           : `
@@ -148,7 +148,7 @@ export async function renderPrevisaoProfessor(container, page) {
                   <div style="font-size:13px;font-weight:500;color:var(--txt)">
                     ${!ehAvulso
                       ? `Aulas do próprio professor`
-                      : `Aulas ministradas por ${profSelecionado?.nome||''} para alunos de <strong>${grupo.professor_nome}</strong>`
+                      : `Aulas ministradas por ${esc(profSelecionado?.nome||'')} para alunos de <strong>${esc(grupo.professor_nome)}</strong>`
                     }
                   </div>
                   <div style="font-size:11px;color:var(--txt2);margin-top:2px">${grupo.aulas} aula(s) · ${grupo.alunos.length} aluno(s)</div>
@@ -165,7 +165,7 @@ export async function renderPrevisaoProfessor(container, page) {
                 ${grupo.alunos.map(l => {
                   const totalDesc = (l.desconto_fixo||0) + (l.desconto_avulso||0)
                   return `<div style="display:grid;grid-template-columns:1fr 80px 80px 80px 90px 80px;align-items:center;padding:9px 0;border-bottom:1px solid rgba(212,200,158,.2);font-size:12px;gap:8px">
-                    <span style="font-weight:500">${l.aluno_nome}</span>
+                    <span style="font-weight:500">${esc(l.aluno_nome)}</span>
                     <span style="color:var(--txt2)">${fmtR(l.valor_mensal)}</span>
                     <span style="color:${totalDesc>0?'#e67e22':'var(--txt2)'}">${totalDesc>0?'-'+fmtR(totalDesc):'—'}</span>
                     <span style="font-weight:500;color:var(--verde)">${fmtR(l.valor_liquido)}</span>
@@ -183,12 +183,12 @@ export async function renderPrevisaoProfessor(container, page) {
 
           <div style="background:var(--verde);border-radius:var(--r);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px">
             <div>
-              <div style="font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.7)">Total a pagar para ${profSelecionado?.nome||'professor'}</div>
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.7)">Total a pagar para ${esc(profSelecionado?.nome||'professor')}</div>
               <div style="font-size:11px;color:rgba(242,236,206,.5);margin-top:2px">${nomeMes(mesSel)} · baseado em ${totalAulas} presença(s) confirmada(s)</div>
             </div>
             <div style="display:flex;align-items:center;gap:12px;flex-shrink:0">
               <div style="font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:500;color:var(--bege)">${fmtR(totalRepasse)}</div>
-              <button onclick="abrirModalRegistrarRepasse('${profIdEfetivo}','${(profSelecionado?.nome||'').replace(/'/g,"\\'")}',${totalRepasse},'${mesSel}')"
+              <button onclick="abrirModalRegistrarRepasse(this.dataset.prof, this.dataset.nome, ${totalRepasse}, this.dataset.mes)" data-prof="${esc(profIdEfetivo)}" data-nome="${esc(profSelecionado?.nome||'')}" data-mes="${esc(mesSel)}"
                 style="padding:8px 16px;background:var(--bege);color:var(--verde);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;white-space:nowrap">
                 💰 Registrar pagamento
               </button>

@@ -3,9 +3,7 @@
  */
 
 import { sb }         from '../../lib/supabase.js'
-import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
-          PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
-          calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
+import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel, PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS, calcularNivel, NIVEL_LABELS, esc } from '../../modules/utils.js'
 import { carregarNotificacoes, renderPainelNotif, initNotifHandlers,
          calcularBadgesMenu, aplicarBadgesMenu } from '../../modules/notificacoes.js'
 import { uiAnimar } from '../../modules/ui.js'   // ← linha 1: import
@@ -49,7 +47,7 @@ export async function renderDashboard(container, page) {
     </div>
     <div class="content">
       ${renderPainelNotif(notifs, { titulo: 'Avisos do sistema' })}
-      ${feriados.length ? `<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:9px 13px;display:flex;align-items:center;gap:8px;font-size:12px;color:#7a5a10;margin-bottom:14px"><i class="ti ti-alert-triangle" style="color:var(--dourado)"></i><span><strong>Atenção:</strong> Há feriados nos próximos 30 dias: ${feriados.slice(0,3).map(f=>`${f.nome} (${new Date(f.data+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})})`).join(' · ')}</span></div>` : ''}
+      ${feriados.length ? `<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:9px 13px;display:flex;align-items:center;gap:8px;font-size:12px;color:#7a5a10;margin-bottom:14px"><i class="ti ti-alert-triangle" style="color:var(--dourado)"></i><span><strong>Atenção:</strong> Há feriados nos próximos 30 dias: ${feriados.slice(0,3).map(f=>`${esc(f.nome)} (${new Date(f.data+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})})`).join(' · ')}</span></div>` : ''}
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px">
         <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Aulas hoje</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${aulasHoje.length}</div></div>
         <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Alunos ativos</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--verde)">${alunos.length}</div></div>
@@ -67,7 +65,7 @@ export async function renderDashboard(container, page) {
               const hora = new Date(a.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
               return `<div style="display:grid;grid-template-columns:60px 1fr 90px 70px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.35);font-size:12px">
                 <span style="color:var(--txt2);font-size:11px">${hora}</span>
-                <span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${cor};flex-shrink:0"></span><strong>${nomes[a.modalidade]}</strong>${a.eh_feriado?`<span style="background:rgba(232,188,79,.2);color:#7a5a10;font-size:10px;padding:1px 6px;border-radius:10px">⚠ ${a.nome_feriado}</span>`:''}</span>
+                <span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${cor};flex-shrink:0"></span><strong>${nomes[a.modalidade]}</strong>${a.eh_feriado?`<span style="background:rgba(232,188,79,.2);color:#7a5a10;font-size:10px;padding:1px 6px;border-radius:10px">⚠ ${esc(a.nome_feriado)}</span>`:''}</span>
                 <span style="font-size:11px;color:var(--txt2)">${a.confirmados||0}/${a.vagas_total} conf.</span>
                 <button onclick="window._ocPresencaId='${a.id}';window._presencaData=null;navigate('presencas')" style="padding:4px 8px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:11px;cursor:pointer;color:var(--txt2)">Ver</button>
               </div>`
@@ -99,7 +97,7 @@ export async function renderDashboard(container, page) {
           <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
             <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500;color:var(--verde);margin-bottom:10px">Próximos feriados</div>
             ${feriados.length===0 ? '<div style="font-size:12px;color:var(--txt2)">Nenhum nos próximos 30 dias</div>' :
-              feriados.slice(0,4).map(f=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(212,200,158,.25);font-size:12px"><span>${f.nome}</span><span style="font-size:11px;color:var(--txt2)">${new Date(f.data+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</span></div>`).join('')}
+              feriados.slice(0,4).map(f=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(212,200,158,.25);font-size:12px"><span>${esc(f.nome)}</span><span style="font-size:11px;color:var(--txt2)">${new Date(f.data+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</span></div>`).join('')}
           </div>
         </div>
       </div>

@@ -5,9 +5,7 @@
 
 import { confirmarModal, formularioModal } from '../../modules/dialogs.js'
 import { sb }         from '../../lib/supabase.js'
-import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
-          PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
-          calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
+import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel, PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS, calcularNivel, NIVEL_LABELS, esc } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 // Correção (mesmo bug de previsao-professor.js / pagamentos.js): esta tela
 // nunca integrou o painel de notificações, mesmo estando listada em
@@ -82,7 +80,7 @@ export async function renderCriarAulas(container, page) {
           : `<span style="background:#fceaea;color:#8a1a1a;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:500">✗ Nunca gerada</span>`
       return `<div style="display:grid;grid-template-columns:1fr 110px 70px 60px 110px 60px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px;background:${isRed?'rgba(255,180,180,.12)':'transparent'}">
         <span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">${dot(a.modalidade)}<strong>${NOMES[a.modalidade]}</strong><span style="font-size:10px;color:var(--txt2)">${diasStr}</span>${isRed?'<span style="background:#fceaea;color:#8a1a1a;font-size:9px;padding:1px 6px;border-radius:8px;margin-left:2px">⚠ redundante</span>':''}</span>
-        <span style="font-size:11px;color:var(--txt2)">${a.professor?.nome||'—'}</span>
+        <span style="font-size:11px;color:var(--txt2)">${esc(a.professor?.nome||'—')}</span>
         <span style="font-size:11px">${a.vagas} vagas</span>
         <span>${statusBadge}</span>
         <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-start">
@@ -102,7 +100,7 @@ export async function renderCriarAulas(container, page) {
       </label>`
     ).join('')
 
-    const profsOptions = profs.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('')
+    const profsOptions = profs.map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('')
 
     const modalCriar = modal('modal-criar-aula', 'Nova Aula',
       `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -177,7 +175,7 @@ export async function renderCriarAulas(container, page) {
             <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Professor</label>
             <select onchange="window._criarFiltroProf=this.value;navigate('criar-aulas')" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff">
               <option value="" ${!filtroProf?'selected':''}>Todos</option>
-              ${profs.map(p=>`<option value="${p.id}" ${filtroProf===p.id?'selected':''}>${p.nome}</option>`).join('')}
+              ${profs.map(p=>`<option value="${p.id}" ${filtroProf===p.id?'selected':''}>${esc(p.nome)}</option>`).join('')}
             </select>
           </div>
           <div style="display:flex;flex-direction:column;gap:3px">
@@ -432,7 +430,7 @@ uiAnimar(container)
           const nOcs = ocsFuturas[a.id] || 0
           html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(242,236,206,.3);border-radius:6px;margin-bottom:6px;gap:10px">'
             + '<div>'
-              + `<div style="font-size:12px;font-weight:500">${a.professor?.nome||'Sem professor'}</div>`
+              + `<div style="font-size:12px;font-weight:500">${esc(a.professor?.nome||'Sem professor')}</div>`
               + `<div style="font-size:10px;color:var(--txt2)">${nOcs>0?'✓ '+nOcs+' aulas geradas':'⚠ Não gerada'} · Criada ${a.criado_em?new Date(a.criado_em).toLocaleDateString('pt-BR'):'—'}</div>`
             + '</div>'
             + `<button onclick="excluirAulaRedundante('${a.id}')" style="padding:4px 10px;background:#fceaea;color:#8a1a1a;border:1px solid #f5c1c1;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">Excluir esta</button>`

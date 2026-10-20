@@ -11,7 +11,7 @@
  */
 
 import { sb as _sbAuth } from '../../lib/supabase.js'
-import { toast } from '../../modules/utils.js'
+import { toast, esc } from '../../modules/utils.js'
 
 import { uiAnimar } from '../../modules/ui.js'
 // Correção (mesmo bug encontrado em previsao-professor.js): esta tela nunca
@@ -320,7 +320,7 @@ export async function renderPagamentos(container, page) {
           <span style="font-size:20px">⚠️</span>
           <div>
             <div style="font-weight:500;font-size:13px;color:#8a1a1a">${vencidos.length} aluno(s) em atraso em ${nomeMes(mesSel)}</div>
-            <div style="font-size:11px;color:#c0392b;margin-top:2px">${vencidos.map(p=>p.aluno?.nome||p.asaas_customer||'—').join(', ')}</div>
+            <div style="font-size:11px;color:#c0392b;margin-top:2px">${vencidos.map(p=>esc(p.aluno?.nome||p.asaas_customer||'—')).join(', ')}</div>
           </div>
         </div>` : ''}
 
@@ -362,12 +362,12 @@ export async function renderPagamentos(container, page) {
               const temPerfil = !!(p.aluno?.id)
               return `<div style="display:grid;grid-template-columns:1fr 110px 90px 100px 80px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
                 <div>
-                  <div style="font-weight:500;${temPerfil?'color:var(--verde);cursor:pointer;text-decoration:underline;text-underline-offset:2px':''}" ${temPerfil?`onclick="abrirPerfilAlunoPg('${p.aluno.id}')"`:''}>${p.aluno?.nome || '—'}</div>
-                  <div style="font-size:10px;color:var(--txt2)">${p.aluno?.email || (p.asaas_customer ? '🔗 ' + p.asaas_customer : '')}</div>
+                  <div style="font-weight:500;${temPerfil?'color:var(--verde);cursor:pointer;text-decoration:underline;text-underline-offset:2px':''}" ${temPerfil?`onclick="abrirPerfilAlunoPg('${p.aluno.id}')"`:''}>${esc(p.aluno?.nome || '—')}</div>
+                  <div style="font-size:10px;color:var(--txt2)">${esc(p.aluno?.email || (p.asaas_customer ? '🔗 ' + p.asaas_customer : ''))}</div>
                 </div>
                 <span style="font-size:11px">${fmtData(p.vencimento)}</span>
                 <span style="font-weight:500">${fmtR(p.valor)}</span>
-                <span style="background:${STATUS_BG[p.status]||'#f0ede4'};color:${STATUS_COR[p.status]||'#5a5a4a'};padding:3px 10px;border-radius:20px;font-size:10px;font-weight:500;white-space:nowrap">${STATUS_LABEL[p.status]||p.status}</span>
+                <span style="background:${STATUS_BG[p.status]||'#f0ede4'};color:${STATUS_COR[p.status]||'#5a5a4a'};padding:3px 10px;border-radius:20px;font-size:10px;font-weight:500;white-space:nowrap">${STATUS_LABEL[p.status]||esc(p.status)}</span>
                 <span style="font-size:10px;color:var(--txt2)">${p.mes_ref?p.mes_ref.slice(0,7):'—'}</span>
               </div>`
             }).join('')
@@ -444,17 +444,17 @@ uiAnimar(container)
 
     body.innerHTML = `
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
-        <div style="width:48px;height:48px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:var(--verde);flex-shrink:0">${initials}</div>
+        <div style="width:48px;height:48px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:var(--verde);flex-shrink:0">${esc(initials)}</div>
         <div>
-          <div style="font-size:16px;font-weight:500;color:var(--txt)">${a?.nome||'—'}</div>
-          <div style="font-size:12px;color:var(--txt2)">${a?.email||'—'}</div>
-          ${a?.telefone?`<div style="font-size:12px;color:var(--txt2)">${a.telefone}</div>`:''}
+          <div style="font-size:16px;font-weight:500;color:var(--txt)">${esc(a?.nome||'—')}</div>
+          <div style="font-size:12px;color:var(--txt2)">${esc(a?.email||'—')}</div>
+          ${a?.telefone?`<div style="font-size:12px;color:var(--txt2)">${esc(a.telefone)}</div>`:''}
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
         <div style="background:var(--fundo);border-radius:6px;padding:12px">
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Plano</div>
-          <div style="font-size:14px;font-weight:500;color:var(--verde);margin-top:3px">${mat ? PLANO_NOMES[mat.plano_tipo]||mat.plano_tipo : 'Sem matrícula'}</div>
+          <div style="font-size:14px;font-weight:500;color:var(--verde);margin-top:3px">${mat ? PLANO_NOMES[mat.plano_tipo]||esc(mat.plano_tipo) : 'Sem matrícula'}</div>
           ${mat?.valor_mensal?`<div style="font-size:11px;color:var(--txt2)">R$${mat.valor_mensal}/mês</div>`:''}
         </div>
         <div style="background:var(--fundo);border-radius:6px;padding:12px">
@@ -470,7 +470,7 @@ uiAnimar(container)
           <span>${p.mes_ref?new Date(p.mes_ref+'T12:00').toLocaleDateString('pt-BR',{month:'long',year:'numeric'}):'—'}</span>
           <div style="text-align:right">
             <div style="font-weight:500">${fmtR(p.valor)}</div>
-            <div style="font-size:10px;color:${PG_COR[p.status]||'#888'}">${PG_LABEL[p.status]||p.status}</div>
+            <div style="font-size:10px;color:${PG_COR[p.status]||'#888'}">${PG_LABEL[p.status]||esc(p.status)}</div>
           </div>
         </div>`).join('')}
       ` : '<div style="font-size:12px;color:var(--txt2)">Nenhum pagamento encontrado.</div>'}

@@ -3,7 +3,7 @@
  * Previsão de repasse do professor logado + histórico de repasses pagos
  */
 
-import { toast } from '../../modules/utils.js'
+import { toast, esc } from '../../modules/utils.js'
 import { renderHistoricoRepasse } from '../admin/repasse-pago.js'
 import { uiAnimar } from '../../modules/ui.js'
 
@@ -67,7 +67,7 @@ export async function renderProfRepasse(container, page) {
   container.innerHTML = `
     <div class="topbar">
       <div class="topbar-t">Meu Repasse</div>
-      <div style="font-size:11px;color:var(--txt2)">${profNome}</div>
+      <div style="font-size:11px;color:var(--txt2)">${esc(profNome)}</div>
     </div>
     <div class="content">
 
@@ -87,7 +87,7 @@ export async function renderProfRepasse(container, page) {
 
       ${errRpc
         ? `<div style="background:#fceaea;border:1px solid #f5c1c1;border-radius:8px;padding:16px;font-size:13px;color:#8a1a1a">
-             Erro ao carregar dados: ${errRpc.message}
+             Erro ao carregar dados: ${esc(errRpc.message)}
            </div>`
         : `
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">
@@ -120,7 +120,7 @@ export async function renderProfRepasse(container, page) {
               <div style="padding:12px 18px;background:${ehProprio?'rgba(31,56,31,.06)':'rgba(232,188,79,.08)'};border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
                 <div>
                   <div style="font-size:13px;font-weight:500;color:var(--txt)">
-                    ${ehProprio ? `Minhas aulas` : `Aulas de <strong>${grupo.professor_nome}</strong> que ministrei`}
+                    ${ehProprio ? `Minhas aulas` : `Aulas de <strong>${esc(grupo.professor_nome)}</strong> que ministrei`}
                   </div>
                   <div style="font-size:11px;color:var(--txt2);margin-top:2px">${grupo.aulas} aula(s) · ${grupo.alunos.length} aluno(s)</div>
                 </div>
@@ -136,7 +136,7 @@ export async function renderProfRepasse(container, page) {
                 ${grupo.alunos.map(l => {
                   const totalDesc = (l.desconto_fixo||0) + (l.desconto_avulso||0)
                   return `<div style="display:grid;grid-template-columns:1fr 80px 80px 80px 90px 80px;align-items:center;padding:9px 0;border-bottom:1px solid rgba(212,200,158,.2);font-size:12px;gap:8px">
-                    <span style="font-weight:500">${l.aluno_nome}</span>
+                    <span style="font-weight:500">${esc(l.aluno_nome)}</span>
                     <span style="color:var(--txt2)">${fmtR(l.valor_mensal)}</span>
                     <span style="color:${totalDesc>0?'#e67e22':'var(--txt2)'}">${totalDesc>0?'-'+fmtR(totalDesc):'—'}</span>
                     <span style="font-weight:500;color:var(--verde)">${fmtR(l.valor_liquido)}</span>

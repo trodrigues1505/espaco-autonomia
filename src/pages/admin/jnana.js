@@ -6,7 +6,7 @@
  */
 
 import { confirmarModal } from '../../modules/dialogs.js'
-import { toast } from '../../modules/utils.js'
+import { toast, esc } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 
 const CAPITULOS = [
@@ -33,7 +33,7 @@ export async function renderJnanaAdmin(container, page) {
 
   if (error) {
     container.innerHTML = `<div class="topbar"><div class="topbar-t">Jñāna Mārga</div></div>
-      <div class="content"><p style="color:#c0392b">Erro: ${error.message}</p></div>`
+      <div class="content"><p style="color:#c0392b">Erro: ${esc(error.message)}</p></div>`
     return
   }
 
@@ -79,7 +79,7 @@ export async function renderJnanaAdmin(container, page) {
     return `<select id="${id}"
       style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
              font-family:'DM Sans',sans-serif;outline:none;width:100%">
-      ${CAPITULOS.map(c => `<option value="${c.ordem}" ${c.ordem === ordemSelecionada ? 'selected' : ''}>${c.nome}</option>`).join('')}
+      ${CAPITULOS.map(c => `<option value="${c.ordem}" ${c.ordem === ordemSelecionada ? 'selected' : ''}>${esc(c.nome)}</option>`).join('')}
     </select>`
   }
 
@@ -106,7 +106,7 @@ export async function renderJnanaAdmin(container, page) {
                       padding:12px 16px;margin-bottom:16px;font-size:13px;color:#1a5a1a;
                       display:flex;align-items:center;gap:10px">
              <i class="ti ti-check" style="font-size:18px"></i>
-             <span>Sutra de hoje: <strong>${hojePublicado.capitulo} ${_labelNumero(hojePublicado)} — ${hojePublicado.transliteracao}</strong></span>
+             <span>Sutra de hoje: <strong>${esc(hojePublicado.capitulo)} ${_labelNumero(hojePublicado)} — ${esc(hojePublicado.transliteracao)}</strong></span>
            </div>`
       }
 
@@ -148,10 +148,10 @@ export async function renderJnanaAdmin(container, page) {
                         align-items:center;gap:10px;padding:11px 18px;
                         border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
               <div>
-                <div style="font-weight:500;color:var(--txt)">${s.capitulo} ${_labelNumero(s)}</div>
-                <div style="font-size:10px;color:var(--txt2);margin-top:1px;font-style:italic">${s.transliteracao}</div>
+                <div style="font-weight:500;color:var(--txt)">${esc(s.capitulo)} ${_labelNumero(s)}</div>
+                <div style="font-size:10px;color:var(--txt2);margin-top:1px;font-style:italic">${esc(s.transliteracao)}</div>
               </div>
-              <span style="color:var(--txt2);font-size:11px">${s.capitulo}</span>
+              <span style="color:var(--txt2);font-size:11px">${esc(s.capitulo)}</span>
               <div style="display:flex;flex-direction:column;gap:3px">
                 <input type="date" value="${s.publicada_em}" id="data-${s.id}"
                   style="border:1px solid var(--borda);border-radius:5px;padding:4px 8px;
@@ -167,7 +167,7 @@ export async function renderJnanaAdmin(container, page) {
                   style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--verde);border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Prévia">👁</button>
                 <button onclick="editarSutra('${s.id}')"
                   style="padding:3px 8px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✎</button>
-                <button onclick="excluirSutra('${s.id}','${s.capitulo} ${_labelNumero(s)}')"
+                <button onclick="excluirSutra(this.dataset.id, this.dataset.rotulo)" data-id="${esc(s.id)}" data-rotulo="${esc(s.capitulo)} ${esc(_labelNumero(s))}"
                   style="padding:3px 8px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✕</button>
               </div>
             </div>`).join('')}
@@ -191,17 +191,17 @@ export async function renderJnanaAdmin(container, page) {
                         border-bottom:1px solid rgba(212,200,158,.3);font-size:12px;
                         background:${isHoje ? 'rgba(232,188,79,.05)' : 'transparent'}">
                 <div>
-                  <div style="font-weight:500;color:var(--txt)">${s.capitulo} ${_labelNumero(s)}</div>
-                  <div style="font-size:10px;color:var(--txt2);margin-top:1px;font-style:italic">${s.transliteracao}</div>
+                  <div style="font-weight:500;color:var(--txt)">${esc(s.capitulo)} ${_labelNumero(s)}</div>
+                  <div style="font-size:10px;color:var(--txt2);margin-top:1px;font-style:italic">${esc(s.transliteracao)}</div>
                 </div>
-                <span style="color:var(--txt2);font-size:11px">${s.capitulo}</span>
+                <span style="color:var(--txt2);font-size:11px">${esc(s.capitulo)}</span>
                 <div>${badgeStatus(s.publicada_em)}<div style="font-size:10px;color:var(--txt2);margin-top:2px">${fmtDia(s.publicada_em)}</div></div>
                 <div style="display:flex;gap:4px">
                   <button onclick="previaSutra('${s.id}')"
                     style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--verde);border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Prévia">👁</button>
                   <button onclick="editarSutra('${s.id}')"
                     style="padding:3px 8px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✎</button>
-                  <button onclick="excluirSutra('${s.id}','${s.capitulo} ${_labelNumero(s)}')"
+                  <button onclick="excluirSutra(this.dataset.id, this.dataset.rotulo)" data-id="${esc(s.id)}" data-rotulo="${esc(s.capitulo)} ${esc(_labelNumero(s))}"
                     style="padding:3px 8px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✕</button>
                 </div>
               </div>`
@@ -332,21 +332,21 @@ export async function renderJnanaAdmin(container, page) {
         </div>
         <div style="padding:18px">
           <div style="background:var(--verde);border-radius:10px;padding:16px;margin-bottom:14px">
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:rgba(242,236,206,.55);margin-bottom:8px">✦ ${s.capitulo} · sutra ${_labelNumero(s)} · ${fmtDia(s.publicada_em)}</div>
-            ${s.contexto_capitulo ? `<div style="font-size:12px;color:rgba(242,236,206,.75);line-height:1.6;margin-bottom:12px;font-style:italic">${s.contexto_capitulo}</div>` : ''}
-            <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--bege);direction:ltr">${s.texto_devanagari}</div>
-            <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:rgba(242,236,206,.8);margin-top:4px">${s.transliteracao}</div>
-            <div style="font-size:13px;color:rgba(242,236,206,.9);margin-top:8px">${s.traducao}</div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:rgba(242,236,206,.55);margin-bottom:8px">✦ ${esc(s.capitulo)} · sutra ${_labelNumero(s)} · ${fmtDia(s.publicada_em)}</div>
+            ${s.contexto_capitulo ? `<div style="font-size:12px;color:rgba(242,236,206,.75);line-height:1.6;margin-bottom:12px;font-style:italic">${esc(s.contexto_capitulo)}</div>` : ''}
+            <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--bege);direction:ltr">${esc(s.texto_devanagari)}</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:rgba(242,236,206,.8);margin-top:4px">${esc(s.transliteracao)}</div>
+            <div style="font-size:13px;color:rgba(242,236,206,.9);margin-top:8px">${esc(s.traducao)}</div>
           </div>
           ${s.comentario ? `
             <div style="margin-bottom:12px;background:#f9f7f0;border-radius:8px;padding:12px 14px">
               <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Comentário</div>
-              <div style="font-size:13px;color:var(--txt);line-height:1.7">${comentarioHtml}</div>
+              <div style="font-size:13px;color:var(--txt);line-height:1.7">${esc(comentarioHtml)}</div>
             </div>` : ''}
           ${s.pratica ? `
             <div style="background:#f9f7f0;border-radius:8px;padding:12px 14px">
               <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Na prática</div>
-              <p style="font-size:13px;color:var(--txt);line-height:1.7;margin:0">${s.pratica}</p>
+              <p style="font-size:13px;color:var(--txt);line-height:1.7;margin:0">${esc(s.pratica)}</p>
             </div>` : ''}
         </div>
       </div>`
@@ -457,13 +457,13 @@ try {
         ${dica ? `<div style="font-size:10px;color:var(--txt2)">${dica}</div>` : ''}
       </div>`
     const inp = (id, val = '', ph = '') =>
-      `<input id="${id}" value="${(val||'').replace(/"/g,'&quot;')}" placeholder="${ph}"
+      `<input id="${id}" value="${esc(val)}" placeholder="${esc(ph)}"
         style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
                font-family:'DM Sans',sans-serif;outline:none;width:100%">`
     const ta = (id, val = '', rows = 3, ph = '') =>
-      `<textarea id="${id}" rows="${rows}" placeholder="${ph}"
+      `<textarea id="${id}" rows="${rows}" placeholder="${esc(ph)}"
         style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
-               font-family:'DM Sans',sans-serif;outline:none;width:100%;resize:vertical">${val||''}</textarea>`
+               font-family:'DM Sans',sans-serif;outline:none;width:100%;resize:vertical">${esc(val)}</textarea>`
 
     document.getElementById('jn-etapa-2').innerHTML = `
       <div style="background:rgba(31,56,31,.04);border-radius:8px;padding:10px 14px;

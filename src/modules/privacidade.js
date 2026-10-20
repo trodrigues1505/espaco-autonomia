@@ -22,7 +22,7 @@ const VERSAO_ACEITE = 'v3'          // deve ser igual a VERSAO em lgpd.js
 
 // ── Texto da política ────────────────────────────────────────
 function secao(titulo, corpo) {
-  return `<section class="priv-doc__sec"><h3>${titulo}</h3>${corpo}</section>`
+  return `<section class="priv-doc__sec"><h3>${esc(titulo)}</h3>${corpo}</section>`
 }
 
 export function politicaHTML() {

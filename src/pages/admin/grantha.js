@@ -8,7 +8,7 @@
  */
 
 import { confirmarModal } from '../../modules/dialogs.js'
-import { toast } from '../../modules/utils.js'
+import { toast, esc } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 
 const CATEGORIAS = [
@@ -28,7 +28,7 @@ export async function renderGranthaAdmin(container, page) {
   const { data: granthas, error } = await sb.from('grantha_mandir').select('*').order('titulo')
   if (error) {
     container.innerHTML = `<div class="topbar"><div class="topbar-t">Grantha Mandir</div></div>
-      <div class="content"><p style="color:#c0392b">Erro: ${error.message}</p></div>`
+      <div class="content"><p style="color:#c0392b">Erro: ${esc(error.message)}</p></div>`
     return
   }
 
@@ -54,19 +54,19 @@ export async function renderGranthaAdmin(container, page) {
             <div style="display:grid;grid-template-columns:1fr 110px 130px 140px;align-items:center;gap:10px;
                         padding:11px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
               <div>
-                <div style="font-weight:500;color:var(--txt)">${g.titulo}</div>
-                ${g.autor ? `<div style="font-size:10px;color:var(--txt2)">${g.autor}${g.periodo ? ' · '+g.periodo : ''}</div>` : ''}
+                <div style="font-weight:500;color:var(--txt)">${esc(g.titulo)}</div>
+                ${g.autor ? `<div style="font-size:10px;color:var(--txt2)">${esc(g.autor)}${esc(g.periodo ? ' · '+g.periodo : '')}</div>` : ''}
               </div>
               <span style="font-size:11px;color:var(--txt2)">${g.tipo === 'obra_classica' ? 'Obra clássica' : 'Artigo'}</span>
-              <span style="font-size:11px;color:var(--txt2)">${_catLabel(g.categoria)}</span>
+              <span style="font-size:11px;color:var(--txt2)">${esc(_catLabel(g.categoria))}</span>
               <div style="display:flex;gap:4px">
                 ${g.tipo === 'obra_classica'
-                  ? `<button onclick="abrirVersos('${g.id}','${_esc(g.titulo).replace(/'/g,"\\'")}')"
+                  ? `<button onclick="abrirVersos(this.dataset.id, this.dataset.titulo)" data-id="${esc(g.id)}" data-titulo="${esc(g.titulo)}"
                        style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--verde);border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Gerenciar versos">📜</button>`
                   : ''}
                 <button onclick="editarGrantha('${g.id}')"
                   style="padding:3px 8px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✎</button>
-                <button onclick="excluirGrantha('${g.id}','${_esc(g.titulo).replace(/'/g,"\\'")}')"
+                <button onclick="excluirGrantha(this.dataset.id, this.dataset.titulo)" data-id="${esc(g.id)}" data-titulo="${esc(g.titulo)}"
                   style="padding:3px 8px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✕</button>
               </div>
             </div>`).join('')
@@ -274,8 +274,8 @@ export async function renderGranthaAdmin(container, page) {
     cont.innerHTML = versos.map(v => `
       <div style="display:grid;grid-template-columns:1fr 60px;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
         <div>
-          <div style="font-weight:500;color:var(--txt)">${v.capitulo} ${v.numero}${v.numero_fim ? '–'+v.numero_fim : ''}</div>
-          <div style="font-size:10px;color:var(--txt2);font-style:italic">${v.transliteracao}</div>
+          <div style="font-weight:500;color:var(--txt)">${esc(v.capitulo)} ${v.numero}${v.numero_fim ? '–'+v.numero_fim : ''}</div>
+          <div style="font-size:10px;color:var(--txt2);font-style:italic">${esc(v.transliteracao)}</div>
         </div>
         <button onclick="excluirVerso('${v.id}')"
           style="padding:3px 8px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer">✕</button>
@@ -298,7 +298,7 @@ export async function renderGranthaAdmin(container, page) {
       itens = JSON.parse(raw)
       if (!Array.isArray(itens)) throw new Error('não é um array')
     } catch (e) {
-      status.innerHTML = `<span style="color:#c0392b">JSON inválido: ${e.message}</span>`
+      status.innerHTML = `<span style="color:#c0392b">JSON inválido: ${esc(e.message)}</span>`
       return
     }
 
@@ -319,7 +319,7 @@ export async function renderGranthaAdmin(container, page) {
     }))
 
     const { error: err } = await sb.from('grantha_versos').insert(registros)
-    if (err) { status.innerHTML = `<span style="color:#c0392b">Erro: ${err.message}</span>`; return }
+    if (err) { status.innerHTML = `<span style="color:#c0392b">Erro: ${esc(err.message)}</span>`; return }
     status.innerHTML = `<span style="color:#1a5a1a">✓ ${registros.length} verso(s) importado(s)</span>`
     document.getElementById('versos-json-textarea').value = ''
     await _carregarListaVersos()

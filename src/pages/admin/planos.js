@@ -4,9 +4,7 @@
  */
 
 import { sb }         from '../../lib/supabase.js'
-import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
-          PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
-          calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
+import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel, PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS, calcularNivel, NIVEL_LABELS, esc, urlSegura } from '../../modules/utils.js'
 
 import { uiAnimar } from '../../modules/ui.js'
 
@@ -106,15 +104,15 @@ export async function renderPlanos(container, page) {
         </div>
         ${opcoes.map(o=>`<div style="display:grid;grid-template-columns:180px 120px 1fr 120px 60px;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
           <div>
-            <span style="font-weight:500">${o.plano.nome}</span>
-            ${o.plano.sangha && o.plano.whatsapp_sangha?`<div style="font-size:10px;margin-top:2px"><a href="${o.plano.whatsapp_sangha}" target="_blank" style="color:var(--verde);text-decoration:none">📱 Link Sangha</a></div>`:''}
+            <span style="font-weight:500">${esc(o.plano.nome)}</span>
+            ${o.plano.sangha && o.plano.whatsapp_sangha?`<div style="font-size:10px;margin-top:2px"><a href="${urlSegura(o.plano.whatsapp_sangha)}" target="_blank" style="color:var(--verde);text-decoration:none">📱 Link Sangha</a></div>`:''}
           </div>
           <span style="color:var(--txt2)">${o.label}</span>
           <div style="display:flex;gap:4px;flex-wrap:wrap">
-            ${(o.plano.modalidades||[]).map(m=>`<span style="background:${CORES[m.modalidade]||'#888'}22;color:${CORES[m.modalidade]||'#888'};padding:1px 7px;border-radius:10px;font-size:10px;font-weight:500">${NOMES[m.modalidade]||m.modalidade}</span>`).join('')}
+            ${(o.plano.modalidades||[]).map(m=>`<span style="background:${CORES[m.modalidade]||'#888'}22;color:${CORES[m.modalidade]||'#888'};padding:1px 7px;border-radius:10px;font-size:10px;font-weight:500">${NOMES[m.modalidade]||esc(m.modalidade)}</span>`).join('')}
           </div>
           <span style="font-weight:500;color:var(--verde)">R$ ${o.preco}<span style="font-weight:400;color:var(--txt2);font-size:11px">/mês</span></span>
-          <button onclick="abrirEditarPlano('${o.plano.tipo}')" style="padding:3px 8px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Editar">✎</button>
+          <button onclick="abrirEditarPlano(this.dataset.tipo)" data-tipo="${esc(o.plano.tipo)}" style="padding:3px 8px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Editar">✎</button>
         </div>`).join('')}
       </div>
 
@@ -123,7 +121,7 @@ export async function renderPlanos(container, page) {
           const modsDoPLano = (p.modalidades||[]).map(m=>m.modalidade)
           return `<div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden">
             <div style="padding:14px 18px;background:var(--fundo);border-bottom:1px solid var(--borda)">
-              <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${p.nome}</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${esc(p.nome)}</div>
               <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
                 ${modsDoPLano.map(m=>`<span style="background:${CORES[m]||'#888'}22;color:${CORES[m]||'#888'};padding:2px 8px;border-radius:10px;font-size:10px;font-weight:500">${NOMES[m]||m}</span>`).join('')}
               </div>
@@ -132,7 +130,7 @@ export async function renderPlanos(container, page) {
               ${feats.map(f=>`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:11px;color:${p[f]?'var(--txt)':'#ccc'}${p[f]?'':';text-decoration:line-through'}">
                 <span>${p[f]?'✓':'—'}</span>${featLabels[f]}
               </div>`).join('')}
-              ${p.sangha && p.whatsapp_sangha?`<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--borda)"><a href="${p.whatsapp_sangha}" target="_blank" style="font-size:11px;color:var(--verde);text-decoration:none;display:flex;align-items:center;gap:5px">📱 Grupo WhatsApp deste plano</a></div>`:''}
+              ${p.sangha && p.whatsapp_sangha?`<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--borda)"><a href="${urlSegura(p.whatsapp_sangha)}" target="_blank" style="font-size:11px;color:var(--verde);text-decoration:none;display:flex;align-items:center;gap:5px">📱 Grupo WhatsApp deste plano</a></div>`:''}
             </div>
           </div>`
         }).join('')}
@@ -205,7 +203,7 @@ uiAnimar(container)
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
           <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Nome exibido</label>
-          <input id="ep-nome" value="${p.nome}" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--txt);width:100%;outline:none">
+          <input id="ep-nome" value="${esc(p.nome)}" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--txt);width:100%;outline:none">
         </div>
         <div></div>
       </div>
@@ -226,7 +224,7 @@ uiAnimar(container)
       <!-- Link Sangha -->
       <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px">
         <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Link WhatsApp — Sangha</label>
-        <input id="ep-sangha" type="url" value="${p.whatsapp_sangha||''}" placeholder="https://chat.whatsapp.com/..." style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
+        <input id="ep-sangha" type="url" value="${esc(p.whatsapp_sangha)}" placeholder="https://chat.whatsapp.com/..." style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
         <div style="font-size:10px;color:var(--txt2)">Link exclusivo do grupo WhatsApp Sangha para alunos deste plano.</div>
       </div>
       <div style="margin-bottom:12px">

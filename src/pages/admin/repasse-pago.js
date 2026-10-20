@@ -10,7 +10,7 @@
  */
 
 import { confirmarModal } from '../../modules/dialogs.js'
-import { toast } from '../../modules/utils.js'
+import { toast, esc } from '../../modules/utils.js'
 
 function fmtR(v) {
   return 'R$ ' + (v || 0).toFixed(2).replace('.', ',')
@@ -121,18 +121,18 @@ export async function renderHistoricoRepasse(container, professorId, isAdmin) {
                              align-items:center;gap:10px;padding:10px 18px;
                              border-bottom:1px solid rgba(212,200,158,.3);font-size:12px;min-width:480px"
                       id="repasse-row-${r.id}">
-                   ${isAdmin ? `<span style="font-weight:500">${r.professor?.nome || '—'}</span>` : ''}
+                   ${isAdmin ? `<span style="font-weight:500">${esc(r.professor?.nome || '—')}</span>` : ''}
                    <span style="font-size:11px;color:var(--txt2)">${nomeMes(r.mes_ref)}</span>
                    <span style="font-size:11px;color:var(--txt2)">${r.valor_previsto ? fmtR(r.valor_previsto) : '—'}</span>
                    <div>
                      <span style="font-weight:500;color:#1a5a1a">${fmtR(r.valor_pago)}</span>
                      ${diffStr}
                    </div>
-                   <span style="font-size:11px;color:var(--txt2)">${r.observacao || '—'}</span>
+                   <span style="font-size:11px;color:var(--txt2)">${esc(r.observacao || '—')}</span>
                    ${isAdmin
                      ? `<div style="display:flex;gap:4px">
                           <button
-                            onclick="window._editarRepasse('${r.id}','${r.professor_id}','${nomeEsc}','${r.mes_ref}',${r.valor_pago},${r.valor_previsto || 0},'${obsEsc}')"
+                            onclick="window._editarRepasse(this.dataset.id, this.dataset.prof, this.dataset.nome, this.dataset.mes, ${Number(r.valor_pago) || 0}, ${Number(r.valor_previsto) || 0}, this.dataset.obs)" data-id="${esc(r.id)}" data-prof="${esc(r.professor_id)}" data-nome="${esc(r.professor?.nome || '')}" data-mes="${esc(r.mes_ref)}" data-obs="${esc(r.observacao || '')}"
                             style="padding:3px 7px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer"
                             title="Editar">✎</button>
                           <button

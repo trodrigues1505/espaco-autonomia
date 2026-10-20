@@ -54,7 +54,7 @@ export function dot(mod) {
 
 /** Badge pill colorida */
 export function badge(txt, bg, color) {
-  return `<span style="background:${bg};color:${color};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap">${txt}</span>`
+  return `<span style="background:${bg};color:${color};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap">${esc(txt)}</span>`
 }
 
 /** Card com cabeçalho e corpo */
@@ -140,3 +140,23 @@ export function esc(v) {
     .replace(/'/g, '&#39;')
 }
 window.esc = esc
+
+/**
+ * URL segura para src/href: só http(s), caminho relativo ou imagem em data:. Bloqueia javascript:,
+ * vbscript: etc. (inclusive disfarçados com espaços/quebras de linha) e neutraliza aspas.
+ * Devolve já escapado para HTML; vazio se a URL não for aceitável.
+ */
+export function urlSegura(u) {
+  if (u == null) return ''
+  const bruta = String(u).trim()
+  if (!bruta) return ''
+  const semControle = bruta.replace(/[\u0000-\u0020]/g, '')           // "java\nscript:" vira "javascript:"
+  const esquema = (semControle.match(/^([a-z][a-z0-9+.\-]*):/i) || [])[1]
+  if (esquema) {
+    const e = esquema.toLowerCase()
+    const ok = e === 'http' || e === 'https' || (e === 'data' && /^data:image\/(png|jpe?g|gif|webp);/i.test(semControle))
+    if (!ok) return ''
+  }
+  return esc(bruta.replace(/'/g, '%27').replace(/`/g, '%60'))
+}
+window.urlSegura = urlSegura

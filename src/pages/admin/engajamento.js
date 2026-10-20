@@ -9,7 +9,7 @@
  * em código — ver conversa de definição deste dashboard).
  */
 
-import { toast } from '../../modules/utils.js'
+import { toast, esc } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 
 const JANELA_DIAS = 30
@@ -58,7 +58,7 @@ export async function renderEngajamento(container, page) {
   const erroCritico = perfisRes.error || matriculasRes.error
   if (erroCritico) {
     container.innerHTML = `<div class="topbar"><div class="topbar-t">Engajamento</div></div>
-      <div class="content"><p style="color:#c0392b;font-size:13px">Erro: ${erroCritico.message}</p></div>`
+      <div class="content"><p style="color:#c0392b;font-size:13px">Erro: ${esc(erroCritico.message)}</p></div>`
     return
   }
 
@@ -212,7 +212,7 @@ export async function renderEngajamento(container, page) {
           : linhas.map(l => `
             <div style="display:grid;grid-template-columns:1.4fr 90px 90px 90px 90px 90px 90px;align-items:center;gap:8px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px;cursor:pointer"
                  onclick="window._abrirDetalheEngajamento('${l.id}')">
-              <span style="font-weight:500">${l.nome}</span>
+              <span style="font-weight:500">${esc(l.nome)}</span>
               <span style="color:${corScore(l.presencaScore)}">${l.presencaScore === null ? '—' : l.presencaScore.toFixed(1)}</span>
               <span style="color:${corScore(l.timelineScore)}">${l.timelineScore.toFixed(1)}</span>
               <span style="color:${corScore(l.saldoScore)}">${l.saldoScore === null ? '—' : l.saldoScore.toFixed(1)}</span>
@@ -299,7 +299,7 @@ export async function renderEngajamento(container, page) {
         <tr><th>Aluno</th><th>Presença</th><th>Timeline</th><th>Saldo</th><th>Benefícios</th><th>Login</th><th>Total</th></tr>
         ${linhasOrdenadas.map(l => `
           <tr>
-            <td>${l.nome}</td>
+            <td>${esc(l.nome)}</td>
             <td>${l.presencaScore === null ? '—' : l.presencaScore.toFixed(1)}</td>
             <td>${l.timelineScore.toFixed(1)}</td>
             <td>${l.saldoScore === null ? '—' : l.saldoScore.toFixed(1)}</td>

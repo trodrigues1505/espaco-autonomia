@@ -7,9 +7,7 @@
  */
 
 import { sb }         from '../../lib/supabase.js'
-import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
-          PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
-          calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
+import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel, PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS, calcularNivel, NIVEL_LABELS, esc } from '../../modules/utils.js'
 
 import { uiAnimar } from '../../modules/ui.js'
 
@@ -84,8 +82,8 @@ export async function renderProfessores(container, page) {
           : (profs||[]).map(p=>`
             <div style="display:flex;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px;flex-wrap:wrap">
               <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:160px">
-                <div style="width:28px;height:28px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:var(--verde);flex-shrink:0">${p.nome.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()}</div>
-                <div><div style="font-weight:500">${p.nome}</div><div style="font-size:10px;color:var(--txt2)">${p.email}</div></div>
+                <div style="width:28px;height:28px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:var(--verde);flex-shrink:0">${esc(p.nome.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase())}</div>
+                <div><div style="font-weight:500">${esc(p.nome)}</div><div style="font-size:10px;color:var(--txt2)">${esc(p.email)}</div></div>
               </div>
               <span style="font-size:11px;color:var(--txt2);min-width:100px">${exibirModalidades(p)}</span>
               <span style="background:${p.ativo?'#e8f4e8':'#fceaea'};color:${p.ativo?'#1a5a1a':'#8a1a1a'};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap">${p.ativo?'Ativo':'Inativo'}</span>
@@ -164,11 +162,11 @@ uiAnimar(container)
         <div style="padding:18px 22px">
           <div style="margin-bottom:10px">
             <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:5px">Nome</label>
-            <input id="ep-nome" value="${(p.nome||'').replace(/"/g,'&quot;')}" style="border:1px solid var(--borda);border-radius:6px;padding:8px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
+            <input id="ep-nome" value="${esc((p.nome||'').replace(/"/g,'&quot;'))}" style="border:1px solid var(--borda);border-radius:6px;padding:8px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
           </div>
           <div style="margin-bottom:10px">
             <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:5px">Telefone</label>
-            <input id="ep-tel" value="${p.telefone||''}" style="border:1px solid var(--borda);border-radius:6px;padding:8px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
+            <input id="ep-tel" value="${esc(p.telefone||'')}" style="border:1px solid var(--borda);border-radius:6px;padding:8px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
           </div>
           <div style="margin-bottom:10px">
             <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:8px">Especialidades</label>

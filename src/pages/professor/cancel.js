@@ -1,3 +1,4 @@
+import { esc } from '../../modules/utils.js'
 /**
  * src/modules/professor-cancel.js
  * Responsabilidade: cancelamento de aula pelo professor.
@@ -28,7 +29,7 @@ export function abrirModalCancelarAula(ocorrenciaId, infoObj) {
     const dia  = dt.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' })
     const nomes = { hatha: 'Hatha Yoga', acro: 'Acro Yoga', raja: 'Raja Yoga' }
     infoEl.innerHTML = `
-      <strong>${nomes[infoObj.modalidade] || infoObj.modalidade}</strong> —
+      <strong>${nomes[infoObj.modalidade] || esc(infoObj.modalidade)}</strong> —
       ${dia}, ${hora}
       <span style="margin-left:8px;font-size:11px;color:var(--txt2)">
         ${infoObj.confirmados || 0} aluno(s) confirmado(s)

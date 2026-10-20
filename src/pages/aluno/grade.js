@@ -10,9 +10,7 @@
 
 import { confirmarModal, formularioModal } from '../../modules/dialogs.js'
 import { sb }         from '../../lib/supabase.js'
-import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
-          PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
-          calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
+import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel, PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS, calcularNivel, NIVEL_LABELS, esc } from '../../modules/utils.js'
 
 export async function renderAlunoGrade(container, page) {
   const sb = window._sb
@@ -144,7 +142,7 @@ export async function renderAlunoGrade(container, page) {
             actionHtml = `<div style="font-size:9px;color:#8a1a1a;font-weight:600;margin-top:3px">🚫 Cancelada${oc.eh_feriado?' — feriado':''}</div>`
           } else if (isAluno && !passada) {
             if (!permitida) {
-              actionHtml = `<div style="font-size:9px;color:#ccc;margin-top:3px">🔒 ${planoAluno}</div>`
+              actionHtml = `<div style="font-size:9px;color:#ccc;margin-top:3px">🔒 ${esc(planoAluno)}</div>`
             } else if (confirmado) {
               actionHtml = `<div style="font-size:9px;color:var(--dourado);font-weight:500;margin-top:3px">✓ Confirmado</div>`
             } else if (foraPrazo) {
@@ -163,7 +161,7 @@ export async function renderAlunoGrade(container, page) {
           gradeHTML += `<td style="border:1px solid rgba(212,200,158,.3);background:${bgCell};padding:5px 7px;vertical-align:top;cursor:${isAluno?'default':'pointer'}${cancelada?';opacity:.75':''}" ${!isAluno?`onclick="verDetalhesOcorrencia('${oc.id}')"`:''}">
             <div style="font-size:10px;font-weight:500;${borderCell};padding-left:4px;line-height:1.3;color:${cancelada?'#999':!permitida?'#ccc':'var(--txt)'}${cancelada?';text-decoration:line-through':''}">${NOMES[oc.modalidade]}</div>
             <div style="font-size:9px;color:var(--txt2);margin-top:1px">${oc.confirmados||0}/${oc.vagas_total}</div>
-            ${oc.professor_nome?`<div style="font-size:9px;color:var(--txt2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px" title="${oc.professor_nome}">👤 ${oc.professor_nome.split(' ')[0]}</div>`:''}
+            ${oc.professor_nome?`<div style="font-size:9px;color:var(--txt2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px" title="${esc(oc.professor_nome)}">👤 ${esc(oc.professor_nome.split(' ')[0])}</div>`:''}
             ${isFeriado&&!isAluno&&!cancelada?`<div style="font-size:9px;color:#8a6b1a;margin-top:1px">⚠ feriado</div>`:''}
             ${actionHtml}
             ${adminActions}
@@ -224,7 +222,7 @@ export async function renderAlunoGrade(container, page) {
         ${isAluno?`<div>${badge('Plano '+planoAluno,'#e8f4e8','#1a5a1a')}</div>`:''}
       </div>
       <div class="content">
-        ${feriados?.length?`<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:9px 13px;display:flex;align-items:center;gap:8px;font-size:12px;color:#7a5a10;margin-bottom:12px"><i class="ti ti-alert-triangle" style="color:var(--dourado)"></i><span>Há feriados esta semana: ${(feriados||[]).map(f=>f.nome).join(', ')}</span></div>`:''}
+        ${feriados?.length?`<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:9px 13px;display:flex;align-items:center;gap:8px;font-size:12px;color:#7a5a10;margin-bottom:12px"><i class="ti ti-alert-triangle" style="color:var(--dourado)"></i><span>Há feriados esta semana: ${(feriados||[]).map(f=>esc(f.nome)).join(', ')}</span></div>`:''}
         ${navHtml}
         ${legendaHtml}
         ${gradeHTML}

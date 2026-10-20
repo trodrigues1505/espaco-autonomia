@@ -4,6 +4,7 @@
  * O cadastro/edição continua em src/pages/admin/vocabulario.js.
  */
 
+import { esc } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 
 export async function renderVocabularioAluno(container, page) {
@@ -16,7 +17,7 @@ export async function renderVocabularioAluno(container, page) {
 
   if (error) {
     container.innerHTML = `<div class="topbar"><div class="topbar-t">Śabda Kośa</div></div>
-      <div class="content"><p style="color:#c0392b;font-size:13px">Erro: ${error.message}</p></div>`
+      <div class="content"><p style="color:#c0392b;font-size:13px">Erro: ${esc(error.message)}</p></div>`
     return
   }
 

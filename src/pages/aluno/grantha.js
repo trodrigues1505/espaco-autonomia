@@ -4,6 +4,7 @@
  * via Web Speech API do navegador — sem hospedagem de áudio nem custo).
  */
 
+import { esc, urlSegura } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 import { aplicarVocabulario } from '../../modules/vocabulario.js'
 
@@ -42,7 +43,7 @@ async function _renderLista(container, sb) {
   const { data: granthas, error } = await sb.from('grantha_mandir').select('*').order('titulo')
   if (error) {
     container.innerHTML = `<div class="topbar"><div class="topbar-t">Grantha Mandir</div></div>
-      <div class="content"><p style="color:#c0392b;font-size:13px">Erro: ${error.message}</p></div>`
+      <div class="content"><p style="color:#c0392b;font-size:13px">Erro: ${esc(error.message)}</p></div>`
     return
   }
 
@@ -64,11 +65,11 @@ async function _renderLista(container, sb) {
             ${granthas.map(g => `
               <div onclick="window._granthaSelId='${g.id}';navigate('grantha-aluno')"
                 style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;cursor:pointer;display:flex;gap:14px;align-items:center">
-                ${g.capa_url ? `<img src="${g.capa_url}" referrerpolicy="no-referrer" style="width:56px;height:72px;object-fit:cover;border-radius:4px;flex-shrink:0">` : `<div style="width:56px;height:72px;background:var(--verde);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px">📖</div>`}
+                ${g.capa_url ? `<img src="${urlSegura(g.capa_url)}" referrerpolicy="no-referrer" style="width:56px;height:72px;object-fit:cover;border-radius:4px;flex-shrink:0">` : `<div style="width:56px;height:72px;background:var(--verde);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px">📖</div>`}
                 <div style="flex:1;min-width:0">
-                  <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${g.titulo}</div>
-                  <div style="font-size:11px;color:var(--txt2);margin-top:2px">${g.autor ? g.autor+' · ' : ''}${CATEGORIAS_LABEL[g.categoria] || g.categoria || ''}${g.periodo ? ' · '+g.periodo : ''}</div>
-                  ${g.descricao ? `<div style="font-size:12px;color:var(--txt);margin-top:6px;line-height:1.5">${g.descricao}</div>` : ''}
+                  <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--verde)">${esc(g.titulo)}</div>
+                  <div style="font-size:11px;color:var(--txt2);margin-top:2px">${esc(g.autor ? g.autor+' · ' : '')}${CATEGORIAS_LABEL[g.categoria] || esc(g.categoria) || ''}${esc(g.periodo ? ' · '+g.periodo : '')}</div>
+                  ${g.descricao ? `<div style="font-size:12px;color:var(--txt);margin-top:6px;line-height:1.5">${esc(g.descricao)}</div>` : ''}
                   <div style="font-size:10px;color:var(--txt2);margin-top:6px;background:rgba(31,56,31,.06);display:inline-block;padding:2px 8px;border-radius:20px">${g.tipo === 'obra_classica' ? 'Obra clássica' : 'Artigo'}</div>
                 </div>
               </div>`).join('')}
@@ -100,8 +101,8 @@ async function _renderLeitura(container, sb, granthaId) {
       <div class="content">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">
           <div>
-            <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">${g.titulo}</div>
-            <div style="font-size:12px;color:var(--txt2);margin-top:3px">${g.autor ? g.autor+' · ' : ''}${CATEGORIAS_LABEL[g.categoria] || ''}</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">${esc(g.titulo)}</div>
+            <div style="font-size:12px;color:var(--txt2);margin-top:3px">${esc(g.autor ? g.autor+' · ' : '')}${CATEGORIAS_LABEL[g.categoria] || ''}</div>
           </div>
           <button id="btn-ouvir-artigo" style="padding:8px 16px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px;white-space:nowrap">
             🔊 Ouvir
@@ -143,8 +144,8 @@ async function _renderLeitura(container, sb, granthaId) {
     </div>
     <div class="content">
       <div style="margin-bottom:14px">
-        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">${g.titulo}</div>
-        <div style="font-size:12px;color:var(--txt2);margin-top:3px">${g.autor ? g.autor+' · ' : ''}${g.periodo || ''}</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">${esc(g.titulo)}</div>
+        <div style="font-size:12px;color:var(--txt2);margin-top:3px">${esc(g.autor ? g.autor+' · ' : '')}${esc(g.periodo || '')}</div>
       </div>
 
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -152,7 +153,7 @@ async function _renderLeitura(container, sb, granthaId) {
           <button onclick="window._granthaCapituloOrdem=${ordem};navigate('grantha-aluno')"
             style="padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
                    border:1px solid ${ordem===capAtual?'var(--verde)':'var(--borda)'};background:${ordem===capAtual?'var(--verde)':'#fff'};color:${ordem===capAtual?'var(--bege)':'var(--txt2)'}">
-            ${nome}
+            ${esc(nome)}
           </button>`).join('')}
       </div>
 
@@ -163,10 +164,10 @@ async function _renderLeitura(container, sb, granthaId) {
       <div id="versos-leitura-container">
         ${versosCapitulo.map(v => `
           <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:10px">
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);margin-bottom:8px">${v.capitulo} · ${v.numero}${v.numero_fim?'–'+v.numero_fim:''}</div>
-            <div style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--verde);line-height:1.5">${v.texto_devanagari}</div>
-            <div style="font-family:'Cormorant Garamond',serif;font-size:14px;font-style:italic;color:var(--txt2);margin-top:4px">${v.transliteracao}</div>
-            <div style="font-size:13px;color:var(--txt);margin-top:8px;line-height:1.6">${v.traducao}</div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);margin-bottom:8px">${esc(v.capitulo)} · ${v.numero}${v.numero_fim?'–'+v.numero_fim:''}</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--verde);line-height:1.5">${esc(v.texto_devanagari)}</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:14px;font-style:italic;color:var(--txt2);margin-top:4px">${esc(v.transliteracao)}</div>
+            <div style="font-size:13px;color:var(--txt);margin-top:8px;line-height:1.6">${esc(v.traducao)}</div>
           </div>`).join('')}
       </div>
     </div>

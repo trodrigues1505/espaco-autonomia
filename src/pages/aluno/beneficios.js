@@ -3,6 +3,7 @@
  * Dharma Phala — detalhe de um benefício do plano.
  */
 
+import { esc, urlSegura } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 import { BENEFICIO_INTRO } from '../../modules/navigation.js'
 import { aplicarVocabulario } from '../../modules/vocabulario.js'
@@ -150,7 +151,7 @@ function _imprimirHTML(titulo, html) {
   const win = window.open('', '_blank')
   win.document.write(`<!DOCTYPE html><html lang="pt-BR"><head>
     <meta charset="UTF-8">
-    <title>${titulo} — Espaço Autonomia</title>
+    <title>${esc(titulo)} — Espaço Autonomia</title>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
     <style>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
@@ -235,8 +236,8 @@ function _renderIntro(campo, onContinuar) {
     <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;
                 color:rgba(242,236,206,.55);margin-bottom:8px;font-weight:500">O que é este benefício</div>
     <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;
-                color:var(--bege);margin-bottom:10px">${intro.titulo}</div>
-    <p style="font-size:13px;color:rgba(242,236,206,.85);line-height:1.7;margin:0 0 18px">${intro.desc}</p>
+                color:var(--bege);margin-bottom:10px">${esc(intro.titulo)}</div>
+    <p style="font-size:13px;color:rgba(242,236,206,.85);line-height:1.7;margin:0 0 18px">${esc(intro.desc)}</p>
     <button id="btn-intro-continuar"
       style="padding:10px 22px;background:var(--bege);color:var(--verde);border:none;
              border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;
@@ -311,8 +312,8 @@ export async function renderAlunosBeneficios(container, page) {
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;
                       color:rgba(242,236,206,.55);margin-bottom:8px;font-weight:500">O que é este benefício</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;
-                      color:var(--bege);margin-bottom:10px">${intro.titulo}</div>
-          <p style="font-size:13px;color:rgba(242,236,206,.85);line-height:1.7;margin:0 0 18px">${intro.desc}</p>
+                      color:var(--bege);margin-bottom:10px">${esc(intro.titulo)}</div>
+          <p style="font-size:13px;color:rgba(242,236,206,.85);line-height:1.7;margin:0 0 18px">${esc(intro.desc)}</p>
           <button id="btn-intro-ok"
             style="padding:10px 22px;background:var(--bege);color:var(--verde);border:none;
                    border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;
@@ -357,7 +358,7 @@ function _stepper(secoes, prefixo) {
           </div>
           <div style="flex:1">
             <div onclick="window._step_${prefixo}(${idx})" style="cursor:pointer;padding:5px 0 ${aberta?'12px':'16px'}">
-              <div style="font-size:13px;font-weight:500;color:${aberta?s.cor:passada?'var(--txt2)':'var(--txt)'};transition:color .3s">${s.titulo}</div>
+              <div style="font-size:13px;font-weight:500;color:${aberta?s.cor:passada?'var(--txt2)':'var(--txt)'};transition:color .3s">${esc(s.titulo)}</div>
               ${!aberta ? `<div style="font-size:11px;color:var(--txt2);margin-top:2px">${s.itens.length} itens</div>` : ''}
             </div>
             ${aberta ? `
@@ -368,8 +369,8 @@ function _stepper(secoes, prefixo) {
                     <div style="width:6px;height:6px;border-radius:50%;background:${s.cor};flex-shrink:0;margin-top:6px"></div>
                     <div style="font-size:13px;line-height:1.6;white-space:pre-line">
                       ${item.termo
-                        ? `<span style="font-weight:500;color:var(--txt)">${item.termo}</span><span style="color:var(--txt2)">: ${item.desc}</span>`
-                        : `<span style="color:var(--txt)">${item.desc}</span>`}
+                        ? `<span style="font-weight:500;color:var(--txt)">${esc(item.termo)}</span><span style="color:var(--txt2)">: ${esc(item.desc)}</span>`
+                        : `<span style="color:var(--txt)">${esc(item.desc)}</span>`}
                     </div>
                   </div>`).join('')}
                 ${idx < secoes.length - 1
@@ -377,7 +378,7 @@ function _stepper(secoes, prefixo) {
                        style="margin-top:14px;width:100%;padding:9px;background:${s.cor};color:#fff;
                               border:none;border-radius:7px;font-size:12px;font-weight:500;
                               cursor:pointer;font-family:'DM Sans',sans-serif">
-                       Próximo: ${secoes[idx+1].titulo} →
+                       Próximo: ${esc(secoes[idx+1].titulo)} →
                      </button>`
                   : `<div style="margin-top:14px;padding:12px;background:rgba(31,56,31,.06);
                                  border-radius:7px;text-align:center;font-size:12px;color:var(--txt2)">
@@ -432,7 +433,7 @@ async function _renderYogaAdhyayana(container) {
     .lte('publicada_em', hoje)
     .order('publicada_em', { ascending: false })
   if (error) {
-    container.querySelector('.content').innerHTML = `<p style="color:#c0392b;font-size:13px">Erro: ${error.message}</p>`
+    container.querySelector('.content').innerHTML = `<p style="color:#c0392b;font-size:13px">Erro: ${esc(error.message)}</p>`
     return
   }
   if (!linhas || linhas.length === 0) {
@@ -488,19 +489,19 @@ async function _renderYogaAdhyayana(container) {
   function _salvarAula(aula, secoes) {
     const dataFmt = new Date(aula.publicada_em + 'T12:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })
     const secoesHtml = secoes.map(s => `
-      <h2>${s.titulo}</h2>
+      <h2>${esc(s.titulo)}</h2>
       <div class="secao">
         ${s.itens.map(item => `
-          <div class="item"><div class="item-termo">${item.termo || ''}</div><div class="item-desc">${item.desc}</div></div>`).join('')}
+          <div class="item"><div class="item-termo">${esc(item.termo || '')}</div><div class="item-desc">${esc(item.desc)}</div></div>`).join('')}
       </div>`).join('')
-    const imgTag = aula.imagem_url ? `<img src="${aula.imagem_url}" alt="${aula.nome}" class="postura" referrerpolicy="no-referrer">` : ''
+    const imgTag = aula.imagem_url ? `<img src="${urlSegura(aula.imagem_url)}" alt="${esc(aula.nome)}" class="postura" referrerpolicy="no-referrer">` : ''
     _imprimirHTML(`Yoga Adhyayana — ${aula.nome}`, `
-      <h1>${aula.nome}</h1>
-      ${aula.nome_alternativo ? `<p style="font-family:'Cormorant Garamond',serif;font-size:14px;font-style:italic;color:#5a7a5a;margin-bottom:6px">${aula.nome_alternativo}</p>` : ''}
-      <div class="meta"><span>${dataFmt}</span>${aula.nivel ? `<span>${aula.nivel}</span>` : ''}</div>
+      <h1>${esc(aula.nome)}</h1>
+      ${aula.nome_alternativo ? `<p style="font-family:'Cormorant Garamond',serif;font-size:14px;font-style:italic;color:#5a7a5a;margin-bottom:6px">${esc(aula.nome_alternativo)}</p>` : ''}
+      <div class="meta"><span>${dataFmt}</span>${aula.nivel ? `<span>${esc(aula.nivel)}</span>` : ''}</div>
       ${imgTag}
       ${secoesHtml}
-      ${aula.fechamento ? `<div class="reflexao"><div class="reflexao-label">Reflexão</div>${aula.fechamento}</div>` : ''}
+      ${aula.fechamento ? `<div class="reflexao"><div class="reflexao-label">Reflexão</div>${esc(aula.fechamento)}</div>` : ''}
     `)
   }
 
@@ -513,15 +514,15 @@ async function _renderYogaAdhyayana(container) {
     const imgHtml = aula.imagem_url ? `
       <div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:16px;
                   background:var(--verde);min-height:160px;cursor:zoom-in"
-           onclick="_abrirLightbox('${aula.imagem_url}','${aula.nome}')" title="Clique para ampliar">
-        <img src="${aula.imagem_url}" alt="${aula.nome}" referrerpolicy="no-referrer"
+           onclick="_abrirLightbox(this.dataset.src, this.dataset.nome)" data-src="${urlSegura(aula.imagem_url)}" data-nome="${esc(aula.nome)}" title="Clique para ampliar">
+        <img src="${urlSegura(aula.imagem_url)}" alt="${esc(aula.nome)}" referrerpolicy="no-referrer"
           style="width:100%;max-height:240px;object-fit:cover;object-position:center center;
                  display:block;opacity:.9" onerror="this.parentElement.style.display='none'">
         <div style="position:absolute;bottom:0;left:0;right:0;padding:16px;
                     background:linear-gradient(to top,rgba(31,56,31,.92) 0%,transparent 100%)">
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;
-                      color:var(--bege);line-height:1.2">${aula.nome}</div>
-          ${aula.nome_alternativo ? `<div style="font-size:11px;color:rgba(242,236,206,.75);margin-top:3px;font-style:italic">${aula.nome_alternativo}</div>` : ''}
+                      color:var(--bege);line-height:1.2">${esc(aula.nome)}</div>
+          ${aula.nome_alternativo ? `<div style="font-size:11px;color:rgba(242,236,206,.75);margin-top:3px;font-style:italic">${esc(aula.nome_alternativo)}</div>` : ''}
         </div>
         <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);
                     border-radius:20px;padding:3px 8px;font-size:10px;color:#fff;
@@ -550,7 +551,7 @@ async function _renderYogaAdhyayana(container) {
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
         ${isSemana ? `<span style="font-size:11px;background:var(--dourado);color:#4a3300;padding:3px 10px;border-radius:20px;font-weight:500">★ Postura da semana</span>` : ''}
         <span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${dataFmt}</span>
-        ${aula.nivel ? `<span style="font-size:11px;background:${bg};color:${cor};padding:3px 10px;border-radius:20px;font-weight:500">${aula.nivel}</span>` : ''}
+        ${aula.nivel ? `<span style="font-size:11px;background:${bg};color:${cor};padding:3px 10px;border-radius:20px;font-weight:500">${esc(aula.nivel)}</span>` : ''}
       </div>
       ${imgHtml}
       <div id="${containerId}" style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px 16px;margin-bottom:16px">
@@ -559,7 +560,7 @@ async function _renderYogaAdhyayana(container) {
       ${aula.fechamento ? `
       <div style="background:var(--verde);border-radius:12px;padding:20px;margin-bottom:20px">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.55);margin-bottom:8px;font-weight:500">Reflexão</div>
-        <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--bege);line-height:1.7;margin:0;font-style:italic;white-space:pre-line">${aula.fechamento}</p>
+        <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--bege);line-height:1.7;margin:0;font-style:italic;white-space:pre-line">${esc(aula.fechamento)}</p>
       </div>` : ''}
     `
   }
@@ -595,12 +596,12 @@ async function _renderYogaAdhyayana(container) {
           <div style="min-width:0">
             <div style="font-size:13px;font-weight:500;color:var(--txt);display:flex;align-items:center;gap:6px">
               ${isSemana ? '<span style="color:var(--dourado)">★</span>' : ''}
-              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.nome}</span>
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.nome)}</span>
             </div>
-            ${l.nome_alternativo ? `<div style="font-size:11px;color:var(--txt2);font-style:italic">${l.nome_alternativo}</div>` : ''}
+            ${l.nome_alternativo ? `<div style="font-size:11px;color:var(--txt2);font-style:italic">${esc(l.nome_alternativo)}</div>` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-            ${l.nivel ? `<span style="font-size:10px;color:${NIVEL_COR[l.nivel] || 'var(--txt2)'}">${l.nivel}</span>` : ''}
+            ${l.nivel ? `<span style="font-size:10px;color:${NIVEL_COR[l.nivel] || 'var(--txt2)'}">${esc(l.nivel)}</span>` : ''}
             <span style="font-size:11px;color:var(--txt2)">${dataFmt}</span>
           </div>
         </button>`
@@ -699,9 +700,11 @@ function _gerarDescricaoAsana(aula) {
 }
 // Item 17: qualquer campo de texto preenchível pelo admin aceita links
 function _linkify(texto) {
-  if (!texto) return texto
-  return String(texto).replace(/(https?:\/\/[^\s<]+)/g, url =>
-    `<a href="${url}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">${url}</a>`)
+  if (texto == null || texto === '') return ''
+  // as partes ímpares do split são as URLs; o resto é texto e precisa ser escapado
+  return String(texto).split(/(https?:\/\/[^\s<>"']+)/g).map((parte, i) => i % 2
+    ? `<a href="${urlSegura(parte)}" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline">${esc(parte)}</a>`
+    : esc(parte)).join('')
 }
 
 function _blocoIntroducao(itens) {
@@ -711,7 +714,7 @@ function _blocoIntroducao(itens) {
       <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:10px">Abertura da prática</div>
       ${itens.map((it,i) => `
         <div style="display:flex;gap:10px;padding:8px 0;border-bottom:${i<itens.length-1?'1px solid rgba(212,200,158,.3)':'none'}">
-          <span style="font-weight:500;color:var(--txt);min-width:120px;flex-shrink:0;font-size:13px">${it.termo}</span>
+          <span style="font-weight:500;color:var(--txt);min-width:120px;flex-shrink:0;font-size:13px">${esc(it.termo)}</span>
           <span style="color:var(--txt2);font-size:13px;line-height:1.6">${_linkify(it.desc)}</span>
         </div>`).join('')}
     </div>`
@@ -766,7 +769,7 @@ function _blocoAulaPratica(aula, secoes, sufixo) {
   const badges = [
     aula.numero      ? `<span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">Aula ${aula.numero}</span>` : '',
     aula.data_aula   ? `<span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${new Date(aula.data_aula+'T12:00').toLocaleDateString('pt-BR')}</span>` : '',
-    aula.modalidade  ? `<span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.modalidade}</span>` : '',
+    aula.modalidade  ? `<span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${esc(aula.modalidade)}</span>` : '',
     aula.duracao     ? `<span style="font-size:11px;background:rgba(31,56,31,.07);color:var(--verde);padding:3px 10px;border-radius:20px">${aula.duracao}</span>` : '',
   ].filter(Boolean).join('')
 
@@ -780,8 +783,8 @@ function _blocoAulaPratica(aula, secoes, sufixo) {
       <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde);margin-bottom:4px">Sequência de Āsanas</div>
       <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">Faça-os devagar, sem forçar — de 30s a 1min cada āsana. Clique na imagem para ampliar.</div>
       <div style="position:relative;border-radius:8px;overflow:hidden;cursor:zoom-in"
-           onclick="_abrirLightbox('${aula.link_tummee}','Sequência de āsanas')" title="Clique para ampliar">
-        <img src="${aula.link_tummee}" alt="Sequência de āsanas" referrerpolicy="no-referrer"
+           onclick="_abrirLightbox('${urlSegura(aula.link_tummee)}','Sequência de āsanas')" title="Clique para ampliar">
+        <img src="${urlSegura(aula.link_tummee)}" alt="Sequência de āsanas" referrerpolicy="no-referrer"
           style="width:100%;max-height:480px;object-fit:contain;display:block;background:#f7f5ee"
           onerror="this.parentElement.parentElement.style.display='none'">
         <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);
@@ -801,7 +804,7 @@ function _blocoAulaPratica(aula, secoes, sufixo) {
         <i class="ti ti-eye"></i> Ver sequência completa
       </button>
       <div id="am-iframe-wrap${sufixo}" style="display:none;margin-top:12px;border-radius:8px;overflow:hidden;border:1px solid var(--borda)">
-        <iframe src="${aula.link_tummee}"
+        <iframe src="${urlSegura(aula.link_tummee)}"
           style="width:100%;height:600px;border:none;display:block" loading="lazy"
           title="Sequência de āsanas"></iframe>
       </div>
@@ -855,7 +858,7 @@ async function _renderAsanaMarga(container) {
   const sb = window._sb
   const { data: linhas, error } = await sb.from('asana_praticas').select('*').order('slot', { ascending: true })
   if (error) {
-    container.querySelector('.content').innerHTML = `<p style="color:#c0392b;font-size:13px">Erro: ${error.message}</p>`
+    container.querySelector('.content').innerHTML = `<p style="color:#c0392b;font-size:13px">Erro: ${esc(error.message)}</p>`
     return
   }
   const aula1 = linhas?.find(l => l.slot === 1)
@@ -919,19 +922,19 @@ async function _renderAsanaMarga(container) {
     const introHtml = (aula.introducao||[]).length ? `
       <h2>Abertura da prática</h2>
       <div class="secao">
-        ${aula.introducao.map(item => `<div class="item"><div class="item-termo">${item.termo}</div><div class="item-desc">${item.desc}</div></div>`).join('')}
+        ${aula.introducao.map(item => `<div class="item"><div class="item-termo">${esc(item.termo)}</div><div class="item-desc">${esc(item.desc)}</div></div>`).join('')}
       </div>` : ''
     const estruturaHtml = secoes.map(s => `
-      <h2>${s.titulo}</h2>
+      <h2>${esc(s.titulo)}</h2>
       <div class="secao">
-        ${s.itens.map(item => `<div class="item"><div class="item-termo">${item.termo}</div><div class="item-desc">${item.desc}</div></div>`).join('')}
+        ${s.itens.map(item => `<div class="item"><div class="item-termo">${esc(item.termo)}</div><div class="item-desc">${esc(item.desc)}</div></div>`).join('')}
       </div>`).join('')
     _imprimirHTML(`Āsana Mārga — ${titulo}`, `
-      <h1>Āsana Mārga — ${titulo}</h1>
-      <div class="meta">${aula.data_aula ? `<span>${new Date(aula.data_aula+'T12:00').toLocaleDateString('pt-BR')}</span>` : ''}<span>${aula.modalidade||''}</span><span>${aula.duracao||''}</span></div>
+      <h1>Āsana Mārga — ${esc(titulo)}</h1>
+      <div class="meta">${aula.data_aula ? `<span>${new Date(aula.data_aula+'T12:00').toLocaleDateString('pt-BR')}</span>` : ''}<span>${esc(aula.modalidade||'')}</span><span>${aula.duracao||''}</span></div>
       <div class="citacao">${_gerarDescricaoAsana(aula)}</div>
       ${introHtml}
-      ${aula.link_tummee ? `<h2>Sequência de Āsanas</h2><div class="tummee-link">Acesse a sequência completa em: <strong>${aula.link_tummee}</strong></div>` : ''}
+      ${aula.link_tummee ? `<h2>Sequência de Āsanas</h2><div class="tummee-link">Acesse a sequência completa em: <strong>${urlSegura(aula.link_tummee)}</strong></div>` : ''}
       ${estruturaHtml}
     `)
   }
@@ -953,7 +956,7 @@ async function _renderJnanaMarga(container) {
     .lte('publicada_em', hoje)
     .order('publicada_em', { ascending: false })
   if (error) {
-    container.querySelector('.content').innerHTML = `<p style="color:#c0392b;font-size:13px">Erro: ${error.message}</p>`
+    container.querySelector('.content').innerHTML = `<p style="color:#c0392b;font-size:13px">Erro: ${esc(error.message)}</p>`
     return
   }
   if (!sutras || sutras.length === 0) {
@@ -984,18 +987,18 @@ async function _renderJnanaMarga(container) {
     const dataFmt = new Date(s.publicada_em + 'T12:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })
     const comentarioHtml = (s.comentario||'').split(/\n\s*\n/).map(p => `<p>${p}</p>`).join('')
     _imprimirHTML(`Jñāna Mārga — ${s.capitulo} ${_labelNumeroSutra(s)}`, `
-      <h1>${s.capitulo} — Sutra ${_labelNumeroSutra(s)}</h1>
-      <p style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:#5a7a5a;margin-bottom:4px">${s.transliteracao}</p>
+      <h1>${esc(s.capitulo)} — Sutra ${_labelNumeroSutra(s)}</h1>
+      <p style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:#5a7a5a;margin-bottom:4px">${esc(s.transliteracao)}</p>
       <div class="meta"><span>Jñāna Mārga · Yoga Sūtras</span><span>${dataFmt}</span></div>
-      ${s.contexto_capitulo ? `<div class="citacao">${s.contexto_capitulo}</div>` : ''}
+      ${s.contexto_capitulo ? `<div class="citacao">${esc(s.contexto_capitulo)}</div>` : ''}
       <h2>Texto</h2>
       <div class="secao">
-        <p style="font-family:'Cormorant Garamond',serif;font-size:14px">${s.texto_devanagari}</p>
-        <p style="font-style:italic">${s.transliteracao}</p>
-        <p>${s.traducao}</p>
+        <p style="font-family:'Cormorant Garamond',serif;font-size:14px">${esc(s.texto_devanagari)}</p>
+        <p style="font-style:italic">${esc(s.transliteracao)}</p>
+        <p>${esc(s.traducao)}</p>
       </div>
-      ${s.comentario ? `<h2>Comentário</h2><div class="secao">${comentarioHtml}</div>` : ''}
-      ${s.pratica ? `<h2>Na prática</h2><div class="secao"><p>${s.pratica}</p></div>` : ''}
+      ${s.comentario ? `<h2>Comentário</h2><div class="secao">${esc(comentarioHtml)}</div>` : ''}
+      ${s.pratica ? `<h2>Na prática</h2><div class="secao"><p>${esc(s.pratica)}</p></div>` : ''}
     `)
   }
 
@@ -1006,22 +1009,22 @@ async function _renderJnanaMarga(container) {
     return `
       <div style="background:var(--verde);border-radius:12px;padding:20px;margin-bottom:16px">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:rgba(242,236,206,.55);margin-bottom:8px">
-          ${isHoje ? '✦ Sutra de hoje' : dataFmt} · ${s.capitulo} ${_labelNumeroSutra(s)}
+          ${isHoje ? '✦ Sutra de hoje' : dataFmt} · ${esc(s.capitulo)} ${_labelNumeroSutra(s)}
         </div>
-        ${s.contexto_capitulo ? `<p style="font-size:12px;color:rgba(242,236,206,.75);line-height:1.6;margin-bottom:14px;font-style:italic">${s.contexto_capitulo}</p>` : ''}
-        <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:var(--bege);line-height:1.3">${s.texto_devanagari}</div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;color:rgba(242,236,206,.8);margin-top:6px">${s.transliteracao}</div>
-        <div style="font-size:14px;color:rgba(242,236,206,.92);margin-top:10px">${s.traducao}</div>
+        ${s.contexto_capitulo ? `<p style="font-size:12px;color:rgba(242,236,206,.75);line-height:1.6;margin-bottom:14px;font-style:italic">${esc(s.contexto_capitulo)}</p>` : ''}
+        <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:var(--bege);line-height:1.3">${esc(s.texto_devanagari)}</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;color:rgba(242,236,206,.8);margin-top:6px">${esc(s.transliteracao)}</div>
+        <div style="font-size:14px;color:rgba(242,236,206,.92);margin-top:10px">${esc(s.traducao)}</div>
       </div>
       ${s.comentario ? `
         <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px;margin-bottom:16px">
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:10px">Comentário</div>
-          <div style="font-size:13px;color:var(--txt)">${comentarioHtml}</div>
+          <div style="font-size:13px;color:var(--txt)">${esc(comentarioHtml)}</div>
         </div>` : ''}
       ${s.pratica ? `
         <div style="background:rgba(232,188,79,.07);border-left:3px solid var(--dourado);border-radius:0 8px 8px 0;padding:14px 16px;margin-bottom:16px">
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#7a5a10;font-weight:500;margin-bottom:6px">Na prática</div>
-          <p style="font-size:13px;color:var(--txt);line-height:1.7;margin:0">${s.pratica}</p>
+          <p style="font-size:13px;color:var(--txt);line-height:1.7;margin:0">${esc(s.pratica)}</p>
         </div>` : ''}
       <div style="display:flex;gap:8px;margin-bottom:8px">
         <button onclick="window._jnAnterior()" ${_jnTemAnterior(s) ? '' : 'disabled'}
@@ -1052,8 +1055,8 @@ async function _renderJnanaMarga(container) {
           <button onclick="window._jnSelSutra('${s.id}')" id="jn-hist-${s.id}"
             style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:#fff;border:1px solid var(--borda);border-radius:8px;cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif">
             <div>
-              <div style="font-size:13px;font-weight:500;color:var(--txt)">${s.capitulo} ${_labelNumeroSutra(s)}</div>
-              <div style="font-size:11px;color:var(--txt2);font-style:italic">${s.transliteracao}</div>
+              <div style="font-size:13px;font-weight:500;color:var(--txt)">${esc(s.capitulo)} ${_labelNumeroSutra(s)}</div>
+              <div style="font-size:11px;color:var(--txt2);font-style:italic">${esc(s.transliteracao)}</div>
             </div>
             <div style="font-size:11px;color:var(--txt2);flex-shrink:0;margin-left:12px">${new Date(s.publicada_em + 'T12:00').toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})}</div>
           </button>`).join('')}
@@ -1139,8 +1142,8 @@ async function _renderBeneficioGenerico(container, b, campo, temAcesso, planoTip
       <span style="font-size:36px;line-height:1;${temAcesso?'':'filter:grayscale(1);opacity:.4'}">${b.icone}</span>
       <div>
         <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;
-                    color:${temAcesso?'var(--verde)':'var(--txt2)'};line-height:1.2">${b.nome}</div>
-        <div style="font-size:12px;color:var(--txt2);margin-top:3px">${b.subtitulo}</div>
+                    color:${temAcesso?'var(--verde)':'var(--txt2)'};line-height:1.2">${esc(b.nome)}</div>
+        <div style="font-size:12px;color:var(--txt2);margin-top:3px">${esc(b.subtitulo)}</div>
         ${temAcesso
           ? `<span style="font-size:10px;background:rgba(31,56,31,.08);color:var(--verde);padding:2px 8px;border-radius:20px;font-weight:500;margin-top:4px;display:inline-block">Incluso no seu plano</span>`
           : `<span style="font-size:10px;background:rgba(0,0,0,.06);color:var(--txt2);padding:2px 8px;border-radius:20px;margin-top:4px;display:inline-block">Não incluso no seu plano</span>`
@@ -1148,7 +1151,7 @@ async function _renderBeneficioGenerico(container, b, campo, temAcesso, planoTip
       </div>
     </div>
     <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:18px 20px;margin-bottom:16px">
-      <p style="font-size:14px;color:var(--txt);line-height:1.8;margin:0;white-space:pre-line">${(b.descricao||'').trim()}</p>
+      <p style="font-size:14px;color:var(--txt);line-height:1.8;margin:0;white-space:pre-line">${esc((b.descricao||'').trim())}</p>
       ${acaoHtml}
     </div>
     ${!temAcesso ? `

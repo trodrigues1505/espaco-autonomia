@@ -153,7 +153,7 @@ async function _mostrarPasso(el, texto, idx, total, onProximo, onVoltar, onPular
   const isLast = idx === total - 1
   const isFirst = idx === 0
   bubble.innerHTML = `
-    <div style="font-size:13px;color:var(--txt);line-height:1.6;margin-bottom:14px">${texto}</div>
+    <div style="font-size:13px;color:var(--txt);line-height:1.6;margin-bottom:14px">${esc(texto)}</div>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
       <button id="_tour-pular" style="background:none;border:none;font-size:11px;color:var(--txt2);
         cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:underline;padding:0">Pular tutorial</button>
@@ -206,4 +206,5 @@ function _finalizarTour(perfil) {
   _emAndamento = false
   if (perfil?.id) localStorage.setItem(_chave(perfil.id), '1')
   if (_ultimaPagina !== 'aluno-home') window.navigate('aluno-home')
-}   
+}   import { esc } from './utils.js'
+

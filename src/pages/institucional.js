@@ -3,6 +3,7 @@
  * "O Espaço" e "Nossa Prática" — páginas institucionais estáticas.
  */
 
+import { esc } from '../modules/utils.js'
 import { uiAnimar } from '../modules/ui.js'
 
 // ── O Espaço ────────────────────────────────────────────────────
@@ -102,14 +103,14 @@ function _renderSubpagina(idx) {
 
   const secoesHtml = s.secoes.map(sec => `
     <div style="margin-bottom:16px">
-      <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--verde);margin-bottom:6px">${sec.titulo}</div>
-      <p style="font-size:14px;color:var(--txt);line-height:1.85;margin:0">${sec.texto}</p>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--verde);margin-bottom:6px">${esc(sec.titulo)}</div>
+      <p style="font-size:14px;color:var(--txt);line-height:1.85;margin:0">${esc(sec.texto)}</p>
     </div>
   `).join('')
 
   const outroHtml = s.outro
     ? `<div style="background:var(--verde);border-radius:12px;padding:18px 20px;margin-top:4px">
-         <p style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:var(--bege);line-height:1.7;margin:0">${s.outro}</p>
+         <p style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:var(--bege);line-height:1.7;margin:0">${esc(s.outro)}</p>
        </div>`
     : ''
 
@@ -131,7 +132,7 @@ export async function renderNossaPratica(container, page) {
         style="padding:8px 16px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;
                font-family:'DM Sans',sans-serif;white-space:nowrap;border:1px solid ${idx===abaAtiva?'var(--verde)':'var(--borda)'};
                background:${idx===abaAtiva?'var(--verde)':'#fff'};color:${idx===abaAtiva?'var(--bege)':'var(--txt)'}">
-        ${s.icone} ${s.titulo}
+        ${s.icone} ${esc(s.titulo)}
       </button>
     `).join('')
 

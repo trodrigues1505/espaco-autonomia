@@ -3,7 +3,7 @@
  */
 
 import { confirmarModal } from '../modules/dialogs.js'
-import { toast } from '../modules/utils.js'
+import { toast, esc, urlSegura } from '../modules/utils.js'
 import { uiAnimar } from '../modules/ui.js'
 import { aplicarVocabulario } from '../modules/vocabulario.js'
 
@@ -389,7 +389,7 @@ export async function renderTimeline(container, page) {
       .eq('enquete_id', enqId)
       .order('votado_em', { ascending: true })
 
-    if (error) { body.innerHTML = `<p style="color:#c0392b;font-size:12px">Erro: ${error.message}</p>`; return }
+    if (error) { body.innerHTML = `<p style="color:#c0392b;font-size:12px">Erro: ${esc(error.message)}</p>`; return }
     if (!data?.length) { body.innerHTML = `<p style="font-size:12px;color:var(--txt2)">Ninguém votou ainda.</p>`; return }
 
     // Agrupa por aluno (múltipla escolha = várias linhas por pessoa)
@@ -426,7 +426,7 @@ export async function renderTimeline(container, page) {
     if (!feedEl) return
 
     if (error) {
-      feedEl.innerHTML = `<div style="padding:24px;text-align:center;font-size:12px;color:#c0392b">Erro ao carregar feed: ${error.message}</div>`
+      feedEl.innerHTML = `<div style="padding:24px;text-align:center;font-size:12px;color:#c0392b">Erro ao carregar feed: ${esc(error.message)}</div>`
       return
     }
 
@@ -512,8 +512,8 @@ export async function renderTimeline(container, page) {
 
   function renderPostCard(post, emModeracao) {
     const fotoHtml = post.autor_foto
-      ? `<img src="${post.autor_foto}" referrerpolicy="no-referrer" style="width:38px;height:38px;border-radius:50%;object-fit:cover">`
-      : `<div style="width:38px;height:38px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--verde)">${(post.autor_nome || '?')[0].toUpperCase()}</div>`
+      ? `<img src="${urlSegura(post.autor_foto)}" referrerpolicy="no-referrer" style="width:38px;height:38px;border-radius:50%;object-fit:cover">`
+      : `<div style="width:38px;height:38px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--verde)">${esc((post.autor_nome || '?')[0].toUpperCase())}</div>`
 
     const roleBadgeMap = {
       admin:     { bg: 'var(--verde)',          cor: 'var(--bege)',    label: 'Admin'     },
@@ -630,8 +630,8 @@ export async function renderTimeline(container, page) {
     if (!tipo) tipo = detectarTipoMidia(url)
 
     if (tipo === 'imagem') {
-      return `<div style="margin-top:12px;cursor:zoom-in;position:relative" onclick="window._tlAbrirLightbox('${url}')" title="Clique para ampliar">
-        <img src="${url}" referrerpolicy="no-referrer" style="width:100%;max-height:420px;object-fit:cover;display:block" loading="lazy" onerror="this.parentElement.remove()">
+      return `<div style="margin-top:12px;cursor:zoom-in;position:relative" onclick="window._tlAbrirLightbox('${urlSegura(url)}')" title="Clique para ampliar">
+        <img src="${urlSegura(url)}" referrerpolicy="no-referrer" style="width:100%;max-height:420px;object-fit:cover;display:block" loading="lazy" onerror="this.parentElement.remove()">
         <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);border-radius:20px;padding:3px 8px;font-size:10px;color:#fff;display:flex;align-items:center;gap:4px;pointer-events:none">
           <i class="ti ti-zoom-in" style="font-size:12px"></i> ampliar
         </div>
@@ -644,14 +644,14 @@ export async function renderTimeline(container, page) {
         return `<div style="margin-top:12px"><iframe src="${embed}" style="width:100%;aspect-ratio:16/9;border:none;display:block" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`
       }
       // Arquivo de vídeo direto (mp4/webm/ogg/mov) — sem provedor reconhecido, usa <video> nativo
-      return `<div style="margin-top:12px"><video src="${url}" controls preload="metadata" style="width:100%;max-height:420px;display:block;background:#000"></video></div>`
+      return `<div style="margin-top:12px"><video src="${urlSegura(url)}" controls preload="metadata" style="width:100%;max-height:420px;display:block;background:#000"></video></div>`
     }
 
     if (tipo === 'pdf') {
       const viewer = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`
       return `<div style="margin-top:12px;border:1px solid var(--borda);border-radius:8px;overflow:hidden">
         <iframe src="${viewer}" style="width:100%;height:420px;border:none;display:block" loading="lazy"></iframe>
-        <a href="${url}" target="_blank" rel="noopener"
+        <a href="${urlSegura(url)}" target="_blank" rel="noopener"
           style="display:flex;align-items:center;gap:6px;padding:8px 12px;font-size:11px;color:var(--txt2);background:rgba(31,56,31,.03);text-decoration:none">
           <span>📄</span><span>Abrir PDF em nova aba</span>
         </a>
@@ -659,9 +659,9 @@ export async function renderTimeline(container, page) {
     }
 
     return `<div style="margin:12px 18px 0">
-      <a href="${url}" target="_blank" rel="noopener"
+      <a href="${urlSegura(url)}" target="_blank" rel="noopener"
         style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(31,56,31,.04);border:1px solid var(--borda);border-radius:6px;text-decoration:none;color:var(--txt);font-size:12px">
-        <span>🔗</span><span style="word-break:break-all">${url}</span>
+        <span>🔗</span><span style="word-break:break-all">${urlSegura(url)}</span>
       </a>
     </div>`
   }
@@ -829,7 +829,7 @@ export async function renderTimeline(container, page) {
       return `
         <div style="display:flex;gap:8px;margin-bottom:10px">
           <div style="width:26px;height:26px;border-radius:50%;background:rgba(31,56,31,.08);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--verde);flex-shrink:0">
-            ${(c.autor_nome || '?')[0].toUpperCase()}
+            ${esc((c.autor_nome || '?')[0].toUpperCase())}
           </div>
           <div style="flex:1;background:rgba(31,56,31,.03);border-radius:6px;padding:7px 10px">
             <div style="display:flex;align-items:center;gap:4px">
@@ -965,8 +965,8 @@ export async function renderTimeline(container, page) {
 
 function renderComposeBox(perfil, isAdmin, isProf) {
   const fotoHtml = perfil.foto_url
-    ? `<img src="${perfil.foto_url}" referrerpolicy="no-referrer" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`
-    : `<div style="width:36px;height:36px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--verde)">${perfil.nome[0].toUpperCase()}</div>`
+    ? `<img src="${urlSegura(perfil.foto_url)}" referrerpolicy="no-referrer" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`
+    : `<div style="width:36px;height:36px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--verde)">${esc(perfil.nome[0].toUpperCase())}</div>`
 
   const noticeHtml = (!isAdmin && !isProf)
     ? `<div style="font-size:11px;color:#e67e22;margin-top:8px;display:flex;align-items:center;gap:5px">⏳ Seu post passará por aprovação antes de aparecer no feed.</div>`

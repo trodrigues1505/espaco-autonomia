@@ -1,7 +1,8 @@
+import { esc } from '../modules/utils.js'
 /**
  * src/pages/index.js
  */
-const V = '?v=31'
+const V = '?v=32'
 const rotaMap = {
   'dashboard':          () => import('./admin/dashboard.js'  + V).then(m => m.renderDashboard),
   'timeline':           () => import('./timeline.js'         + V).then(m => m.renderTimeline),
@@ -64,7 +65,7 @@ export async function navigate(page) {
     const fn = await loader()
     await fn(container, page)
   } catch (e) {
-    container.innerHTML = `<div class="content"><div style="color:#c0392b;font-size:12px;font-family:monospace">Erro em ${page}: ${e.message}</div></div>`
+    container.innerHTML = `<div class="content"><div style="color:#c0392b;font-size:12px;font-family:monospace">Erro em ${page}: ${esc(e.message)}</div></div>`
     console.error(`navigate(${page}):`, e)
   }
 }

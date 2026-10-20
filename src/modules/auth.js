@@ -6,7 +6,7 @@ import { sb } from '../lib/supabase.js'
 import { buildMenu, homePorPerfil, initMobileMenu } from './navigation.js'
 import { verificarContrato } from './contrato.js'
 import { initProfessorCancel } from './professor-cancel.js'
-import { toast, PLANO_NOMES } from './utils.js'
+import { toast, PLANO_NOMES, esc } from './utils.js'
 import { initSelecaoParaCriarTermo } from './vocabulario.js'
 import { sincronizarConsentimentoAposLogin, lgpdLimparLocal } from './lgpd.js'
 
@@ -25,10 +25,10 @@ export async function mostrarOnboarding(user, nomeGoogle, fotoGoogle) {
         <div style="font-size:12px;color:rgba(242,236,206,.7);margin-top:4px">Complete seus dados para começar</div>
       </div>
       <div style="padding:24px">
-        <input type="hidden" id="onb-foto" value="${fotoGoogle || ''}">
+        <input type="hidden" id="onb-foto" value="${esc(fotoGoogle || '')}">
         <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
           <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Nome completo</label>
-          <input id="onb-nome" value="${nomeGoogle}" style="border:1px solid var(--borda);border-radius:6px;padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">
+          <input id="onb-nome" value="${esc(nomeGoogle)}" style="border:1px solid var(--borda);border-radius:6px;padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:20px">
           <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Telefone / WhatsApp</label>
@@ -37,7 +37,7 @@ export async function mostrarOnboarding(user, nomeGoogle, fotoGoogle) {
         <p style="font-size:12px;color:var(--txt2);line-height:1.6;margin:0 0 20px">
           Você começa como visitante, com acesso ao Sangha e ao Āsana Mārga. Para liberar os demais benefícios, fale com a equipe do estúdio sobre os planos disponíveis.
         </p>
-        <button onclick="finalizarOnboarding('${user.id}','${user.email}')"
+        <button onclick="finalizarOnboarding(this.dataset.id, this.dataset.email)" data-id="${esc(user.id)}" data-email="${esc(user.email)}"
           style="width:100%;padding:12px;background:var(--verde);color:var(--bege);border:none;border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500">
           Começar →
         </button>

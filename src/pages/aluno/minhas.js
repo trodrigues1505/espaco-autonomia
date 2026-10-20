@@ -4,9 +4,7 @@
  */
 
 import { sb }         from '../../lib/supabase.js'
-import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
-          PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
-          calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
+import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel, PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS, calcularNivel, NIVEL_LABELS, esc } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 
 export async function renderAlunoMinhas(container, page) {
@@ -43,11 +41,11 @@ export async function renderAlunoMinhas(container, page) {
       return `<div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px">
         <div>
           <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
-            ${dot(oc.aula?.modalidade)}<strong style="font-size:13px">${nome}</strong>
+            ${dot(oc.aula?.modalidade)}<strong style="font-size:13px">${esc(nome)}</strong>
             <span style="background:${statusBg[c.status]||'#f0ede4'};color:${statusColor[c.status]||'#5a5a4a'};padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500">${c.status==='confirmado'?'Confirmado':c.status==='presente'?'Presente':'Ausente'}</span>
           </div>
           <div style="font-size:11px;color:var(--txt2)">${dt.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'})} · ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
-          <div style="font-size:10px;color:var(--txt2);margin-top:2px">${oc.aula?.professor?.nome||''}</div>
+          <div style="font-size:10px;color:var(--txt2);margin-top:2px">${esc(oc.aula?.professor?.nome||'')}</div>
           ${podeCancelar?`<div style="font-size:10px;color:var(--verde-cl);margin-top:3px">Cancelamento disponível até ${limiteCancel.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>`:''}
         </div>
         ${podeCancelar?`<button onclick="cancelarMinhaConf('${c.id}','${oc.id}')" style="padding:5px 11px;background:#fceaea;color:#8a1a1a;border:1px solid #f5c1c1;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Cancelar</button>`:''}

@@ -4,9 +4,7 @@
  */
 
 import { sb }         from '../../lib/supabase.js'
-import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
-          PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
-          calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
+import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel, PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS, calcularNivel, NIVEL_LABELS, esc, urlSegura } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 
 // Descrições fixas de cada benefício
@@ -107,16 +105,16 @@ export async function renderAlunoPlano(container, page) {
         <div style="display:flex;flex-direction:column;gap:6px">
           <div style="display:flex;gap:8px;font-size:13px">
             <span style="color:var(--txt2);min-width:70px;font-size:11px;text-transform:uppercase;letter-spacing:.6px;padding-top:1px">Nome</span>
-            <span id="perfil-nome-display" style="font-weight:500">${perfil.nome}</span>
+            <span id="perfil-nome-display" style="font-weight:500">${esc(perfil.nome)}</span>
           </div>
           <div style="display:flex;gap:8px;font-size:13px">
             <span style="color:var(--txt2);min-width:70px;font-size:11px;text-transform:uppercase;letter-spacing:.6px;padding-top:1px">E-mail</span>
-            <span style="color:var(--txt2)">${perfil.email}</span>
+            <span style="color:var(--txt2)">${esc(perfil.email)}</span>
           </div>
           ${perfil.telefone
             ? `<div style="display:flex;gap:8px;font-size:13px">
                 <span style="color:var(--txt2);min-width:70px;font-size:11px;text-transform:uppercase;letter-spacing:.6px;padding-top:1px">Telefone</span>
-                <span id="perfil-tel-display">${perfil.telefone}</span>
+                <span id="perfil-tel-display">${esc(perfil.telefone)}</span>
                </div>`
             : `<div style="display:flex;gap:8px;font-size:13px">
                 <span style="color:var(--txt2);min-width:70px;font-size:11px;text-transform:uppercase;letter-spacing:.6px;padding-top:1px">Telefone</span>
@@ -132,7 +130,7 @@ export async function renderAlunoPlano(container, page) {
         <!-- Card do plano -->
         <div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden;margin-bottom:16px">
           <div style="padding:18px;background:var(--verde)">
-            <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--bege)">Plano ${plano?.nome||mat.plano_tipo}</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--bege)">Plano ${esc(plano?.nome||mat.plano_tipo)}</div>
             <div style="margin-top:8px">
               ${totalDesconto > 0
                 ? `<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
@@ -164,14 +162,14 @@ export async function renderAlunoPlano(container, page) {
                     <button onclick="toggleBeneficio('${f}')" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:none;border:none;cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif">
                       <div style="display:flex;align-items:center;gap:8px">
                         <span style="color:var(--verde);font-weight:500;font-size:12px">✓</span>
-                        <span style="font-size:12px;font-weight:500;color:var(--txt)">${b.titulo}</span>
+                        <span style="font-size:12px;font-weight:500;color:var(--txt)">${esc(b.titulo)}</span>
                       </div>
                       <span id="chevron-${f}" style="font-size:10px;color:var(--txt2);transition:transform .2s">▼</span>
                     </button>
                     <div id="desc-${f}" style="display:none;padding:0 14px 12px;font-size:12px;color:var(--txt2);line-height:1.6;border-top:1px solid rgba(212,200,158,.3)">
-                      <div style="padding-top:10px">${b.texto}</div>
+                      <div style="padding-top:10px">${esc(b.texto)}</div>
                       ${linkSangha
-                        ? `<a href="${plano.whatsapp_sangha}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:8px 16px;background:#25d366;color:#fff;border-radius:6px;text-decoration:none;font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif">
+                        ? `<a href="${urlSegura(plano.whatsapp_sangha)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:8px 16px;background:#25d366;color:#fff;border-radius:6px;text-decoration:none;font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif">
                             📱 Entrar no grupo WhatsApp
                            </a>`
                         : ''
@@ -190,7 +188,7 @@ export async function renderAlunoPlano(container, page) {
                   <div style="margin-top:6px">
                     ${Object.keys(FEAT_DESCRICOES).filter(f => !plano?.[f]).map(f =>
                       `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:11px;color:#ccc;text-decoration:line-through">
-                        <span>—</span>${FEAT_DESCRICOES[f].titulo}
+                        <span>—</span>${esc(FEAT_DESCRICOES[f].titulo)}
                        </div>`
                     ).join('')}
                   </div>
@@ -207,7 +205,7 @@ export async function renderAlunoPlano(container, page) {
               <div style="display:flex;gap:8px;flex-wrap:wrap">
                 ${todos.filter(p=>p.tipo!==mat.plano_tipo&&(p.preco_1x||0)>(plano?.preco_1x||0)).map(p=>`
                   <button style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">
-                    Upgrade para ${p.nome} · R$${p.preco_1x}/mês
+                    Upgrade para ${esc(p.nome)} · R$${p.preco_1x}/mês
                   </button>`).join('')}
               </div>
             </div>`
@@ -221,7 +219,7 @@ export async function renderAlunoPlano(container, page) {
         ? `<div style="background:#fff;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden;margin-bottom:14px">
             <div style="padding:13px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
               <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--verde)">Histórico de Pagamentos</span>
-              ${pgAtual?`<span style="background:${pgStatusOk?'#e8f4e8':'#fceaea'};color:${pgStatusOk?'#1a5a1a':'#8a1a1a'};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500">${pgStatusLabel[pgAtual?.status]||pgAtual?.status||'—'}</span>`:''}
+              ${pgAtual?`<span style="background:${pgStatusOk?'#e8f4e8':'#fceaea'};color:${pgStatusOk?'#1a5a1a':'#8a1a1a'};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500">${pgStatusLabel[pgAtual?.status]||esc(pgAtual?.status)||'—'}</span>`:''}
             </div>
             ${(pgAluno||[]).map(p=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
               <div>
@@ -230,7 +228,7 @@ export async function renderAlunoPlano(container, page) {
               </div>
               <div style="text-align:right">
                 <div style="font-weight:500">R$${(p.valor||0).toFixed(2).replace('.',',')}</div>
-                <div style="font-size:10px;color:${pgStatusColor[p.status]||'#888'};margin-top:1px">${pgStatusLabel[p.status]||p.status}</div>
+                <div style="font-size:10px;color:${pgStatusColor[p.status]||'#888'};margin-top:1px">${pgStatusLabel[p.status]||esc(p.status)}</div>
               </div>
             </div>`).join('')}
           </div>`
@@ -248,11 +246,11 @@ export async function renderAlunoPlano(container, page) {
         <div style="padding:20px;display:flex;flex-direction:column;gap:12px">
           <div style="display:flex;flex-direction:column;gap:4px">
             <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Nome completo</label>
-            <input id="edit-perfil-nome" type="text" value="${perfil.nome.replace(/"/g,'&quot;')}" style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
+            <input id="edit-perfil-nome" type="text" value="${esc(perfil.nome.replace(/"/g,'&quot;'))}" style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
           <div style="display:flex;flex-direction:column;gap:4px">
             <label style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Telefone / WhatsApp</label>
-            <input id="edit-perfil-tel" type="tel" value="${perfil.telefone||''}" placeholder="(11) 99999-9999" style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
+            <input id="edit-perfil-tel" type="tel" value="${esc(perfil.telefone||'')}" placeholder="(11) 99999-9999" style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
           <div style="font-size:11px;color:var(--txt2);background:rgba(242,236,206,.4);border-radius:6px;padding:8px 12px">
             O e-mail não pode ser alterado pois é usado para o login com Google.

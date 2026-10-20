@@ -12,7 +12,7 @@
  */
 
 import { sb } from '../../lib/supabase.js'
-import { toast, badge, card, modal, fi, inputStyle } from '../../modules/utils.js'
+import { toast, badge, card, modal, fi, inputStyle, esc } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 
 let _ultimoContainer = null
@@ -55,11 +55,11 @@ export async function renderVinculos(container, page) {
   const modalNovo = modal('modal-novo-vinculo', 'Novo Vínculo',
     `${fi('', 'Aluno', `<select id="nv-aluno" ${inputStyle}>
         <option value="">— selecionar aluno —</option>
-        ${alunos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('')}
+        ${alunos.map(a => `<option value="${a.id}">${esc(a.nome)}</option>`).join('')}
       </select>`)}
     ${fi('', 'Professor', `<select id="nv-professor" ${inputStyle}>
         <option value="">— selecionar professor —</option>
-        ${professores.map(p => `<option value="${p.id}">${p.nome}</option>`).join('')}
+        ${professores.map(p => `<option value="${p.id}">${esc(p.nome)}</option>`).join('')}
       </select>`)}
     ${fi('', 'Data de início', `<input type="date" id="nv-data-inicio" ${inputStyle} value="${new Date().toISOString().slice(0,10)}">`)}
     ${fi('', 'Observação (opcional)', `<textarea id="nv-obs" rows="2" ${inputStyle} placeholder="Ex: aluno pediu troca de professor"></textarea>`)}
@@ -100,12 +100,12 @@ export async function renderVinculos(container, page) {
           <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Professor</label>
           <select onchange="window._vincFiltroProf=this.value;window._rerenderVinculos()" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff">
             <option value="" ${!filtroProf?'selected':''}>Todos</option>
-            ${professores.map(p=>`<option value="${p.id}" ${filtroProf===p.id?'selected':''}>${p.nome}</option>`).join('')}
+            ${professores.map(p=>`<option value="${p.id}" ${filtroProf===p.id?'selected':''}>${esc(p.nome)}</option>`).join('')}
           </select>
         </div>
         <div style="display:flex;flex-direction:column;gap:3px">
           <label style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Buscar aluno</label>
-          <input id="input-busca-vinc" value="${buscaAluno}" placeholder="Nome do aluno..." oninput="window._vincBusca=this.value;window._rerenderVinculos()" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;width:180px">
+          <input id="input-busca-vinc" value="${esc(buscaAluno)}" placeholder="Nome do aluno..." oninput="window._vincBusca=this.value;window._rerenderVinculos()" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;width:180px">
         </div>
         <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--txt2);cursor:pointer;align-self:flex-end;padding:6px 0">
           <input type="checkbox" ${somenteAtuais?'checked':''} onchange="window._vincSomenteAtuais=this.checked;window._rerenderVinculos()" style="accent-color:var(--verde)">
@@ -120,11 +120,11 @@ export async function renderVinculos(container, page) {
           listaFiltrada.map(v => {
             const emAberto = !v.data_fim
             return `<div style="display:grid;grid-template-columns:1fr 1fr 100px 100px 1fr 130px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
-              <span style="font-weight:500">${v.aluno?.nome||'—'}</span>
-              <span>${v.professor?.nome||'—'}</span>
+              <span style="font-weight:500">${esc(v.aluno?.nome||'—')}</span>
+              <span>${esc(v.professor?.nome||'—')}</span>
               <span style="font-size:11px;color:var(--txt2)">${fmtData(v.data_inicio)}</span>
               <span>${emAberto?badge('Atual','#e8f4e8','#1a5a1a'):`<span style="font-size:11px;color:var(--txt2)">${fmtData(v.data_fim)}</span>`}</span>
-              <span style="font-size:11px;color:var(--txt2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(v.observacao||'').replace(/"/g,'&quot;')}">${v.observacao||'—'}</span>
+              <span style="font-size:11px;color:var(--txt2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc((v.observacao||'').replace(/"/g,'&quot;'))}">${esc(v.observacao||'—')}</span>
               <div style="display:flex;gap:4px">
                 <button onclick="abrirEditarVinculo('${v.id}')" style="padding:3px 8px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Editar datas">✎</button>
                 ${emAberto?`<button onclick="confirmarDesvincular('${v.id}')" style="padding:3px 8px;background:rgba(232,188,79,.15);color:#7a5a10;border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Desvincular (encerrar hoje)">Desvincular</button>`:''}

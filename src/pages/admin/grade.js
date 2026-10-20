@@ -5,9 +5,7 @@
 
 import { confirmarModal, formularioModal } from '../../modules/dialogs.js'
 import { sb }         from '../../lib/supabase.js'
-import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
-          PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
-          calcularNivel, NIVEL_LABELS } from '../../modules/utils.js'
+import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel, PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS, calcularNivel, NIVEL_LABELS, esc } from '../../modules/utils.js'
 
 export async function renderAlunoGrade(container, page) {
   const sb = window._sb
@@ -189,7 +187,7 @@ export async function renderAlunoGrade(container, page) {
             actionHtml = `<div style="font-size:9px;color:#8a1a1a;font-weight:600;margin-top:3px">🚫 Cancelada${oc.eh_feriado?' — feriado':''}</div>`
           } else if (isAluno && !passada) {
             if (!permitida) {
-              actionHtml = `<div style="font-size:9px;color:#ccc;margin-top:3px">🔒 ${planoAluno}</div>`
+              actionHtml = `<div style="font-size:9px;color:#ccc;margin-top:3px">🔒 ${esc(planoAluno)}</div>`
             } else if (confirmado) {
               actionHtml = `<div style="font-size:9px;color:var(--dourado);font-weight:500;margin-top:3px">✓ Confirmado</div>`
             } else if (foraPrazo) {
@@ -213,7 +211,7 @@ export async function renderAlunoGrade(container, page) {
           gradeHTML += `<td style="border:1px solid rgba(212,200,158,.3);background:${bgCell};padding:5px 7px;vertical-align:top;cursor:${isAluno?'default':'pointer'}${cancelada?';opacity:.75':''}" ${!isAluno?`onclick="verDetalhesOcorrencia('${oc.id}')"`:''}">
             <div style="font-size:10px;font-weight:500;${borderCell};padding-left:4px;line-height:1.3;color:${cancelada?'#999':!permitida?'#ccc':'var(--txt)'}${cancelada?';text-decoration:line-through':''}">${NOMES[oc.modalidade]}</div>
             <div style="font-size:9px;color:var(--txt2);margin-top:1px">${oc.confirmados||0}/${oc.vagas_total}</div>
-            ${oc.professor_nome?`<div style="font-size:9px;color:var(--txt2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px" title="${oc.professor_nome}">👤 ${oc.professor_nome.split(' ')[0]}</div>`:''}
+            ${oc.professor_nome?`<div style="font-size:9px;color:var(--txt2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px" title="${esc(oc.professor_nome)}">👤 ${esc(oc.professor_nome.split(' ')[0])}</div>`:''}
             ${isFeriado&&!isAluno&&!cancelada?`<div style="font-size:9px;color:#8a6b1a;margin-top:1px">⚠ feriado</div>`:''}
             ${actionHtml}
             ${adminActions}
@@ -291,7 +289,7 @@ export async function renderAlunoGrade(container, page) {
       </div>
       <div class="content">
         ${!isAluno ? (window._gradeBarraAbas || '') : ''}
-        ${feriados?.length?`<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:9px 13px;display:flex;align-items:center;gap:8px;font-size:12px;color:#7a5a10;margin-bottom:12px"><i class="ti ti-alert-triangle" style="color:var(--dourado)"></i><span>Há feriados esta semana: ${(feriados||[]).map(f=>f.nome).join(', ')}</span></div>`:''}
+        ${feriados?.length?`<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:9px 13px;display:flex;align-items:center;gap:8px;font-size:12px;color:#7a5a10;margin-bottom:12px"><i class="ti ti-alert-triangle" style="color:var(--dourado)"></i><span>Há feriados esta semana: ${(feriados||[]).map(f=>esc(f.nome)).join(', ')}</span></div>`:''}
         ${navHtml}
         ${barraSelecaoHtml}
         ${legendaHtml}
@@ -386,10 +384,10 @@ export async function renderAlunoGrade(container, page) {
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
           <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Confirmados</div><div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--verde)">${oc.confirmados||0}/${oc.vagas_total}</div></div>
-          <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Professor</div><div style="font-size:13px;font-weight:500;color:var(--verde);margin-top:3px">${oc.professor_nome||'—'}</div></div>
+          <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Professor</div><div style="font-size:13px;font-weight:500;color:var(--verde);margin-top:3px">${esc(oc.professor_nome||'—')}</div></div>
         </div>
-        ${oc.cancelada?`<div style="background:#fceaea;border:1px solid #f5c1c1;border-radius:6px;padding:8px 12px;font-size:12px;color:#8a1a1a;margin-bottom:12px">🚫 Esta aula está cancelada${oc.eh_feriado?` (feriado: ${oc.nome_feriado})`:''}${oc.motivo_cancel?` — Motivo: ${oc.motivo_cancel}`:''}</div>`:
-          oc.eh_feriado?`<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:8px 12px;font-size:12px;color:#7a5a10;margin-bottom:12px">⚠ Esta aula cai em feriado: ${oc.nome_feriado}</div>`:''}
+        ${oc.cancelada?`<div style="background:#fceaea;border:1px solid #f5c1c1;border-radius:6px;padding:8px 12px;font-size:12px;color:#8a1a1a;margin-bottom:12px">🚫 Esta aula está cancelada${oc.eh_feriado?` (feriado: ${esc(oc.nome_feriado)})`:''}${oc.motivo_cancel?` — Motivo: ${esc(oc.motivo_cancel)}`:''}</div>`:
+          oc.eh_feriado?`<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:8px 12px;font-size:12px;color:#7a5a10;margin-bottom:12px">⚠ Esta aula cai em feriado: ${esc(oc.nome_feriado)}</div>`:''}
         ${aulaPassada?`<div style="margin-bottom:10px"><span style="font-size:10px;color:#e67e22;background:rgba(230,126,34,.1);padding:2px 8px;border-radius:10px">Aula já realizada</span></div>`:''}
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Presenças (${confs.length})</div>
@@ -399,21 +397,21 @@ export async function renderAlunoGrade(container, page) {
           <span style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500;white-space:nowrap">+ Adicionar aluno</span>
           <select id="sel-add-aluno-modal" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff;color:var(--txt);flex:1;min-width:160px">
             <option value="">— selecionar aluno —</option>
-            ${alunosDisponiveis.map(a=>`<option value="${a.id}">${a.nome}</option>`).join('')}
+            ${alunosDisponiveis.map(a=>`<option value="${a.id}">${esc(a.nome)}</option>`).join('')}
           </select>
           <button onclick="window._adicionarAlunoModal('${ocId}')" style="padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Adicionar${aulaPassada?' (débita saldo)':''}</button>
         </div>
         ${confs.length===0?'<div style="font-size:12px;color:var(--txt2);padding:10px 0">Nenhuma confirmação ainda.</div>':
           confs.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--fundo);border-radius:6px;margin-bottom:5px" id="conf-row-modal-${c.id}">
             <div style="display:flex;align-items:center;gap:8px">
-              <div style="width:24px;height:24px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:var(--verde)">${(c.aluno?.nome||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()}</div>
-              <span style="font-size:12px;font-weight:500">${c.aluno?.nome||'—'}</span>
+              <div style="width:24px;height:24px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:var(--verde)">${esc((c.aluno?.nome||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase())}</div>
+              <span style="font-size:12px;font-weight:500">${esc(c.aluno?.nome||'—')}</span>
               ${badge(statusMap[c.status]||c.status, statusBg[c.status]||'#f0ede4', statusColor[c.status]||'#5a5a4a')}
             </div>
             <div style="display:flex;gap:4px">
               <button onclick="window._setPresencaModal('${ocId}','${c.id}',true)" style="padding:3px 7px;background:#e8f4e8;color:#1a5a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Presente">✓</button>
               <button onclick="window._setPresencaModal('${ocId}','${c.id}',false)" style="padding:3px 7px;background:#fceaea;color:#8a1a1a;border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Ausente">✕</button>
-              <button onclick="window._excluirPresencaModal('${ocId}','${c.id}','${(c.aluno?.nome||'').replace(/'/g,"\\'")}')" style="padding:3px 7px;background:#f0ede4;color:#5a5a4a;border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Remover">🗑</button>
+              <button onclick="window._excluirPresencaModal(this.dataset.oc, this.dataset.id, this.dataset.nome)" data-oc="${esc(ocId)}" data-id="${esc(c.id)}" data-nome="${esc(c.aluno?.nome||'')}" style="padding:3px 7px;background:#f0ede4;color:#5a5a4a;border:none;border-radius:4px;font-size:10px;cursor:pointer" title="Remover">🗑</button>
             </div>
           </div>`).join('')
         }
