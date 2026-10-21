@@ -1,0 +1,29 @@
+# Roda a cada push e pull request. Pega, antes de publicar: onclick="…" voltando ao código (a CSP o bloqueia e o botão
+# fica morto), CPF/RG/chaves secretas no código, CSP inconsistente com a lista de hosts de imagem, e erro de sintaxe.
+name: Verificações
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Nenhum atributo de evento inline (onclick=…)
+        run: node ferramentas/verifica-handlers.mjs
+      - name: Nenhum CPF, RG ou chave secreta
+        run: node ferramentas/verifica-segredos.mjs
+      - name: CSP consistente com o código
+        run: node ferramentas/verifica-csp.mjs
+      - name: Sintaxe dos módulos
+        run: |
+          npm install --no-save acorn@8
+          node ferramentas/verifica-sintaxe.mjs
