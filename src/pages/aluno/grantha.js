@@ -5,7 +5,7 @@
  */
 
 import '../../acoes/pages-aluno-grantha.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
-import { esc, urlSegura } from '../../modules/utils.js'
+import { esc, urlSegura, imagemSegura } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 import { aplicarVocabulario } from '../../modules/vocabulario.js'
 
@@ -66,7 +66,7 @@ async function _renderLista(container, sb) {
             ${granthas.map(g => `
               <div data-h-click="pages-aluno-grantha.1" data-a-click="${esc(JSON.stringify([String(g.id)]))}"
                 style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;cursor:pointer;display:flex;gap:14px;align-items:center">
-                ${g.capa_url ? `<img src="${urlSegura(g.capa_url)}" referrerpolicy="no-referrer" style="width:56px;height:72px;object-fit:cover;border-radius:4px;flex-shrink:0">` : `<div style="width:56px;height:72px;background:var(--verde);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px"><i class="ti ti-book" aria-hidden="true"></i></div>`}
+                ${g.capa_url ? `<img src="${imagemSegura(g.capa_url)}" referrerpolicy="no-referrer" style="width:56px;height:72px;object-fit:cover;border-radius:4px;flex-shrink:0">` : `<div style="width:56px;height:72px;background:var(--verde);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px"><i class="ti ti-book" aria-hidden="true"></i></div>`}
                 <div style="flex:1;min-width:0">
                   <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--titulo)">${esc(g.titulo)}</div>
                   <div style="font-size:12px;color:var(--txt2);margin-top:2px">${esc(g.autor ? g.autor+' · ' : '')}${CATEGORIAS_LABEL[g.categoria] || esc(g.categoria) || ''}${esc(g.periodo ? ' · '+g.periodo : '')}</div>

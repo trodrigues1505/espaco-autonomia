@@ -11,7 +11,7 @@ import '../../acoes/pages-admin-asana.js'   // handlers (antes: eventos inline; 
 import { toast, esc, urlSegura } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 
-const PDFJS_VERSION = '4.7.76'
+const PDFJS_VERSION = '4.10.38'
 const PDFJS_URL     = new URL('../../../vendor/pdfjs/pdf.min.mjs', import.meta.url).href            // hospedado localmente
 const PDFJS_WORKER  = new URL('../../../vendor/pdfjs/pdf.worker.min.mjs', import.meta.url).href
 

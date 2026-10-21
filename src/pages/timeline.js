@@ -4,7 +4,7 @@
 
 import '../acoes/pages-timeline.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { confirmarModal } from '../modules/dialogs.js'
-import { toast, esc, urlSegura } from '../modules/utils.js'
+import { toast, esc, urlSegura, imagemSegura, hostPermitido, HOSTS_IMAGEM, HOSTS_MIDIA } from '../modules/utils.js'
 import { uiAnimar } from '../modules/ui.js'
 import { aplicarVocabulario } from '../modules/vocabulario.js'
 
@@ -20,7 +20,7 @@ function _tlAbrirLightbox(src) {
   lb.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;
     display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out`
   lb.innerHTML = `
-    <img src="${src}" alt="" referrerpolicy="no-referrer"
+    <img src="${imagemSegura(src)}" alt="" referrerpolicy="no-referrer"
       style="max-width:100%;max-height:90vh;border-radius:8px;object-fit:contain;
              box-shadow:0 20px 60px rgba(0,0,0,.5)">
     <button data-h-click="pages-timeline.1"
@@ -513,7 +513,7 @@ export async function renderTimeline(container, page) {
 
   function renderPostCard(post, emModeracao) {
     const fotoHtml = post.autor_foto
-      ? `<img src="${urlSegura(post.autor_foto)}" referrerpolicy="no-referrer" style="width:38px;height:38px;border-radius:50%;object-fit:cover">`
+      ? `<img src="${imagemSegura(post.autor_foto)}" referrerpolicy="no-referrer" style="width:38px;height:38px;border-radius:50%;object-fit:cover">`
       : `<div style="width:38px;height:38px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--titulo)">${esc((post.autor_nome || '?')[0].toUpperCase())}</div>`
 
     const roleBadgeMap = {
@@ -630,9 +630,9 @@ export async function renderTimeline(container, page) {
     if (!url) return ''
     if (!tipo) tipo = detectarTipoMidia(url)
 
-    if (tipo === 'imagem') {
+    if (tipo === 'imagem' && hostPermitido(url, HOSTS_IMAGEM)) {
       return `<div style="margin-top:12px;cursor:zoom-in;position:relative" data-h-click="pages-timeline.8" data-a-click="${esc(JSON.stringify([String(urlSegura(url))]))}" title="Clique para ampliar">
-        <img src="${urlSegura(url)}" referrerpolicy="no-referrer" style="width:100%;max-height:420px;object-fit:cover;display:block" loading="lazy" data-h-error="pages-timeline.9">
+        <img src="${imagemSegura(url)}" referrerpolicy="no-referrer" style="width:100%;max-height:420px;object-fit:cover;display:block" loading="lazy" data-h-error="pages-timeline.9">
         <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);border-radius:20px;padding:3px 8px;font-size:12px;color:#fff;display:flex;align-items:center;gap:4px;pointer-events:none">
           <i class="ti ti-zoom-in" style="font-size:12px"></i> ampliar
         </div>
@@ -644,8 +644,8 @@ export async function renderTimeline(container, page) {
       if (embed) {
         return `<div style="margin-top:12px"><iframe src="${embed}" style="width:100%;aspect-ratio:16/9;border:none;display:block" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`
       }
-      // Arquivo de vídeo direto (mp4/webm/ogg/mov) — sem provedor reconhecido, usa <video> nativo
-      return `<div style="margin-top:12px"><video src="${urlSegura(url)}" controls preload="metadata" style="width:100%;max-height:420px;display:block;background:#000"></video></div>`
+      // Arquivo de vídeo direto (mp4/webm/ogg/mov) de host permitido; senão cai no cartão de link (CSP media-src)
+      if (hostPermitido(url, HOSTS_MIDIA)) return `<div style="margin-top:12px"><video src="${urlSegura(url)}" controls preload="metadata" style="width:100%;max-height:420px;display:block;background:#000"></video></div>`
     }
 
     if (tipo === 'pdf') {
@@ -966,7 +966,7 @@ export async function renderTimeline(container, page) {
 
 function renderComposeBox(perfil, isAdmin, isProf) {
   const fotoHtml = perfil.foto_url
-    ? `<img src="${urlSegura(perfil.foto_url)}" referrerpolicy="no-referrer" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`
+    ? `<img src="${imagemSegura(perfil.foto_url)}" referrerpolicy="no-referrer" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`
     : `<div style="width:36px;height:36px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--titulo)">${esc(perfil.nome[0].toUpperCase())}</div>`
 
   const noticeHtml = (!isAdmin && !isProf)
@@ -980,7 +980,7 @@ function renderComposeBox(perfil, isAdmin, isProf) {
         <textarea id="tl-compose-texto" rows="3" placeholder="Compartilhe algo com a comunidade..."
           style="flex:1;border:1px solid var(--borda);border-radius:6px;padding:10px;font-size:13px;font-family:'DM Sans',sans-serif;resize:none;min-height:70px"></textarea>
       </div>
-      <input id="tl-compose-midia" type="url" placeholder="Link de imagem, vídeo (YouTube/Vimeo), PDF ou outro URL..."
+      <input id="tl-compose-midia" type="url" placeholder="Link: imagem (Imgur), vídeo (YouTube/Vimeo), PDF ou outro endereço..."
         style="width:100%;margin-top:10px;border:1px solid var(--borda);border-radius:6px;padding:8px 10px;font-size:12px;font-family:'DM Sans',sans-serif;box-sizing:border-box">
       ${noticeHtml}
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px">

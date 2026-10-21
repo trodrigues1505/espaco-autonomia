@@ -16,9 +16,9 @@ export { confirmarModal }   // compatibilidade com quem já importava daqui
 const CONTROLADOR   = 'Thiago Rodrigues do Nascimento'
 const CNPJ          = '60.456.737/0001-45'
 const EMAIL_CONTATO = 'thiago.rodrigues@espacoautonomia.com'
-const VERSAO_DOC    = '1.1'
-const VIGENCIA      = '19/10/2026'
-const VERSAO_ACEITE = 'v3'          // deve ser igual a VERSAO em lgpd.js
+const VERSAO_DOC    = '1.2'
+const VIGENCIA      = '21/10/2026'      // ajuste para a data em que você PUBLICAR esta versão
+const VERSAO_ACEITE = 'v4'          // deve ser igual a VERSAO em lgpd.js
 
 // ── Texto da política ────────────────────────────────────────
 function secao(titulo, corpo) {
@@ -60,13 +60,13 @@ export function politicaHTML() {
       <ul>
         <li><strong>Supabase:</strong> banco de dados e autenticação do app.</li>
         <li><strong>Asaas:</strong> emissão e gestão de cobranças.</li>
-        <li><strong>Google:</strong> login com Google e carregamento de fontes.</li>
-        <li><strong>GitHub Pages e redes de entrega de conteúdo (jsDelivr, Cloudflare):</strong> hospedagem e entrega do app; recebem seu endereço IP ao carregá-lo.</li>
+        <li><strong>Google:</strong> login com a sua conta Google (e a foto do seu perfil, se você a tiver).</li>
+        <li><strong>GitHub Pages:</strong> hospedagem e entrega do app. As bibliotecas, fontes e ícones que o app usa ficam no próprio endereço do app, sem redes de entrega de terceiros; o GitHub recebe seu endereço IP ao carregá-lo.</li>
         <li><strong>WhatsApp:</strong> somente se você entrar nos grupos pelos links do app, sob as regras do próprio WhatsApp.</li>
         <li><strong>Professores e equipe do espaço:</strong> acessam apenas o necessário para a função (por exemplo, presenças e contato).</li>
         <li><strong>Autoridades:</strong> quando houver obrigação legal.</li>
       </ul>
-      <p>Na Timeline, seu nome e foto aparecem para os demais participantes do app quando você publica ou comenta. Imagens e vídeos dos posts são links para serviços externos (como Imgur ou YouTube) e seguem as regras desses serviços.</p>`)}
+      <p>Na Timeline, seu nome e foto aparecem para os demais participantes do app quando você publica ou comenta. Imagens e vídeos dos posts são links para serviços externos (como Imgur ou YouTube) e seguem as regras desses serviços. Por segurança, o app só exibe imagens de serviços aprovados (Imgur, Google e o armazenamento do próprio app); outros endereços aparecem apenas como link.</p>`)}
 
     ${secao('5. Transferência internacional', `
       <p>Alguns desses fornecedores podem armazenar ou processar dados fora do Brasil. Essa transferência ocorre para executar o serviço contratado por você (art. 33, IX, da LGPD).</p>`)}
@@ -101,11 +101,18 @@ export function politicaHTML() {
       <p>O aplicativo é destinado a maiores de 18 anos. Não atendemos menores de idade. Se identificarmos um cadastro de menor, ele será excluído.</p>`)}
 
     ${secao('11. Armazenamento no navegador', `
-      <p>O app guarda no seu navegador a sessão de login, a confirmação de leitura desta política e preferências de instalação do aplicativo.
+      <p>O app guarda no seu navegador a sessão de login, a confirmação de leitura desta política e preferências de instalação do aplicativo, além de uma cópia dos arquivos do próprio app para que ele abra mais rápido e funcione com conexão instável (cache do navegador).
       Não usamos cookies de publicidade nem ferramentas próprias de análise de comportamento. Conteúdos incorporados de terceiros (como vídeos) podem seguir as regras desses serviços.</p>`)}
 
     ${secao('12. Alterações', `
       <p>Podemos atualizar esta política. Mudanças relevantes serão avisadas no app e você precisará confirmar a leitura novamente.</p>`)}
+
+    ${secao('13. O que mudou na versão 1.2', `
+      <ul>
+        <li>Bibliotecas, fontes e ícones passaram a ser entregues pelo próprio app. Deixamos de usar o Google Fonts e redes de entrega de conteúdo de terceiros, que recebiam o seu endereço IP.</li>
+        <li>O app só exibe imagens de serviços aprovados e reforçamos as medidas de segurança contra o envio indevido de dados.</li>
+        <li>Nada mudou sobre quais dados tratamos, para quê, por quanto tempo (até 2 anos) ou sobre os seus direitos.</li>
+      </ul>`)}
   </div>`
 }
 

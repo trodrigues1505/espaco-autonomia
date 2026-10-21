@@ -1,5 +1,5 @@
-// ── Espaço Autonomia — Service Worker v6 ─────────────────────
-const CACHE = 'ea-v6'
+// ── Espaço Autonomia — Service Worker v7 ─────────────────────
+const CACHE = 'ea-v7'
 const ASSETS = [
   './',
   './index.html',
@@ -41,6 +41,7 @@ const ASSETS = [
   './src/acoes/pages-professor-home.js',
   './src/acoes/pages-professor-repasse.js',
   './src/acoes/pages-timeline.js',
+  './src/antiframe.js',
   './src/data/asana_marga.js',
   './src/data/yoga_adhyayana.js',
   './src/lib/supabase.js',

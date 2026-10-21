@@ -15,13 +15,19 @@
 
 import { sb } from '../lib/supabase.js'
 
-// v3 = Política de Privacidade 1.1 (pré-cadastro e mídias de posts). Subir a versão força nova ciência de todos.
-const VERSAO = 'v3'
-const KEY    = 'lgpd_consent_v3'
+// v4 = Política de Privacidade 1.2 (bibliotecas/fontes/ícones hospedados no próprio app; imagens só de serviços aprovados).
+// v3 = 1.1 (pré-cadastro e mídias de posts). Subir a versão força nova ciência de TODOS (o histórico das anteriores fica no banco).
+const VERSAO = 'v4'
+const KEY    = 'lgpd_consent_v4'
+const CHAVES_ANTIGAS = ['lgpd_consent_v3', 'lgpd_consent_v2', 'lgpd_consent_v1']
 
 // ── Banner ───────────────────────────────────────────────────
 export function initLGPD() {
   if (!localStorage.getItem(KEY)) {
+    // Quem já aceitou uma versão anterior vê "atualizamos a política", não o texto de um visitante novo.
+    const jaAceitouAntes = CHAVES_ANTIGAS.some(k => { try { return !!localStorage.getItem(k) } catch { return false } })
+    const aviso = document.getElementById('lgpd-aviso-atualizado')
+    if (aviso) aviso.hidden = !jaAceitouAntes
     setTimeout(() => {
       // Se nesse meio-tempo o consentimento foi restaurado do banco, não exibe.
       if (!localStorage.getItem(KEY)) document.getElementById('lgpd-banner')?.classList.add('show')
@@ -68,12 +74,13 @@ export async function sincronizarConsentimentoAposLogin(userId) {
 
 // ── Chamado no logout ────────────────────────────────────────
 export function lgpdLimparLocal() {
-  try { localStorage.removeItem(KEY) } catch { /* modo privado */ }
+  try { [KEY, ...CHAVES_ANTIGAS].forEach(k => localStorage.removeItem(k)) } catch { /* modo privado */ }
 }
 
 // ── Privado ──────────────────────────────────────────────────
 function _salvarLocal(nivel, quando) {
   localStorage.setItem(KEY, JSON.stringify({ nivel, data: quando || new Date().toISOString() }))
+  try { CHAVES_ANTIGAS.forEach(k => localStorage.removeItem(k)) } catch { /* modo privado */ }   // o aceite novo substitui os antigos
 }
 
 function _lerLocal() {

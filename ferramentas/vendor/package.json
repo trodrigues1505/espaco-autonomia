@@ -1,0 +1,23 @@
+{
+  "name": "vendor-espaco-autonomia",
+  "private": true,
+  "type": "module",
+  "description": "Gera a pasta vendor/ (bibliotecas hospedadas localmente). Versões EXATAS: atualizar = editar aqui, rodar npm install e npm run build.",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "node build.mjs",
+    "checar": "node build.mjs --checar",
+    "audit": "npm audit --omit=dev --audit-level=moderate"
+  },
+  "dependencies": {
+    "@fontsource/cormorant-garamond": "5.3.0",
+    "@fontsource/dm-sans": "5.3.0",
+    "@supabase/supabase-js": "2.117.2",
+    "@tabler/icons-webfont": "3.31.0",
+    "pdfjs-dist": "4.10.38"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "subset-font": "2.4.0"
+  }
+}

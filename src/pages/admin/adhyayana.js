@@ -12,7 +12,7 @@
 
 import '../../acoes/pages-admin-adhyayana.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { confirmarModal } from '../../modules/dialogs.js'
-import { toast, esc, urlSegura } from '../../modules/utils.js'
+import { toast, esc, urlSegura, imagemSegura } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 
 // ── Lightbox de imagem (clique para ampliar) — mesmo padrão usado
@@ -24,7 +24,7 @@ function _abrirLightboxAdhy(src, alt) {
   lb.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;
     display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out`
   lb.innerHTML = `
-    <img src="${src}" alt="${alt}" referrerpolicy="no-referrer"
+    <img src="${imagemSegura(src)}" alt="${alt}" referrerpolicy="no-referrer"
       style="max-width:100%;max-height:90vh;border-radius:8px;object-fit:contain;
              box-shadow:0 20px 60px rgba(0,0,0,.5)">
     <button data-h-click="pages-admin-adhyayana.1"
@@ -186,7 +186,7 @@ export async function renderAdhyayanaAdmin(container, page) {
                         align-items:center;gap:10px;padding:11px 18px;
                         border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
               <div style="display:flex;align-items:center;gap:10px">
-                ${a.imagem_url ? `<img src="${urlSegura(a.imagem_url)}" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0">` : ''}
+                ${a.imagem_url ? `<img src="${imagemSegura(a.imagem_url)}" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0">` : ''}
                 <div>
                   <div style="font-weight:500;color:var(--txt)">${esc(a.nome)}</div>
                   ${a.nome_alternativo ? `<div style="font-size:12px;color:var(--txt2);margin-top:1px;font-style:italic">${esc(a.nome_alternativo)}</div>` : ''}
@@ -231,7 +231,7 @@ export async function renderAdhyayanaAdmin(container, page) {
                         border-bottom:1px solid rgba(212,200,158,.3);font-size:12px;
                         background:${isHoje ? 'rgba(232,188,79,.05)' : 'transparent'}">
                 <div style="display:flex;align-items:center;gap:10px">
-                  ${a.imagem_url ? `<img src="${urlSegura(a.imagem_url)}" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0">` : ''}
+                  ${a.imagem_url ? `<img src="${imagemSegura(a.imagem_url)}" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0">` : ''}
                   <div>
                     <div style="font-weight:500;color:var(--txt)">${esc(a.nome)}</div>
                     ${a.nome_alternativo ? `<div style="font-size:12px;color:var(--txt2);margin-top:1px;font-style:italic">${esc(a.nome_alternativo)}</div>` : ''}
@@ -382,7 +382,7 @@ export async function renderAdhyayanaAdmin(container, page) {
           ${a.imagem_url ? `
             <div style="position:relative;border-radius:8px;overflow:hidden;margin-bottom:12px;cursor:zoom-in"
                  data-h-click="pages-admin-adhyayana.10" data-src="${urlSegura(a.imagem_url)}" data-nome="${esc(a.nome||'')}" title="Clique para ampliar">
-              <img src="${urlSegura(a.imagem_url)}" referrerpolicy="no-referrer"
+              <img src="${imagemSegura(a.imagem_url)}" referrerpolicy="no-referrer"
                 style="width:100%;max-height:220px;object-fit:cover;display:block">
               <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);
                           border-radius:20px;padding:3px 8px;font-size:12px;color:#fff;

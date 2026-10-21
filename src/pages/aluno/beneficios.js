@@ -4,7 +4,7 @@
  */
 
 import '../../acoes/pages-aluno-beneficios.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
-import { esc, urlSegura, imprimirQuandoPronto } from '../../modules/utils.js'
+import { esc, urlSegura, imprimirQuandoPronto, imagemSegura } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 import { BENEFICIO_INTRO } from '../../modules/navigation.js'
 import { aplicarVocabulario } from '../../modules/vocabulario.js'
@@ -115,7 +115,7 @@ function _abrirLightbox(src, alt) {
   lb.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;
     display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out`
   lb.innerHTML = `
-    <img src="${src}" alt="${alt}" referrerpolicy="no-referrer"
+    <img src="${imagemSegura(src)}" alt="${alt}" referrerpolicy="no-referrer"
       style="max-width:100%;max-height:90vh;border-radius:8px;object-fit:contain;
              box-shadow:0 20px 60px rgba(0,0,0,.5)">
     <button data-h-click="pages-aluno-beneficios.2"
@@ -482,7 +482,7 @@ async function _renderYogaAdhyayana(container) {
         ${s.itens.map(item => `
           <div class="item"><div class="item-termo">${esc(item.termo || '')}</div><div class="item-desc">${esc(item.desc)}</div></div>`).join('')}
       </div>`).join('')
-    const imgTag = aula.imagem_url ? `<img src="${urlSegura(aula.imagem_url)}" alt="${esc(aula.nome)}" class="postura" referrerpolicy="no-referrer">` : ''
+    const imgTag = aula.imagem_url ? `<img src="${imagemSegura(aula.imagem_url)}" alt="${esc(aula.nome)}" class="postura" referrerpolicy="no-referrer">` : ''
     _imprimirHTML(`Yoga Adhyayana — ${aula.nome}`, `
       <h1>${esc(aula.nome)}</h1>
       ${aula.nome_alternativo ? `<p style="font-family:'Cormorant Garamond',serif;font-size:14px;font-style:italic;color:var(--txt2);margin-bottom:6px">${esc(aula.nome_alternativo)}</p>` : ''}
@@ -503,7 +503,7 @@ async function _renderYogaAdhyayana(container) {
       <div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:16px;
                   background:var(--verde);min-height:160px;cursor:zoom-in"
            data-h-click="pages-aluno-beneficios.3" data-src="${urlSegura(aula.imagem_url)}" data-nome="${esc(aula.nome)}" title="Clique para ampliar">
-        <img src="${urlSegura(aula.imagem_url)}" alt="${esc(aula.nome)}" referrerpolicy="no-referrer"
+        <img src="${imagemSegura(aula.imagem_url)}" alt="${esc(aula.nome)}" referrerpolicy="no-referrer"
           style="width:100%;max-height:240px;object-fit:cover;object-position:center center;
                  display:block;opacity:.9" data-h-error="pages-aluno-beneficios.4">
         <div style="position:absolute;bottom:0;left:0;right:0;padding:16px;
@@ -772,7 +772,7 @@ function _blocoAulaPratica(aula, secoes, sufixo) {
       <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">Faça-os devagar, sem forçar — de 30s a 1min cada āsana. Clique na imagem para ampliar.</div>
       <div style="position:relative;border-radius:8px;overflow:hidden;cursor:zoom-in"
            data-h-click="pages-aluno-beneficios.8" data-a-click="${esc(JSON.stringify([String(urlSegura(aula.link_tummee))]))}" title="Clique para ampliar">
-        <img src="${urlSegura(aula.link_tummee)}" alt="Sequência de āsanas" referrerpolicy="no-referrer"
+        <img src="${imagemSegura(aula.link_tummee)}" alt="Sequência de āsanas" referrerpolicy="no-referrer"
           style="width:100%;max-height:480px;object-fit:contain;display:block;background:var(--superficie-2)"
           data-h-error="pages-aluno-beneficios.9">
         <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);

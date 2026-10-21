@@ -4,7 +4,10 @@
   <meta charset="UTF-8">
 <!-- Content-Security-Policy. script-src 'self' (SEM 'unsafe-inline'): nenhum script inline nem atributo on*= executa;
      só código de arquivos do próprio site. connect-src restringe para onde o app pode enviar dados. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' https: data: blob:; media-src 'self' https: blob:; connect-src 'self' https://kctgcjvfsuinwlbgljdw.supabase.co https://brasilapi.com.br; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://docs.google.com https://tummee.com https://*.tummee.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://i.imgur.com https://*.googleusercontent.com https://kctgcjvfsuinwlbgljdw.supabase.co https://tummee.com https://*.tummee.com; media-src 'self' blob: https://i.imgur.com https://kctgcjvfsuinwlbgljdw.supabase.co; connect-src 'self' https://kctgcjvfsuinwlbgljdw.supabase.co https://brasilapi.com.br; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://docs.google.com https://tummee.com https://*.tummee.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <!-- Anti-clickjacking: escondida até provar que não está em um quadro (ver src/antiframe.js) -->
+  <style id="antiframe">html{display:none!important}</style>
+  <script src="./src/antiframe.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Espaço Autonomia</title>
   <!-- Fontes e ícones hospedados localmente (vendor/): nenhum terceiro recebe o IP de quem abre o app -->
@@ -117,6 +120,7 @@
 <!-- ══ MÓDULO: LGPD ════════════════════════════════════════ -->
 <div id="lgpd-banner" role="region" aria-label="Aviso de privacidade">
   <p>
+    <span id="lgpd-aviso-atualizado" hidden><strong>Atualizamos a Política de Privacidade (versão 1.2):</strong> bibliotecas, fontes e ícones agora ficam no próprio app, sem redes de terceiros, e reforçamos a segurança. Nada muda sobre quais dados usamos, por quê ou por quanto tempo. </span>
     <strong>Privacidade</strong> — Usamos seus dados (nome, e-mail, telefone, presenças, plano e pagamentos)
     para gerenciar suas aulas e cobranças, com apoio de Supabase, Asaas e Google.
     Leia a <a href="#" data-h-click="index.3">Política de Privacidade</a>
