@@ -1,14 +1,16 @@
 EDGE FUNCTIONS REVISADAS — anthropic-proxy e asaas-webhook
 ==========================================================
-Testadas no Deno 2.9.6 (55 verificações); a mesma suíte contra as versões ORIGINAIS falha em 35.
+Testadas no Deno 2.9.6 (62 verificações); a suíte de comportamento seguro contra as versões ORIGINAIS falha em 35.
 
 1) anthropic-proxy  (era: função ABERTA ao público)
    Deploy:   supabase functions deploy anthropic-proxy --no-verify-jwt
+   ANTES: rode supabase/07_ia_limite.sql no SQL Editor (limite global e atômico: 20 chamadas / 10 min por admin).
+     Sem ele a função cai num limite local por instância e registra o erro no log.
    Secrets:  GROQ_API_KEY (já existe) · ALLOWED_ORIGINS (opcional; padrão https://trodrigues1505.github.io)
              SUPABASE_URL e SUPABASE_ANON_KEY são automáticos nas Edge Functions.
    O que mudou: exige login E perfil admin (as 3 telas de IA são de admin e já enviam o token);
      limita max_tokens (4000), tamanho (60 mil caracteres/mensagem), nº de mensagens (6);
-     reconstrói as mensagens (campos extras do cliente não passam); 20 requisições/10 min por admin;
+     reconstrói as mensagens (campos extras do cliente não passam); 20 requisições/10 min por admin (GLOBAL, via banco);
      timeout de 55 s; erros sem vazar detalhes; CORS só para o seu site; falha clara sem GROQ_API_KEY.
    Teste após o deploy (deve dar 401):
      curl -s -o /dev/null -w "%{http_code}\n" -X POST https://kctgcjvfsuinwlbgljdw.supabase.co/functions/v1/anthropic-proxy \
@@ -25,5 +27,4 @@ Testadas no Deno 2.9.6 (55 verificações); a mesma suíte contra as versões OR
    Se o token atual for curto/previsível, gere um novo, atualize o secret E o painel do Asaas juntos.
 
 NÃO verificado: o formato real dos eventos do Asaas em produção (a validação aceita qualquer status em
-MAIÚSCULAS_COM_UNDERSCORE e qualquer valor numérico ≥ 0), o getUser() com JWT real do Supabase, e o limite de
-uso é por instância da função (melhor esforço; várias instâncias somam mais que 20).
+MAIÚSCULAS_COM_UNDERSCORE e qualquer valor numérico ≥ 0) e o getUser() com um JWT real do Supabase (nos testes ele é simulado).

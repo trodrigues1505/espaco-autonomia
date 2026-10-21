@@ -9,7 +9,7 @@
 // Secrets:  GROQ_API_KEY (obrigatório) · ALLOWED_ORIGINS (opcional, separados por vírgula)
 //
 // Segurança: só ADMIN autenticado; tamanho e quantidade de mensagens limitados; max_tokens limitado;
-// limite de requisições por usuário; timeout; erros sem vazar detalhes internos.
+// limite de requisições por usuário GLOBAL (RPC ia_registrar_uso; rode supabase/07_ia_limite.sql); timeout; erros sem vazar detalhes.
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -21,8 +21,8 @@ const LIMITES = {
   charsPorMensagem: 60_000,
   charsSystem: 8_000,
   corpoBytes: 400_000,
-  porJanela: 20,                   // requisições por usuário...
-  janelaMs: 10 * 60_000,           // ...a cada 10 minutos (por instância da função; melhor esforço)
+  porJanela: 20,                   // limite LOCAL (só usado se a RPC do banco não existir)...
+  janelaMs: 10 * 60_000,           // ...a cada 10 minutos, por instância da função
 }
 
 const ORIGENS = (Deno.env.get('ALLOWED_ORIGINS') ?? 'https://trodrigues1505.github.io')
@@ -92,8 +92,18 @@ serve(async (req) => {
   const { data: perfil } = await sb.from('perfis').select('tipo').eq('id', user.id).maybeSingle()
   if (perfil?.tipo !== 'admin') return json(req, { error: 'Acesso restrito a administradores' }, 403)
 
-  // 2) Limite de uso
-  if (excedeuLimite(user.id)) return json(req, { error: 'Muitas requisições. Aguarde alguns minutos.' }, 429, { 'Retry-After': '300' })
+  // 2) Limite de uso: GLOBAL e atômico no banco (supabase/07_ia_limite.sql: 20 chamadas / 10 min por admin).
+  //    Se a função SQL não existir (SQL 07 não aplicado), cai no limite local por instância e registra o erro.
+  const { data: uso, error: erroUso } = await sb.rpc('ia_registrar_uso')
+  if (erroUso) {
+    console.error('ia_registrar_uso indisponível; usando limite local:', erroUso.message)
+    if (excedeuLimite(user.id)) return json(req, { error: 'Muitas requisições. Aguarde alguns minutos.' }, 429, { 'Retry-After': '300' })
+  } else {
+    const r = Array.isArray(uso) ? uso[0] : uso
+    if (!r?.permitido) {
+      return json(req, { error: 'Muitas requisições. Aguarde alguns minutos.' }, 429, { 'Retry-After': String(r?.retry_apos_seg ?? 300) })
+    }
+  }
 
   // 3) Entrada
   const bruto = await req.text()
