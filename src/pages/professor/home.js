@@ -2,6 +2,7 @@
  * src/pages/professor/home.js
  */
 
+import '../../acoes/pages-professor-home.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { sb }         from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel, PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS, calcularNivel, NIVEL_LABELS, esc } from '../../modules/utils.js'
 import { carregarNotificacoes, renderPainelNotif, initNotifHandlers,
@@ -49,7 +50,7 @@ export async function renderProfHome(container, page) {
                 <div style="display:flex;align-items:center;gap:6px">${dot(oc.modalidade)}<strong style="font-size:13px">${NOMES[oc.modalidade]}</strong>${isProxima?badge('Próxima','rgba(232,188,79,.15)','var(--warn-fg)'):''}</div>
                 <div style="font-size:12px;color:var(--txt2);margin-top:2px">${hora} · ${oc.confirmados||0}/${oc.vagas_total} confirmados</div>
               </div>
-              <button onclick="window._ocPresencaId='${oc.id}';navigate('prof-chamada')" style="padding:5px 12px;background:${isProxima?'var(--dourado)':'var(--verde)'};color:${isProxima?'var(--verde)':'var(--bege)'};border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500">Fazer Chamada</button>
+              <button data-h-click="pages-professor-home.1" data-a-click="${esc(JSON.stringify([String(oc.id)]))}" style="padding:5px 12px;background:${isProxima?'var(--dourado)':'var(--verde)'};color:${isProxima?'var(--verde)':'var(--bege)'};border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500">Fazer Chamada</button>
             </div>`
           }).join('')
         )}
@@ -75,7 +76,7 @@ export async function renderProfHome(container, page) {
   const seletor = (ocHoje||[]).map(oc=>{
     const dt = new Date(oc.data_hora)
     const sel = oc.id === ocSelecionadaId
-    return `<button onclick="window._ocPresencaId='${oc.id}';navigate('prof-chamada')" style="padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${sel?'var(--verde)':'var(--borda)'};background:${sel?'var(--verde)':'var(--superficie)'};color:${sel?'var(--bege)':'var(--txt2)'}">${NOMES[oc.modalidade]} ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</button>`
+    return `<button data-h-click="pages-professor-home.1" data-a-click="${esc(JSON.stringify([String(oc.id)]))}" style="padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${sel?'var(--verde)':'var(--borda)'};background:${sel?'var(--verde)':'var(--superficie)'};color:${sel?'var(--bege)':'var(--txt2)'}">${NOMES[oc.modalidade]} ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</button>`
   }).join('')
 
   container.innerHTML = `
@@ -87,13 +88,13 @@ export async function renderProfHome(container, page) {
       ${(ocHoje||[]).length>1?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">${seletor}</div>`:''}
       ${ocAtual?card(
         `${NOMES[ocAtual.modalidade]} — ${new Date(ocAtual.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`,
-        `<button onclick="marcarTodosProfPresentes()" style="padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="ti ti-check" aria-hidden="true"></i> Todos presentes</button>`,
+        `<button data-h-click="pages-professor-home.2" style="padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="ti ti-check" aria-hidden="true"></i> Todos presentes</button>`,
         `<div style="padding:8px 18px;background:rgba(242,236,206,.45);font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Clique no nome para alternar presença/ausência</div>
         ${confs.length===0?'<div style="padding:16px 18px;font-size:12px;color:var(--txt2)">Nenhuma confirmação para esta aula.</div>':
           confs.map(c=>{
             const presente = c.status==='presente'
             const ausente = c.status==='ausente'
-            return `<div onclick="togglePresencaProf(this.dataset.id, this.dataset.status)" data-id="${esc(c.id)}" data-status="${esc(c.status)}" style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid rgba(212,200,158,.3);cursor:pointer;background:${presente?'rgba(232,188,79,.06)':ausente?'rgba(255,0,0,.03)':'var(--superficie)'};transition:background .15s" id="prow-${c.id}">
+            return `<div data-h-click="pages-professor-home.3" data-id="${esc(c.id)}" data-status="${esc(c.status)}" style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid rgba(212,200,158,.3);cursor:pointer;background:${presente?'rgba(232,188,79,.06)':ausente?'rgba(255,0,0,.03)':'var(--superficie)'};transition:background .15s" id="prow-${c.id}">
               <div style="display:flex;align-items:center;gap:10px">
                 <div style="width:32px;height:32px;border-radius:50%;background:${presente?'var(--dourado)':ausente?'var(--err-bg)':'rgba(31,56,31,.1)'};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:${presente?'var(--verde)':ausente?'var(--err-fg)':'var(--titulo)'}">
                   ${esc((c.aluno?.nome||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase())}

@@ -3,6 +3,7 @@
  * Grade semanal — admin e aluno
  */
 
+import '../../acoes/pages-admin-grade.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { confirmarModal, formularioModal } from '../../modules/dialogs.js'
 import { renderAgendaSemanal } from '../../modules/agenda.js'
 import { sb }         from '../../lib/supabase.js'
@@ -24,7 +25,7 @@ export async function renderAlunoGrade(container, page) {
       const barraAbasGrade = `
         <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
           ${[{id:'agenda',label:'Agenda'},{id:'grade',label:'Grade'},{id:'aulas',label:'Aulas Fixas & Avulsas'}].map(t => `
-            <button onclick="window._abaGrade='${t.id}';navigate('${page}')" style="padding:6px 16px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${abaGrade===t.id?'var(--verde)':'var(--borda)'};background:${abaGrade===t.id?'var(--verde)':'var(--superficie)'};color:${abaGrade===t.id?'var(--bege)':'var(--txt2)'}">
+            <button data-h-click="pages-admin-grade.1" data-a-click="${esc(JSON.stringify([String(t.id), String(page)]))}" style="padding:6px 16px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${abaGrade===t.id?'var(--verde)':'var(--borda)'};background:${abaGrade===t.id?'var(--verde)':'var(--superficie)'};color:${abaGrade===t.id?'var(--bege)':'var(--txt2)'}">
               ${t.label}
             </button>`).join('')}
         </div>`
@@ -208,7 +209,7 @@ export async function renderAlunoGrade(container, page) {
             } else if (lotada) {
               actionHtml = `<div style="font-size:12px;color:var(--err-vivo);margin-top:3px">Lotada</div>`
             } else {
-              actionHtml = `<button onclick="confirmarOcorrencia('${oc.id}')" style="margin-top:3px;padding:2px 7px;background:var(--dourado);color:var(--verde);border:none;border-radius:4px;font-size:12px;cursor:pointer;font-weight:500;font-family:'DM Sans',sans-serif">Confirmar</button>`
+              actionHtml = `<button data-h-click="pages-admin-grade.2" data-a-click="${esc(JSON.stringify([String(oc.id)]))}" style="margin-top:3px;padding:2px 7px;background:var(--dourado);color:var(--verde);border:none;border-radius:4px;font-size:12px;cursor:pointer;font-weight:500;font-family:'DM Sans',sans-serif">Confirmar</button>`
             }
           }
 
@@ -216,12 +217,12 @@ export async function renderAlunoGrade(container, page) {
           // estiver cancelada e ainda não tiver acontecido; checkbox de seleção
           // em massa some quando já cancelada (nada a cancelar de novo).
           const adminActions = !isAluno ? `<div style="display:flex;gap:2px;margin-top:3px;align-items:center">
-            <button onclick="event.stopPropagation();editarOcorrencia('${oc.id}')" style="padding:1px 5px;background:rgba(31,56,31,.1);color:var(--titulo);border:none;border-radius:3px;font-size:12px;cursor:pointer" title="Editar"><i class="ti ti-pencil" aria-hidden="true"></i></button>
-            <button onclick="event.stopPropagation();excluirOcorrencia('${oc.id}')" style="padding:1px 5px;background:rgba(255,0,0,.08);color:var(--err-vivo);border:none;border-radius:3px;font-size:12px;cursor:pointer" title="Excluir"><i class="ti ti-x" aria-hidden="true"></i></button>
-            ${!cancelada && !passada ? `<button onclick="event.stopPropagation();window.cancelarOcorrenciaGrade('${oc.id}',window._ocsCache['${oc.id}'])" style="padding:1px 5px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:3px;font-size:12px;cursor:pointer" title="Cancelar aula">⊘</button>
-            <input type="checkbox" class="chk-cancel-massa" ${window._ocsSelecionadas.has(oc.id)?'checked':''} onclick="event.stopPropagation();window._toggleOcSelecionada('${oc.id}')" style="margin-left:3px;cursor:pointer;width:12px;height:12px" title="Selecionar para cancelamento em massa">` : ''}
+            <button data-h-click="pages-admin-grade.5" data-a-click="${esc(JSON.stringify([String(oc.id)]))}" style="padding:1px 5px;background:rgba(31,56,31,.1);color:var(--titulo);border:none;border-radius:3px;font-size:12px;cursor:pointer" title="Editar"><i class="ti ti-pencil" aria-hidden="true"></i></button>
+            <button data-h-click="pages-admin-grade.6" data-a-click="${esc(JSON.stringify([String(oc.id)]))}" style="padding:1px 5px;background:rgba(255,0,0,.08);color:var(--err-vivo);border:none;border-radius:3px;font-size:12px;cursor:pointer" title="Excluir"><i class="ti ti-x" aria-hidden="true"></i></button>
+            ${!cancelada && !passada ? `<button data-h-click="pages-admin-grade.3" data-a-click="${esc(JSON.stringify([String(oc.id), String(oc.id)]))}" style="padding:1px 5px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:3px;font-size:12px;cursor:pointer" title="Cancelar aula">⊘</button>
+            <input type="checkbox" class="chk-cancel-massa" ${window._ocsSelecionadas.has(oc.id)?'checked':''} data-h-click="pages-admin-grade.4" data-a-click="${esc(JSON.stringify([String(oc.id)]))}" style="margin-left:3px;cursor:pointer;width:12px;height:12px" title="Selecionar para cancelamento em massa">` : ''}
           </div>` : ''
-          gradeHTML += `<td style="border:1px solid rgba(212,200,158,.3);background:${bgCell};padding:5px 7px;vertical-align:top;cursor:${isAluno?'default':'pointer'}${cancelada?';opacity:.75':''}" ${!isAluno?`onclick="verDetalhesOcorrencia('${oc.id}')"`:''}">
+          gradeHTML += `<td style="border:1px solid rgba(212,200,158,.3);background:${bgCell};padding:5px 7px;vertical-align:top;cursor:${isAluno?'default':'pointer'}${cancelada?';opacity:.75':''}" ${!isAluno?`data-h-click="pages-admin-grade.7" data-a-click="${esc(JSON.stringify([String(oc.id)]))}"`:''}">
             <div style="font-size:12px;font-weight:500;${borderCell};padding-left:4px;line-height:1.3;color:${cancelada?'var(--txt2)':!permitida?'var(--txt2)':'var(--txt)'}${cancelada?';text-decoration:line-through':''}">${NOMES[oc.modalidade]}</div>
             <div style="font-size:12px;color:var(--txt2);margin-top:1px">${oc.confirmados||0}/${oc.vagas_total}</div>
             ${oc.professor_nome?`<div style="font-size:12px;color:var(--txt2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px" title="${esc(oc.professor_nome)}"><i class="ti ti-user" aria-hidden="true"></i> ${esc(oc.professor_nome.split(' ')[0])}</div>`:''}
@@ -245,8 +246,8 @@ export async function renderAlunoGrade(container, page) {
     // Barra de seleção para cancelamento em massa (admin)
     const barraSelecaoHtml = !isAluno ? `<div id="barra-selecao-massa" style="display:none;align-items:center;gap:10px;background:var(--err-bg);border:1px solid var(--err-borda);border-radius:6px;padding:8px 14px;margin-bottom:12px">
       <span id="barra-selecao-count" style="font-size:12px;color:var(--err-fg)"></span>
-      <button onclick="window._abrirCancelamentoEmMassa()" style="padding:5px 12px;background:#8a1a1a;color:#fff;border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Cancelar selecionadas</button>
-      <button onclick="window._ocsSelecionadas.clear();window._atualizarBarraSelecao();document.querySelectorAll('.chk-cancel-massa').forEach(c=>c.checked=false)" style="padding:5px 10px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Limpar seleção</button>
+      <button data-h-click="pages-admin-grade.8" style="padding:5px 12px;background:#8a1a1a;color:#fff;border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Cancelar selecionadas</button>
+      <button data-h-click="pages-admin-grade.9" style="padding:5px 10px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Limpar seleção</button>
     </div>` : ''
 
     // Navegação de semana
@@ -258,16 +259,16 @@ export async function renderAlunoGrade(container, page) {
 
     const navHtml = `<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <button onclick="window._gradeOffset=(window._gradeOffset||0)-1;navigate('${page}')" style="padding:5px 10px;background:var(--superficie);color:var(--txt);border:1px solid var(--borda);border-radius:5px;font-size:13px;cursor:pointer"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
-        <button onclick="window._gradeOffset=0;navigate('${page}')" style="padding:5px 12px;background:${(window._gradeOffset||0)===0?'var(--verde)':'var(--superficie)'};color:${(window._gradeOffset||0)===0?'var(--bege)':'var(--txt)'};border:1px solid ${(window._gradeOffset||0)===0?'var(--verde)':'var(--borda)'};border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Hoje</button>
-        <button onclick="window._gradeOffset=(window._gradeOffset||0)+1;navigate('${page}')" style="padding:5px 10px;background:var(--superficie);color:var(--txt);border:1px solid var(--borda);border-radius:5px;font-size:13px;cursor:pointer"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+        <button data-h-click="pages-admin-grade.11" data-a-click="${esc(JSON.stringify([String(page)]))}" style="padding:5px 10px;background:var(--superficie);color:var(--txt);border:1px solid var(--borda);border-radius:5px;font-size:13px;cursor:pointer"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+        <button data-h-click="pages-admin-grade.12" data-a-click="${esc(JSON.stringify([String(page)]))}" style="padding:5px 12px;background:${(window._gradeOffset||0)===0?'var(--verde)':'var(--superficie)'};color:${(window._gradeOffset||0)===0?'var(--bege)':'var(--txt)'};border:1px solid ${(window._gradeOffset||0)===0?'var(--verde)':'var(--borda)'};border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Hoje</button>
+        <button data-h-click="pages-admin-grade.13" data-a-click="${esc(JSON.stringify([String(page)]))}" style="padding:5px 10px;background:var(--superficie);color:var(--txt);border:1px solid var(--borda);border-radius:5px;font-size:13px;cursor:pointer"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
         <span style="font-size:12px;color:var(--txt2);font-weight:500">${seg.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})} – ${dom.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})}</span>
-        ${fAtivo?`<button onclick="window._gradeFiltrosAluno={};navigate('${page}')" style="padding:4px 10px;background:var(--err-bg);color:var(--err-fg);border:1px solid var(--err-borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="ti ti-x" aria-hidden="true"></i> Limpar filtros</button>`:''}
+        ${fAtivo?`<button data-h-click="pages-admin-grade.10" data-a-click="${esc(JSON.stringify([String(page)]))}" style="padding:4px 10px;background:var(--err-bg);color:var(--err-fg);border:1px solid var(--err-borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="ti ti-x" aria-hidden="true"></i> Limpar filtros</button>`:''}
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;padding:10px 12px;background:rgba(242,236,206,.4);border:1px solid var(--borda);border-radius:7px;align-items:flex-end">
         <div style="display:flex;flex-direction:column;gap:3px">
           <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Modalidade</label>
-          <select onchange="(window._gradeFiltrosAluno=window._gradeFiltrosAluno||{}).modalidade=this.value||'';navigate('${page}')"
+          <select data-h-change="pages-admin-grade.14" data-a-change="${esc(JSON.stringify([String(page)]))}"
             style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie);color:var(--txt);cursor:pointer;min-width:130px">
             <option value="" ${!(window._gradeFiltrosAluno?.modalidade)?'selected':''}>Todas</option>
             <option value="hatha" ${window._gradeFiltrosAluno?.modalidade==='hatha'?'selected':''}>Hatha Yoga</option>
@@ -277,7 +278,7 @@ export async function renderAlunoGrade(container, page) {
         </div>
         <div style="display:flex;flex-direction:column;gap:3px">
           <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Horário</label>
-          <select onchange="(window._gradeFiltrosAluno=window._gradeFiltrosAluno||{}).horario=this.value||'';navigate('${page}')"
+          <select data-h-change="pages-admin-grade.15" data-a-change="${esc(JSON.stringify([String(page)]))}"
             style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie);color:var(--txt);cursor:pointer;min-width:100px">
             <option value="" ${!(window._gradeFiltrosAluno?.horario)?'selected':''}>Todos</option>
             ${horasUnicas.map(h=>`<option value="${h}" ${window._gradeFiltrosAluno?.horario===h?'selected':''}>${h}</option>`).join('')}
@@ -292,7 +293,7 @@ export async function renderAlunoGrade(container, page) {
     // RPCs SECURITY DEFINER que presencas.js já usa.
     const modalDetalhes = !isAluno ? modal('modal-det-oc', 'Detalhes da Aula',
       `<div id="det-oc-body">Carregando...</div>`,
-      `<button onclick="document.getElementById('modal-det-oc').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Fechar</button>`
+      `<button data-h-click="pages-admin-grade.16" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Fechar</button>`
     ) : ''
 
     container.innerHTML = `
@@ -404,7 +405,7 @@ export async function renderAlunoGrade(container, page) {
         ${aulaPassada?`<div style="margin-bottom:10px"><span style="font-size:12px;color:var(--warn-vivo);background:rgba(230,126,34,.1);padding:2px 8px;border-radius:10px">Aula já realizada</span></div>`:''}
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Presenças (${confs.length})</div>
-          <button onclick="window._marcarTodosPresentesModal('${ocId}')" style="padding:3px 10px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="ti ti-check" aria-hidden="true"></i> Todos presentes</button>
+          <button data-h-click="pages-admin-grade.20" data-a-click="${esc(JSON.stringify([String(ocId)]))}" style="padding:3px 10px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="ti ti-check" aria-hidden="true"></i> Todos presentes</button>
         </div>
         <div style="background:rgba(242,236,206,.25);border:1px solid var(--borda);border-radius:6px;padding:10px;margin-bottom:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <span style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500;white-space:nowrap">+ Adicionar aluno</span>
@@ -412,7 +413,7 @@ export async function renderAlunoGrade(container, page) {
             <option value="">— selecionar aluno —</option>
             ${alunosDisponiveis.map(a=>`<option value="${a.id}">${esc(a.nome)}</option>`).join('')}
           </select>
-          <button onclick="window._adicionarAlunoModal('${ocId}')" style="padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Adicionar${aulaPassada?' (débita saldo)':''}</button>
+          <button data-h-click="pages-admin-grade.21" data-a-click="${esc(JSON.stringify([String(ocId)]))}" style="padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Adicionar${aulaPassada?' (débita saldo)':''}</button>
         </div>
         ${confs.length===0?'<div style="font-size:12px;color:var(--txt2);padding:10px 0">Nenhuma confirmação ainda.</div>':
           confs.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--fundo);border-radius:6px;margin-bottom:5px" id="conf-row-modal-${c.id}">
@@ -422,9 +423,9 @@ export async function renderAlunoGrade(container, page) {
               ${badge(statusMap[c.status]||c.status, statusBg[c.status]||'var(--neutro-bg)', statusColor[c.status]||'var(--txt2)')}
             </div>
             <div style="display:flex;gap:4px">
-              <button onclick="window._setPresencaModal('${ocId}','${c.id}',true)" style="padding:3px 7px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Presente"><i class="ti ti-check" aria-hidden="true"></i></button>
-              <button onclick="window._setPresencaModal('${ocId}','${c.id}',false)" style="padding:3px 7px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Ausente"><i class="ti ti-x" aria-hidden="true"></i></button>
-              <button onclick="window._excluirPresencaModal(this.dataset.oc, this.dataset.id, this.dataset.nome)" data-oc="${esc(ocId)}" data-id="${esc(c.id)}" data-nome="${esc(c.aluno?.nome||'')}" style="padding:3px 7px;background:var(--neutro-bg);color:var(--txt2);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Remover"><i class="ti ti-trash" aria-hidden="true"></i></button>
+              <button data-h-click="pages-admin-grade.17" data-a-click="${esc(JSON.stringify([String(ocId), String(c.id)]))}" style="padding:3px 7px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Presente"><i class="ti ti-check" aria-hidden="true"></i></button>
+              <button data-h-click="pages-admin-grade.18" data-a-click="${esc(JSON.stringify([String(ocId), String(c.id)]))}" style="padding:3px 7px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Ausente"><i class="ti ti-x" aria-hidden="true"></i></button>
+              <button data-h-click="pages-admin-grade.19" data-oc="${esc(ocId)}" data-id="${esc(c.id)}" data-nome="${esc(c.aluno?.nome||'')}" style="padding:3px 7px;background:var(--neutro-bg);color:var(--txt2);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Remover"><i class="ti ti-trash" aria-hidden="true"></i></button>
             </div>
           </div>`).join('')
         }

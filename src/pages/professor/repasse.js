@@ -3,6 +3,7 @@
  * Previsão de repasse do professor logado + histórico de repasses pagos
  */
 
+import '../../acoes/pages-professor-repasse.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { toast, esc } from '../../modules/utils.js'
 import { renderHistoricoRepasse } from '../admin/repasse-pago.js'
 import { uiAnimar } from '../../modules/ui.js'
@@ -79,7 +80,7 @@ export async function renderProfRepasse(container, page) {
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
         <span style="font-size:12px;color:var(--txt2);font-weight:500">Mês:</span>
         ${mesesDisponiveis.map(m => `
-          <button onclick="window._prMes='${m}';navigate('prof-repasse')"
+          <button data-h-click="pages-professor-repasse.1" data-a-click="${esc(JSON.stringify([String(m)]))}"
             style="padding:4px 12px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${mesSel===m?'var(--verde)':'var(--borda)'};background:${mesSel===m?'var(--verde)':'var(--superficie)'};color:${mesSel===m?'var(--bege)':'var(--txt2)'}">
             ${nomeMes(m)}${m===agora.toISOString().slice(0,7)?' · atual':''}
           </button>`).join('')}

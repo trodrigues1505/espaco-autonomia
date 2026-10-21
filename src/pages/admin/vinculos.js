@@ -11,6 +11,7 @@
  * montada — funciona tanto embutida quanto acessada isoladamente.
  */
 
+import '../../acoes/pages-admin-vinculos.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { sb } from '../../lib/supabase.js'
 import { toast, badge, card, modal, fi, inputStyle, esc } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
@@ -66,8 +67,8 @@ export async function renderVinculos(container, page) {
     <div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.3);border-radius:6px;padding:9px 12px;font-size:12px;color:var(--warn-fg)">
       Se o aluno já tiver um vínculo em aberto, ele será encerrado automaticamente um dia antes desta data de início.
     </div>`,
-    `<button onclick="document.getElementById('modal-novo-vinculo').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
-     <button onclick="salvarNovoVinculo()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Vincular</button>`
+    `<button data-h-click="pages-admin-vinculos.1" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+     <button data-h-click="pages-admin-vinculos.2" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Vincular</button>`
   )
 
   const modalEditar = modal('modal-editar-vinculo', 'Editar Vínculo',
@@ -81,14 +82,14 @@ export async function renderVinculos(container, page) {
       ${fi('', 'Data de fim', `<input type="date" id="ev-data-fim" ${inputStyle}>`)}
     </div>
     ${fi('', 'Observação (opcional)', `<textarea id="ev-obs" rows="2" ${inputStyle}></textarea>`)}`,
-    `<button onclick="document.getElementById('modal-editar-vinculo').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
-     <button onclick="salvarEdicaoVinculo()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Salvar</button>`
+    `<button data-h-click="pages-admin-vinculos.3" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+     <button data-h-click="pages-admin-vinculos.4" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Salvar</button>`
   )
 
   container.innerHTML = `
     <div class="topbar">
       <div class="topbar-t">Vínculos Professor × Aluno</div>
-      <button onclick="document.getElementById('modal-novo-vinculo').style.display='flex'" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-link-plus"></i> Novo Vínculo</button>
+      <button data-h-click="pages-admin-vinculos.8" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-link-plus"></i> Novo Vínculo</button>
     </div>
     <div class="content">
       <div style="background:rgba(31,56,31,.04);border:1px solid rgba(31,56,31,.12);border-radius:6px;padding:9px 13px;font-size:12px;color:var(--titulo);margin-bottom:12px">
@@ -98,17 +99,17 @@ export async function renderVinculos(container, page) {
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:flex-end">
         <div style="display:flex;flex-direction:column;gap:3px">
           <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Professor</label>
-          <select onchange="window._vincFiltroProf=this.value;window._rerenderVinculos()" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie)">
+          <select data-h-change="pages-admin-vinculos.9" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie)">
             <option value="" ${!filtroProf?'selected':''}>Todos</option>
             ${professores.map(p=>`<option value="${p.id}" ${filtroProf===p.id?'selected':''}>${esc(p.nome)}</option>`).join('')}
           </select>
         </div>
         <div style="display:flex;flex-direction:column;gap:3px">
           <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Buscar aluno</label>
-          <input id="input-busca-vinc" value="${esc(buscaAluno)}" placeholder="Nome do aluno..." oninput="window._vincBusca=this.value;window._rerenderVinculos()" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;width:180px">
+          <input id="input-busca-vinc" value="${esc(buscaAluno)}" placeholder="Nome do aluno..." data-h-input="pages-admin-vinculos.10" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;width:180px">
         </div>
         <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--txt2);cursor:pointer;align-self:flex-end;padding:6px 0">
-          <input type="checkbox" ${somenteAtuais?'checked':''} onchange="window._vincSomenteAtuais=this.checked;window._rerenderVinculos()" style="accent-color:var(--verde)">
+          <input type="checkbox" ${somenteAtuais?'checked':''} data-h-change="pages-admin-vinculos.11" style="accent-color:var(--verde)">
           Mostrar só vínculos em aberto
         </label>
       </div>
@@ -126,9 +127,9 @@ export async function renderVinculos(container, page) {
               <span>${emAberto?badge('Atual','var(--ok-bg)','var(--ok-fg)'):`<span style="font-size:12px;color:var(--txt2)">${fmtData(v.data_fim)}</span>`}</span>
               <span style="font-size:12px;color:var(--txt2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc((v.observacao||'').replace(/"/g,'&quot;'))}">${esc(v.observacao||'—')}</span>
               <div style="display:flex;gap:4px">
-                <button onclick="abrirEditarVinculo('${v.id}')" style="padding:3px 8px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Editar datas"><i class="ti ti-pencil" aria-hidden="true"></i></button>
-                ${emAberto?`<button onclick="confirmarDesvincular('${v.id}')" style="padding:3px 8px;background:rgba(232,188,79,.15);color:var(--warn-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Desvincular (encerrar hoje)">Desvincular</button>`:''}
-                <button onclick="confirmarExcluirVinculo('${v.id}')" style="padding:3px 8px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Excluir registro"><i class="ti ti-x" aria-hidden="true"></i></button>
+                <button data-h-click="pages-admin-vinculos.6" data-a-click="${esc(JSON.stringify([String(v.id)]))}" style="padding:3px 8px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Editar datas"><i class="ti ti-pencil" aria-hidden="true"></i></button>
+                ${emAberto?`<button data-h-click="pages-admin-vinculos.5" data-a-click="${esc(JSON.stringify([String(v.id)]))}" style="padding:3px 8px;background:rgba(232,188,79,.15);color:var(--warn-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Desvincular (encerrar hoje)">Desvincular</button>`:''}
+                <button data-h-click="pages-admin-vinculos.7" data-a-click="${esc(JSON.stringify([String(v.id)]))}" style="padding:3px 8px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Excluir registro"><i class="ti ti-x" aria-hidden="true"></i></button>
               </div>
             </div>`
           }).join('')
@@ -146,7 +147,7 @@ export async function renderVinculos(container, page) {
           </div>
         </div>
         <div style="padding:0 20px 16px;display:flex;justify-content:flex-end;gap:8px">
-          <button onclick="document.getElementById('modal-confirmar-vinc').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+          <button data-h-click="pages-admin-vinculos.12" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
           <button id="btn-confirmar-vinc" style="padding:7px 14px;background:#c0392b;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Confirmar</button>
         </div>
       </div>

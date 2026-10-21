@@ -2,6 +2,7 @@
  * src/pages/admin/alunos.js
  */
 
+import '../../acoes/pages-admin-alunos.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { confirmarModal } from '../../modules/dialogs.js'
 import { sb }         from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
@@ -51,8 +52,8 @@ function montarListaAlunosHTML(alunos, saldoPorAluno) {
           <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:${saldoCor}">${saldoLabel}</span>
           <span style="font-size:12px;color:${vencida?'var(--err-vivo)':'var(--txt2)'}">${mat?.fim?new Date(mat.fim+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):vencida?'Vencida':'—'}</span>
           <div style="display:flex;gap:4px">
-            <button onclick="editarAluno('${a.id}')" style="padding:3px 10px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:12px;cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif">Editar</button>
-            <button data-nome="${esc(a.nome)}" onclick="confirmarExcluirAluno('${a.id}', this.dataset.nome)" style="padding:3px 8px;background:transparent;border:1px solid var(--err-borda);border-radius:5px;font-size:12px;cursor:pointer;color:var(--err-vivo);font-family:'DM Sans',sans-serif" title="Remover aluno (volta a visitante)"><i class="ti ti-x" aria-hidden="true"></i></button>
+            <button data-h-click="pages-admin-alunos.1" data-a-click="${esc(JSON.stringify([String(a.id)]))}" style="padding:3px 10px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:12px;cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif">Editar</button>
+            <button data-nome="${esc(a.nome)}" data-h-click="pages-admin-alunos.2" data-a-click="${esc(JSON.stringify([String(a.id)]))}" style="padding:3px 8px;background:transparent;border:1px solid var(--err-borda);border-radius:5px;font-size:12px;cursor:pointer;color:var(--err-vivo);font-family:'DM Sans',sans-serif" title="Remover aluno (volta a visitante)"><i class="ti ti-x" aria-hidden="true"></i></button>
           </div>
         </div>`
       }).join('')
@@ -79,7 +80,7 @@ function montarListaVisitantesHTML(visitantes) {
           <span style="font-size:12px;color:var(--txt2)">${esc(v.telefone||'—')}</span>
           <span style="font-size:12px;color:var(--txt2)">${fmtDataHora(v.criado_em)}</span>
           <div>
-            <button onclick="abrirPromoverVisitante('${v.id}')" style="padding:4px 10px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap"><i class="ti ti-arrow-up" aria-hidden="true"></i> Promover a Aluno</button>
+            <button data-h-click="pages-admin-alunos.3" data-a-click="${esc(JSON.stringify([String(v.id)]))}" style="padding:4px 10px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap"><i class="ti ti-arrow-up" aria-hidden="true"></i> Promover a Aluno</button>
           </div>
         </div>`
       }).join('')
@@ -149,14 +150,14 @@ export async function renderAlunos(container, page) {
     ${fi('','E-mail',`<input type="email" id="ca-email" ${inputStyle} placeholder="email@exemplo.com">`)}
     ${fi('','Telefone',`<input type="tel" id="ca-tel" ${inputStyle} placeholder="(11) 99999-9999">`)}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      ${fi('','Plano',`<select id="ca-plano" ${inputStyle} onchange="updateValorPlano()">
+      ${fi('','Plano',`<select id="ca-plano" ${inputStyle} data-h-change="pages-admin-alunos.4">
         <option value="brahma">Brahma — 1× por semana — R$100/mês</option>
         <option value="shiva_1x">Shiva 1x — 1× por semana — R$150/mês</option>
         <option value="shiva_2x">Shiva 2x — 2× por semana — R$200/mês</option>
         <option value="vishnu_2x">Vishnu 2x — 2× por semana — R$250/mês</option>
         <option value="vishnu_livre">Vishnu Livre — uso livre — R$300/mês</option>
       </select>`)}
-      ${fi('','Aulas/semana',`<select id="ca-opcao" ${inputStyle} onchange="updateValorPlano()">
+      ${fi('','Aulas/semana',`<select id="ca-opcao" ${inputStyle} data-h-change="pages-admin-alunos.4">
         <option value="1">1× por semana</option>
         <option value="2">2× por semana</option>
         <option value="99">Uso livre</option>
@@ -171,14 +172,14 @@ export async function renderAlunos(container, page) {
     <div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.3);border-radius:6px;padding:10px;font-size:12px;color:var(--warn-fg)">
       <i class="ti ti-alert-triangle" aria-hidden="true"></i> O aluno precisa entrar no app pelo menos uma vez com Google usando este e-mail <strong>antes</strong> de ser cadastrado aqui — o login cria o registro de autenticação necessário. Se ele já é visitante no app, use a aba <strong>Visitantes (Leads)</strong> para promover diretamente.
     </div>`,
-    `<button onclick="document.getElementById('modal-cad-aluno').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
-     <button onclick="salvarNovoAluno()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Cadastrar</button>`
+    `<button data-h-click="pages-admin-alunos.5" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+     <button data-h-click="pages-admin-alunos.6" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Cadastrar</button>`
   )
 
   const modalEditar = modal('modal-edit-aluno', 'Editar Aluno',
     `<div id="edit-aluno-body">Carregando...</div>`,
-    `<button onclick="document.getElementById('modal-edit-aluno').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
-     <button onclick="salvarEdicaoAluno()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Salvar</button>`
+    `<button data-h-click="pages-admin-alunos.7" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+     <button data-h-click="pages-admin-alunos.8" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Salvar</button>`
   )
 
   const modalPromover = modal('modal-promover-visitante', 'Promover Visitante a Aluno',
@@ -189,14 +190,14 @@ export async function renderAlunos(container, page) {
     </div>
     ${fi('','Telefone',`<input type="tel" id="pv-tel" ${inputStyle} placeholder="(11) 99999-9999">`)}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      ${fi('','Plano',`<select id="pv-plano" ${inputStyle} onchange="updateValorPromocao()">
+      ${fi('','Plano',`<select id="pv-plano" ${inputStyle} data-h-change="pages-admin-alunos.9">
         <option value="brahma">Brahma — 1× por semana — R$100/mês</option>
         <option value="shiva_1x">Shiva 1x — 1× por semana — R$150/mês</option>
         <option value="shiva_2x">Shiva 2x — 2× por semana — R$200/mês</option>
         <option value="vishnu_2x">Vishnu 2x — 2× por semana — R$250/mês</option>
         <option value="vishnu_livre">Vishnu Livre — uso livre — R$300/mês</option>
       </select>`)}
-      ${fi('','Aulas/semana',`<select id="pv-opcao" ${inputStyle} onchange="updateValorPromocao()">
+      ${fi('','Aulas/semana',`<select id="pv-opcao" ${inputStyle} data-h-change="pages-admin-alunos.9">
         <option value="1">1× por semana</option>
         <option value="2">2× por semana</option>
         <option value="99">Uso livre</option>
@@ -208,14 +209,14 @@ export async function renderAlunos(container, page) {
       ${professores.map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('')}
     </select>`)}
     ${fi('','ID no Asaas (opcional)',`<input type="text" id="pv-asaas" ${inputStyle} placeholder="cus_...">`)}`,
-    `<button onclick="document.getElementById('modal-promover-visitante').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
-     <button onclick="salvarPromocaoVisitante()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Promover a Aluno</button>`
+    `<button data-h-click="pages-admin-alunos.10" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+     <button data-h-click="pages-admin-alunos.11" data-acao="salvar-promocao-visitante" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Promover a Aluno</button>`
   )
 
   const barraAbas = `
     <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
       ${ABAS.map(t => `
-        <button onclick="window.trocarAbaAlunos('${t.id}')" style="padding:6px 16px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${aba===t.id?t.cor:'var(--borda)'};background:${aba===t.id?t.cor:'#fff'};color:${aba===t.id?'var(--bege)':'var(--txt2)'}">
+        <button data-h-click="pages-admin-alunos.12" data-a-click="${esc(JSON.stringify([String(t.id)]))}" style="padding:6px 16px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${aba===t.id?t.cor:'var(--borda)'};background:${aba===t.id?t.cor:'#fff'};color:${aba===t.id?'var(--bege)':'var(--txt2)'}">
           ${t.label}${t.id==='visitantes'&&visitantesTodos.length>0?' · '+visitantesTodos.length:''}
         </button>
       `).join('')}
@@ -226,8 +227,8 @@ export async function renderAlunos(container, page) {
     <div class="topbar">
       <div class="topbar-t">Alunos</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        ${aba==='alunos'||aba==='visitantes'?`<input id="input-busca-aluno" placeholder="Buscar..." value="${esc(busca)}" oninput="window.filtrarAlunosDebounced(this.value)" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;width:140px;font-family:'DM Sans',sans-serif;outline:none">`:''}
-        ${aba==='alunos'?`<select onchange="window._filtroPlanoAlunos=this.value;window.aplicarFiltroAlunos()" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;background:var(--superficie);color:var(--txt)">
+        ${aba==='alunos'||aba==='visitantes'?`<input id="input-busca-aluno" placeholder="Buscar..." value="${esc(busca)}" data-h-input="pages-admin-alunos.13" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;width:140px;font-family:'DM Sans',sans-serif;outline:none">`:''}
+        ${aba==='alunos'?`<select data-h-change="pages-admin-alunos.14" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;background:var(--superficie);color:var(--txt)">
           <option value="" ${!filtroPlanok?'selected':''}>Todos os planos</option>
           <option value="brahma"       ${filtroPlanok==='brahma'      ?'selected':''}>Brahma</option>
           <option value="shiva_1x"     ${filtroPlanok==='shiva_1x'    ?'selected':''}>Shiva 1x</option>
@@ -235,8 +236,8 @@ export async function renderAlunos(container, page) {
           <option value="vishnu_2x"    ${filtroPlanok==='vishnu_2x'   ?'selected':''}>Vishnu 2x</option>
           <option value="vishnu_livre" ${filtroPlanok==='vishnu_livre'?'selected':''}>Vishnu Livre</option>
         </select>`:''}
-        ${aba==='alunos'?`<button onclick="window.executarCreditoMensal()" title="Gera o crédito de aulas do mês atual para todos os alunos com matrícula ativa. É seguro rodar mais de uma vez — alunos que já têm o crédito deste mês não são duplicados." style="padding:6px 13px;background:var(--superficie);color:var(--titulo);border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-refresh"></i> Creditar aulas do mês</button>`:''}
-        ${aba==='alunos'?`<button onclick="document.getElementById('modal-cad-aluno').style.display='flex'" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-user-plus"></i> Cadastrar</button>`:''}
+        ${aba==='alunos'?`<button data-h-click="pages-admin-alunos.15" data-acao="credito-mensal" title="Gera o crédito de aulas do mês atual para todos os alunos com matrícula ativa. É seguro rodar mais de uma vez — alunos que já têm o crédito deste mês não são duplicados." style="padding:6px 13px;background:var(--superficie);color:var(--titulo);border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-refresh"></i> Creditar aulas do mês</button>`:''}
+        ${aba==='alunos'?`<button data-h-click="pages-admin-alunos.16" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-user-plus"></i> Cadastrar</button>`:''}
       </div>
     </div>
     <div class="content">
@@ -253,7 +254,7 @@ export async function renderAlunos(container, page) {
           <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--ok-fg)">R$${(todos||[]).reduce((s,a)=>{const m=(a.matriculas||[]).find(m=>m.ativa);if(!m) return s; const desc = (m.desconto_fixo||0) + (m.desconto_avulso_meses>m.desconto_avulso_usado ? (m.desconto_avulso_valor||0) : 0); return s+Math.max(0,(m.valor_mensal||0)-desc)},0).toFixed(0)}</div>
           <div style="font-size:12px;color:var(--txt2);margin-top:2px">soma das mensalidades líquidas</div>
         </div>
-        <div id="card-sem-asaas" onclick="window.toggleFiltroSemAsaas()" title="Clique para filtrar a lista pelos alunos sem Asaas vinculado" style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:box-shadow .15s;box-shadow:${filtroSemAsaas?'0 0 0 2px var(--warn-vivo) inset':'none'}">
+        <div id="card-sem-asaas" data-h-click="pages-admin-alunos.17" title="Clique para filtrar a lista pelos alunos sem Asaas vinculado" style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:box-shadow .15s;box-shadow:${filtroSemAsaas?'0 0 0 2px var(--warn-vivo) inset':'none'}">
           <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Sem Asaas</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;color:var(--warn-vivo)">${(todos||[]).filter(a=>!a.asaas_customer_id).length}</div>
           <div style="font-size:12px;color:var(--txt2);margin-top:2px">não vinculados · clique p/ filtrar</div>
@@ -265,7 +266,7 @@ export async function renderAlunos(container, page) {
           </div>
           <div style="font-size:12px;color:var(--txt2);margin-top:2px">planos vencendo</div>
         </div>
-        <div id="card-visitantes" onclick="window.trocarAbaAlunos('visitantes')" title="Clique para ver os visitantes (leads)" style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:box-shadow .15s">
+        <div id="card-visitantes" data-h-click="pages-admin-alunos.18" title="Clique para ver os visitantes (leads)" style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:box-shadow .15s">
           <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Visitantes (Leads)</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;color:var(--info-fg)">${visitantesTodos.length}</div>
           <div style="font-size:12px;color:var(--txt2);margin-top:2px">usando o app · clique p/ ver</div>
@@ -277,7 +278,7 @@ export async function renderAlunos(container, page) {
 
       ${aba==='alunos'?`
       <div style="margin-bottom:14px">
-        <button onclick="window.toggleDistribPlano()" style="width:100%;text-align:left;background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:10px 18px;font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px">
+        <button data-h-click="pages-admin-alunos.19" style="width:100%;text-align:left;background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:10px 18px;font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px">
           <i id="icon-toggle-distrib" class="ti ti-chevron-${distribAberta?'down':'right'}" style="font-size:13px"></i> Distribuição por Plano
         </button>
         <div id="distribuicao-plano-wrap" data-aberto="${distribAberta?'true':'false'}" style="max-height:${distribAberta?'2000px':'0px'};overflow:hidden;transition:max-height .3s ease">
@@ -331,7 +332,7 @@ export async function renderAlunos(container, page) {
           </div>
         </div>
         <div style="padding:0 20px 16px;display:flex;justify-content:flex-end;gap:8px">
-          <button onclick="document.getElementById('modal-excluir-aluno').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+          <button data-h-click="pages-admin-alunos.20" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
           <button id="btn-confirmar-exclusao" style="padding:7px 14px;background:#c0392b;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Remover</button>
         </div>
       </div>
@@ -438,7 +439,7 @@ export async function renderAlunos(container, page) {
   window.executarCreditoMensal = async function() {
     if (!(await confirmarModal({ titulo: 'Gerar crédito do mês?', texto: 'Isso vai gerar o crédito de aulas do mês atual para todos os alunos com matrícula ativa. Alunos que já têm o crédito deste mês não serão duplicados. Continuar?', confirmar: 'Gerar crédito', perigo: false }))) return
 
-    const btn = document.querySelector('button[onclick="window.executarCreditoMensal()"]')
+    const btn = document.querySelector('button[data-acao="credito-mensal"]')
     const btnHtmlOriginal = btn ? btn.innerHTML : null
     if (btn) { btn.disabled = true; btn.innerHTML = 'Creditando...' }
 
@@ -541,7 +542,7 @@ export async function renderAlunos(container, page) {
     const asaasNovo = document.getElementById('pv-asaas')?.value.trim() || null
     if (!visitanteId) { toast('Erro: visitante não identificado'); return }
 
-    const btn = document.querySelector('#modal-promover-visitante button[onclick="salvarPromocaoVisitante()"]')
+    const btn = document.querySelector('#modal-promover-visitante button[data-acao="salvar-promocao-visitante"]')
     if (btn) { btn.disabled = true; btn.textContent = 'Promovendo...' }
 
     try {
@@ -608,7 +609,7 @@ export async function renderAlunos(container, page) {
         ${fi('','Telefone',`<input type="tel" id="ea-tel" ${inputStyle} value="${esc(a.telefone)}" placeholder="(11) 99999-9999">`)}
         <div style="font-size:12px;color:var(--txt2);margin-top:4px">E-mail: <strong>${esc(a.email)}</strong> (não editável — usado para login)</div>
       </div>
-      ${fi('','Plano',`<select id="ea-plano" ${inputStyle} onchange="updateValorEdicao()">
+      ${fi('','Plano',`<select id="ea-plano" ${inputStyle} data-h-change="pages-admin-alunos.21">
         <option value="brahma" ${mat?.plano_tipo==='brahma'?'selected':''}>Brahma</option>
         <option value="shiva_1x" ${mat?.plano_tipo==='shiva_1x'?'selected':''}>Shiva 1x</option>
         <option value="shiva_2x" ${mat?.plano_tipo==='shiva_2x'?'selected':''}>Shiva 2x</option>
@@ -617,7 +618,7 @@ export async function renderAlunos(container, page) {
       </select>`)}
       <div style="font-size:12px;color:var(--txt2);margin:-6px 0 12px">
         Professor responsável agora é gerenciado na aba
-        <a href="#" onclick="document.getElementById('modal-edit-aluno').style.display='none';window._abaAlunos='vinculos';navigate('alunos');return false" style="color:var(--titulo);text-decoration:underline;text-underline-offset:2px">Vínculos</a>.
+        <a href="#" data-h-click="pages-admin-alunos.22" style="color:var(--titulo);text-decoration:underline;text-underline-offset:2px">Vínculos</a>.
       </div>
       ${fi('','Valor mensal (R$)',`<input type="number" id="ea-valor" ${inputStyle} value="${mat?.valor_mensal||0}">`)}
       ${fi('','Vencimento',`<input type="date" id="ea-fim" ${inputStyle} value="${mat?.fim||''}">`)}
@@ -656,7 +657,7 @@ export async function renderAlunos(container, page) {
             <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Motivo</label>
             <input type="text" id="ea-credito-motivo" placeholder="Ex: aulas a repor de maio" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
-          <button onclick="creditarAulasManual('${a.id}')" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Creditar</button>
+          <button data-h-click="pages-admin-alunos.23" data-a-click="${esc(JSON.stringify([String(a.id)]))}" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Creditar</button>
         </div>
       </div>
     `

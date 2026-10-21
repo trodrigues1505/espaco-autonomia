@@ -3,6 +3,7 @@
  * Configurações do sistema
  */
 
+import '../../acoes/pages-admin-config.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { sb }         from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel,
           PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS,
@@ -76,8 +77,8 @@ export async function renderConfig(container, page) {
         </div>
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
-        <button onclick="salvarConfig()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500"><i class="ti ti-device-floppy"></i>Salvar configurações</button>
-        <button onclick="sincronizarFeriados()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--superficie);color:var(--titulo);border:1px solid var(--borda);border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500"><i class="ti ti-calendar-event"></i>Sincronizar Feriados <span id="sync-feriado-status"></span></button>
+        <button data-h-click="pages-admin-config.1" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500"><i class="ti ti-device-floppy"></i>Salvar configurações</button>
+        <button data-h-click="pages-admin-config.2" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--superficie);color:var(--titulo);border:1px solid var(--borda);border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500"><i class="ti ti-calendar-event"></i>Sincronizar Feriados <span id="sync-feriado-status"></span></button>
       </div>
 
       <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
@@ -90,8 +91,8 @@ export async function renderConfig(container, page) {
           A chave de API do Asaas fica guardada com segurança no servidor — não é mais necessário informá-la aqui.
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <button onclick="previewImportAsaas()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--superficie);color:var(--titulo);border:1px solid var(--borda);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500"><i class="ti ti-eye" aria-hidden="true"></i> Pré-visualizar</button>
-          <button onclick="executarImportAsaas()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500"><i class="ti ti-arrow-down" aria-hidden="true"></i> Importar alunos</button>
+          <button data-h-click="pages-admin-config.3" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--superficie);color:var(--titulo);border:1px solid var(--borda);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500"><i class="ti ti-eye" aria-hidden="true"></i> Pré-visualizar</button>
+          <button data-h-click="pages-admin-config.4" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500"><i class="ti ti-arrow-down" aria-hidden="true"></i> Importar alunos</button>
           <span id="asaas-status" style="font-size:12px;color:var(--txt2)"></span>
         </div>
         <div id="asaas-preview" style="margin-top:12px"></div>

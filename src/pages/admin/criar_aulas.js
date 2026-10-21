@@ -3,6 +3,7 @@
  * Criar aulas fixas e avulsas
  */
 
+import '../../acoes/pages-admin-criar_aulas.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { confirmarModal, formularioModal } from '../../modules/dialogs.js'
 import { sb }         from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel, PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS, calcularNivel, NIVEL_LABELS, esc } from '../../modules/utils.js'
@@ -85,11 +86,11 @@ export async function renderCriarAulas(container, page) {
         <span>${statusBadge}</span>
         <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-start">
           ${geradoBadge}
-          <button onclick="gerarOcorrenciasAula('${a.id}')" style="padding:2px 8px;background:rgba(31,56,31,.08);color:var(--titulo);border:1px solid rgba(31,56,31,.2);border-radius:4px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">${nFut>0?'<i class="ti ti-refresh" aria-hidden="true"></i> Regerar':jaGerou?'<i class="ti ti-refresh" aria-hidden="true"></i> Regerar':'<i class="ti ti-player-play" aria-hidden="true"></i> Gerar'}</button>
+          <button data-h-click="pages-admin-criar_aulas.1" data-a-click="${esc(JSON.stringify([String(a.id)]))}" style="padding:2px 8px;background:rgba(31,56,31,.08);color:var(--titulo);border:1px solid rgba(31,56,31,.2);border-radius:4px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">${nFut>0?'<i class="ti ti-refresh" aria-hidden="true"></i> Regerar':jaGerou?'<i class="ti ti-refresh" aria-hidden="true"></i> Regerar':'<i class="ti ti-player-play" aria-hidden="true"></i> Gerar'}</button>
         </div>
         <div style="display:flex;gap:3px">
-          <button onclick="editarAula('${a.id}')" style="padding:3px 7px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Editar"><i class="ti ti-pencil" aria-hidden="true"></i></button>
-          <button onclick="excluirAula('${a.id}')" style="padding:3px 7px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Excluir"><i class="ti ti-x" aria-hidden="true"></i></button>
+          <button data-h-click="pages-admin-criar_aulas.2" data-a-click="${esc(JSON.stringify([String(a.id)]))}" style="padding:3px 7px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Editar"><i class="ti ti-pencil" aria-hidden="true"></i></button>
+          <button data-h-click="pages-admin-criar_aulas.3" data-a-click="${esc(JSON.stringify([String(a.id)]))}" style="padding:3px 7px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Excluir"><i class="ti ti-x" aria-hidden="true"></i></button>
         </div>
       </div>`
     }
@@ -105,7 +106,7 @@ export async function renderCriarAulas(container, page) {
     const modalCriar = modal('modal-criar-aula', 'Nova Aula',
       `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         ${fi('','Modalidade',`<select id="na-mod" ${inputStyle}><option value="hatha">Hatha Yoga</option><option value="acro">Acro Yoga</option><option value="raja">Raja Yoga</option></select>`)}
-        ${fi('','Tipo',`<select id="na-tipo" ${inputStyle} onchange="toggleTipoAula()"><option value="fixa">Fixa (recorrente)</option><option value="avulsa">Avulsa (única)</option></select>`)}
+        ${fi('','Tipo',`<select id="na-tipo" ${inputStyle} data-h-change="pages-admin-criar_aulas.4"><option value="fixa">Fixa (recorrente)</option><option value="avulsa">Avulsa (única)</option></select>`)}
       </div>
       <div id="na-dias-wrap">
         ${fi('','Dias da semana',`<div style="display:flex;flex-wrap:wrap;gap:6px">${diasCheckboxes}</div>`)}
@@ -129,8 +130,8 @@ export async function renderCriarAulas(container, page) {
         ${fi('','Professor',`<select id="na-prof" ${inputStyle}>${profsOptions}</select>`)}
       </div>
       <div id="na-feriado-warn" style="display:none;background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--warn-fg)"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Data coincide com feriado. Verifique antes de confirmar.</div>`,
-      `<button onclick="document.getElementById('modal-criar-aula').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
-       <button onclick="salvarNovaAula()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Criar Aula</button>`
+      `<button data-h-click="pages-admin-criar_aulas.5" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+       <button data-h-click="pages-admin-criar_aulas.6" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Criar Aula</button>`
     )
 
     const modalGerar = modal('modal-gerar', 'Gerar Ocorrências',
@@ -139,16 +140,16 @@ export async function renderCriarAulas(container, page) {
         ${fi('','De',`<input type="date" id="ger-de" ${inputStyle}>`)}
         ${fi('','Até',`<input type="date" id="ger-ate" ${inputStyle}>`)}
       </div>`,
-      `<button onclick="document.getElementById('modal-gerar').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
-       <button onclick="executarGerarOcorrencias()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Gerar</button>`
+      `<button data-h-click="pages-admin-criar_aulas.7" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+       <button data-h-click="pages-admin-criar_aulas.8" data-acao="gerar-ocorrencias" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Gerar</button>`
     )
 
     container.innerHTML = `
       <div class="topbar">
         <div class="topbar-t">Criar Aulas</div>
         <div style="display:flex;gap:6px">
-          ${[...aulasComOcs].filter ? aulas.filter(a=>a.tipo==='fixa'&&a.ativa&&!ocsFuturas[a.id]).length > 0 ? `<button onclick="gerarTodasPendentes()" style="padding:6px 13px;background:var(--superficie);color:var(--titulo);border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="ti ti-player-play" aria-hidden="true"></i> Gerar pendentes (${aulas.filter(a=>a.tipo==='fixa'&&a.ativa&&!ocsFuturas[a.id]).length})</button>` : '' : ''}
-          <button onclick="document.getElementById('modal-criar-aula').style.display='flex'" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-plus"></i> Nova Aula</button>
+          ${[...aulasComOcs].filter ? aulas.filter(a=>a.tipo==='fixa'&&a.ativa&&!ocsFuturas[a.id]).length > 0 ? `<button data-h-click="pages-admin-criar_aulas.9" style="padding:6px 13px;background:var(--superficie);color:var(--titulo);border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="ti ti-player-play" aria-hidden="true"></i> Gerar pendentes (${aulas.filter(a=>a.tipo==='fixa'&&a.ativa&&!ocsFuturas[a.id]).length})</button>` : '' : ''}
+          <button data-h-click="pages-admin-criar_aulas.12" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-plus"></i> Nova Aula</button>
         </div>
       </div>
       <div class="content">
@@ -159,12 +160,12 @@ export async function renderCriarAulas(container, page) {
         </div>
         ${redundantes.size>0?`<div style="background:var(--err-bg);border:1px solid var(--err-borda);border-radius:6px;padding:9px 13px;font-size:12px;color:var(--err-fg);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px">
           <span><i class="ti ti-alert-triangle" aria-hidden="true"></i> <strong>${redundantes.size} aula(s) com possível redundância</strong> — mesma modalidade, dia e horário já cadastrados.</span>
-          <button onclick="abrirModalRedundancias()" style="padding:4px 12px;background:#8a1a1a;color:#fff;border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Ver e resolver <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+          <button data-h-click="pages-admin-criar_aulas.10" style="padding:4px 12px;background:#8a1a1a;color:#fff;border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Ver e resolver <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
         </div>`:''}
         <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:flex-end">
           <div style="display:flex;flex-direction:column;gap:3px">
             <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Modalidade</label>
-            <select onchange="window._criarFiltroMod=this.value;navigate('criar-aulas')" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie)">
+            <select data-h-change="pages-admin-criar_aulas.13" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie)">
               <option value="" ${!filtroMod?'selected':''}>Todas</option>
               <option value="hatha" ${filtroMod==='hatha'?'selected':''}>Hatha Yoga</option>
               <option value="acro"  ${filtroMod==='acro' ?'selected':''}>Acro Yoga</option>
@@ -173,34 +174,34 @@ export async function renderCriarAulas(container, page) {
           </div>
           <div style="display:flex;flex-direction:column;gap:3px">
             <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Professor</label>
-            <select onchange="window._criarFiltroProf=this.value;navigate('criar-aulas')" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie)">
+            <select data-h-change="pages-admin-criar_aulas.14" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie)">
               <option value="" ${!filtroProf?'selected':''}>Todos</option>
               ${profs.map(p=>`<option value="${p.id}" ${filtroProf===p.id?'selected':''}>${esc(p.nome)}</option>`).join('')}
             </select>
           </div>
           <div style="display:flex;flex-direction:column;gap:3px">
             <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Dia</label>
-            <select onchange="window._criarFiltroDia=this.value;navigate('criar-aulas')" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie)">
+            <select data-h-change="pages-admin-criar_aulas.15" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie)">
               <option value="" ${!filtroDia?'selected':''}>Todos</option>
               ${['seg','ter','qua','qui','sex','sab','dom'].map(d=>`<option value="${d}" ${filtroDia===d?'selected':''}>${DIAS_LABEL[d]||d}</option>`).join('')}
             </select>
           </div>
           <div style="display:flex;flex-direction:column;gap:3px">
             <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Horário</label>
-            <select onchange="window._criarFiltroHora=this.value;navigate('criar-aulas')" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie)">
+            <select data-h-change="pages-admin-criar_aulas.16" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie)">
               <option value="" ${!filtroHora?'selected':''}>Todos</option>
               ${horasUnicas.map(h=>`<option value="${h}" ${filtroHora===h?'selected':''}>${h}</option>`).join('')}
             </select>
           </div>
           <div style="display:flex;flex-direction:column;gap:3px">
             <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Status</label>
-            <select onchange="window._criarFiltroStat=this.value;navigate('criar-aulas')" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie)">
+            <select data-h-change="pages-admin-criar_aulas.17" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie)">
               <option value="" ${!filtroStat?'selected':''}>Todos</option>
               <option value="ativa"   ${filtroStat==='ativa'  ?'selected':''}>Ativa</option>
               <option value="inativa" ${filtroStat==='inativa'?'selected':''}>Inativa</option>
             </select>
           </div>
-          ${filtroMod||filtroProf||filtroStat||filtroDia||filtroHora?`<button onclick="window._criarFiltroMod='';window._criarFiltroProf='';window._criarFiltroStat='';window._criarFiltroDia='';window._criarFiltroHora='';navigate('criar-aulas')" style="padding:5px 10px;background:var(--err-bg);color:var(--err-fg);border:1px solid var(--err-borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;align-self:flex-end"><i class="ti ti-x" aria-hidden="true"></i> Limpar</button>`:''}
+          ${filtroMod||filtroProf||filtroStat||filtroDia||filtroHora?`<button data-h-click="pages-admin-criar_aulas.11" style="padding:5px 10px;background:var(--err-bg);color:var(--err-fg);border:1px solid var(--err-borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;align-self:flex-end"><i class="ti ti-x" aria-hidden="true"></i> Limpar</button>`:''}
         </div>
         ${card('Aulas Fixas ('+fixas.length+')', '',
           `<div style="display:grid;grid-template-columns:1fr 110px 90px 60px 80px 70px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
@@ -313,7 +314,7 @@ uiAnimar(container)
       const ate = document.getElementById('ger-ate').value
       if (!de||!ate) { toast('Preencha as datas'); return }
 
-      const btnGerar = document.querySelector('#modal-gerar button[onclick="executarGerarOcorrencias()"]')
+      const btnGerar = document.querySelector('#modal-gerar button[data-acao="gerar-ocorrencias"]')
       if (btnGerar && !silencioso) { btnGerar.textContent = 'Gerando...'; btnGerar.disabled = true }
 
       try {
@@ -433,7 +434,7 @@ uiAnimar(container)
               + `<div style="font-size:12px;font-weight:500">${esc(a.professor?.nome||'Sem professor')}</div>`
               + `<div style="font-size:12px;color:var(--txt2)">${nOcs>0?'<i class="ti ti-check" aria-hidden="true"></i> '+nOcs+' aulas geradas':'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Não gerada'} · Criada ${a.criado_em?new Date(a.criado_em).toLocaleDateString('pt-BR'):'—'}</div>`
             + '</div>'
-            + `<button onclick="excluirAulaRedundante('${a.id}')" style="padding:4px 10px;background:var(--err-bg);color:var(--err-fg);border:1px solid var(--err-borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Excluir esta</button>`
+            + `<button data-h-click="pages-admin-criar_aulas.18" data-a-click="${esc(JSON.stringify([String(a.id)]))}" style="padding:4px 10px;background:var(--err-bg);color:var(--err-fg);border:1px solid var(--err-borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Excluir esta</button>`
           + '</div>'
         }
         html += '</div>'

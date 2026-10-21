@@ -4,6 +4,7 @@
  * via Web Speech API do navegador — sem hospedagem de áudio nem custo).
  */
 
+import '../../acoes/pages-aluno-grantha.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { esc, urlSegura } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 import { aplicarVocabulario } from '../../modules/vocabulario.js'
@@ -63,7 +64,7 @@ async function _renderLista(container, sb) {
            </div>`
         : `<div style="display:flex;flex-direction:column;gap:10px">
             ${granthas.map(g => `
-              <div onclick="window._granthaSelId='${g.id}';navigate('grantha-aluno')"
+              <div data-h-click="pages-aluno-grantha.1" data-a-click="${esc(JSON.stringify([String(g.id)]))}"
                 style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;cursor:pointer;display:flex;gap:14px;align-items:center">
                 ${g.capa_url ? `<img src="${urlSegura(g.capa_url)}" referrerpolicy="no-referrer" style="width:56px;height:72px;object-fit:cover;border-radius:4px;flex-shrink:0">` : `<div style="width:56px;height:72px;background:var(--verde);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px"><i class="ti ti-book" aria-hidden="true"></i></div>`}
                 <div style="flex:1;min-width:0">
@@ -93,7 +94,7 @@ async function _renderLeitura(container, sb, granthaId) {
     container.innerHTML = `
       <div class="topbar">
         <div class="topbar-t">Grantha Mandir</div>
-        <button onclick="window._granthaSelId=null;navigate('grantha-aluno')"
+        <button data-h-click="pages-aluno-grantha.2"
           style="padding:5px 12px;background:var(--superficie);border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer;color:var(--txt2)">
           <i class="ti ti-arrow-left" aria-hidden="true"></i> Voltar
         </button>
@@ -137,7 +138,7 @@ async function _renderLeitura(container, sb, granthaId) {
   container.innerHTML = `
     <div class="topbar">
       <div class="topbar-t">Grantha Mandir</div>
-      <button onclick="window._granthaSelId=null;navigate('grantha-aluno')"
+      <button data-h-click="pages-aluno-grantha.2"
         style="padding:5px 12px;background:var(--superficie);border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer;color:var(--txt2)">
         <i class="ti ti-arrow-left" aria-hidden="true"></i> Voltar
       </button>
@@ -150,7 +151,7 @@ async function _renderLeitura(container, sb, granthaId) {
 
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
         ${capitulos.map(([ordem, nome]) => `
-          <button onclick="window._granthaCapituloOrdem=${ordem};navigate('grantha-aluno')"
+          <button data-h-click="pages-aluno-grantha.3" data-a-click="${esc(JSON.stringify([(ordem)]))}"
             style="padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
                    border:1px solid ${ordem===capAtual?'var(--verde)':'var(--borda)'};background:${ordem===capAtual?'var(--verde)':'var(--superficie)'};color:${ordem===capAtual?'var(--bege)':'var(--txt2)'}">
             ${esc(nome)}

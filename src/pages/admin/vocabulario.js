@@ -4,6 +4,7 @@
  * qualquer texto do app (ver src/modules/vocabulario.js).
  */
 
+import '../../acoes/pages-admin-vocabulario.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { confirmarModal } from '../../modules/dialogs.js'
 import { toast, esc } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
@@ -34,7 +35,7 @@ export async function renderVocabularioAdmin(container, page) {
   container.innerHTML = `
     <div class="topbar">
       <div class="topbar-t">Śabda Kośa</div>
-      <button onclick="abrirFormVocab()"
+      <button data-h-click="pages-admin-vocabulario.3"
         style="padding:6px 14px;background:var(--verde);color:var(--bege);border:none;
                border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
                display:flex;align-items:center;gap:5px">
@@ -50,7 +51,7 @@ export async function renderVocabularioAdmin(container, page) {
       <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-bottom:16px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px">
           <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo)">Termos não catalogados</div>
-          <button onclick="escanearTermosNaoCatalogados()"
+          <button data-h-click="pages-admin-vocabulario.4" data-acao="escanear-termos"
             style="padding:6px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px;white-space:nowrap">
             <i class="ti ti-search"></i> Escanear agora
           </button>
@@ -68,7 +69,7 @@ export async function renderVocabularioAdmin(container, page) {
         </div>
         <textarea id="import-json-textarea" rows="6" placeholder='[{"termo": "Sankalpa", "definicao": "..."}]'
           style="width:100%;border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:12px;font-family:monospace;outline:none;resize:vertical;box-sizing:border-box;margin-bottom:8px"></textarea>
-        <button onclick="processarImportacaoJson()"
+        <button data-h-click="pages-admin-vocabulario.5"
           style="padding:6px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px">
           <i class="ti ti-upload"></i> Processar importação
         </button>
@@ -89,9 +90,9 @@ export async function renderVocabularioAdmin(container, page) {
               <span style="font-weight:500;color:var(--txt)">${esc(t.termo)}</span>
               <span style="color:var(--txt2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.definicao)}</span>
               <div style="display:flex;gap:4px">
-                <button onclick="editarVocab('${t.id}')"
+                <button data-h-click="pages-admin-vocabulario.1" data-a-click="${esc(JSON.stringify([String(t.id)]))}"
                   style="padding:3px 8px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-pencil" aria-hidden="true"></i></button>
-                <button onclick="excluirVocab(this.dataset.id, this.dataset.termo)" data-id="${esc(t.id)}" data-termo="${esc(t.termo||'')}"
+                <button data-h-click="pages-admin-vocabulario.2" data-id="${esc(t.id)}" data-termo="${esc(t.termo||'')}"
                   style="padding:3px 8px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-x" aria-hidden="true"></i></button>
               </div>
             </div>`).join('')
@@ -104,7 +105,7 @@ export async function renderVocabularioAdmin(container, page) {
       <div style="background:var(--superficie);border-radius:12px;width:480px;max-width:100%">
         <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)" id="vocab-modal-titulo">Novo Termo</div>
-          <button onclick="document.getElementById('modal-vocab').style.display='none'"
+          <button data-h-click="pages-admin-vocabulario.6"
             style="background:none;border:none;color:var(--bege);font-size:22px;cursor:pointer;line-height:1">×</button>
         </div>
         <div style="padding:20px;display:flex;flex-direction:column;gap:12px">
@@ -121,9 +122,9 @@ export async function renderVocabularioAdmin(container, page) {
           </div>
         </div>
         <div style="padding:0 20px 20px;display:flex;justify-content:flex-end;gap:8px">
-          <button onclick="document.getElementById('modal-vocab').style.display='none'"
+          <button data-h-click="pages-admin-vocabulario.6"
             style="padding:8px 16px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
-          <button onclick="salvarVocab()"
+          <button data-h-click="pages-admin-vocabulario.7"
             style="padding:8px 16px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500">
             <i class="ti ti-check"></i> Salvar
           </button>
@@ -342,7 +343,7 @@ export async function renderVocabularioAdmin(container, page) {
   }
 
   window.escanearTermosNaoCatalogados = async function() {
-    const btn = document.querySelector('button[onclick="escanearTermosNaoCatalogados()"]')
+    const btn = document.querySelector('button[data-acao="escanear-termos"]')
     if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Escaneando...' }
     const container = document.getElementById('termos-nao-catalogados-container')
     container.innerHTML = '<div style="font-size:12px;color:var(--txt2);padding:8px 0">Escaneando...</div>'
@@ -416,7 +417,7 @@ export async function renderVocabularioAdmin(container, page) {
     container.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:var(--warn-fg);background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:8px 12px;margin-bottom:10px">
         <span>${lista.length} termo(s) encontrado(s), ainda não cadastrado(s). Revise o contexto e escreva a definição de cada um antes de salvar.</span>
-        <button onclick="exportarTermosEscaneadosJson()"
+        <button data-h-click="pages-admin-vocabulario.10"
           style="padding:4px 10px;background:var(--superficie);color:var(--warn-fg);border:1px solid rgba(232,188,79,.5);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;display:flex;align-items:center;gap:4px">
           <i class="ti ti-download"></i> Exportar JSON
         </button>
@@ -430,11 +431,11 @@ export async function renderVocabularioAdmin(container, page) {
           <textarea id="tnc-def-${i}" rows="2" placeholder="Escreva a definição deste termo..."
             style="width:100%;border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;resize:vertical;box-sizing:border-box;margin-bottom:8px"></textarea>
           <div style="display:flex;gap:6px">
-            <button onclick="salvarTermoEscaneado(${i}, this.dataset.termo)" data-termo="${esc(item.termo)}"
+            <button data-h-click="pages-admin-vocabulario.8" data-a-click="${esc(JSON.stringify([(i)]))}" data-termo="${esc(item.termo)}"
               style="padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">
               <i class="ti ti-check" aria-hidden="true"></i> Cadastrar
             </button>
-            <button onclick="document.getElementById('tnc-${i}').remove()"
+            <button data-h-click="pages-admin-vocabulario.9" data-a-click="${esc(JSON.stringify([String(i)]))}"
               style="padding:5px 12px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:12px;cursor:pointer;color:var(--txt2)">
               Ignorar
             </button>

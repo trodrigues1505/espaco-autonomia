@@ -3,6 +3,7 @@
  * "O Espaço" e "Nossa Prática" — páginas institucionais estáticas.
  */
 
+import '../acoes/pages-institucional.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { esc } from '../modules/utils.js'
 import { uiAnimar } from '../modules/ui.js'
 
@@ -128,7 +129,7 @@ export async function renderNossaPratica(container, page) {
 
   function render() {
     const tabsHtml = SUBPAGINAS.map((s, idx) => `
-      <button onclick="window._npMudarAba(${idx})"
+      <button data-h-click="pages-institucional.1" data-a-click="${esc(JSON.stringify([(idx)]))}"
         style="padding:8px 16px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;
                font-family:'DM Sans',sans-serif;white-space:nowrap;border:1px solid ${idx===abaAtiva?'var(--verde)':'var(--borda)'};
                background:${idx===abaAtiva?'var(--verde)':'var(--superficie)'};color:${idx===abaAtiva?'var(--bege)':'var(--txt)'}">

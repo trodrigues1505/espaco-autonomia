@@ -3,6 +3,7 @@
  * Dharma Phala — detalhe de um benefício do plano.
  */
 
+import '../../acoes/pages-aluno-beneficios.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { esc, urlSegura } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 import { BENEFICIO_INTRO } from '../../modules/navigation.js'
@@ -76,7 +77,7 @@ Com a Agenda Flex você tem autonomia para moldar o yoga ao seu ritmo de vida, n
 Precisa faltar a uma aula? Cancele com antecedência e recupere em outra turma disponível na grade, sem custo adicional.
 A flexibilidade não é um desvio do caminho — ela é o caminho.`,
     acaoAtivo() {
-      return `<button onclick="navigate('aluno-grade')"
+      return `<button data-h-click="pages-aluno-beneficios.1"
         style="display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:11px 22px;
                background:var(--verde);color:var(--bege);border:none;border-radius:8px;
                font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif">
@@ -117,7 +118,7 @@ function _abrirLightbox(src, alt) {
     <img src="${src}" alt="${alt}" referrerpolicy="no-referrer"
       style="max-width:100%;max-height:90vh;border-radius:8px;object-fit:contain;
              box-shadow:0 20px 60px rgba(0,0,0,.5)">
-    <button onclick="document.getElementById('_ea-lightbox').remove()"
+    <button data-h-click="pages-aluno-beneficios.2"
       style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);
              border:none;border-radius:50%;width:36px;height:36px;color:#fff;
              font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;
@@ -135,9 +136,9 @@ function _labelNumeroSutra(s) {
 }
 
 // ── Botão salvar PDF ──────────────────────────────────────────
-function _btnSalvar(onclick) {
+function _btnSalvar(nomeFuncaoGlobal) {
   return `
-    <button onclick="${onclick}"
+    <button data-h-click="@global" data-a-click="${esc(JSON.stringify([nomeFuncaoGlobal]))}"
       style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;
              background:var(--superficie);color:var(--titulo);border:1px solid var(--borda);
              border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
@@ -347,7 +348,7 @@ function _stepper(secoes, prefixo) {
       return `
         <div style="display:flex;gap:12px">
           <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:32px">
-            <button onclick="window._step_${prefixo}(${idx})"
+            <button data-h-click="@global" data-a-click="${esc(JSON.stringify(['_step_' + prefixo, idx]))}"
               style="width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;
                      display:flex;align-items:center;justify-content:center;flex-shrink:0;
                      background:${aberta ? s.cor : passada ? s.cor : 'rgba(212,200,158,.4)'};
@@ -357,7 +358,7 @@ function _stepper(secoes, prefixo) {
             ${linha}
           </div>
           <div style="flex:1">
-            <div onclick="window._step_${prefixo}(${idx})" style="cursor:pointer;padding:5px 0 ${aberta?'12px':'16px'}">
+            <div data-h-click="@global" data-a-click="${esc(JSON.stringify(['_step_' + prefixo, idx]))}" style="cursor:pointer;padding:5px 0 ${aberta?'12px':'16px'}">
               <div style="font-size:13px;font-weight:500;color:${aberta?s.cor:passada?'var(--txt2)':'var(--txt)'};transition:color .3s">${esc(s.titulo)}</div>
               ${!aberta ? `<div style="font-size:12px;color:var(--txt2);margin-top:2px">${s.itens.length} itens</div>` : ''}
             </div>
@@ -374,7 +375,7 @@ function _stepper(secoes, prefixo) {
                     </div>
                   </div>`).join('')}
                 ${idx < secoes.length - 1
-                  ? `<button onclick="window._step_${prefixo}(${idx+1})"
+                  ? `<button data-h-click="@global" data-a-click="${esc(JSON.stringify(['_step_' + prefixo, idx + 1]))}"
                        style="margin-top:14px;width:100%;padding:9px;background:${s.cor};color:#fff;
                               border:none;border-radius:7px;font-size:12px;font-weight:500;
                               cursor:pointer;font-family:'DM Sans',sans-serif">
@@ -514,10 +515,10 @@ async function _renderYogaAdhyayana(container) {
     const imgHtml = aula.imagem_url ? `
       <div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:16px;
                   background:var(--verde);min-height:160px;cursor:zoom-in"
-           onclick="_abrirLightbox(this.dataset.src, this.dataset.nome)" data-src="${urlSegura(aula.imagem_url)}" data-nome="${esc(aula.nome)}" title="Clique para ampliar">
+           data-h-click="pages-aluno-beneficios.3" data-src="${urlSegura(aula.imagem_url)}" data-nome="${esc(aula.nome)}" title="Clique para ampliar">
         <img src="${urlSegura(aula.imagem_url)}" alt="${esc(aula.nome)}" referrerpolicy="no-referrer"
           style="width:100%;max-height:240px;object-fit:cover;object-position:center center;
-                 display:block;opacity:.9" onerror="this.parentElement.style.display='none'">
+                 display:block;opacity:.9" data-h-error="pages-aluno-beneficios.4">
         <div style="position:absolute;bottom:0;left:0;right:0;padding:16px;
                     background:linear-gradient(to top,rgba(31,56,31,.92) 0%,transparent 100%)">
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;
@@ -546,7 +547,7 @@ async function _renderYogaAdhyayana(container) {
             <div style="font-size:12px;color:var(--txt2)">${isSemana ? 'Postura da semana' : 'Consultando āsana do histórico'}</div>
           </div>
         </div>
-        ${_btnSalvar('window._salvarYA()')}
+        ${_btnSalvar('_salvarYA')}
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
         ${isSemana ? `<span style="font-size:12px;background:var(--dourado);color:var(--warn-fg);padding:3px 10px;border-radius:20px;font-weight:500"><i class="ti ti-star" aria-hidden="true"></i> Postura da semana</span>` : ''}
@@ -588,7 +589,7 @@ async function _renderYogaAdhyayana(container) {
       const isAtiva  = l.id === aulaSel.id
       const dataFmt  = new Date(l.publicada_em + 'T12:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' })
       return `
-        <button onclick="window._yaSelPostura('${l.id}')" id="ya-linha-${l.id}"
+        <button data-h-click="pages-aluno-beneficios.5" data-a-click="${esc(JSON.stringify([String(l.id)]))}" id="ya-linha-${l.id}"
           style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;
                  padding:11px 14px;background:${isAtiva ? 'rgba(31,56,31,.06)' : 'var(--superficie)'};
                  border:1px solid ${isAtiva ? 'var(--verde)' : 'var(--borda)'};border-radius:8px;
@@ -614,13 +615,13 @@ async function _renderYogaAdhyayana(container) {
             Todas as posturas (${linhas.length})
           </div>
           <div style="display:flex;gap:6px">
-            <button onclick="window._yaOrdenar('nome')"
+            <button data-h-click="pages-aluno-beneficios.6"
               style="display:flex;align-items:center;gap:4px;padding:5px 10px;background:var(--superficie);
                      border:1px solid var(--borda);border-radius:6px;font-size:12px;color:var(--txt2);
                      cursor:pointer;font-family:'DM Sans',sans-serif">
               Nome ${_iconeOrdenacao('nome')}
             </button>
-            <button onclick="window._yaOrdenar('data')"
+            <button data-h-click="pages-aluno-beneficios.7"
               style="display:flex;align-items:center;gap:4px;padding:5px 10px;background:var(--superficie);
                      border:1px solid var(--borda);border-radius:6px;font-size:12px;color:var(--txt2);
                      cursor:pointer;font-family:'DM Sans',sans-serif">
@@ -783,10 +784,10 @@ function _blocoAulaPratica(aula, secoes, sufixo) {
       <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo);margin-bottom:4px">Sequência de Āsanas</div>
       <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">Faça-os devagar, sem forçar — de 30s a 1min cada āsana. Clique na imagem para ampliar.</div>
       <div style="position:relative;border-radius:8px;overflow:hidden;cursor:zoom-in"
-           onclick="_abrirLightbox('${urlSegura(aula.link_tummee)}','Sequência de āsanas')" title="Clique para ampliar">
+           data-h-click="pages-aluno-beneficios.8" data-a-click="${esc(JSON.stringify([String(urlSegura(aula.link_tummee))]))}" title="Clique para ampliar">
         <img src="${urlSegura(aula.link_tummee)}" alt="Sequência de āsanas" referrerpolicy="no-referrer"
           style="width:100%;max-height:480px;object-fit:contain;display:block;background:var(--superficie-2)"
-          onerror="this.parentElement.parentElement.style.display='none'">
+          data-h-error="pages-aluno-beneficios.9">
         <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);
                     border-radius:20px;padding:3px 8px;font-size:12px;color:#fff;
                     display:flex;align-items:center;gap:4px;pointer-events:none">
@@ -797,7 +798,7 @@ function _blocoAulaPratica(aula, secoes, sufixo) {
     <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:16px">
       <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo);margin-bottom:4px">Sequência de Āsanas</div>
       <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">Faça-os devagar, sem forçar — de 30s a 1min cada āsana.</div>
-      <button onclick="window._amToggleIframe${sufixo}()" id="btn-am-iframe${sufixo}"
+      <button data-h-click="@global" data-a-click="${esc(JSON.stringify(['_amToggleIframe' + sufixo]))}" id="btn-am-iframe${sufixo}"
         style="width:100%;padding:11px;background:var(--verde);color:var(--bege);border:none;
                border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;
                font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px">
@@ -881,7 +882,7 @@ async function _renderAsanaMarga(container) {
           <div style="font-size:12px;color:var(--txt2)">Aulas práticas da semana</div>
         </div>
       </div>
-      ${temConteudo1 ? _btnSalvar('window._salvarAM1()') : ''}
+      ${temConteudo1 ? _btnSalvar('_salvarAM1') : ''}
     </div>
 
     <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:10px">Aula 1 · livre para todos os planos</div>
@@ -1027,14 +1028,14 @@ async function _renderJnanaMarga(container) {
           <p style="font-size:13px;color:var(--txt);line-height:1.7;margin:0">${esc(s.pratica)}</p>
         </div>` : ''}
       <div style="display:flex;gap:8px;margin-bottom:8px">
-        <button onclick="window._jnAnterior()" ${_jnTemAnterior(s) ? '' : 'disabled'}
+        <button data-h-click="pages-aluno-beneficios.10" ${_jnTemAnterior(s) ? '' : 'disabled'}
           style="flex:1;padding:10px;background:var(--superficie);color:${_jnTemAnterior(s) ? 'var(--titulo)' : 'var(--txt2)'};
                  border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;
                  font-size:12px;cursor:${_jnTemAnterior(s) ? 'pointer' : 'default'};opacity:${_jnTemAnterior(s) ? '1' : '.4'};
                  display:flex;align-items:center;justify-content:center;gap:6px">
           <i class="ti ti-chevron-left"></i> Anterior
         </button>
-        <button onclick="window._jnProximo()" ${_jnTemProximo(s) ? '' : 'disabled'}
+        <button data-h-click="pages-aluno-beneficios.11" ${_jnTemProximo(s) ? '' : 'disabled'}
           style="flex:1;padding:10px;background:var(--superficie);color:${_jnTemProximo(s) ? 'var(--titulo)' : 'var(--txt2)'};
                  border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;
                  font-size:12px;cursor:${_jnTemProximo(s) ? 'pointer' : 'default'};opacity:${_jnTemProximo(s) ? '1' : '.4'};
@@ -1042,7 +1043,7 @@ async function _renderJnanaMarga(container) {
           Próximo <i class="ti ti-chevron-right"></i>
         </button>
       </div>
-      <button onclick="window._salvarJN()" style="width:100%;margin-bottom:16px;padding:10px;background:var(--superficie);color:var(--titulo);border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:500">
+      <button data-h-click="pages-aluno-beneficios.12" style="width:100%;margin-bottom:16px;padding:10px;background:var(--superficie);color:var(--titulo);border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:500">
         <i class="ti ti-download"></i> Salvar este sutra em PDF
       </button>`
   }
@@ -1052,7 +1053,7 @@ async function _renderJnanaMarga(container) {
       <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:10px">Sutras anteriores (${sutras.length - 1})</div>
       <div style="display:flex;flex-direction:column;gap:6px">
         ${sutras.filter(s => s.id !== sutra_hoje.id).map(s => `
-          <button onclick="window._jnSelSutra('${s.id}')" id="jn-hist-${s.id}"
+          <button data-h-click="pages-aluno-beneficios.13" data-a-click="${esc(JSON.stringify([String(s.id)]))}" id="jn-hist-${s.id}"
             style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--superficie);border:1px solid var(--borda);border-radius:8px;cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif">
             <div>
               <div style="font-size:13px;font-weight:500;color:var(--txt)">${esc(s.capitulo)} ${_labelNumeroSutra(s)}</div>

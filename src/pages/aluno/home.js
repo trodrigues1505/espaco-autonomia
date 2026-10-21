@@ -2,6 +2,7 @@
  * src/pages/aluno/home.js
  */
 
+import '../../acoes/pages-aluno-home.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { sb }         from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel, PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS, calcularNivel, NIVEL_LABELS, esc } from '../../modules/utils.js'
 import { getSaldoAluno, getGamificacao, getPagamentosAluno, verificarConquistas } from '../../modules/gamificacao.js'
@@ -28,9 +29,9 @@ function _blocoBoasVindas() {
         Parte desse conteúdo está disponível para qualquer pessoa. O restante acompanha as aulas presenciais — é lá que ele faz sentido.
       </p>
       <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:rgba(242,236,206,.85);line-height:1.6">
-        <div>Se é sua primeira vez aqui, comece por <a href="#" id="tour-link-nossa-pratica" onclick="navigate('nossa-pratica');return false" style="color:var(--dourado);font-weight:500;text-decoration:underline">Nossa Prática</a> antes de acessar a grade de aulas.</div>
-        <div>Se você já pratica aqui, comece pelo <a href="#" onclick="navigate('aluno-beneficio-asana-marga');return false" style="color:var(--dourado);font-weight:500;text-decoration:underline">Āsana Mārga</a> da semana.</div>
-        <div>Se ainda não é aluno e quer entender o que fazemos antes de se matricular, comece pela <a href="#" onclick="navigate('aluno-beneficio-sangha');return false" style="color:var(--dourado);font-weight:500;text-decoration:underline">Sangha</a>.</div>
+        <div>Se é sua primeira vez aqui, comece por <a href="#" id="tour-link-nossa-pratica" data-h-click="pages-aluno-home.1" style="color:var(--dourado);font-weight:500;text-decoration:underline">Nossa Prática</a> antes de acessar a grade de aulas.</div>
+        <div>Se você já pratica aqui, comece pelo <a href="#" data-h-click="pages-aluno-home.2" style="color:var(--dourado);font-weight:500;text-decoration:underline">Āsana Mārga</a> da semana.</div>
+        <div>Se ainda não é aluno e quer entender o que fazemos antes de se matricular, comece pela <a href="#" data-h-click="pages-aluno-home.3" style="color:var(--dourado);font-weight:500;text-decoration:underline">Sangha</a>.</div>
       </div>
     </div>
   `
@@ -92,7 +93,7 @@ export async function renderAlunoHome(container, page) {
     <div class="content">
       ${renderPainelNotif(notifs)}
       ${_blocoBoasVindas()}
-      <button onclick="window._reiniciarTourDharmaPhala(${Number(cfg.prazo_confirmacao_min || 60)})"
+      <button data-h-click="pages-aluno-home.9" data-a-click="${esc(JSON.stringify([(Number(cfg.prazo_confirmacao_min || 60))]))}"
         style="width:100%;padding:8px 16px;background:none;border:none;font-family:'DM Sans',sans-serif;
                font-size:12px;color:var(--txt2);cursor:pointer;text-align:left;margin:-6px 0 14px;
                display:flex;align-items:center;gap:5px;text-decoration:underline">
@@ -129,9 +130,9 @@ export async function renderAlunoHome(container, page) {
       <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);overflow-x:auto;margin-bottom:12px">
         <div style="padding:12px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
           <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo)">Próximas aulas</span>
-          <button onclick="navigate('aluno-grade')" style="font-size:12px;color:var(--titulo);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif">Ver grade <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+          <button data-h-click="pages-aluno-home.10" style="font-size:12px;color:var(--titulo);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif">Ver grade <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
         </div>
-        ${confs.length===0?`<div style="padding:16px 18px;font-size:12px;color:var(--txt2)">Nenhuma aula confirmada. <a href="#" onclick="navigate('aluno-grade');return false" style="color:var(--titulo)">Ver grade <i class="ti ti-arrow-right" aria-hidden="true"></i></a></div>`:
+        ${confs.length===0?`<div style="padding:16px 18px;font-size:12px;color:var(--txt2)">Nenhuma aula confirmada. <a href="#" data-h-click="pages-aluno-home.4" style="color:var(--titulo)">Ver grade <i class="ti ti-arrow-right" aria-hidden="true"></i></a></div>`:
           confs.map(c=>{
             const dt = new Date(c.ocorrencia.data_hora)
             const prazo = Number(cfg.prazo_cancelamento_min||180)
@@ -143,12 +144,12 @@ export async function renderAlunoHome(container, page) {
                 <div style="font-size:12px;color:var(--txt2);margin-top:2px">${dt.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'})} · ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
                 <div style="font-size:12px;color:${podeCancelar?'var(--verde-cl)':'var(--err-vivo)'};margin-top:2px">${podeCancelar?'<i class="ti ti-check" aria-hidden="true"></i> Cancelamento disponível':'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Prazo encerrado — falta perde aula do saldo'}</div>
               </div>
-              ${podeCancelar?`<button onclick="cancelarConfHome('${c.id}','${c.ocorrencia_id}')" style="padding:4px 10px;background:var(--err-bg);color:var(--err-fg);border:1px solid var(--err-borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Cancelar</button>`:''}
+              ${podeCancelar?`<button data-h-click="pages-aluno-home.5" data-a-click="${esc(JSON.stringify([String(c.id), String(c.ocorrencia_id)]))}" style="padding:4px 10px;background:var(--err-bg);color:var(--err-fg);border:1px solid var(--err-borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Cancelar</button>`:''}
             </div>`
           }).join('')
         }
       </div>
-      <button onclick="navigate('aluno-conquistas')" style="width:100%;padding:12px 16px;background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--titulo);cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <button data-h-click="pages-aluno-home.11" style="width:100%;padding:12px 16px;background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--titulo);cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <span><i class="ti ti-trophy" aria-hidden="true"></i> Minhas Conquistas · ${gam?.prana_points||0} pts</span>
         <span style="font-size:12px;color:var(--txt2)">Ver todas <i class="ti ti-arrow-right" aria-hidden="true"></i></span>
       </button>
@@ -172,16 +173,16 @@ export async function renderAlunoHome(container, page) {
               <div style="font-size:12px;color:var(--txt2)">Acesse mais rápido direto da tela inicial</div>
             </div>
           </div>
-          <button onclick="this.closest('[data-pwa]').style.display='none';localStorage.setItem('pwa-instalado','1')"
+          <button data-h-click="pages-aluno-home.6"
             style="background:none;border:none;color:var(--txt2);font-size:16px;cursor:pointer;padding:4px">×</button>
         </div>
         <div id="pwa-ios-tip" style="display:none;background:rgba(242,236,206,.5);border-radius:6px;padding:10px 12px;font-size:12px;color:var(--txt);line-height:1.6;margin-bottom:8px">
           No <strong>iPhone/iPad</strong>: toque em <strong>Compartilhar</strong> (ícone <i class="ti ti-arrow-up" aria-hidden="true"></i> na barra do Safari) <i class="ti ti-arrow-right" aria-hidden="true"></i> <strong>"Adicionar à Tela de Início"</strong>
         </div>
         <div style="display:flex;gap:8px">
-          <button id="btn-instalar-pwa" onclick="instalarAppAgora()"
+          <button id="btn-instalar-pwa" data-h-click="pages-aluno-home.7"
             style="flex:1;padding:9px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500">Instalar agora</button>
-          <button onclick="mostrarDicaIOS()"
+          <button data-h-click="pages-aluno-home.8"
             style="padding:9px 12px;background:var(--superficie);color:var(--titulo);border:1px solid var(--borda);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer">iPhone/iPad</button>
         </div>
       </div>` : ''}

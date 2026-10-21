@@ -3,6 +3,7 @@
  * Gestão de planos
  */
 
+import '../../acoes/pages-admin-planos.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { sb }         from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel, PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS, calcularNivel, NIVEL_LABELS, esc, urlSegura } from '../../modules/utils.js'
 
@@ -36,7 +37,7 @@ export async function renderPlanos(container, page) {
     <div style="background:var(--superficie);border-radius:10px;width:520px;max-width:95vw;max-height:90vh;overflow:auto">
       <div style="padding:18px 22px 14px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
         <span style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--titulo)">Novo Plano</span>
-        <button onclick="document.getElementById('modal-criar-plano').style.display='none'" style="background:none;border:1px solid var(--borda);border-radius:5px;padding:3px 8px;cursor:pointer"><i class="ti ti-x" aria-hidden="true"></i></button>
+        <button data-h-click="pages-admin-planos.1" style="background:none;border:1px solid var(--borda);border-radius:5px;padding:3px 8px;cursor:pointer"><i class="ti ti-x" aria-hidden="true"></i></button>
       </div>
       <div style="padding:18px 22px">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -82,8 +83,8 @@ export async function renderPlanos(container, page) {
         </div>
       </div>
       <div style="padding:12px 22px;border-top:1px solid var(--borda);display:flex;gap:8px;justify-content:flex-end">
-        <button onclick="document.getElementById('modal-criar-plano').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
-        <button onclick="salvarNovoPLano()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Criar Plano</button>
+        <button data-h-click="pages-admin-planos.1" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+        <button data-h-click="pages-admin-planos.2" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Criar Plano</button>
       </div>
     </div>
   </div>`
@@ -91,7 +92,7 @@ export async function renderPlanos(container, page) {
   container.innerHTML = `
     <div class="topbar">
       <div class="topbar-t">Planos</div>
-      <button onclick="document.getElementById('modal-criar-plano').style.display='flex'" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px">+ Novo Plano</button>
+      <button data-h-click="pages-admin-planos.4" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px">+ Novo Plano</button>
     </div>
     <div class="content">
       <div style="margin-bottom:16px;font-size:13px;color:var(--txt2)">
@@ -112,7 +113,7 @@ export async function renderPlanos(container, page) {
             ${(o.plano.modalidades||[]).map(m=>`<span style="background:${CORES[m.modalidade]||'#888'}22;color:${CORES[m.modalidade]||'var(--txt2)'};padding:1px 7px;border-radius:10px;font-size:12px;font-weight:500">${NOMES[m.modalidade]||esc(m.modalidade)}</span>`).join('')}
           </div>
           <span style="font-weight:500;color:var(--titulo)">R$ ${o.preco}<span style="font-weight:400;color:var(--txt2);font-size:12px">/mês</span></span>
-          <button onclick="abrirEditarPlano(this.dataset.tipo)" data-tipo="${esc(o.plano.tipo)}" style="padding:3px 8px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Editar"><i class="ti ti-pencil" aria-hidden="true"></i></button>
+          <button data-h-click="pages-admin-planos.3" data-tipo="${esc(o.plano.tipo)}" style="padding:3px 8px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Editar"><i class="ti ti-pencil" aria-hidden="true"></i></button>
         </div>`).join('')}
       </div>
 
@@ -179,12 +180,12 @@ uiAnimar(container)
     <div style="background:var(--superficie);border-radius:10px;width:520px;max-width:95vw;max-height:90vh;overflow:auto">
       <div style="padding:18px 22px 14px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
         <span style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--titulo)" id="ep-titulo">Editar Plano</span>
-        <button onclick="document.getElementById('modal-editar-plano').style.display='none'" style="background:none;border:1px solid var(--borda);border-radius:5px;padding:3px 8px;cursor:pointer"><i class="ti ti-x" aria-hidden="true"></i></button>
+        <button data-h-click="pages-admin-planos.5" style="background:none;border:1px solid var(--borda);border-radius:5px;padding:3px 8px;cursor:pointer"><i class="ti ti-x" aria-hidden="true"></i></button>
       </div>
       <div style="padding:18px 22px" id="ep-body">Carregando...</div>
       <div style="padding:12px 22px;border-top:1px solid var(--borda);display:flex;gap:8px;justify-content:flex-end">
-        <button onclick="document.getElementById('modal-editar-plano').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
-        <button onclick="salvarEdicaoPlano()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Salvar Alterações</button>
+        <button data-h-click="pages-admin-planos.5" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+        <button data-h-click="pages-admin-planos.6" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Salvar Alterações</button>
       </div>
     </div>
   </div>`

@@ -1,3 +1,6 @@
+import '../acoes/notificacoes-acao.js'   // handler do botão de ação do aviso (antes: evento inline)
+import { esc } from './utils.js'
+import '../acoes/modules-notificacoes.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 /**
  * src/modules/notificacoes.js
  *
@@ -537,12 +540,12 @@ export function renderPainelNotif(notifs, opts = {}) {
     const cor    = COR_NIVEL[n.nivel] || COR_NIVEL.info
     const oculto = idx >= maxVisiveis ? 'class="notif-extra" style="display:none"' : ''
     const acaoBtn = n.acao
-      ? `<button onclick="${_acaoOnclick(n.acao)}"
+      ? `<button data-h-click="notificacoes.acao" data-a-click="${esc(JSON.stringify([n.acao.ocId ?? null, String(n.acao.page)]))}"
            style="padding:3px 10px;background:transparent;border:1px solid ${cor.txt};border-radius:4px;
                   font-size:12px;cursor:pointer;color:${cor.txt};font-family:'DM Sans',sans-serif;white-space:nowrap">
            ${_esc(n.acao.label)}</button>` : ''
     const dispensarBtn = !n.lida
-      ? `<button onclick="window._notifMarcarLida('${_esc(n.key)}')"
+      ? `<button data-h-click="modules-notificacoes.1" data-a-click="${esc(JSON.stringify([String(_esc(n.key))]))}"
            style="padding:3px 8px;background:transparent;border:none;font-size:12px;
                   cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif">dispensar</button>` : ''
     return `
@@ -575,13 +578,13 @@ export function renderPainelNotif(notifs, opts = {}) {
           ${naoLidas.length ? `<span id="notif-badge-count" style="background:#c0392b;color:#fff;border-radius:10px;padding:1px 7px;font-size:12px;font-weight:600">${naoLidas.length}</span>` : ''}
         </div>
         ${naoLidas.length > 1
-          ? `<button onclick="window._notifMarcarTodasLidas()"
+          ? `<button data-h-click="modules-notificacoes.2"
                style="font-size:12px;color:var(--txt2);background:none;border:none;cursor:pointer;
                       font-family:'DM Sans',sans-serif;text-decoration:underline">dispensar tudo</button>` : ''}
       </div>
       <div style="display:flex;flex-direction:column;gap:7px" id="notif-lista">${todasCards.join('')}</div>
       ${temMais
-        ? `<button onclick="document.querySelectorAll('.notif-extra').forEach(el=>el.style.display='flex');this.style.display='none'"
+        ? `<button data-h-click="modules-notificacoes.3"
              style="margin-top:10px;width:100%;padding:6px;background:transparent;border:1px solid var(--borda);
                     border-radius:6px;font-size:12px;cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif">
              Ver mais ${notifs.length - maxVisiveis} aviso(s)</button>` : ''}
@@ -666,8 +669,4 @@ function _esc(str) {
   return String(str || '')
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
-
-function _acaoOnclick(acao) {
-  if (acao.ocId) return `window._ocPresencaId='${acao.ocId}';navigate('${acao.page}')`
-  return `navigate('${acao.page}')`
-}   
+   

@@ -9,6 +9,7 @@
  * em código — ver conversa de definição deste dashboard).
  */
 
+import '../../acoes/pages-admin-engajamento.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { toast, esc } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 
@@ -172,7 +173,7 @@ export async function renderEngajamento(container, page) {
     const ativo = sortAtual.startsWith(campo)
     const seta = ativo ? (sortAtual.endsWith('asc') ? '↑' : '↓') : '↕'
     const proximo = ativo && sortAtual.endsWith('desc') ? `${campo}_asc` : `${campo}_desc`
-    return `<span onclick="window._engSort='${proximo}';window._rerenderEngajamento()" style="cursor:pointer">${label} ${seta}</span>`
+    return `<span data-h-click="pages-admin-engajamento.1" data-a-click="${esc(JSON.stringify([String(proximo)]))}" style="cursor:pointer">${label} ${seta}</span>`
   }
 
   function corScore(v) {
@@ -185,7 +186,7 @@ export async function renderEngajamento(container, page) {
   container.innerHTML = `
     <div class="topbar">
       <div class="topbar-t">Engajamento</div>
-      <button onclick="window._gerarRelatorioEngajamento()"
+      <button data-h-click="pages-admin-engajamento.3"
         style="padding:6px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px">
         <i class="ti ti-download"></i> Gerar relatório
       </button>
@@ -211,7 +212,7 @@ export async function renderEngajamento(container, page) {
           ? '<div style="padding:24px 18px;font-size:12px;color:var(--txt2)">Nenhum aluno encontrado.</div>'
           : linhas.map(l => `
             <div style="display:grid;grid-template-columns:1.4fr 90px 90px 90px 90px 90px 90px;align-items:center;gap:8px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px;cursor:pointer"
-                 onclick="window._abrirDetalheEngajamento('${l.id}')">
+                 data-h-click="pages-admin-engajamento.2" data-a-click="${esc(JSON.stringify([String(l.id)]))}">
               <span style="font-weight:500">${esc(l.nome)}</span>
               <span style="color:${corScore(l.presencaScore)}">${l.presencaScore === null ? '—' : l.presencaScore.toFixed(1)}</span>
               <span style="color:${corScore(l.timelineScore)}">${l.timelineScore.toFixed(1)}</span>
@@ -229,7 +230,7 @@ export async function renderEngajamento(container, page) {
       <div style="background:var(--superficie);border-radius:12px;width:480px;max-width:100%;max-height:85vh;overflow-y:auto">
         <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0">
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)" id="det-eng-titulo">—</div>
-          <button onclick="document.getElementById('modal-detalhe-engajamento').style.display='none'" style="background:none;border:none;color:var(--bege);font-size:22px;cursor:pointer;line-height:1">×</button>
+          <button data-h-click="pages-admin-engajamento.4" style="background:none;border:none;color:var(--bege);font-size:22px;cursor:pointer;line-height:1">×</button>
         </div>
         <div id="det-eng-body" style="padding:20px"></div>
       </div>

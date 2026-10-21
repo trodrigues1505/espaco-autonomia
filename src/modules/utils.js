@@ -1,3 +1,4 @@
+import '../acoes/modules-utils.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 /**
  * src/modules/utils.js
  * Responsabilidade: constantes de domínio e funções puras de UI.
@@ -76,7 +77,7 @@ export function modal(id, title, bodyHtml, footHtml) {
       <div style="background:var(--superficie);border-radius:10px;width:500px;max-width:95vw;max-height:90vh;overflow:auto">
         <div style="padding:18px 22px 14px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
           <span style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--titulo)">${title}</span>
-          <button onclick="document.getElementById('${id}').style.display='none'" style="background:none;border:1px solid var(--borda);border-radius:5px;padding:3px 8px;cursor:pointer;font-size:12px"><i class="ti ti-x" aria-hidden="true"></i></button>
+          <button data-h-click="modules-utils.1" data-a-click="${esc(JSON.stringify([String(id)]))}" style="background:none;border:1px solid var(--borda);border-radius:5px;padding:3px 8px;cursor:pointer;font-size:12px"><i class="ti ti-x" aria-hidden="true"></i></button>
         </div>
         <div style="padding:18px 22px">${bodyHtml}</div>
         <div style="padding:12px 22px;border-top:1px solid var(--borda);display:flex;gap:8px;justify-content:flex-end">${footHtml}</div>

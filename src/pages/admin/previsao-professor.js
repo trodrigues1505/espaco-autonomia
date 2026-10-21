@@ -3,6 +3,7 @@
  * Previsão de repasse — quanto cada professor vai receber no mês
  */
 
+import '../../acoes/pages-admin-previsao-professor.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { toast, esc } from '../../modules/utils.js'
 import { renderHistoricoRepasse, abrirModalRegistrarRepasse } from './repasse-pago.js'
 import { uiAnimar } from '../../modules/ui.js'
@@ -86,7 +87,7 @@ export async function renderPrevisaoProfessor(container, page) {
     <div class="topbar">
       <div class="topbar-t">Previsão de Repasse</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <select onchange="window._ppProfId=this.value;navigate('previsao-professor')"
+        <select data-h-change="pages-admin-previsao-professor.3"
           style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;background:var(--superficie);color:var(--txt)">
           <option value="">— Selecionar professor —</option>
           ${(professores||[]).map(p=>
@@ -101,7 +102,7 @@ export async function renderPrevisaoProfessor(container, page) {
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
         <span style="font-size:12px;color:var(--txt2);font-weight:500">Mês:</span>
         ${mesesDisponiveis.map(m => `
-          <button onclick="window._ppMes='${m}';navigate('previsao-professor')"
+          <button data-h-click="pages-admin-previsao-professor.1" data-a-click="${esc(JSON.stringify([String(m)]))}"
             style="padding:4px 12px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${mesSel===m?'var(--verde)':'var(--borda)'};background:${mesSel===m?'var(--verde)':'var(--superficie)'};color:${mesSel===m?'var(--bege)':'var(--txt2)'}">
             ${nomeMes(m)}${m===agora.toISOString().slice(0,7)?' · atual':''}
           </button>`).join('')}
@@ -188,7 +189,7 @@ export async function renderPrevisaoProfessor(container, page) {
             </div>
             <div style="display:flex;align-items:center;gap:12px;flex-shrink:0">
               <div style="font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:500;color:var(--bege)">${fmtR(totalRepasse)}</div>
-              <button onclick="abrirModalRegistrarRepasse(this.dataset.prof, this.dataset.nome, ${totalRepasse}, this.dataset.mes)" data-prof="${esc(profIdEfetivo)}" data-nome="${esc(profSelecionado?.nome||'')}" data-mes="${esc(mesSel)}"
+              <button data-h-click="pages-admin-previsao-professor.2" data-a-click="${esc(JSON.stringify([(totalRepasse)]))}" data-prof="${esc(profIdEfetivo)}" data-nome="${esc(profSelecionado?.nome||'')}" data-mes="${esc(mesSel)}"
                 style="padding:8px 16px;background:var(--bege);color:var(--verde);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;white-space:nowrap">
                 <i class="ti ti-coin" aria-hidden="true"></i> Registrar pagamento
               </button>

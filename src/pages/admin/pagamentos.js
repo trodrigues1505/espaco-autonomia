@@ -10,6 +10,7 @@
  * montada — funciona tanto embutida quanto acessada isoladamente.
  */
 
+import '../../acoes/pages-admin-pagamentos.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { sb as _sbAuth } from '../../lib/supabase.js'
 import { toast, esc } from '../../modules/utils.js'
 
@@ -260,7 +261,7 @@ export async function renderPagamentos(container, page) {
     <div class="topbar">
       <div class="topbar-t">Pagamentos</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <select onchange="window._pgPlano=this.value;window._rerenderPagamentos()" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie);color:var(--txt)">
+        <select data-h-change="pages-admin-pagamentos.5" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie);color:var(--txt)">
           <option value="" ${!filtroPlano?'selected':''}>Todos os planos</option>
           <option value="brahma"       ${filtroPlano==='brahma'      ?'selected':''}>Brahma</option>
           <option value="shiva_1x"     ${filtroPlano==='shiva_1x'    ?'selected':''}>Shiva 1x</option>
@@ -268,7 +269,7 @@ export async function renderPagamentos(container, page) {
           <option value="vishnu_2x"    ${filtroPlano==='vishnu_2x'   ?'selected':''}>Vishnu 2x</option>
           <option value="vishnu_livre" ${filtroPlano==='vishnu_livre'?'selected':''}>Vishnu Livre</option>
         </select>
-        <button onclick="abrirSyncAsaas()" style="padding:5px 12px;background:var(--superficie);color:var(--titulo);border:1px solid var(--borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="ti ti-refresh" aria-hidden="true"></i> Sincronizar Asaas</button>
+        <button data-h-click="pages-admin-pagamentos.6" style="padding:5px 12px;background:var(--superficie);color:var(--titulo);border:1px solid var(--borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="ti ti-refresh" aria-hidden="true"></i> Sincronizar Asaas</button>
       </div>
     </div>
     <div class="content">
@@ -283,26 +284,26 @@ export async function renderPagamentos(container, page) {
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
         <span style="font-size:12px;color:var(--txt2);font-weight:500">Mês:</span>
         ${mesesDisponiveis.map(m => `
-          <button onclick="window._pgMes='${m}';window._pgFiltro='TODOS';window._rerenderPagamentos()"
+          <button data-h-click="pages-admin-pagamentos.1" data-a-click="${esc(JSON.stringify([String(m)]))}"
             style="padding:4px 12px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${mesSel===m?'var(--verde)':'var(--borda)'};background:${mesSel===m?'var(--verde)':'var(--superficie)'};color:${mesSel===m?'var(--bege)':'var(--txt2)'}">
             ${nomeMes(m)}${m===agora.toISOString().slice(0,7)?' ·atual':''}
           </button>`).join('')}
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
-        <div onclick="window._pgFiltro='RECEIVED';window._rerenderPagamentos()" style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;border-top:3px solid var(--ok-fg);cursor:pointer">
+        <div data-h-click="pages-admin-pagamentos.7" style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;border-top:3px solid var(--ok-fg);cursor:pointer">
           <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:6px">Recebidas</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--ok-fg)">${fmtR(totalRec)}</div>
           <div style="height:4px;background:var(--ok-bg);border-radius:2px;margin:8px 0 6px"><div style="height:4px;background:var(--ok-fg);border-radius:2px;width:${pgsMes.length?Math.round(recebidos.length/pgsMes.length*100):0}%"></div></div>
           <div style="font-size:12px;color:var(--txt2)">${recebidos.length} cobranças · clique para ver <i class="ti ti-arrow-down" aria-hidden="true"></i></div>
         </div>
-        <div onclick="window._pgFiltro='PENDING';window._rerenderPagamentos()" style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;border-top:3px solid var(--warn-vivo);cursor:pointer">
+        <div data-h-click="pages-admin-pagamentos.8" style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;border-top:3px solid var(--warn-vivo);cursor:pointer">
           <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:6px">Aguardando</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--warn-vivo)">${fmtR(totalAg)}</div>
           <div style="height:4px;background:rgba(232,188,79,.2);border-radius:2px;margin:8px 0 6px"><div style="height:4px;background:#e67e22;border-radius:2px;width:${pgsMes.length?Math.round(aguardando.length/pgsMes.length*100):0}%"></div></div>
           <div style="font-size:12px;color:var(--txt2)">${aguardando.length} cobranças · clique para ver <i class="ti ti-arrow-down" aria-hidden="true"></i></div>
         </div>
-        <div onclick="window._pgFiltro='OVERDUE';window._rerenderPagamentos()" style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;border-top:3px solid var(--err-vivo);cursor:pointer">
+        <div data-h-click="pages-admin-pagamentos.9" style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;border-top:3px solid var(--err-vivo);cursor:pointer">
           <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:6px">Vencidas</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--err-vivo)">${fmtR(totalVenc)}</div>
           <div style="height:4px;background:var(--err-bg);border-radius:2px;margin:8px 0 6px"><div style="height:4px;background:#c0392b;border-radius:2px;width:${pgsMes.length?Math.round(vencidos.length/pgsMes.length*100):0}%"></div></div>
@@ -329,7 +330,7 @@ export async function renderPagamentos(container, page) {
           const cnt = s==='TODOS' ? pgsMes.length :
             pgs.filter(p => p.mes_ref?.slice(0,7)===mesSel && (p.status===s||(s==='RECEIVED'&&p.status==='CONFIRMED'))).length
           const label = {TODOS:'Todos',RECEIVED:'Recebidos',PENDING:'Aguardando',OVERDUE:'Vencidos',CANCELLED:'Cancelados'}[s]
-          return `<button onclick="window._pgFiltro='${s}';window._rerenderPagamentos()"
+          return `<button data-h-click="pages-admin-pagamentos.2" data-a-click="${esc(JSON.stringify([String(s)]))}"
             style="padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${filtroAtivo===s?'var(--verde)':'var(--borda)'};background:${filtroAtivo===s?'var(--verde)':'var(--superficie)'};color:${filtroAtivo===s?'var(--bege)':'var(--txt2)'}">${label} (${cnt})</button>`
         }).join('')}
       </div>
@@ -337,23 +338,23 @@ export async function renderPagamentos(container, page) {
       <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;align-items:flex-end">
         <div style="display:flex;flex-direction:column;gap:3px">
           <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Vencimento de</label>
-          <input type="date" value="${window._pgDe||''}" onchange="window._pgDe=this.value;window._rerenderPagamentos()" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie)">
+          <input type="date" value="${window._pgDe||''}" data-h-change="pages-admin-pagamentos.10" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie)">
         </div>
         <div style="display:flex;flex-direction:column;gap:3px">
           <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Até</label>
-          <input type="date" value="${window._pgAte||''}" onchange="window._pgAte=this.value;window._rerenderPagamentos()" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie)">
+          <input type="date" value="${window._pgAte||''}" data-h-change="pages-admin-pagamentos.11" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie)">
         </div>
-        ${window._pgDe||window._pgAte?`<button onclick="window._pgDe='';window._pgAte='';window._rerenderPagamentos()" style="padding:5px 10px;background:var(--err-bg);color:var(--err-fg);border:1px solid var(--err-borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;align-self:flex-end"><i class="ti ti-x" aria-hidden="true"></i> Limpar datas</button>`:''}
+        ${window._pgDe||window._pgAte?`<button data-h-click="pages-admin-pagamentos.3" style="padding:5px 10px;background:var(--err-bg);color:var(--err-fg);border:1px solid var(--err-borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;align-self:flex-end"><i class="ti ti-x" aria-hidden="true"></i> Limpar datas</button>`:''}
         <div style="margin-left:auto;font-size:12px;color:var(--txt2);align-self:flex-end">${pgsFiltrados.length} registro(s)</div>
       </div>
 
       <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
       <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);overflow-x:auto;min-width:520px">
         <div style="display:grid;grid-template-columns:1fr 110px 90px 100px 80px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
-          <span onclick="window._pgSort=window._pgSort==='nome_asc'?'nome_desc':'nome_asc';window._rerenderPagamentos()" style="cursor:pointer">Aluno ${window._pgSort?.startsWith('nome')?window._pgSort==='nome_asc'?'<i class="ti ti-arrow-up" aria-hidden="true"></i>':'<i class="ti ti-arrow-down" aria-hidden="true"></i>':'<i class="ti ti-arrows-sort" aria-hidden="true"></i>'}</span>
-          <span onclick="window._pgSort=window._pgSort==='data_asc'?'data_desc':'data_asc';window._rerenderPagamentos()" style="cursor:pointer">Vencimento ${window._pgSort?.startsWith('data')?window._pgSort==='data_asc'?'<i class="ti ti-arrow-up" aria-hidden="true"></i>':'<i class="ti ti-arrow-down" aria-hidden="true"></i>':'<i class="ti ti-arrows-sort" aria-hidden="true"></i>'}</span>
-          <span onclick="window._pgSort=window._pgSort==='valor_asc'?'valor_desc':'valor_asc';window._rerenderPagamentos()" style="cursor:pointer">Valor ${window._pgSort?.startsWith('valor')?window._pgSort==='valor_asc'?'<i class="ti ti-arrow-up" aria-hidden="true"></i>':'<i class="ti ti-arrow-down" aria-hidden="true"></i>':'<i class="ti ti-arrows-sort" aria-hidden="true"></i>'}</span>
-          <span onclick="window._pgSort=window._pgSort==='status_asc'?'status_desc':'status_asc';window._rerenderPagamentos()" style="cursor:pointer">Status ${window._pgSort?.startsWith('status')?window._pgSort==='status_asc'?'<i class="ti ti-arrow-up" aria-hidden="true"></i>':'<i class="ti ti-arrow-down" aria-hidden="true"></i>':'<i class="ti ti-arrows-sort" aria-hidden="true"></i>'}</span>
+          <span data-h-click="pages-admin-pagamentos.12" style="cursor:pointer">Aluno ${window._pgSort?.startsWith('nome')?window._pgSort==='nome_asc'?'<i class="ti ti-arrow-up" aria-hidden="true"></i>':'<i class="ti ti-arrow-down" aria-hidden="true"></i>':'<i class="ti ti-arrows-sort" aria-hidden="true"></i>'}</span>
+          <span data-h-click="pages-admin-pagamentos.13" style="cursor:pointer">Vencimento ${window._pgSort?.startsWith('data')?window._pgSort==='data_asc'?'<i class="ti ti-arrow-up" aria-hidden="true"></i>':'<i class="ti ti-arrow-down" aria-hidden="true"></i>':'<i class="ti ti-arrows-sort" aria-hidden="true"></i>'}</span>
+          <span data-h-click="pages-admin-pagamentos.14" style="cursor:pointer">Valor ${window._pgSort?.startsWith('valor')?window._pgSort==='valor_asc'?'<i class="ti ti-arrow-up" aria-hidden="true"></i>':'<i class="ti ti-arrow-down" aria-hidden="true"></i>':'<i class="ti ti-arrows-sort" aria-hidden="true"></i>'}</span>
+          <span data-h-click="pages-admin-pagamentos.15" style="cursor:pointer">Status ${window._pgSort?.startsWith('status')?window._pgSort==='status_asc'?'<i class="ti ti-arrow-up" aria-hidden="true"></i>':'<i class="ti ti-arrow-down" aria-hidden="true"></i>':'<i class="ti ti-arrows-sort" aria-hidden="true"></i>'}</span>
           <span>Mês ref.</span>
         </div>
         ${pgsFiltrados.length === 0
@@ -362,7 +363,7 @@ export async function renderPagamentos(container, page) {
               const temPerfil = !!(p.aluno?.id)
               return `<div style="display:grid;grid-template-columns:1fr 110px 90px 100px 80px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
                 <div>
-                  <div style="font-weight:500;${temPerfil?'color:var(--titulo);cursor:pointer;text-decoration:underline;text-underline-offset:2px':''}" ${temPerfil?`onclick="abrirPerfilAlunoPg('${p.aluno.id}')"`:''}>${esc(p.aluno?.nome || '—')}</div>
+                  <div style="font-weight:500;${temPerfil?'color:var(--titulo);cursor:pointer;text-decoration:underline;text-underline-offset:2px':''}" ${temPerfil?`data-h-click="pages-admin-pagamentos.4" data-a-click="${esc(JSON.stringify([String(p.aluno.id)]))}"`:''}>${esc(p.aluno?.nome || '—')}</div>
                   <div style="font-size:12px;color:var(--txt2)">${esc(p.aluno?.email || (p.asaas_customer ? '<i class="ti ti-link" aria-hidden="true"></i> ' + p.asaas_customer : ''))}</div>
                 </div>
                 <span style="font-size:12px">${fmtData(p.vencimento)}</span>
@@ -380,7 +381,7 @@ export async function renderPagamentos(container, page) {
         <div style="background:var(--superficie);border-radius:12px;width:480px;max-width:100%;max-height:85vh;overflow-y:auto">
           <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0">
             <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)">Perfil do Aluno</div>
-            <button onclick="document.getElementById('modal-pg-aluno').style.display='none'" style="background:none;border:none;color:var(--bege);font-size:22px;cursor:pointer;line-height:1">×</button>
+            <button data-h-click="pages-admin-pagamentos.16" style="background:none;border:none;color:var(--bege);font-size:22px;cursor:pointer;line-height:1">×</button>
           </div>
           <div id="modal-pg-aluno-body" style="padding:20px">Carregando...</div>
         </div>
@@ -400,9 +401,9 @@ export async function renderPagamentos(container, page) {
             <div id="sync-progress" style="display:none;font-size:12px;color:var(--txt2);margin-bottom:10px"><i class="ti ti-hourglass" aria-hidden="true"></i> Sincronizando e vinculando alunos...</div>
           </div>
           <div style="padding:0 20px 16px;display:flex;justify-content:flex-end;gap:8px">
-            <button onclick="document.getElementById('modal-sync-asaas').style.display='none'"
+            <button data-h-click="pages-admin-pagamentos.17"
               style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
-            <button id="btn-executar-sync" onclick="executarSyncAsaas()"
+            <button id="btn-executar-sync" data-h-click="pages-admin-pagamentos.18"
               style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Sincronizar</button>
           </div>
         </div>
@@ -475,8 +476,8 @@ uiAnimar(container)
         </div>`).join('')}
       ` : '<div style="font-size:12px;color:var(--txt2)">Nenhum pagamento encontrado.</div>'}
       <div style="margin-top:16px;display:flex;gap:8px">
-        <button onclick="document.getElementById('modal-pg-aluno').style.display='none';window._pendingEditAluno='${alunoId}';window._abaAlunos='alunos';navigate('alunos')" style="flex:1;padding:8px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Editar aluno</button>
-        <button onclick="document.getElementById('modal-pg-aluno').style.display='none'" style="padding:8px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Fechar</button>
+        <button data-h-click="pages-admin-pagamentos.19" data-a-click="${esc(JSON.stringify([String(alunoId)]))}" style="flex:1;padding:8px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Editar aluno</button>
+        <button data-h-click="pages-admin-pagamentos.16" style="padding:8px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Fechar</button>
       </div>
     `
   }

@@ -2,6 +2,7 @@
  * src/modules/auth.js
  */
 
+import '../acoes/modules-auth.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { sb } from '../lib/supabase.js'
 import { buildMenu, homePorPerfil, initMobileMenu } from './navigation.js'
 import { verificarContrato } from './contrato.js'
@@ -37,7 +38,7 @@ export async function mostrarOnboarding(user, nomeGoogle, fotoGoogle) {
         <p style="font-size:12px;color:var(--txt2);line-height:1.6;margin:0 0 20px">
           Você começa como visitante, com acesso ao Sangha e ao Āsana Mārga. Para liberar os demais benefícios, fale com a equipe do estúdio sobre os planos disponíveis.
         </p>
-        <button onclick="finalizarOnboarding(this.dataset.id, this.dataset.email)" data-id="${esc(user.id)}" data-email="${esc(user.email)}"
+        <button data-h-click="modules-auth.1" data-id="${esc(user.id)}" data-email="${esc(user.email)}"
           style="width:100%;padding:12px;background:var(--verde);color:var(--bege);border:none;border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500">
           Começar <i class="ti ti-arrow-right" aria-hidden="true"></i>
         </button>

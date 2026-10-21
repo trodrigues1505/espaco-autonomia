@@ -1,6 +1,7 @@
 /**
  * src/pages/professor/aulas.js
  */
+import '../../acoes/pages-professor-aulas.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { sb }         from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel, PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS, calcularNivel, NIVEL_LABELS, esc } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
@@ -40,8 +41,8 @@ export async function renderProfAulas(container, page) {
     <div class="content">
       <div id="barra-selecao-massa" style="display:none;align-items:center;gap:10px;background:var(--err-bg);border:1px solid var(--err-borda);border-radius:6px;padding:8px 14px;margin-bottom:12px">
         <span id="barra-selecao-count" style="font-size:12px;color:var(--err-fg)"></span>
-        <button onclick="window._abrirCancelamentoEmMassa()" style="padding:5px 12px;background:#8a1a1a;color:#fff;border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Cancelar selecionadas</button>
-        <button onclick="window._ocsSelecionadas.clear();window._atualizarBarraSelecao();document.querySelectorAll('.chk-cancel-massa').forEach(c=>c.checked=false)" style="padding:5px 10px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Limpar seleção</button>
+        <button data-h-click="pages-professor-aulas.4" style="padding:5px 12px;background:#8a1a1a;color:#fff;border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Cancelar selecionadas</button>
+        <button data-h-click="pages-professor-aulas.5" style="padding:5px 10px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Limpar seleção</button>
       </div>
       ${(ocs||[]).length===0
         ? '<div style="text-align:center;padding:40px;font-size:13px;color:var(--txt2)">Nenhuma aula nos próximos 14 dias.</div>'
@@ -50,7 +51,7 @@ export async function renderProfAulas(container, page) {
             const cancelada = oc.cancelada
             return `<div style="background:var(--superficie);border:1px solid ${cancelada?'var(--err-borda)':'var(--borda)'};border-radius:var(--r);padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;${cancelada?'opacity:.7':''}">
               <div style="display:flex;align-items:flex-start;gap:10px">
-                ${!cancelada?`<input type="checkbox" class="chk-cancel-massa" ${window._ocsSelecionadas.has(oc.id)?'checked':''} onclick="window._toggleOcSelecionada('${oc.id}')" style="margin-top:3px;cursor:pointer" title="Selecionar para cancelamento em massa">`:''}
+                ${!cancelada?`<input type="checkbox" class="chk-cancel-massa" ${window._ocsSelecionadas.has(oc.id)?'checked':''} data-h-click="pages-professor-aulas.1" data-a-click="${esc(JSON.stringify([String(oc.id)]))}" style="margin-top:3px;cursor:pointer" title="Selecionar para cancelamento em massa">`:''}
                 <div>
                   <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
                     ${dot(oc.modalidade)}
@@ -65,8 +66,8 @@ export async function renderProfAulas(container, page) {
               </div>
               <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
                 ${!cancelada ? `
-                  <button onclick="window._ocPresencaId='${oc.id}';navigate('prof-chamada')" style="padding:6px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Fazer chamada</button>
-                  <button onclick="window._currentPage='prof-aulas';cancelarOcorrenciaGrade('${oc.id}',window._profAulasMap['${oc.id}'])" style="padding:5px 12px;background:var(--err-bg);color:var(--err-fg);border:1px solid var(--err-borda);border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Cancelar aula</button>
+                  <button data-h-click="pages-professor-aulas.2" data-a-click="${esc(JSON.stringify([String(oc.id)]))}" style="padding:6px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Fazer chamada</button>
+                  <button data-h-click="pages-professor-aulas.3" data-a-click="${esc(JSON.stringify([String(oc.id), String(oc.id)]))}" style="padding:5px 12px;background:var(--err-bg);color:var(--err-fg);border:1px solid var(--err-borda);border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Cancelar aula</button>
                 ` : '<span style="font-size:12px;color:var(--err-fg)">Aula cancelada</span>'}
               </div>
             </div>`

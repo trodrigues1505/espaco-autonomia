@@ -7,6 +7,7 @@
  * completa os campos manuais (abertura, kriya, aquecimento, pranayama) → salva.
  */
 
+import '../../acoes/pages-admin-asana.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { toast, esc, urlSegura } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 
@@ -203,13 +204,13 @@ export async function renderAsanaAdmin(container, page) {
             <div style="font-size:12px;color:var(--txt2)">${esc(SLOT_INFO[slot].sub)}</div>
           </div>
           <div style="display:flex;gap:6px">
-            ${!vazio ? `<button onclick="previaAsana(${slot})"
+            ${!vazio ? `<button data-h-click="pages-admin-asana.1" data-a-click="${esc(JSON.stringify([(slot)]))}"
               style="padding:6px 12px;background:rgba(31,56,31,.08);color:var(--titulo);border:none;
                      border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Ver como o aluno vê"><i class="ti ti-eye" aria-hidden="true"></i> Prévia</button>` : ''}
-            ${!vazio ? `<button onclick="abrirEdicaoAsana(${slot})"
+            ${!vazio ? `<button data-h-click="pages-admin-asana.2" data-a-click="${esc(JSON.stringify([(slot)]))}"
               style="padding:6px 12px;background:var(--ok-bg);color:var(--ok-fg);border:none;
                      border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Editar os dados já salvos, sem novo PDF"><i class="ti ti-pencil" aria-hidden="true"></i> Editar</button>` : ''}
-            <button onclick="abrirFormAsana(${slot})"
+            <button data-h-click="pages-admin-asana.3" data-a-click="${esc(JSON.stringify([(slot)]))}"
               style="padding:6px 14px;background:var(--verde);color:var(--bege);border:none;
                      border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
                      display:flex;align-items:center;gap:5px">
@@ -242,7 +243,7 @@ export async function renderAsanaAdmin(container, page) {
                                           padding:16px;overflow-y:auto">
       <div style="width:560px;max-width:100%;margin:auto">
         <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
-          <button onclick="document.getElementById('modal-previa-asana').style.display='none'"
+          <button data-h-click="pages-admin-asana.4"
             style="background:var(--superficie);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:18px">×</button>
         </div>
         <div id="previa-asana-body"></div>
@@ -264,7 +265,7 @@ export async function renderAsanaAdmin(container, page) {
               Envie o PDF de estatísticas do Tummee — a IA extrai e interpreta os campos
             </div>
           </div>
-          <button onclick="fecharFormAsana()"
+          <button data-h-click="pages-admin-asana.5"
             style="background:none;border:none;color:var(--bege);font-size:22px;cursor:pointer;line-height:1">×</button>
         </div>
 
@@ -304,7 +305,7 @@ export async function renderAsanaAdmin(container, page) {
                        font-family:monospace;outline:none;width:100%;resize:vertical;line-height:1.5"></textarea>
             </div>
 
-            <button onclick="interpretarComIAAsana()" id="btn-interpretar-am"
+            <button data-h-click="pages-admin-asana.6" id="btn-interpretar-am"
               style="width:100%;padding:12px;background:var(--verde);color:var(--bege);border:none;
                      border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;
                      font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px">
@@ -315,7 +316,7 @@ export async function renderAsanaAdmin(container, page) {
         </div>
 
         <div id="asana-modal-footer" style="padding:0 20px 20px;display:flex;justify-content:flex-end;gap:8px">
-          <button onclick="fecharFormAsana()"
+          <button data-h-click="pages-admin-asana.5"
             style="padding:8px 16px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
         </div>
       </div>
@@ -350,7 +351,7 @@ export async function renderAsanaAdmin(container, page) {
     document.getElementById('am-pdf-file').value = ''
     document.getElementById('am-pdf-status').textContent = ''
     document.getElementById('asana-modal-footer').innerHTML = `
-      <button onclick="fecharFormAsana()"
+      <button data-h-click="pages-admin-asana.5"
         style="padding:8px 16px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>`
     document.getElementById('modal-asana').style.display = 'flex'
 
@@ -522,13 +523,13 @@ Regras:
 
   function _mostrarBotaoSalvar() {
     document.getElementById('asana-modal-footer').innerHTML = `
-      <button onclick="voltarEtapa1Asana()"
+      <button data-h-click="pages-admin-asana.7"
         style="padding:8px 16px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer;margin-right:auto">
         <i class="ti ti-arrow-left" aria-hidden="true"></i> Novo PDF
       </button>
-      <button onclick="fecharFormAsana()"
+      <button data-h-click="pages-admin-asana.5"
         style="padding:8px 16px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
-      <button onclick="salvarAsana()"
+      <button data-h-click="pages-admin-asana.8"
         style="padding:8px 16px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;
                font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500">
         <i class="ti ti-check"></i> Salvar
@@ -541,7 +542,7 @@ Regras:
     const btn = document.getElementById('btn-interpretar-am')
     if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-sparkles"></i> Interpretar com IA' }
     document.getElementById('asana-modal-footer').innerHTML = `
-      <button onclick="fecharFormAsana()"
+      <button data-h-click="pages-admin-asana.5"
         style="padding:8px 16px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>`
   }
 

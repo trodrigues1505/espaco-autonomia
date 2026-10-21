@@ -5,6 +5,7 @@
  * para evitar erro de cast do enum confirmacao_status.
  */
 
+import '../../acoes/pages-admin-presencas.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { confirmarModal } from '../../modules/dialogs.js'
 import { sb } from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel, PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS, calcularNivel, NIVEL_LABELS, esc } from '../../modules/utils.js'
@@ -59,7 +60,7 @@ export async function renderPresencas(container, page) {
     const dt = new Date(oc.data_hora)
     const hora = dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
     const sel = oc.id === ocSelecionadaId
-    return `<button onclick="window._ocPresencaId='${oc.id}';navigate('presencas')" style="padding:7px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${sel?'var(--verde)':'var(--borda)'};background:${sel?'var(--verde)':'var(--superficie)'};color:${sel?'var(--bege)':'var(--txt2)'};display:flex;align-items:center;gap:6px">
+    return `<button data-h-click="pages-admin-presencas.1" data-a-click="${esc(JSON.stringify([String(oc.id)]))}" style="padding:7px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${sel?'var(--verde)':'var(--borda)'};background:${sel?'var(--verde)':'var(--superficie)'};color:${sel?'var(--bege)':'var(--txt2)'};display:flex;align-items:center;gap:6px">
       ${dot(oc.modalidade)} ${NOMES[oc.modalidade]} ${hora}
       <span style="background:${sel?'rgba(242,236,206,.2)':'rgba(31,56,31,.08)'};padding:1px 6px;border-radius:10px;font-size:12px">${oc.confirmados||0}/${oc.vagas_total}</span>
     </button>`
@@ -91,14 +92,14 @@ export async function renderPresencas(container, page) {
     <div class="content">
       ${renderPainelNotif(notifs, { titulo: 'Avisos', maxVisiveis: 2 })}
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-        <button onclick="window._presencaData='${anteriorISO}';window._ocPresencaId=null;navigate('presencas')"
+        <button data-h-click="pages-admin-presencas.7" data-a-click="${esc(JSON.stringify([String(anteriorISO)]))}"
           style="padding:5px 10px;background:var(--superficie);color:var(--txt);border:1px solid var(--borda);border-radius:5px;font-size:13px;cursor:pointer"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
-        <button onclick="window._presencaData=null;window._ocPresencaId=null;navigate('presencas')"
+        <button data-h-click="pages-admin-presencas.8"
           style="padding:5px 12px;background:${ehHoje?'var(--verde)':'var(--superficie)'};color:${ehHoje?'var(--bege)':'var(--txt)'};border:1px solid ${ehHoje?'var(--verde)':'var(--borda)'};border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Hoje</button>
-        <button onclick="window._presencaData='${amanhaISO}';window._ocPresencaId=null;navigate('presencas')"
+        <button data-h-click="pages-admin-presencas.7" data-a-click="${esc(JSON.stringify([String(amanhaISO)]))}"
           style="padding:5px 10px;background:var(--superficie);color:var(--txt);border:1px solid var(--borda);border-radius:5px;font-size:13px;cursor:pointer"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
         <input type="date" value="${dataISO}"
-          onchange="window._presencaData=this.value;window._ocPresencaId=null;navigate('presencas')"
+          data-h-change="pages-admin-presencas.9"
           style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie);color:var(--txt);cursor:pointer">
         <span style="font-size:12px;color:var(--txt2)">${ocHoje?.length||0} aula(s)</span>
       </div>
@@ -110,7 +111,7 @@ export async function renderPresencas(container, page) {
           `<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
             ${badge(ocAtual.confirmados+'/'+(ocAtual.vagas_total)+' conf.','var(--ok-bg)','var(--ok-fg)')}
             ${aulaPassada ? '<span style="font-size:12px;color:var(--warn-vivo);background:rgba(230,126,34,.1);padding:2px 8px;border-radius:10px">Aula já realizada</span>' : ''}
-            <button onclick="marcarTodosPresentes('${ocSelecionadaId}')" style="padding:3px 10px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="ti ti-check" aria-hidden="true"></i> Todos presentes</button>
+            <button data-h-click="pages-admin-presencas.2" data-a-click="${esc(JSON.stringify([String(ocSelecionadaId)]))}" style="padding:3px 10px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="ti ti-check" aria-hidden="true"></i> Todos presentes</button>
           </div>`,
           `<div style="padding:10px 18px;background:rgba(242,236,206,.25);border-bottom:1px solid var(--borda);display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <span style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500;white-space:nowrap">+ Adicionar aluno</span>
@@ -118,7 +119,7 @@ export async function renderPresencas(container, page) {
               <option value="">— selecionar aluno —</option>
               ${alunosDisponiveis.map(a=>`<option value="${a.id}">${esc(a.nome)}</option>`).join('')}
             </select>
-            <button onclick="adicionarAlunoPresenca('${ocSelecionadaId}')" style="padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Adicionar${aulaPassada?' (débita saldo)':''}</button>
+            <button data-h-click="pages-admin-presencas.6" data-a-click="${esc(JSON.stringify([String(ocSelecionadaId)]))}" style="padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Adicionar${aulaPassada?' (débita saldo)':''}</button>
           </div>
           <div style="display:grid;grid-template-columns:1fr 90px 100px 120px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
             <span>Aluno</span><span>Confirmou</span><span>Status</span><span>Ações</span>
@@ -132,9 +133,9 @@ export async function renderPresencas(container, page) {
               <span style="font-size:12px;color:var(--txt2)">${c.confirmado_em?new Date(c.confirmado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'-'}</span>
               <span>${badge(statusMap[c.status]||c.status, statusBg[c.status]||'var(--neutro-bg)', statusColor[c.status]||'var(--txt2)')}</span>
               <div style="display:flex;gap:4px">
-                <button onclick="setPresenca('${c.id}',true)" style="padding:3px 7px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Presente"><i class="ti ti-check" aria-hidden="true"></i></button>
-                <button onclick="setPresenca('${c.id}',false)" style="padding:3px 7px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Ausente"><i class="ti ti-x" aria-hidden="true"></i></button>
-                <button onclick="excluirPresenca(this.dataset.id, this.dataset.nome, this.dataset.aluno)" data-id="${esc(c.id)}" data-nome="${esc(c.aluno?.nome||'')}" data-aluno="${esc(c.aluno?.id||'')}" style="padding:3px 7px;background:var(--neutro-bg);color:var(--txt2);border:none;border-radius:4px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Remover presença"><i class="ti ti-trash" aria-hidden="true"></i></button>
+                <button data-h-click="pages-admin-presencas.3" data-a-click="${esc(JSON.stringify([String(c.id)]))}" style="padding:3px 7px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Presente"><i class="ti ti-check" aria-hidden="true"></i></button>
+                <button data-h-click="pages-admin-presencas.4" data-a-click="${esc(JSON.stringify([String(c.id)]))}" style="padding:3px 7px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Ausente"><i class="ti ti-x" aria-hidden="true"></i></button>
+                <button data-h-click="pages-admin-presencas.5" data-id="${esc(c.id)}" data-nome="${esc(c.aluno?.nome||'')}" data-aluno="${esc(c.aluno?.id||'')}" style="padding:3px 7px;background:var(--neutro-bg);color:var(--txt2);border:none;border-radius:4px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Remover presença"><i class="ti ti-trash" aria-hidden="true"></i></button>
               </div>
             </div>`).join('')
           }`

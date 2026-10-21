@@ -5,6 +5,7 @@
  * → API Anthropic interpreta os blocos de texto → admin confirma capítulo/número/data → salva.
  */
 
+import '../../acoes/pages-admin-jnana.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { confirmarModal } from '../../modules/dialogs.js'
 import { toast, esc } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
@@ -86,7 +87,7 @@ export async function renderJnanaAdmin(container, page) {
   container.innerHTML = `
     <div class="topbar">
       <div class="topbar-t">Jñāna Mārga — Yoga Sutras</div>
-      <button onclick="abrirFormJnana()"
+      <button data-h-click="pages-admin-jnana.5"
         style="padding:6px 14px;background:var(--verde);color:var(--bege);border:none;
                border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
                display:flex;align-items:center;gap:5px">
@@ -157,17 +158,17 @@ export async function renderJnanaAdmin(container, page) {
                   style="border:1px solid var(--borda);border-radius:5px;padding:4px 8px;
                          font-size:12px;font-family:'DM Sans',sans-serif;color:var(--txt);
                          width:130px">
-                <button onclick="reagendarSutra('${s.id}')"
+                <button data-h-click="pages-admin-jnana.1" data-a-click="${esc(JSON.stringify([String(s.id)]))}"
                   style="padding:2px 8px;background:rgba(232,188,79,.15);color:var(--warn-fg);
                          border:1px solid rgba(232,188,79,.4);border-radius:4px;font-size:12px;
                          cursor:pointer;font-family:'DM Sans',sans-serif">Reagendar</button>
               </div>
               <div style="display:flex;gap:4px">
-                <button onclick="previaSutra('${s.id}')"
+                <button data-h-click="pages-admin-jnana.2" data-a-click="${esc(JSON.stringify([String(s.id)]))}"
                   style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--titulo);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Prévia"><i class="ti ti-eye" aria-hidden="true"></i></button>
-                <button onclick="editarSutra('${s.id}')"
+                <button data-h-click="pages-admin-jnana.3" data-a-click="${esc(JSON.stringify([String(s.id)]))}"
                   style="padding:3px 8px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-pencil" aria-hidden="true"></i></button>
-                <button onclick="excluirSutra(this.dataset.id, this.dataset.rotulo)" data-id="${esc(s.id)}" data-rotulo="${esc(s.capitulo)} ${esc(_labelNumero(s))}"
+                <button data-h-click="pages-admin-jnana.4" data-id="${esc(s.id)}" data-rotulo="${esc(s.capitulo)} ${esc(_labelNumero(s))}"
                   style="padding:3px 8px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-x" aria-hidden="true"></i></button>
               </div>
             </div>`).join('')}
@@ -197,11 +198,11 @@ export async function renderJnanaAdmin(container, page) {
                 <span style="color:var(--txt2);font-size:12px">${esc(s.capitulo)}</span>
                 <div>${badgeStatus(s.publicada_em)}<div style="font-size:12px;color:var(--txt2);margin-top:2px">${fmtDia(s.publicada_em)}</div></div>
                 <div style="display:flex;gap:4px">
-                  <button onclick="previaSutra('${s.id}')"
+                  <button data-h-click="pages-admin-jnana.2" data-a-click="${esc(JSON.stringify([String(s.id)]))}"
                     style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--titulo);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Prévia"><i class="ti ti-eye" aria-hidden="true"></i></button>
-                  <button onclick="editarSutra('${s.id}')"
+                  <button data-h-click="pages-admin-jnana.3" data-a-click="${esc(JSON.stringify([String(s.id)]))}"
                     style="padding:3px 8px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-pencil" aria-hidden="true"></i></button>
-                  <button onclick="excluirSutra(this.dataset.id, this.dataset.rotulo)" data-id="${esc(s.id)}" data-rotulo="${esc(s.capitulo)} ${esc(_labelNumero(s))}"
+                  <button data-h-click="pages-admin-jnana.4" data-id="${esc(s.id)}" data-rotulo="${esc(s.capitulo)} ${esc(_labelNumero(s))}"
                     style="padding:3px 8px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-x" aria-hidden="true"></i></button>
                 </div>
               </div>`
@@ -226,7 +227,7 @@ export async function renderJnanaAdmin(container, page) {
               Cole o texto (ONDE ESTAMOS / sânscrito / COMENTÁRIO / NA PRÁTICA) e a IA extrai os campos
             </div>
           </div>
-          <button onclick="fecharFormJnana()"
+          <button data-h-click="pages-admin-jnana.6"
             style="background:none;border:none;color:var(--bege);font-size:22px;cursor:pointer;line-height:1">×</button>
         </div>
 
@@ -265,7 +266,7 @@ export async function renderJnanaAdmin(container, page) {
                 Sutras com data futura ficam invisíveis para alunos até lá.
               </div>
             </div>
-            <button onclick="interpretarComIA()"
+            <button data-h-click="pages-admin-jnana.7"
               id="btn-interpretar"
               style="width:100%;padding:12px;background:var(--verde);color:var(--bege);border:none;
                      border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;
@@ -278,7 +279,7 @@ export async function renderJnanaAdmin(container, page) {
         </div>
 
         <div id="jnana-modal-footer" style="padding:0 20px 20px;display:flex;justify-content:flex-end;gap:8px">
-          <button onclick="fecharFormJnana()"
+          <button data-h-click="pages-admin-jnana.6"
             style="padding:8px 16px;background:transparent;border:1px solid var(--borda);
                    border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
         </div>
@@ -309,7 +310,7 @@ export async function renderJnanaAdmin(container, page) {
     document.getElementById('jn-capitulo').value = String(capituloSugerido)
     document.getElementById('jn-numero').value = numeroSugerido
     document.getElementById('jnana-modal-footer').innerHTML = `
-      <button onclick="fecharFormJnana()"
+      <button data-h-click="pages-admin-jnana.6"
         style="padding:8px 16px;background:transparent;border:1px solid var(--borda);
                border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>`
     document.getElementById('modal-jnana').style.display = 'flex'
@@ -327,7 +328,7 @@ export async function renderJnanaAdmin(container, page) {
       <div style="background:var(--superficie);border-radius:12px;width:560px;max-width:100%;margin:auto;overflow:hidden">
         <div style="background:var(--verde);padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
           <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--bege)">Prévia — visão do aluno</div>
-          <button onclick="document.getElementById('modal-previa-jnana').remove()"
+          <button data-h-click="pages-admin-jnana.8"
             style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
         </div>
         <div style="padding:18px">
@@ -499,15 +500,15 @@ try {
 
   function _mostrarBotaoSalvar() {
     document.getElementById('jnana-modal-footer').innerHTML = `
-      <button onclick="voltarEtapa1()"
+      <button data-h-click="pages-admin-jnana.9"
         style="padding:8px 16px;background:transparent;border:1px solid var(--borda);
                border-radius:6px;font-size:12px;cursor:pointer;margin-right:auto">
         <i class="ti ti-arrow-left" aria-hidden="true"></i> Novo texto
       </button>
-      <button onclick="fecharFormJnana()"
+      <button data-h-click="pages-admin-jnana.6"
         style="padding:8px 16px;background:transparent;border:1px solid var(--borda);
                border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
-      <button onclick="salvarSutra()"
+      <button data-h-click="pages-admin-jnana.10"
         style="padding:8px 16px;background:var(--verde);color:var(--bege);border:none;
                border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
                font-weight:500">
@@ -521,7 +522,7 @@ try {
     const btn = document.getElementById('btn-interpretar')
     if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-sparkles"></i> Interpretar com IA' }
     document.getElementById('jnana-modal-footer').innerHTML = `
-      <button onclick="fecharFormJnana()"
+      <button data-h-click="pages-admin-jnana.6"
         style="padding:8px 16px;background:transparent;border:1px solid var(--borda);
                border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>`
   }

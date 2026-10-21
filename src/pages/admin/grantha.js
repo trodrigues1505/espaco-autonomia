@@ -7,6 +7,7 @@
  * Artigos (tipo='artigo') usam o campo 'conteudo' direto, sem versos.
  */
 
+import '../../acoes/pages-admin-grantha.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { confirmarModal } from '../../modules/dialogs.js'
 import { toast, esc } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
@@ -35,7 +36,7 @@ export async function renderGranthaAdmin(container, page) {
   container.innerHTML = `
     <div class="topbar">
       <div class="topbar-t">Grantha Mandir</div>
-      <button onclick="abrirFormGrantha()"
+      <button data-h-click="pages-admin-grantha.4"
         style="padding:6px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;
                font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px">
         <i class="ti ti-plus"></i> Nova obra/artigo
@@ -61,12 +62,12 @@ export async function renderGranthaAdmin(container, page) {
               <span style="font-size:12px;color:var(--txt2)">${esc(_catLabel(g.categoria))}</span>
               <div style="display:flex;gap:4px">
                 ${g.tipo === 'obra_classica'
-                  ? `<button onclick="abrirVersos(this.dataset.id, this.dataset.titulo)" data-id="${esc(g.id)}" data-titulo="${esc(g.titulo)}"
+                  ? `<button data-h-click="pages-admin-grantha.1" data-id="${esc(g.id)}" data-titulo="${esc(g.titulo)}"
                        style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--titulo);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Gerenciar versos"><i class="ti ti-file-text" aria-hidden="true"></i></button>`
                   : ''}
-                <button onclick="editarGrantha('${g.id}')"
+                <button data-h-click="pages-admin-grantha.2" data-a-click="${esc(JSON.stringify([String(g.id)]))}"
                   style="padding:3px 8px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-pencil" aria-hidden="true"></i></button>
-                <button onclick="excluirGrantha(this.dataset.id, this.dataset.titulo)" data-id="${esc(g.id)}" data-titulo="${esc(g.titulo)}"
+                <button data-h-click="pages-admin-grantha.3" data-id="${esc(g.id)}" data-titulo="${esc(g.titulo)}"
                   style="padding:3px 8px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-x" aria-hidden="true"></i></button>
               </div>
             </div>`).join('')
@@ -80,7 +81,7 @@ export async function renderGranthaAdmin(container, page) {
       <div style="background:var(--superficie);border-radius:12px;width:520px;max-width:100%;margin:auto">
         <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)" id="grantha-modal-titulo">Nova obra/artigo</div>
-          <button onclick="document.getElementById('modal-grantha').style.display='none'"
+          <button data-h-click="pages-admin-grantha.5"
             style="background:none;border:none;color:var(--bege);font-size:22px;cursor:pointer;line-height:1">×</button>
         </div>
         <div style="padding:20px;display:flex;flex-direction:column;gap:12px">
@@ -88,7 +89,7 @@ export async function renderGranthaAdmin(container, page) {
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div style="display:flex;flex-direction:column;gap:4px">
               <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Tipo</label>
-              <select id="gr-tipo" onchange="toggleTipoGrantha()"
+              <select id="gr-tipo" data-h-change="pages-admin-grantha.6"
                 style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
                 <option value="obra_classica">Obra clássica (em versos)</option>
                 <option value="artigo">Artigo (texto corrido)</option>
@@ -136,9 +137,9 @@ export async function renderGranthaAdmin(container, page) {
           </div>
         </div>
         <div style="padding:0 20px 20px;display:flex;justify-content:flex-end;gap:8px">
-          <button onclick="document.getElementById('modal-grantha').style.display='none'"
+          <button data-h-click="pages-admin-grantha.5"
             style="padding:8px 16px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
-          <button onclick="salvarGrantha()"
+          <button data-h-click="pages-admin-grantha.7"
             style="padding:8px 16px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500">
             <i class="ti ti-check"></i> Salvar
           </button>
@@ -152,7 +153,7 @@ export async function renderGranthaAdmin(container, page) {
       <div style="background:var(--superficie);border-radius:12px;width:680px;max-width:100%;margin:auto">
         <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0">
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)" id="versos-modal-titulo">Versos</div>
-          <button onclick="document.getElementById('modal-versos').style.display='none'"
+          <button data-h-click="pages-admin-grantha.8"
             style="background:none;border:none;color:var(--bege);font-size:22px;cursor:pointer;line-height:1">×</button>
         </div>
         <div style="padding:20px">
@@ -163,7 +164,7 @@ export async function renderGranthaAdmin(container, page) {
             </div>
             <textarea id="versos-json-textarea" rows="5" placeholder="Cole o array JSON aqui..."
               style="width:100%;border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:12px;font-family:monospace;outline:none;resize:vertical;box-sizing:border-box;margin-bottom:8px"></textarea>
-            <button onclick="importarVersosJson()"
+            <button data-h-click="pages-admin-grantha.9"
               style="padding:6px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">
               <i class="ti ti-upload"></i> Importar versos
             </button>
@@ -277,7 +278,7 @@ export async function renderGranthaAdmin(container, page) {
           <div style="font-weight:500;color:var(--txt)">${esc(v.capitulo)} ${v.numero}${v.numero_fim ? '–'+v.numero_fim : ''}</div>
           <div style="font-size:12px;color:var(--txt2);font-style:italic">${esc(v.transliteracao)}</div>
         </div>
-        <button onclick="excluirVerso('${v.id}')"
+        <button data-h-click="pages-admin-grantha.10" data-a-click="${esc(JSON.stringify([String(v.id)]))}"
           style="padding:3px 8px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-x" aria-hidden="true"></i></button>
       </div>`).join('')
   }

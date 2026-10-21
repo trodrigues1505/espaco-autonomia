@@ -2,6 +2,7 @@
  * src/modules/navigation.js
  */
 
+import '../acoes/modules-navigation.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { esc } from './utils.js'
 import { calcularBadgesMenu, aplicarBadgesMenu } from './notificacoes.js'
 
@@ -234,16 +235,16 @@ async function _abrirModalImpersonar(tipo) {
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)">Ver como ${tipo === 'professor' ? 'Professor' : 'Aluno'}</div>
           <div style="font-size:12px;color:rgba(242,236,206,.7);margin-top:2px">Escolha quem deseja visualizar</div>
         </div>
-        <button onclick="document.getElementById('modal-impersonar').remove()" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
+        <button data-h-click="modules-navigation.4" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
       </div>
       <div style="overflow-y:auto;flex:1;padding:12px">
         ${(pessoas||[]).length === 0
           ? `<div style="padding:20px;text-align:center;font-size:13px;color:var(--txt2)">Nenhum encontrado.</div>`
           : (pessoas||[]).map(p => `
-            <div onclick="selecionarImpersonar('${p.id}','${tipo}')"
+            <div data-h-click="modules-navigation.1" data-a-click="${esc(JSON.stringify([String(p.id), String(tipo)]))}"
               style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;cursor:pointer;margin-bottom:4px;transition:background .15s"
-              onmouseover="this.style.background='rgba(31,56,31,.06)'"
-              onmouseout="this.style.background='transparent'">
+              data-h-mouseover="modules-navigation.2"
+              data-h-mouseout="modules-navigation.3">
               <div style="width:34px;height:34px;border-radius:50%;background:rgba(31,56,31,.12);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--titulo);flex-shrink:0">
                 ${esc(p.nome.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase())}
               </div>

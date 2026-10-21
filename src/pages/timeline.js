@@ -2,6 +2,7 @@
  * src/pages/timeline.js
  */
 
+import '../acoes/pages-timeline.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { confirmarModal } from '../modules/dialogs.js'
 import { toast, esc, urlSegura } from '../modules/utils.js'
 import { uiAnimar } from '../modules/ui.js'
@@ -22,7 +23,7 @@ function _tlAbrirLightbox(src) {
     <img src="${src}" alt="" referrerpolicy="no-referrer"
       style="max-width:100%;max-height:90vh;border-radius:8px;object-fit:contain;
              box-shadow:0 20px 60px rgba(0,0,0,.5)">
-    <button onclick="document.getElementById('_tl-lightbox').remove()"
+    <button data-h-click="pages-timeline.1"
       style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);
              border:none;border-radius:50%;width:36px;height:36px;color:#fff;
              font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;
@@ -82,7 +83,7 @@ export async function renderTimeline(container, page) {
       <div style="background:var(--superficie);border-radius:12px;width:460px;max-width:100%;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">
         <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)">Nova enquete</div>
-          <button onclick="document.getElementById('modal-criar-enquete').style.display='none'" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
+          <button data-h-click="pages-timeline.2" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
         </div>
         <div style="overflow-y:auto;flex:1;padding:18px 20px">
           <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Pergunta</label>
@@ -93,7 +94,7 @@ export async function renderTimeline(container, page) {
           <button id="btn-enq-add-opcao" style="margin-top:8px;padding:7px 12px;background:rgba(31,56,31,.06);color:var(--titulo);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">+ Adicionar opção</button>
         </div>
         <div style="padding:14px 20px;border-top:1px solid var(--borda);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0">
-          <button onclick="document.getElementById('modal-criar-enquete').style.display='none'" style="padding:8px 16px;background:var(--superficie);border:1px solid var(--borda);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;color:var(--txt2)">Cancelar</button>
+          <button data-h-click="pages-timeline.2" style="padding:8px 16px;background:var(--superficie);border:1px solid var(--borda);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;color:var(--txt2)">Cancelar</button>
           <button id="btn-enq-publicar" style="padding:8px 18px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500">Publicar enquete</button>
         </div>
       </div>
@@ -102,7 +103,7 @@ export async function renderTimeline(container, page) {
       <div style="background:var(--superficie);border-radius:12px;width:440px;max-width:100%;max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
         <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)">Votos individuais</div>
-          <button onclick="document.getElementById('modal-votos-enquete').style.display='none'" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
+          <button data-h-click="pages-timeline.3" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
         </div>
         <div id="votos-enquete-body" style="overflow-y:auto;flex:1;padding:12px 20px">Carregando...</div>
       </div>
@@ -111,7 +112,7 @@ export async function renderTimeline(container, page) {
       <div style="background:var(--superficie);border-radius:12px;width:400px;max-width:100%;max-height:75vh;display:flex;flex-direction:column;overflow:hidden">
         <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)" id="lista-pessoas-titulo">—</div>
-          <button onclick="document.getElementById('modal-lista-pessoas').style.display='none'" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
+          <button data-h-click="pages-timeline.4" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
         </div>
         <div id="lista-pessoas-body" style="overflow-y:auto;flex:1;padding:14px 20px">Carregando...</div>
       </div>
@@ -568,9 +569,9 @@ export async function renderTimeline(container, page) {
     // Não aparece pra professor nem aluno — só admin enxerga essas listas.
     const adminStatsRow = (isAdmin && post.status !== 'pendente') ? `
       <div style="display:flex;gap:14px;padding:7px 18px;border-top:1px solid rgba(212,200,158,.2);font-size:12px;color:var(--txt2)">
-        <span style="cursor:pointer" onclick="window._abrirListaPessoas('curtidas','${post.id}','Quem curtiu')"><i class="ti ti-heart" aria-hidden="true"></i> ver quem curtiu</span>
-        <span style="cursor:pointer" onclick="window._abrirListaPessoas('salvos','${post.id}','Quem salvou')"><i class="ti ti-bookmark" aria-hidden="true"></i> ver quem salvou</span>
-        <span style="cursor:pointer" onclick="window._abrirListaPessoas('visualizacoes','${post.id}','Quem visualizou')"><i class="ti ti-eye" aria-hidden="true"></i> ver quem visualizou</span>
+        <span style="cursor:pointer" data-h-click="pages-timeline.5" data-a-click="${esc(JSON.stringify([String(post.id)]))}"><i class="ti ti-heart" aria-hidden="true"></i> ver quem curtiu</span>
+        <span style="cursor:pointer" data-h-click="pages-timeline.6" data-a-click="${esc(JSON.stringify([String(post.id)]))}"><i class="ti ti-bookmark" aria-hidden="true"></i> ver quem salvou</span>
+        <span style="cursor:pointer" data-h-click="pages-timeline.7" data-a-click="${esc(JSON.stringify([String(post.id)]))}"><i class="ti ti-eye" aria-hidden="true"></i> ver quem visualizou</span>
       </div>` : ''
 
     const modBar = emModeracao ? `
@@ -630,8 +631,8 @@ export async function renderTimeline(container, page) {
     if (!tipo) tipo = detectarTipoMidia(url)
 
     if (tipo === 'imagem') {
-      return `<div style="margin-top:12px;cursor:zoom-in;position:relative" onclick="window._tlAbrirLightbox('${urlSegura(url)}')" title="Clique para ampliar">
-        <img src="${urlSegura(url)}" referrerpolicy="no-referrer" style="width:100%;max-height:420px;object-fit:cover;display:block" loading="lazy" onerror="this.parentElement.remove()">
+      return `<div style="margin-top:12px;cursor:zoom-in;position:relative" data-h-click="pages-timeline.8" data-a-click="${esc(JSON.stringify([String(urlSegura(url))]))}" title="Clique para ampliar">
+        <img src="${urlSegura(url)}" referrerpolicy="no-referrer" style="width:100%;max-height:420px;object-fit:cover;display:block" loading="lazy" data-h-error="pages-timeline.9">
         <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);border-radius:20px;padding:3px 8px;font-size:12px;color:#fff;display:flex;align-items:center;gap:4px;pointer-events:none">
           <i class="ti ti-zoom-in" style="font-size:12px"></i> ampliar
         </div>

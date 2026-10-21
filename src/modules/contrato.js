@@ -6,6 +6,7 @@
  * Bloqueio total da UI até aceite — o aluno não pode navegar antes de assinar.
  */
 
+import '../acoes/modules-contrato.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { sb } from '../lib/supabase.js'
 import { toast, esc } from './utils.js'
 
@@ -221,7 +222,7 @@ export async function verContratoAceito(userId, nomeAluno) {
           <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--bege)">Contrato de Adesão</div>
           <div style="font-size:12px;color:rgba(242,236,206,.7);margin-top:2px">Versão ${data.versao}</div>
         </div>
-        <button onclick="document.getElementById('modal-ver-contrato').remove()"
+        <button data-h-click="modules-contrato.1"
           style="background:rgba(242,236,206,.15);border:none;border-radius:6px;padding:6px 14px;font-size:13px;color:var(--bege);cursor:pointer;font-family:'DM Sans',sans-serif">
           <i class="ti ti-x" aria-hidden="true"></i> Fechar
         </button>

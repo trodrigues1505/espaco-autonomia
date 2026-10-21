@@ -10,6 +10,7 @@
  * agendamento do jnana.js.
  */
 
+import '../../acoes/pages-admin-adhyayana.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { confirmarModal } from '../../modules/dialogs.js'
 import { toast, esc, urlSegura } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
@@ -26,7 +27,7 @@ function _abrirLightboxAdhy(src, alt) {
     <img src="${src}" alt="${alt}" referrerpolicy="no-referrer"
       style="max-width:100%;max-height:90vh;border-radius:8px;object-fit:contain;
              box-shadow:0 20px 60px rgba(0,0,0,.5)">
-    <button onclick="document.getElementById('_adhy-lightbox').remove()"
+    <button data-h-click="pages-admin-adhyayana.1"
       style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);
              border:none;border-radius:50%;width:36px;height:36px;color:#fff;
              font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;
@@ -125,7 +126,7 @@ export async function renderAdhyayanaAdmin(container, page) {
   container.innerHTML = `
     <div class="topbar">
       <div class="topbar-t">Yoga Adhyayana — Estudo dos Āsanas</div>
-      <button onclick="abrirFormAdhyayana()"
+      <button data-h-click="pages-admin-adhyayana.6"
         style="padding:6px 14px;background:var(--verde);color:var(--bege);border:none;
                border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
                display:flex;align-items:center;gap:5px">
@@ -196,17 +197,17 @@ export async function renderAdhyayanaAdmin(container, page) {
                   style="border:1px solid var(--borda);border-radius:5px;padding:4px 8px;
                          font-size:12px;font-family:'DM Sans',sans-serif;color:var(--txt);
                          width:130px">
-                <button onclick="reagendarAsanaAdhyayana('${a.id}')"
+                <button data-h-click="pages-admin-adhyayana.2" data-a-click="${esc(JSON.stringify([String(a.id)]))}"
                   style="padding:2px 8px;background:rgba(232,188,79,.15);color:var(--warn-fg);
                          border:1px solid rgba(232,188,79,.4);border-radius:4px;font-size:12px;
                          cursor:pointer;font-family:'DM Sans',sans-serif">Reagendar</button>
               </div>
               <div style="display:flex;gap:4px">
-                <button onclick="previaAdhyayana('${a.id}')"
+                <button data-h-click="pages-admin-adhyayana.3" data-a-click="${esc(JSON.stringify([String(a.id)]))}"
                   style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--titulo);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Prévia"><i class="ti ti-eye" aria-hidden="true"></i></button>
-                <button onclick="editarAdhyayana('${a.id}')"
+                <button data-h-click="pages-admin-adhyayana.4" data-a-click="${esc(JSON.stringify([String(a.id)]))}"
                   style="padding:3px 8px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-pencil" aria-hidden="true"></i></button>
-                <button onclick="excluirAdhyayana(this.dataset.id, this.dataset.nome)" data-id="${esc(a.id)}" data-nome="${esc(a.nome||'')}"
+                <button data-h-click="pages-admin-adhyayana.5" data-id="${esc(a.id)}" data-nome="${esc(a.nome||'')}"
                   style="padding:3px 8px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-x" aria-hidden="true"></i></button>
               </div>
             </div>`).join('')}
@@ -238,11 +239,11 @@ export async function renderAdhyayanaAdmin(container, page) {
                 </div>
                 <div>${badgeStatus(a.publicada_em)}<div style="font-size:12px;color:var(--txt2);margin-top:2px">${fmtDia(a.publicada_em)}</div></div>
                 <div style="display:flex;gap:4px">
-                  <button onclick="previaAdhyayana('${a.id}')"
+                  <button data-h-click="pages-admin-adhyayana.3" data-a-click="${esc(JSON.stringify([String(a.id)]))}"
                     style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--titulo);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Prévia"><i class="ti ti-eye" aria-hidden="true"></i></button>
-                  <button onclick="editarAdhyayana('${a.id}')"
+                  <button data-h-click="pages-admin-adhyayana.4" data-a-click="${esc(JSON.stringify([String(a.id)]))}"
                     style="padding:3px 8px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-pencil" aria-hidden="true"></i></button>
-                  <button onclick="excluirAdhyayana(this.dataset.id, this.dataset.nome)" data-id="${esc(a.id)}" data-nome="${esc(a.nome||'')}"
+                  <button data-h-click="pages-admin-adhyayana.5" data-id="${esc(a.id)}" data-nome="${esc(a.nome||'')}"
                     style="padding:3px 8px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-x" aria-hidden="true"></i></button>
                 </div>
               </div>`
@@ -256,7 +257,7 @@ export async function renderAdhyayanaAdmin(container, page) {
                                           padding:16px;overflow-y:auto">
       <div style="width:560px;max-width:100%;margin:auto">
         <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
-          <button onclick="document.getElementById('modal-previa-adhyayana').style.display='none'"
+          <button data-h-click="pages-admin-adhyayana.7"
             style="background:var(--superficie);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:18px">×</button>
         </div>
         <div id="previa-adhyayana-body"></div>
@@ -278,7 +279,7 @@ export async function renderAdhyayanaAdmin(container, page) {
               Cole o texto completo do estudo do āsana e a IA extrai os campos
             </div>
           </div>
-          <button onclick="fecharFormAdhyayana()"
+          <button data-h-click="pages-admin-adhyayana.8"
             style="background:none;border:none;color:var(--bege);font-size:22px;cursor:pointer;line-height:1">×</button>
         </div>
 
@@ -303,7 +304,7 @@ export async function renderAdhyayanaAdmin(container, page) {
                 Āsanas com data futura ficam invisíveis para alunos até lá.
               </div>
             </div>
-            <button onclick="interpretarComIAAdhyayana()"
+            <button data-h-click="pages-admin-adhyayana.9"
               id="btn-interpretar-adhy"
               style="width:100%;padding:12px;background:var(--verde);color:var(--bege);border:none;
                      border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;
@@ -316,7 +317,7 @@ export async function renderAdhyayanaAdmin(container, page) {
         </div>
 
         <div id="adhyayana-modal-footer" style="padding:0 20px 20px;display:flex;justify-content:flex-end;gap:8px">
-          <button onclick="fecharFormAdhyayana()"
+          <button data-h-click="pages-admin-adhyayana.8"
             style="padding:8px 16px;background:transparent;border:1px solid var(--borda);
                    border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
         </div>
@@ -347,7 +348,7 @@ export async function renderAdhyayanaAdmin(container, page) {
     document.getElementById('adhy-texto-bruto').value = ''
     document.getElementById('adhy-data-pub').value = proximoLivre
     document.getElementById('adhyayana-modal-footer').innerHTML = `
-      <button onclick="fecharFormAdhyayana()"
+      <button data-h-click="pages-admin-adhyayana.8"
         style="padding:8px 16px;background:transparent;border:1px solid var(--borda);
                border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>`
     document.getElementById('modal-adhyayana').style.display = 'flex'
@@ -380,7 +381,7 @@ export async function renderAdhyayanaAdmin(container, page) {
         <div style="background:var(--verde);padding:16px 18px">
           ${a.imagem_url ? `
             <div style="position:relative;border-radius:8px;overflow:hidden;margin-bottom:12px;cursor:zoom-in"
-                 onclick="_abrirLightboxAdhy(this.dataset.src, this.dataset.nome)" data-src="${urlSegura(a.imagem_url)}" data-nome="${esc(a.nome||'')}" title="Clique para ampliar">
+                 data-h-click="pages-admin-adhyayana.10" data-src="${urlSegura(a.imagem_url)}" data-nome="${esc(a.nome||'')}" title="Clique para ampliar">
               <img src="${urlSegura(a.imagem_url)}" referrerpolicy="no-referrer"
                 style="width:100%;max-height:220px;object-fit:cover;display:block">
               <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);
@@ -545,22 +546,22 @@ Regras:
     const ehPrimeiro = idx === 1
     const ehUltimo   = idx === STEPS.length
     document.getElementById('adhyayana-modal-footer').innerHTML = `
-      <button onclick="${ehPrimeiro ? 'voltarEtapa1Adhyayana()' : 'adhyVoltarStep()'}"
+      <button data-h-click="@global" data-a-click="${esc(JSON.stringify([ehPrimeiro ? 'voltarEtapa1Adhyayana' : 'adhyVoltarStep']))}"
         style="padding:8px 16px;background:transparent;border:1px solid var(--borda);
                border-radius:6px;font-size:12px;cursor:pointer;margin-right:auto">
         <i class="ti ti-arrow-left" aria-hidden="true"></i> ${ehPrimeiro ? 'Novo texto' : 'Voltar'}
       </button>
-      <button onclick="fecharFormAdhyayana()"
+      <button data-h-click="pages-admin-adhyayana.8"
         style="padding:8px 16px;background:transparent;border:1px solid var(--borda);
                border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
       ${ehUltimo
-        ? `<button onclick="salvarAdhyayana()"
+        ? `<button data-h-click="pages-admin-adhyayana.11"
              style="padding:8px 16px;background:var(--verde);color:var(--bege);border:none;
                     border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
                     font-weight:500">
              <i class="ti ti-check"></i> Salvar āsana
            </button>`
-        : `<button onclick="adhyAvancarStep()"
+        : `<button data-h-click="pages-admin-adhyayana.12"
              style="padding:8px 16px;background:var(--verde);color:var(--bege);border:none;
                     border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
                     font-weight:500">
@@ -592,7 +593,7 @@ Regras:
     const btn = document.getElementById('btn-interpretar-adhy')
     if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-sparkles"></i> Interpretar com IA' }
     document.getElementById('adhyayana-modal-footer').innerHTML = `
-      <button onclick="fecharFormAdhyayana()"
+      <button data-h-click="pages-admin-adhyayana.8"
         style="padding:8px 16px;background:transparent;border:1px solid var(--borda);
                border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>`
   }

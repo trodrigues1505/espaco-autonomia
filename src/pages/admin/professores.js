@@ -6,6 +6,7 @@
  * (a rota 'previsao-professor' segue existindo em index.js).
  */
 
+import '../../acoes/pages-admin-professores.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { sb }         from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel, PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS, calcularNivel, NIVEL_LABELS, esc } from '../../modules/utils.js'
 
@@ -36,7 +37,7 @@ export async function renderProfessores(container, page) {
   const barraAbas = `
     <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
       ${ABAS.map(t => `
-        <button onclick="window.trocarAbaProfessores('${t.id}')" style="padding:6px 16px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${aba===t.id?t.cor:'var(--borda)'};background:${aba===t.id?t.cor:'#fff'};color:${aba===t.id?'var(--bege)':'var(--txt2)'}">
+        <button data-h-click="pages-admin-professores.1" data-a-click="${esc(JSON.stringify([String(t.id)]))}" style="padding:6px 16px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${aba===t.id?t.cor:'var(--borda)'};background:${aba===t.id?t.cor:'#fff'};color:${aba===t.id?'var(--bege)':'var(--txt2)'}">
           ${t.label}
         </button>
       `).join('')}
@@ -69,7 +70,7 @@ export async function renderProfessores(container, page) {
   container.innerHTML = `
     <div class="topbar">
       <div class="topbar-t">Professores</div>
-      <button onclick="document.getElementById('modal-cad-prof').style.display='flex'" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-user-plus"></i> Cadastrar Professor</button>
+      <button data-h-click="pages-admin-professores.3" style="padding:6px 13px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px"><i class="ti ti-user-plus"></i> Cadastrar Professor</button>
     </div>
     <div class="content">
       ${barraAbas}
@@ -87,7 +88,7 @@ export async function renderProfessores(container, page) {
               </div>
               <span style="font-size:12px;color:var(--txt2);min-width:100px">${exibirModalidades(p)}</span>
               <span style="background:${p.ativo?'var(--ok-bg)':'var(--err-bg)'};color:${p.ativo?'var(--ok-fg)':'var(--err-fg)'};padding:2px 8px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap">${p.ativo?'Ativo':'Inativo'}</span>
-              <button onclick="editarProfessor('${p.id}')" style="padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Editar</button>
+              <button data-h-click="pages-admin-professores.2" data-a-click="${esc(JSON.stringify([String(p.id)]))}" style="padding:5px 12px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Editar</button>
             </div>`).join('')
         }
       </div>
@@ -101,7 +102,7 @@ export async function renderProfessores(container, page) {
       <div style="background:var(--superficie);border-radius:10px;width:440px;max-width:100%">
         <div style="padding:18px 22px 14px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
           <span style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--titulo)">Cadastrar Professor</span>
-          <button onclick="document.getElementById('modal-cad-prof').style.display='none'" style="background:none;border:1px solid var(--borda);border-radius:5px;padding:3px 8px;cursor:pointer"><i class="ti ti-x" aria-hidden="true"></i></button>
+          <button data-h-click="pages-admin-professores.4" style="background:none;border:1px solid var(--borda);border-radius:5px;padding:3px 8px;cursor:pointer"><i class="ti ti-x" aria-hidden="true"></i></button>
         </div>
         <div style="padding:18px 22px">
           <div style="margin-bottom:10px">
@@ -129,8 +130,8 @@ export async function renderProfessores(container, page) {
           </div>
         </div>
         <div style="padding:12px 22px;border-top:1px solid var(--borda);display:flex;gap:8px;justify-content:flex-end">
-          <button onclick="document.getElementById('modal-cad-prof').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
-          <button onclick="salvarProfessor()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Cadastrar</button>
+          <button data-h-click="pages-admin-professores.4" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+          <button data-h-click="pages-admin-professores.5" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Cadastrar</button>
         </div>
       </div>
     </div>

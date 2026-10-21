@@ -9,6 +9,7 @@
  *   abrirModalRegistrarRepasse(professorId, nomeProfessor, valorPrevisto, mesRef)
  */
 
+import '../../acoes/pages-admin-repasse-pago.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { confirmarModal } from '../../modules/dialogs.js'
 import { toast, esc } from '../../modules/utils.js'
 
@@ -132,11 +133,11 @@ export async function renderHistoricoRepasse(container, professorId, isAdmin) {
                    ${isAdmin
                      ? `<div style="display:flex;gap:4px">
                           <button
-                            onclick="window._editarRepasse(this.dataset.id, this.dataset.prof, this.dataset.nome, this.dataset.mes, ${Number(r.valor_pago) || 0}, ${Number(r.valor_previsto) || 0}, this.dataset.obs)" data-id="${esc(r.id)}" data-prof="${esc(r.professor_id)}" data-nome="${esc(r.professor?.nome || '')}" data-mes="${esc(r.mes_ref)}" data-obs="${esc(r.observacao || '')}"
+                            data-h-click="pages-admin-repasse-pago.1" data-a-click="${esc(JSON.stringify([(Number(r.valor_pago) || 0), (Number(r.valor_previsto) || 0)]))}" data-id="${esc(r.id)}" data-prof="${esc(r.professor_id)}" data-nome="${esc(r.professor?.nome || '')}" data-mes="${esc(r.mes_ref)}" data-obs="${esc(r.observacao || '')}"
                             style="padding:3px 7px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"
                             title="Editar"><i class="ti ti-pencil" aria-hidden="true"></i></button>
                           <button
-                            onclick="window._excluirRepasse('${r.id}')"
+                            data-h-click="pages-admin-repasse-pago.2" data-a-click="${esc(JSON.stringify([String(r.id)]))}"
                             style="padding:3px 7px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"
                             title="Excluir"><i class="ti ti-x" aria-hidden="true"></i></button>
                         </div>`
@@ -154,7 +155,7 @@ export async function renderHistoricoRepasse(container, professorId, isAdmin) {
         <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)"
                id="modal-repasse-titulo">Registrar Pagamento</div>
-          <button onclick="document.getElementById('modal-repasse-pago').style.display='none'"
+          <button data-h-click="pages-admin-repasse-pago.3"
             style="background:none;border:none;color:var(--bege);font-size:22px;cursor:pointer;line-height:1">×</button>
         </div>
         <div style="padding:20px;display:flex;flex-direction:column;gap:12px">
@@ -204,11 +205,11 @@ export async function renderHistoricoRepasse(container, professorId, isAdmin) {
           </div>
         </div>
         <div style="padding:0 20px 16px;display:flex;justify-content:flex-end;gap:8px">
-          <button onclick="document.getElementById('modal-repasse-pago').style.display='none'"
+          <button data-h-click="pages-admin-repasse-pago.3"
             style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">
             Cancelar
           </button>
-          <button onclick="window._salvarRepasse()"
+          <button data-h-click="pages-admin-repasse-pago.4"
             style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;
                    font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">
             Salvar

@@ -3,6 +3,7 @@
  * Meu plano — detalhes, saldo e edição de perfil
  */
 
+import '../../acoes/pages-aluno-plano.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 import { sb }         from '../../lib/supabase.js'
 import { toast, NOMES, CORES, dot, badge, card, modal, fi, inputStyle, fmtDt, prazoLabel, PLANO_BADGES, PLANO_NOMES, PLANO_VALORES, PLANO_OPCOES, DIAS_LABEL, HORARIOS, calcularNivel, NIVEL_LABELS, esc, urlSegura } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
@@ -100,7 +101,7 @@ export async function renderAlunoPlano(container, page) {
       <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
           <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo)">Meus Dados</div>
-          <button onclick="abrirEditarPerfil()" style="padding:5px 12px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:12px;cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif"><i class="ti ti-pencil" aria-hidden="true"></i> Editar</button>
+          <button data-h-click="pages-aluno-plano.2" style="padding:5px 12px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:12px;cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif"><i class="ti ti-pencil" aria-hidden="true"></i> Editar</button>
         </div>
         <div style="display:flex;flex-direction:column;gap:6px">
           <div style="display:flex;gap:8px;font-size:13px">
@@ -159,7 +160,7 @@ export async function renderAlunoPlano(container, page) {
                   const b = FEAT_DESCRICOES[f]
                   const linkSangha = f === 'sangha' && plano?.whatsapp_sangha
                   return `<div style="border:1px solid var(--borda);border-radius:8px;margin-bottom:8px;overflow:hidden">
-                    <button onclick="toggleBeneficio('${f}')" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:none;border:none;cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif">
+                    <button data-h-click="pages-aluno-plano.1" data-a-click="${esc(JSON.stringify([String(f)]))}" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:none;border:none;cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif">
                       <div style="display:flex;align-items:center;gap:8px">
                         <span style="color:var(--titulo);font-weight:500;font-size:12px"><i class="ti ti-check" aria-hidden="true"></i></span>
                         <span style="font-size:12px;font-weight:500;color:var(--txt)">${esc(b.titulo)}</span>
@@ -257,8 +258,8 @@ export async function renderAlunoPlano(container, page) {
           </div>
         </div>
         <div style="padding:0 20px 16px;display:flex;justify-content:flex-end;gap:8px">
-          <button onclick="document.getElementById('modal-editar-perfil').style.display='none'" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
-          <button onclick="salvarEdicaoPerfil()" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Salvar</button>
+          <button data-h-click="pages-aluno-plano.3" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
+          <button data-h-click="pages-aluno-plano.4" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Salvar</button>
         </div>
       </div>
     </div>

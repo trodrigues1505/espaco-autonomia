@@ -1,3 +1,4 @@
+import '../acoes/modules-vocabulario.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
 /**
  * src/modules/vocabulario.js
  * Detecta termos cadastrados no vocabulário dentro de qualquer texto já
@@ -99,7 +100,7 @@ function _abrirModalVocab(entrada) {
     <div style="background:var(--superficie);border-radius:12px;width:380px;max-width:100%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
       <div style="background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
         <div style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--bege)">${_esc(entrada.termo)}</div>
-        <button onclick="document.getElementById('_voc-modal').remove()" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
+        <button data-h-click="modules-vocabulario.1" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
       </div>
       <div style="padding:18px 20px;font-size:13px;color:var(--txt);line-height:1.7;white-space:pre-line">${_esc(entrada.definicao)}</div>
     </div>`
