@@ -571,9 +571,9 @@ export function renderPainelNotif(notifs, opts = {}) {
   const temMais = notifs.length > maxVisiveis
 
   return `
-    <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-bottom:14px" id="painel-notif">
+    <div class="card mb-14" id="painel-notif">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="display:flex;align-items:center;gap:8px">
+        <div class="row-8">
           <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo)">${_esc(titulo)}</span>
           ${naoLidas.length ? `<span id="notif-badge-count" style="background:#c0392b;color:#fff;border-radius:10px;padding:1px 7px;font-size:12px;font-weight:600">${naoLidas.length}</span>` : ''}
         </div>

@@ -80,9 +80,9 @@ export async function renderCriarAulas(container, page) {
           ? `<span style="background:rgba(232,188,79,.2);color:var(--warn-fg);padding:2px 7px;border-radius:10px;font-size:12px;font-weight:500"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Sem futuras</span>`
           : `<span style="background:var(--err-bg);color:var(--err-fg);padding:2px 7px;border-radius:10px;font-size:12px;font-weight:500"><i class="ti ti-x" aria-hidden="true"></i> Nunca gerada</span>`
       return `<div style="display:grid;grid-template-columns:1fr 110px 70px 60px 110px 60px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px;background:${isRed?'rgba(255,180,180,.12)':'transparent'}">
-        <span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">${dot(a.modalidade)}<strong>${NOMES[a.modalidade]}</strong><span style="font-size:12px;color:var(--txt2)">${diasStr}</span>${isRed?'<span style="background:var(--err-bg);color:var(--err-fg);font-size:12px;padding:1px 6px;border-radius:8px;margin-left:2px"><i class="ti ti-alert-triangle" aria-hidden="true"></i> redundante</span>':''}</span>
-        <span style="font-size:12px;color:var(--txt2)">${esc(a.professor?.nome||'—')}</span>
-        <span style="font-size:12px">${a.vagas} vagas</span>
+        <span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">${dot(a.modalidade)}<strong>${NOMES[a.modalidade]}</strong><span class="t-mut">${diasStr}</span>${isRed?'<span style="background:var(--err-bg);color:var(--err-fg);font-size:12px;padding:1px 6px;border-radius:8px;margin-left:2px"><i class="ti ti-alert-triangle" aria-hidden="true"></i> redundante</span>':''}</span>
+        <span class="t-mut">${esc(a.professor?.nome||'—')}</span>
+        <span class="fs-12">${a.vagas} vagas</span>
         <span>${statusBadge}</span>
         <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-start">
           ${geradoBadge}
@@ -97,14 +97,14 @@ export async function renderCriarAulas(container, page) {
 
     const diasCheckboxes = ['seg','ter','qua','qui','sex','sab','dom'].map(d=>
       `<label style="display:flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--borda);border-radius:20px;font-size:12px;cursor:pointer">
-        <input type="checkbox" name="dia" value="${d}" style="accent-color:var(--verde)"> ${DIAS_LABEL[d].slice(0,3)}
+        <input type="checkbox" name="dia" value="${d}" class="accent"> ${DIAS_LABEL[d].slice(0,3)}
       </label>`
     ).join('')
 
     const profsOptions = profs.map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('')
 
     const modalCriar = modal('modal-criar-aula', 'Nova Aula',
-      `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      `<div class="grid-2">
         ${fi('','Modalidade',`<select id="na-mod" ${inputStyle}><option value="hatha">Hatha Yoga</option><option value="acro">Acro Yoga</option><option value="raja">Raja Yoga</option></select>`)}
         ${fi('','Tipo',`<select id="na-tipo" ${inputStyle} data-h-change="pages-admin-criar_aulas.4"><option value="fixa">Fixa (recorrente)</option><option value="avulsa">Avulsa (única)</option></select>`)}
       </div>
@@ -115,14 +115,14 @@ export async function renderCriarAulas(container, page) {
         ${fi('','Data',`<input type="date" id="na-data" ${inputStyle}>`)}
       </div>
       <div id="na-horas-wrap">
-        <div style="margin-bottom:12px">
-          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:6px">Horários (selecione um ou mais)</label>
+        <div class="mb-12">
+          <label class="t-label mb-6 d-block">Horários (selecione um ou mais)</label>
           <div style="display:flex;flex-wrap:wrap;gap:6px" id="na-horas-checks">
-            ${HORARIOS.map(h=>`<label style="display:flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--borda);border-radius:20px;font-size:12px;cursor:pointer"><input type="checkbox" name="hora" value="${h}" style="accent-color:var(--verde)"> ${h}</label>`).join('')}
+            ${HORARIOS.map(h=>`<label style="display:flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--borda);border-radius:20px;font-size:12px;cursor:pointer"><input type="checkbox" name="hora" value="${h}" class="accent"> ${h}</label>`).join('')}
           </div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="grid-2">
         ${fi('','Duração',`<select id="na-dur" ${inputStyle}><option value="60">60 minutos</option><option value="75">75 minutos</option><option value="90">90 minutos</option></select>`)}
         ${fi('','Vagas',`<input type="number" id="na-vagas" value="${cfg.vagas_padrao||15}" min="1" max="100" ${inputStyle}>`)}
       </div>
@@ -135,8 +135,8 @@ export async function renderCriarAulas(container, page) {
     )
 
     const modalGerar = modal('modal-gerar', 'Gerar Ocorrências',
-      `<p style="font-size:13px;color:var(--txt2);margin-bottom:14px">Gera as datas reais da aula no período selecionado, verificando feriados automaticamente.</p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      `<p class="mb-14 fs-13 c-txt2">Gera as datas reais da aula no período selecionado, verificando feriados automaticamente.</p>
+      <div class="grid-2">
         ${fi('','De',`<input type="date" id="ger-de" ${inputStyle}>`)}
         ${fi('','Até',`<input type="date" id="ger-ate" ${inputStyle}>`)}
       </div>`,
@@ -163,8 +163,8 @@ export async function renderCriarAulas(container, page) {
           <button data-h-click="pages-admin-criar_aulas.10" style="padding:4px 12px;background:#8a1a1a;color:#fff;border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Ver e resolver <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
         </div>`:''}
         <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:flex-end">
-          <div style="display:flex;flex-direction:column;gap:3px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Modalidade</label>
+          <div class="stack-3">
+            <label class="t-label">Modalidade</label>
             <select data-h-change="pages-admin-criar_aulas.13" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie)">
               <option value="" ${!filtroMod?'selected':''}>Todas</option>
               <option value="hatha" ${filtroMod==='hatha'?'selected':''}>Hatha Yoga</option>
@@ -172,29 +172,29 @@ export async function renderCriarAulas(container, page) {
               <option value="raja"  ${filtroMod==='raja' ?'selected':''}>Raja Yoga</option>
             </select>
           </div>
-          <div style="display:flex;flex-direction:column;gap:3px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Professor</label>
+          <div class="stack-3">
+            <label class="t-label">Professor</label>
             <select data-h-change="pages-admin-criar_aulas.14" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie)">
               <option value="" ${!filtroProf?'selected':''}>Todos</option>
               ${profs.map(p=>`<option value="${p.id}" ${filtroProf===p.id?'selected':''}>${esc(p.nome)}</option>`).join('')}
             </select>
           </div>
-          <div style="display:flex;flex-direction:column;gap:3px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Dia</label>
+          <div class="stack-3">
+            <label class="t-label">Dia</label>
             <select data-h-change="pages-admin-criar_aulas.15" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie)">
               <option value="" ${!filtroDia?'selected':''}>Todos</option>
               ${['seg','ter','qua','qui','sex','sab','dom'].map(d=>`<option value="${d}" ${filtroDia===d?'selected':''}>${DIAS_LABEL[d]||d}</option>`).join('')}
             </select>
           </div>
-          <div style="display:flex;flex-direction:column;gap:3px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Horário</label>
+          <div class="stack-3">
+            <label class="t-label">Horário</label>
             <select data-h-change="pages-admin-criar_aulas.16" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie)">
               <option value="" ${!filtroHora?'selected':''}>Todos</option>
               ${horasUnicas.map(h=>`<option value="${h}" ${filtroHora===h?'selected':''}>${h}</option>`).join('')}
             </select>
           </div>
-          <div style="display:flex;flex-direction:column;gap:3px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Status</label>
+          <div class="stack-3">
+            <label class="t-label">Status</label>
             <select data-h-change="pages-admin-criar_aulas.17" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie)">
               <option value="" ${!filtroStat?'selected':''}>Todos</option>
               <option value="ativa"   ${filtroStat==='ativa'  ?'selected':''}>Ativa</option>
@@ -431,8 +431,8 @@ uiAnimar(container)
           const nOcs = ocsFuturas[a.id] || 0
           html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(242,236,206,.3);border-radius:6px;margin-bottom:6px;gap:10px">'
             + '<div>'
-              + `<div style="font-size:12px;font-weight:500">${esc(a.professor?.nome||'Sem professor')}</div>`
-              + `<div style="font-size:12px;color:var(--txt2)">${nOcs>0?'<i class="ti ti-check" aria-hidden="true"></i> '+nOcs+' aulas geradas':'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Não gerada'} · Criada ${a.criado_em?new Date(a.criado_em).toLocaleDateString('pt-BR'):'—'}</div>`
+              + `<div class="fs-12 fw-500">${esc(a.professor?.nome||'Sem professor')}</div>`
+              + `<div class="t-mut">${nOcs>0?'<i class="ti ti-check" aria-hidden="true"></i> '+nOcs+' aulas geradas':'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Não gerada'} · Criada ${a.criado_em?new Date(a.criado_em).toLocaleDateString('pt-BR'):'—'}</div>`
             + '</div>'
             + `<button data-h-click="pages-admin-criar_aulas.18" data-a-click="${esc(JSON.stringify([String(a.id)]))}" style="padding:4px 10px;background:var(--err-bg);color:var(--err-fg);border:1px solid var(--err-borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Excluir esta</button>`
           + '</div>'

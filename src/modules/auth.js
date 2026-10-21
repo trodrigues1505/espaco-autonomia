@@ -27,12 +27,12 @@ export async function mostrarOnboarding(user, nomeGoogle, fotoGoogle) {
       </div>
       <div style="padding:24px">
         <input type="hidden" id="onb-foto" value="${esc(fotoGoogle || '')}">
-        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
-          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Nome completo</label>
+        <div class="stack-4 mb-12">
+          <label class="t-label">Nome completo</label>
           <input id="onb-nome" value="${esc(nomeGoogle)}" style="border:1px solid var(--borda);border-radius:6px;padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:20px">
-          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Telefone / WhatsApp</label>
+          <label class="t-label">Telefone / WhatsApp</label>
           <input id="onb-tel" placeholder="(11) 99999-9999" style="border:1px solid var(--borda);border-radius:6px;padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%">
         </div>
         <p style="font-size:12px;color:var(--txt2);line-height:1.6;margin:0 0 20px">

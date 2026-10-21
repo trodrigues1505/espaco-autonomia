@@ -143,13 +143,13 @@ export async function renderAlunoGrade(container, page) {
             actionHtml = `<div style="font-size:12px;color:var(--err-fg);font-weight:600;margin-top:3px"><i class="ti ti-ban" aria-hidden="true"></i> Cancelada${oc.eh_feriado?' — feriado':''}</div>`
           } else if (isAluno && !passada) {
             if (!permitida) {
-              actionHtml = `<div style="font-size:12px;color:var(--txt2);margin-top:3px"><i class="ti ti-lock" aria-hidden="true"></i> ${esc(planoAluno)}</div>`
+              actionHtml = `<div class="t-mut mt-3"><i class="ti ti-lock" aria-hidden="true"></i> ${esc(planoAluno)}</div>`
             } else if (confirmado) {
               actionHtml = `<div style="font-size:12px;color:var(--ok-fg);font-weight:600;margin-top:3px"><i class="ti ti-check" aria-hidden="true"></i> Confirmado</div>`
             } else if (foraPrazo) {
-              actionHtml = `<div style="font-size:12px;color:var(--err-vivo);margin-top:3px">Prazo enc.</div>`
+              actionHtml = `<div class="mt-3 fs-12 c-err">Prazo enc.</div>`
             } else if (lotada) {
-              actionHtml = `<div style="font-size:12px;color:var(--err-vivo);margin-top:3px">Lotada</div>`
+              actionHtml = `<div class="mt-3 fs-12 c-err">Lotada</div>`
             } else {
               actionHtml = `<button data-h-click="pages-aluno-grade.1" data-a-click="${esc(JSON.stringify([String(oc.id)]))}" style="margin-top:3px;padding:2px 7px;background:var(--dourado);color:var(--verde);border:none;border-radius:4px;font-size:12px;cursor:pointer;font-weight:500;font-family:'DM Sans',sans-serif">Confirmar</button>`
             }
@@ -161,7 +161,7 @@ export async function renderAlunoGrade(container, page) {
           </div>` : ''
           gradeHTML += `<td style="border:1px solid rgba(212,200,158,.3);background:${bgCell};padding:5px 7px;vertical-align:top;cursor:${isAluno?'default':'pointer'}${cancelada?';opacity:.75':''}" ${!isAluno?`data-h-click="pages-aluno-grade.4" data-a-click="${esc(JSON.stringify([String(oc.id)]))}"`:''}">
             <div style="font-size:12px;font-weight:500;${borderCell};padding-left:4px;line-height:1.3;color:${cancelada?'var(--txt2)':!permitida?'var(--txt2)':'var(--txt)'}${cancelada?';text-decoration:line-through':''}">${NOMES[oc.modalidade]}</div>
-            <div style="font-size:12px;color:var(--txt2);margin-top:1px">${oc.confirmados||0}/${oc.vagas_total}</div>
+            <div class="t-mut mt-1">${oc.confirmados||0}/${oc.vagas_total}</div>
             ${oc.professor_nome?`<div style="font-size:12px;color:var(--txt2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px" title="${esc(oc.professor_nome)}"><i class="ti ti-user" aria-hidden="true"></i> ${esc(oc.professor_nome.split(' ')[0])}</div>`:''}
             ${isFeriado&&!isAluno&&!cancelada?`<div style="font-size:12px;color:var(--warn-fg);margin-top:1px"><i class="ti ti-alert-triangle" aria-hidden="true"></i> feriado</div>`:''}
             ${actionHtml}
@@ -177,7 +177,7 @@ export async function renderAlunoGrade(container, page) {
     const legendaHtml = `<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px">
       ${['hatha','acro','raja'].map(m=>`<span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--txt2)">${dot(m)}${NOMES[m]}</span>`).join('')}
       ${temCanceladaNaSemana?`<span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--err-fg)"><i class="ti ti-ban" aria-hidden="true"></i> Cancelada</span>`:''}
-      ${isAluno?`<span style="font-size:12px;color:var(--txt2)">· Prazo: <strong>${prazoMin>=60?prazoMin/60+'h':prazoMin+'min'}</strong> antes</span>`:''}
+      ${isAluno?`<span class="t-mut">· Prazo: <strong>${prazoMin>=60?prazoMin/60+'h':prazoMin+'min'}</strong> antes</span>`:''}
     </div>`
 
     // Navegação de semana
@@ -192,12 +192,12 @@ export async function renderAlunoGrade(container, page) {
         <button data-h-click="pages-aluno-grade.6" data-a-click="${esc(JSON.stringify([String(page)]))}" style="padding:5px 10px;background:var(--superficie);color:var(--txt);border:1px solid var(--borda);border-radius:5px;font-size:13px;cursor:pointer"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
         <button data-h-click="pages-aluno-grade.7" data-a-click="${esc(JSON.stringify([String(page)]))}" style="padding:5px 12px;background:${(window._gradeOffset||0)===0?'var(--verde)':'var(--superficie)'};color:${(window._gradeOffset||0)===0?'var(--bege)':'var(--txt)'};border:1px solid ${(window._gradeOffset||0)===0?'var(--verde)':'var(--borda)'};border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Hoje</button>
         <button data-h-click="pages-aluno-grade.8" data-a-click="${esc(JSON.stringify([String(page)]))}" style="padding:5px 10px;background:var(--superficie);color:var(--txt);border:1px solid var(--borda);border-radius:5px;font-size:13px;cursor:pointer"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
-        <span style="font-size:12px;color:var(--txt2);font-weight:500">${seg.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})} – ${dom.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})}</span>
+        <span class="t-mut fw-500">${seg.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})} – ${dom.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})}</span>
         ${fAtivo?`<button data-h-click="pages-aluno-grade.5" data-a-click="${esc(JSON.stringify([String(page)]))}" style="padding:4px 10px;background:var(--err-bg);color:var(--err-fg);border:1px solid var(--err-borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="ti ti-x" aria-hidden="true"></i> Limpar filtros</button>`:''}
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;padding:10px 12px;background:rgba(242,236,206,.4);border:1px solid var(--borda);border-radius:7px;align-items:flex-end">
-        <div style="display:flex;flex-direction:column;gap:3px">
-          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Modalidade</label>
+        <div class="stack-3">
+          <label class="t-label">Modalidade</label>
           <select data-h-change="pages-aluno-grade.9" data-a-change="${esc(JSON.stringify([String(page)]))}"
             style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie);color:var(--txt);cursor:pointer;min-width:130px">
             <option value="" ${!(window._gradeFiltrosAluno?.modalidade)?'selected':''}>Todas</option>
@@ -206,8 +206,8 @@ export async function renderAlunoGrade(container, page) {
             <option value="raja"  ${window._gradeFiltrosAluno?.modalidade==='raja' ?'selected':''}>Raja Yoga</option>
           </select>
         </div>
-        <div style="display:flex;flex-direction:column;gap:3px">
-          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Horário</label>
+        <div class="stack-3">
+          <label class="t-label">Horário</label>
           <select data-h-change="pages-aluno-grade.10" data-a-change="${esc(JSON.stringify([String(page)]))}"
             style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie);color:var(--txt);cursor:pointer;min-width:100px">
             <option value="" ${!(window._gradeFiltrosAluno?.horario)?'selected':''}>Todos</option>

@@ -239,7 +239,7 @@ async function _abrirModalImpersonar(tipo) {
       </div>
       <div style="overflow-y:auto;flex:1;padding:12px">
         ${(pessoas||[]).length === 0
-          ? `<div style="padding:20px;text-align:center;font-size:13px;color:var(--txt2)">Nenhum encontrado.</div>`
+          ? `<div class="p-20 fs-13 c-txt2 ta-center">Nenhum encontrado.</div>`
           : (pessoas||[]).map(p => `
             <div data-h-click="modules-navigation.1" data-a-click="${esc(JSON.stringify([String(p.id), String(tipo)]))}"
               style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;cursor:pointer;margin-bottom:4px;transition:background .15s"
@@ -249,8 +249,8 @@ async function _abrirModalImpersonar(tipo) {
                 ${esc(p.nome.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase())}
               </div>
               <div>
-                <div style="font-size:13px;font-weight:500;color:var(--txt)">${esc(p.nome)}</div>
-                <div style="font-size:12px;color:var(--txt2)">${esc(p.email)}${p.tipo==='visitante'?' · Visitante':''}</div>
+                <div class="fs-13 fw-500 c-txt">${esc(p.nome)}</div>
+                <div class="t-mut">${esc(p.email)}${p.tipo==='visitante'?' · Visitante':''}</div>
               </div>
             </div>`).join('')
         }

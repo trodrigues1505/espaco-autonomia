@@ -87,7 +87,7 @@ export async function renderPresencas(container, page) {
   container.innerHTML = `
     <div class="topbar">
       <div class="topbar-t">Presenças</div>
-      <div style="font-size:12px;color:var(--txt2)">${dataFmtLonga}</div>
+      <div class="t-mut">${dataFmtLonga}</div>
     </div>
     <div class="content">
       ${renderPainelNotif(notifs, { titulo: 'Avisos', maxVisiveis: 2 })}
@@ -101,7 +101,7 @@ export async function renderPresencas(container, page) {
         <input type="date" value="${dataISO}"
           data-h-change="pages-admin-presencas.9"
           style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie);color:var(--txt);cursor:pointer">
-        <span style="font-size:12px;color:var(--txt2)">${ocHoje?.length||0} aula(s)</span>
+        <span class="t-mut">${ocHoje?.length||0} aula(s)</span>
       </div>
       ${ocHoje?.length===0?`<div style="text-align:center;padding:40px;font-size:13px;color:var(--txt2)">Nenhuma aula em ${dataFmtLonga}.</div>`:''}
       ${ocHoje?.length>0?`
@@ -126,13 +126,13 @@ export async function renderPresencas(container, page) {
           </div>
           ${confs.length===0?'<div style="padding:16px 18px;font-size:12px;color:var(--txt2)">Nenhuma confirmação para esta aula.</div>':
             confs.map(c=>`<div style="display:grid;grid-template-columns:1fr 90px 100px 120px;align-items:center;gap:10px;padding:9px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px" id="conf-row-${c.id}">
-              <div style="display:flex;align-items:center;gap:8px">
+              <div class="row-8">
                 <div style="width:26px;height:26px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--titulo)">${esc((c.aluno?.nome||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase())}</div>
-                <span style="font-weight:500">${esc(c.aluno?.nome||'—')}</span>
+                <span class="fw-500">${esc(c.aluno?.nome||'—')}</span>
               </div>
-              <span style="font-size:12px;color:var(--txt2)">${c.confirmado_em?new Date(c.confirmado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'-'}</span>
+              <span class="t-mut">${c.confirmado_em?new Date(c.confirmado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'-'}</span>
               <span>${badge(statusMap[c.status]||c.status, statusBg[c.status]||'var(--neutro-bg)', statusColor[c.status]||'var(--txt2)')}</span>
-              <div style="display:flex;gap:4px">
+              <div class="row-4">
                 <button data-h-click="pages-admin-presencas.3" data-a-click="${esc(JSON.stringify([String(c.id)]))}" style="padding:3px 7px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Presente"><i class="ti ti-check" aria-hidden="true"></i></button>
                 <button data-h-click="pages-admin-presencas.4" data-a-click="${esc(JSON.stringify([String(c.id)]))}" style="padding:3px 7px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Ausente"><i class="ti ti-x" aria-hidden="true"></i></button>
                 <button data-h-click="pages-admin-presencas.5" data-id="${esc(c.id)}" data-nome="${esc(c.aluno?.nome||'')}" data-aluno="${esc(c.aluno?.id||'')}" style="padding:3px 7px;background:var(--neutro-bg);color:var(--txt2);border:none;border-radius:4px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif" title="Remover presença"><i class="ti ti-trash" aria-hidden="true"></i></button>

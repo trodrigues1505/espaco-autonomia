@@ -29,7 +29,7 @@ export async function renderGranthaAdmin(container, page) {
   const { data: granthas, error } = await sb.from('grantha_mandir').select('*').order('titulo')
   if (error) {
     container.innerHTML = `<div class="topbar"><div class="topbar-t">Grantha Mandir</div></div>
-      <div class="content"><p style="color:var(--err-vivo)">Erro: ${esc(error.message)}</p></div>`
+      <div class="content"><p class="c-err">Erro: ${esc(error.message)}</p></div>`
     return
   }
 
@@ -43,7 +43,7 @@ export async function renderGranthaAdmin(container, page) {
       </button>
     </div>
     <div class="content">
-      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);overflow-x:auto">
+      <div class="card-scroll">
         <div style="display:grid;grid-template-columns:1fr 110px 130px 140px;padding:8px 18px;
                     background:rgba(242,236,206,.45);font-size:12px;text-transform:uppercase;
                     letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
@@ -55,12 +55,12 @@ export async function renderGranthaAdmin(container, page) {
             <div style="display:grid;grid-template-columns:1fr 110px 130px 140px;align-items:center;gap:10px;
                         padding:11px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
               <div>
-                <div style="font-weight:500;color:var(--txt)">${esc(g.titulo)}</div>
-                ${g.autor ? `<div style="font-size:12px;color:var(--txt2)">${esc(g.autor)}${esc(g.periodo ? ' · '+g.periodo : '')}</div>` : ''}
+                <div class="fw-500 c-txt">${esc(g.titulo)}</div>
+                ${g.autor ? `<div class="t-mut">${esc(g.autor)}${esc(g.periodo ? ' · '+g.periodo : '')}</div>` : ''}
               </div>
-              <span style="font-size:12px;color:var(--txt2)">${g.tipo === 'obra_classica' ? 'Obra clássica' : 'Artigo'}</span>
-              <span style="font-size:12px;color:var(--txt2)">${esc(_catLabel(g.categoria))}</span>
-              <div style="display:flex;gap:4px">
+              <span class="t-mut">${g.tipo === 'obra_classica' ? 'Obra clássica' : 'Artigo'}</span>
+              <span class="t-mut">${esc(_catLabel(g.categoria))}</span>
+              <div class="row-4">
                 ${g.tipo === 'obra_classica'
                   ? `<button data-h-click="pages-admin-grantha.1" data-id="${esc(g.id)}" data-titulo="${esc(g.titulo)}"
                        style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--titulo);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Gerenciar versos"><i class="ti ti-file-text" aria-hidden="true"></i></button>`
@@ -86,57 +86,57 @@ export async function renderGranthaAdmin(container, page) {
         </div>
         <div style="padding:20px;display:flex;flex-direction:column;gap:12px">
           <input type="hidden" id="gr-id">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div style="display:flex;flex-direction:column;gap:4px">
-              <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Tipo</label>
+          <div class="grid-2">
+            <div class="stack-4">
+              <label class="t-label">Tipo</label>
               <select id="gr-tipo" data-h-change="pages-admin-grantha.6"
                 style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
                 <option value="obra_classica">Obra clássica (em versos)</option>
                 <option value="artigo">Artigo (texto corrido)</option>
               </select>
             </div>
-            <div style="display:flex;flex-direction:column;gap:4px">
-              <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Categoria</label>
+            <div class="stack-4">
+              <label class="t-label">Categoria</label>
               <select id="gr-categoria"
                 style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
                 ${CATEGORIAS.map(c => `<option value="${c.valor}">${c.label}</option>`).join('')}
               </select>
             </div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:4px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Título</label>
+          <div class="stack-4">
+            <label class="t-label">Título</label>
             <input id="gr-titulo" placeholder="ex: Yoga Sūtra de Patañjali"
               style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div style="display:flex;flex-direction:column;gap:4px">
-              <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Autor</label>
+          <div class="grid-2">
+            <div class="stack-4">
+              <label class="t-label">Autor</label>
               <input id="gr-autor" placeholder="ex: Patañjali"
                 style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
             </div>
-            <div style="display:flex;flex-direction:column;gap:4px">
-              <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Período</label>
+            <div class="stack-4">
+              <label class="t-label">Período</label>
               <input id="gr-periodo" placeholder="ex: séc. II a.C. – IV d.C."
                 style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
             </div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:4px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Capa (link de imagem, opcional)</label>
+          <div class="stack-4">
+            <label class="t-label">Capa (link de imagem, opcional)</label>
             <input id="gr-capa" placeholder="https://i.imgur.com/..."
               style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
-          <div style="display:flex;flex-direction:column;gap:4px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Descrição curta</label>
+          <div class="stack-4">
+            <label class="t-label">Descrição curta</label>
             <textarea id="gr-descricao" rows="2" placeholder="Uma ou duas frases sobre a obra..."
               style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;resize:vertical"></textarea>
           </div>
           <div id="gr-conteudo-wrap" style="display:none;flex-direction:column;gap:4px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Conteúdo do artigo</label>
+            <label class="t-label">Conteúdo do artigo</label>
             <textarea id="gr-conteudo" rows="10" placeholder="Texto completo do artigo..."
               style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;resize:vertical"></textarea>
           </div>
         </div>
-        <div style="padding:0 20px 20px;display:flex;justify-content:flex-end;gap:8px">
+        <div class="modal-foot">
           <button data-h-click="pages-admin-grantha.5"
             style="padding:8px 16px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
           <button data-h-click="pages-admin-grantha.7"
@@ -156,10 +156,10 @@ export async function renderGranthaAdmin(container, page) {
           <button data-h-click="pages-admin-grantha.8"
             style="background:none;border:none;color:var(--bege);font-size:22px;cursor:pointer;line-height:1">×</button>
         </div>
-        <div style="padding:20px">
+        <div class="p-20">
           <div style="background:rgba(31,56,31,.04);border:1px solid rgba(31,56,31,.12);border-radius:6px;padding:10px 14px;margin-bottom:14px">
-            <div style="font-size:12px;font-weight:500;color:var(--titulo);margin-bottom:6px">Importar versos em lote (JSON)</div>
-            <div style="font-size:12px;color:var(--txt2);margin-bottom:8px">
+            <div class="mb-6 fs-12 fw-500 c-titulo">Importar versos em lote (JSON)</div>
+            <div class="t-mut mb-8">
               Formato: <code>[{"capitulo":"Samādhipāda","capitulo_ordem":1,"numero":1,"numero_fim":null,"texto_devanagari":"...","transliteracao":"...","traducao":"..."}]</code>
             </div>
             <textarea id="versos-json-textarea" rows="5" placeholder="Cole o array JSON aqui..."
@@ -171,7 +171,7 @@ export async function renderGranthaAdmin(container, page) {
             <span id="versos-import-status" style="font-size:12px;color:var(--txt2);margin-left:8px"></span>
           </div>
 
-          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:8px">
+          <div class="t-label mb-8">
             Versos cadastrados (<span id="versos-count">0</span>)
           </div>
           <div id="versos-lista-container" style="max-height:360px;overflow-y:auto"></div>
@@ -275,7 +275,7 @@ export async function renderGranthaAdmin(container, page) {
     cont.innerHTML = versos.map(v => `
       <div style="display:grid;grid-template-columns:1fr 60px;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
         <div>
-          <div style="font-weight:500;color:var(--txt)">${esc(v.capitulo)} ${v.numero}${v.numero_fim ? '–'+v.numero_fim : ''}</div>
+          <div class="fw-500 c-txt">${esc(v.capitulo)} ${v.numero}${v.numero_fim ? '–'+v.numero_fim : ''}</div>
           <div style="font-size:12px;color:var(--txt2);font-style:italic">${esc(v.transliteracao)}</div>
         </div>
         <button data-h-click="pages-admin-grantha.10" data-a-click="${esc(JSON.stringify([String(v.id)]))}"
@@ -299,7 +299,7 @@ export async function renderGranthaAdmin(container, page) {
       itens = JSON.parse(raw)
       if (!Array.isArray(itens)) throw new Error('não é um array')
     } catch (e) {
-      status.innerHTML = `<span style="color:var(--err-vivo)">JSON inválido: ${esc(e.message)}</span>`
+      status.innerHTML = `<span class="c-err">JSON inválido: ${esc(e.message)}</span>`
       return
     }
 
@@ -320,7 +320,7 @@ export async function renderGranthaAdmin(container, page) {
     }))
 
     const { error: err } = await sb.from('grantha_versos').insert(registros)
-    if (err) { status.innerHTML = `<span style="color:var(--err-vivo)">Erro: ${esc(err.message)}</span>`; return }
+    if (err) { status.innerHTML = `<span class="c-err">Erro: ${esc(err.message)}</span>`; return }
     status.innerHTML = `<span style="color:var(--ok-fg)"><i class="ti ti-check" aria-hidden="true"></i> ${registros.length} verso(s) importado(s)</span>`
     document.getElementById('versos-json-textarea').value = ''
     await _carregarListaVersos()

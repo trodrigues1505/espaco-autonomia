@@ -2,7 +2,7 @@ import { esc } from '../modules/utils.js'
 /**
  * src/pages/index.js
  */
-const V = '?v=38'
+const V = '?v=39'
 const rotaMap = {
   'dashboard':          () => import('./admin/dashboard.js'  + V).then(m => m.renderDashboard),
   'timeline':           () => import('./timeline.js'         + V).then(m => m.renderTimeline),
@@ -58,7 +58,7 @@ export async function navigate(page) {
   container.innerHTML = '<div class="loading-page"><div class="spin-big"></div></div>'
   const loader = rotaMap[page]
   if (!loader) {
-    container.innerHTML = `<div class="content"><p style="color:var(--txt2);font-size:13px">Página não encontrada: ${page}</p></div>`
+    container.innerHTML = `<div class="content"><p class="fs-13 c-txt2">Página não encontrada: ${page}</p></div>`
     return
   }
   try {

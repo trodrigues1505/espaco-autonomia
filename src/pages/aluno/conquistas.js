@@ -31,8 +31,8 @@ export async function renderConquistas(container, page) {
           : '<div style="color:var(--dourado-texto);margin-top:6px"><i class="ti ti-confetti" aria-hidden="true"></i> Nível máximo!</div>'
         }
         <div style="display:flex;justify-content:center;gap:24px;margin-top:14px;font-size:12px">
-          <div><div style="font-size:12px;opacity:.7">Sequência atual</div><div style="font-size:20px">${gam?.streak_atual||0}<i class="ti ti-flame" aria-hidden="true"></i></div></div>
-          <div><div style="font-size:12px;opacity:.7">Recorde</div><div style="font-size:20px">${gam?.streak_max||0}</div></div>
+          <div><div style="font-size:12px;opacity:.7">Sequência atual</div><div class="fs-20">${gam?.streak_atual||0}<i class="ti ti-flame" aria-hidden="true"></i></div></div>
+          <div><div style="font-size:12px;opacity:.7">Recorde</div><div class="fs-20">${gam?.streak_max||0}</div></div>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
@@ -40,8 +40,8 @@ export async function renderConquistas(container, page) {
           <div style="background:var(--superficie);border:${c.desbloqueada?'2px solid var(--dourado)':'1px solid var(--borda)'};border-radius:var(--r);padding:13px;display:flex;align-items:center;gap:10px;${!c.desbloqueada?'opacity:.45':''}">
             <div style="font-size:26px;flex-shrink:0">${c.icone}</div>
             <div>
-              <div style="font-weight:500;font-size:12px;color:var(--titulo)">${esc(c.nome)}</div>
-              <div style="font-size:12px;color:var(--txt2);margin-top:1px">${esc(c.descricao)}</div>
+              <div class="fs-12 fw-500 c-titulo">${esc(c.nome)}</div>
+              <div class="t-mut mt-1">${esc(c.descricao)}</div>
               <div style="font-size:12px;color:var(--dourado-texto);margin-top:2px;font-weight:500">+${c.pontos} pts${c.desbloqueada&&c.quando?' · '+new Date(c.quando).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):''}</div>
             </div>
           </div>`).join('')}

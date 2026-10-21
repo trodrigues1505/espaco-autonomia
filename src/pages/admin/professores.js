@@ -74,7 +74,7 @@ export async function renderProfessores(container, page) {
     </div>
     <div class="content">
       ${barraAbas}
-      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);overflow-x:auto;margin-bottom:16px">
+      <div class="card-scroll mb-16">
         <div style="display:grid;grid-template-columns:1fr 160px 70px 80px;padding:8px 18px;background:rgba(242,236,206,.45);font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
           <span>Professor</span><span>Especialidades</span><span>Status</span><span></span>
         </div>
@@ -84,7 +84,7 @@ export async function renderProfessores(container, page) {
             <div style="display:flex;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px;flex-wrap:wrap">
               <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:160px">
                 <div style="width:28px;height:28px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--titulo);flex-shrink:0">${esc(p.nome.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase())}</div>
-                <div><div style="font-weight:500">${esc(p.nome)}</div><div style="font-size:12px;color:var(--txt2)">${esc(p.email)}</div></div>
+                <div><div class="fw-500">${esc(p.nome)}</div><div class="t-mut">${esc(p.email)}</div></div>
               </div>
               <span style="font-size:12px;color:var(--txt2);min-width:100px">${exibirModalidades(p)}</span>
               <span style="background:${p.ativo?'var(--ok-bg)':'var(--err-bg)'};color:${p.ativo?'var(--ok-fg)':'var(--err-fg)'};padding:2px 8px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap">${p.ativo?'Ativo':'Inativo'}</span>
@@ -105,24 +105,24 @@ export async function renderProfessores(container, page) {
           <button data-h-click="pages-admin-professores.4" style="background:none;border:1px solid var(--borda);border-radius:5px;padding:3px 8px;cursor:pointer"><i class="ti ti-x" aria-hidden="true"></i></button>
         </div>
         <div style="padding:18px 22px">
-          <div style="margin-bottom:10px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:5px">Nome completo</label>
+          <div class="mb-10">
+            <label class="t-label mb-5 d-block">Nome completo</label>
             <input id="cp-nome" placeholder="Nome do professor" style="border:1px solid var(--borda);border-radius:6px;padding:8px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
           </div>
-          <div style="margin-bottom:10px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:5px">E-mail</label>
+          <div class="mb-10">
+            <label class="t-label mb-5 d-block">E-mail</label>
             <input id="cp-email" type="email" placeholder="professor@email.com" style="border:1px solid var(--borda);border-radius:6px;padding:8px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
           </div>
-          <div style="margin-bottom:10px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:5px">Telefone</label>
+          <div class="mb-10">
+            <label class="t-label mb-5 d-block">Telefone</label>
             <input id="cp-tel" placeholder="(11) 99999-9999" style="border:1px solid var(--borda);border-radius:6px;padding:8px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
           </div>
-          <div style="margin-bottom:4px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:8px">Especialidades</label>
+          <div class="mb-4">
+            <label class="t-label mb-8 d-block">Especialidades</label>
             <div id="cp-mods" style="display:flex;gap:8px;flex-wrap:wrap">
-              <label style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--borda);border-radius:20px;cursor:pointer;font-size:12px"><input type="checkbox" value="hatha" style="accent-color:var(--verde)"> Hatha Yoga</label>
-              <label style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--borda);border-radius:20px;cursor:pointer;font-size:12px"><input type="checkbox" value="acro" style="accent-color:var(--verde)"> Acro Yoga</label>
-              <label style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--borda);border-radius:20px;cursor:pointer;font-size:12px"><input type="checkbox" value="raja" style="accent-color:var(--verde)"> Raja Yoga</label>
+              <label class="btn-pill"><input type="checkbox" value="hatha" class="accent"> Hatha Yoga</label>
+              <label class="btn-pill"><input type="checkbox" value="acro" class="accent"> Acro Yoga</label>
+              <label class="btn-pill"><input type="checkbox" value="raja" class="accent"> Raja Yoga</label>
             </div>
           </div>
           <div style="margin-top:12px;background:rgba(232,188,79,.08);border:1px solid rgba(232,188,79,.2);border-radius:6px;padding:10px;font-size:12px;color:var(--txt2)">
@@ -161,32 +161,32 @@ uiAnimar(container)
           <button id="btn-fechar-ep" style="background:none;border:1px solid var(--borda);border-radius:5px;padding:3px 8px;cursor:pointer"><i class="ti ti-x" aria-hidden="true"></i></button>
         </div>
         <div style="padding:18px 22px">
-          <div style="margin-bottom:10px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:5px">Nome</label>
+          <div class="mb-10">
+            <label class="t-label mb-5 d-block">Nome</label>
             <input id="ep-nome" value="${esc((p.nome||'').replace(/"/g,'&quot;'))}" style="border:1px solid var(--borda);border-radius:6px;padding:8px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
           </div>
-          <div style="margin-bottom:10px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:5px">Telefone</label>
+          <div class="mb-10">
+            <label class="t-label mb-5 d-block">Telefone</label>
             <input id="ep-tel" value="${esc(p.telefone||'')}" style="border:1px solid var(--borda);border-radius:6px;padding:8px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none">
           </div>
-          <div style="margin-bottom:10px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;display:block;margin-bottom:8px">Especialidades</label>
+          <div class="mb-10">
+            <label class="t-label mb-8 d-block">Especialidades</label>
             <div id="ep-mods" style="display:flex;gap:8px;flex-wrap:wrap">
-              <label style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--borda);border-radius:20px;cursor:pointer;font-size:12px">
-                <input type="checkbox" id="ep-mod-hatha" value="hatha" ${modsAtuais.includes('hatha')?'checked':''} style="accent-color:var(--verde)"> Hatha Yoga
+              <label class="btn-pill">
+                <input type="checkbox" id="ep-mod-hatha" value="hatha" ${modsAtuais.includes('hatha')?'checked':''} class="accent"> Hatha Yoga
               </label>
-              <label style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--borda);border-radius:20px;cursor:pointer;font-size:12px">
-                <input type="checkbox" id="ep-mod-acro" value="acro" ${modsAtuais.includes('acro')?'checked':''} style="accent-color:var(--verde)"> Acro Yoga
+              <label class="btn-pill">
+                <input type="checkbox" id="ep-mod-acro" value="acro" ${modsAtuais.includes('acro')?'checked':''} class="accent"> Acro Yoga
               </label>
-              <label style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--borda);border-radius:20px;cursor:pointer;font-size:12px">
-                <input type="checkbox" id="ep-mod-raja" value="raja" ${modsAtuais.includes('raja')?'checked':''} style="accent-color:var(--verde)"> Raja Yoga
+              <label class="btn-pill">
+                <input type="checkbox" id="ep-mod-raja" value="raja" ${modsAtuais.includes('raja')?'checked':''} class="accent"> Raja Yoga
               </label>
             </div>
             <div style="font-size:12px;color:var(--txt2);margin-top:6px">Vazio = todas as modalidades.</div>
           </div>
-          <div style="display:flex;align-items:center;gap:8px">
+          <div class="row-8">
             <input type="checkbox" id="ep-ativo" ${p.ativo?'checked':''} style="accent-color:var(--verde);width:15px;height:15px">
-            <label for="ep-ativo" style="font-size:13px;cursor:pointer">Ativo</label>
+            <label for="ep-ativo" class="fs-13 cursor-pointer">Ativo</label>
           </div>
         </div>
         <div style="padding:12px 22px;border-top:1px solid var(--borda);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:var(--superficie)">

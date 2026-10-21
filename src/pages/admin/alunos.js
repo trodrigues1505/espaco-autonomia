@@ -39,19 +39,19 @@ function montarListaAlunosHTML(alunos, saldoPorAluno) {
         const saldoCor = ehLivre ? 'var(--titulo)' : saldo === 0 ? 'var(--err-vivo)' : (saldo !== null && saldo <= 1) ? 'var(--warn-vivo)' : 'var(--verde)'
         const temDesconto = mat && ((mat.desconto_fixo||0) > 0 || (mat.desconto_avulso_meses > mat.desconto_avulso_usado && (mat.desconto_avulso_valor||0) > 0))
         return `<div style="display:grid;grid-template-columns:1fr 80px 60px 60px 80px 160px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
-          <div style="display:flex;align-items:center;gap:8px">
+          <div class="row-8">
             <div style="width:28px;height:28px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--titulo);flex-shrink:0">${esc(initials)}</div>
             <div>
-              <div style="font-weight:500">${esc(a.nome)}</div>
-              <div style="font-size:12px;color:var(--txt2)">${esc(a.email)}</div>
+              <div class="fw-500">${esc(a.nome)}</div>
+              <div class="t-mut">${esc(a.email)}</div>
               ${temDesconto?`<div style="font-size:12px;color:var(--warn-vivo)"><i class="ti ti-tag" aria-hidden="true"></i> com desconto</div>`:''}
             </div>
           </div>
           <span>${mat?PLANO_BADGES[mat?.plano_tipo]||esc(mat?.plano_tipo)||'—':badge('Sem plano','var(--err-bg)','var(--err-fg)')}</span>
-          <span style="font-size:12px;color:var(--txt2)">${opcaoLabel}</span>
+          <span class="t-mut">${opcaoLabel}</span>
           <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:${saldoCor}">${saldoLabel}</span>
           <span style="font-size:12px;color:${vencida?'var(--err-vivo)':'var(--txt2)'}">${mat?.fim?new Date(mat.fim+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):vencida?'Vencida':'—'}</span>
-          <div style="display:flex;gap:4px">
+          <div class="row-4">
             <button data-h-click="pages-admin-alunos.1" data-a-click="${esc(JSON.stringify([String(a.id)]))}" style="padding:3px 10px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:12px;cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif">Editar</button>
             <button data-nome="${esc(a.nome)}" data-h-click="pages-admin-alunos.2" data-a-click="${esc(JSON.stringify([String(a.id)]))}" style="padding:3px 8px;background:transparent;border:1px solid var(--err-borda);border-radius:5px;font-size:12px;cursor:pointer;color:var(--err-vivo);font-family:'DM Sans',sans-serif" title="Remover aluno (volta a visitante)"><i class="ti ti-x" aria-hidden="true"></i></button>
           </div>
@@ -70,15 +70,15 @@ function montarListaVisitantesHTML(visitantes) {
       visitantes.map(v => {
         const initials = (v.nome||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()
         return `<div style="display:grid;grid-template-columns:1fr 130px 110px 120px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
-          <div style="display:flex;align-items:center;gap:8px">
+          <div class="row-8">
             <div style="width:28px;height:28px;border-radius:50%;background:rgba(58,110,165,.12);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--info-fg);flex-shrink:0">${esc(initials)}</div>
             <div>
-              <div style="font-weight:500">${esc(v.nome||'—')}</div>
-              <div style="font-size:12px;color:var(--txt2)">${esc(v.email)}</div>
+              <div class="fw-500">${esc(v.nome||'—')}</div>
+              <div class="t-mut">${esc(v.email)}</div>
             </div>
           </div>
-          <span style="font-size:12px;color:var(--txt2)">${esc(v.telefone||'—')}</span>
-          <span style="font-size:12px;color:var(--txt2)">${fmtDataHora(v.criado_em)}</span>
+          <span class="t-mut">${esc(v.telefone||'—')}</span>
+          <span class="t-mut">${fmtDataHora(v.criado_em)}</span>
           <div>
             <button data-h-click="pages-admin-alunos.3" data-a-click="${esc(JSON.stringify([String(v.id)]))}" style="padding:4px 10px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap"><i class="ti ti-arrow-up" aria-hidden="true"></i> Promover a Aluno</button>
           </div>
@@ -149,7 +149,7 @@ export async function renderAlunos(container, page) {
     `${fi('','Nome completo',`<input type="text" id="ca-nome" ${inputStyle} placeholder="Nome do aluno">`)}
     ${fi('','E-mail',`<input type="email" id="ca-email" ${inputStyle} placeholder="email@exemplo.com">`)}
     ${fi('','Telefone',`<input type="tel" id="ca-tel" ${inputStyle} placeholder="(11) 99999-9999">`)}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div class="grid-2">
       ${fi('','Plano',`<select id="ca-plano" ${inputStyle} data-h-change="pages-admin-alunos.4">
         <option value="brahma">Brahma — 1× por semana — R$100/mês</option>
         <option value="shiva_1x">Shiva 1x — 1× por semana — R$150/mês</option>
@@ -186,10 +186,10 @@ export async function renderAlunos(container, page) {
     `<input type="hidden" id="pv-id">
     <div style="background:rgba(58,110,165,.08);border:1px solid rgba(58,110,165,.25);border-radius:8px;padding:12px;margin-bottom:14px">
       <div id="pv-nome" style="font-size:14px;font-weight:500;color:var(--txt)"></div>
-      <div id="pv-email" style="font-size:12px;color:var(--txt2);margin-top:2px"></div>
+      <div id="pv-email" class="t-mut mt-2"></div>
     </div>
     ${fi('','Telefone',`<input type="tel" id="pv-tel" ${inputStyle} placeholder="(11) 99999-9999">`)}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div class="grid-2">
       ${fi('','Plano',`<select id="pv-plano" ${inputStyle} data-h-change="pages-admin-alunos.9">
         <option value="brahma">Brahma — 1× por semana — R$100/mês</option>
         <option value="shiva_1x">Shiva 1x — 1× por semana — R$150/mês</option>
@@ -249,27 +249,27 @@ export async function renderAlunos(container, page) {
           <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;color:var(--bege)">${todos?.length||0}</div>
           <div style="font-size:12px;color:rgba(242,236,206,.6);margin-top:2px">${(todos||[]).filter(a=>a.ativo).length} ativos</div>
         </div>
-        <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
-          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Receita Mensal Est.</div>
+        <div class="card">
+          <div class="t-label mb-4">Receita Mensal Est.</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--ok-fg)">R$${(todos||[]).reduce((s,a)=>{const m=(a.matriculas||[]).find(m=>m.ativa);if(!m) return s; const desc = (m.desconto_fixo||0) + (m.desconto_avulso_meses>m.desconto_avulso_usado ? (m.desconto_avulso_valor||0) : 0); return s+Math.max(0,(m.valor_mensal||0)-desc)},0).toFixed(0)}</div>
-          <div style="font-size:12px;color:var(--txt2);margin-top:2px">soma das mensalidades líquidas</div>
+          <div class="t-mut mt-2">soma das mensalidades líquidas</div>
         </div>
         <div id="card-sem-asaas" data-h-click="pages-admin-alunos.17" title="Clique para filtrar a lista pelos alunos sem Asaas vinculado" style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:box-shadow .15s;box-shadow:${filtroSemAsaas?'0 0 0 2px var(--warn-vivo) inset':'none'}">
-          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Sem Asaas</div>
+          <div class="t-label mb-4">Sem Asaas</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;color:var(--warn-vivo)">${(todos||[]).filter(a=>!a.asaas_customer_id).length}</div>
-          <div style="font-size:12px;color:var(--txt2);margin-top:2px">não vinculados · clique p/ filtrar</div>
+          <div class="t-mut mt-2">não vinculados · clique p/ filtrar</div>
         </div>
-        <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
-          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Vencendo em 7d</div>
+        <div class="card">
+          <div class="t-label mb-4">Vencendo em 7d</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;color:${(()=>{const em7=new Date();em7.setDate(em7.getDate()+7);return (todos||[]).filter(a=>{const m=(a.matriculas||[]).find(m=>m.ativa);return m?.fim&&new Date(m.fim+'T12:00')<=em7&&new Date(m.fim+'T12:00')>=new Date()}).length})()>0?'var(--err-vivo)':'var(--verde)'}">
             ${(()=>{const em7=new Date();em7.setDate(em7.getDate()+7);return (todos||[]).filter(a=>{const m=(a.matriculas||[]).find(m=>m.ativa);return m?.fim&&new Date(m.fim+'T12:00')<=em7&&new Date(m.fim+'T12:00')>=new Date()}).length})()}
           </div>
-          <div style="font-size:12px;color:var(--txt2);margin-top:2px">planos vencendo</div>
+          <div class="t-mut mt-2">planos vencendo</div>
         </div>
         <div id="card-visitantes" data-h-click="pages-admin-alunos.18" title="Clique para ver os visitantes (leads)" style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:box-shadow .15s">
-          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Visitantes (Leads)</div>
+          <div class="t-label mb-4">Visitantes (Leads)</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;color:var(--info-fg)">${visitantesTodos.length}</div>
-          <div style="font-size:12px;color:var(--txt2);margin-top:2px">usando o app · clique p/ ver</div>
+          <div class="t-mut mt-2">usando o app · clique p/ ver</div>
         </div>
       </div>
       `:''}
@@ -277,9 +277,9 @@ export async function renderAlunos(container, page) {
       ${barraAbas}
 
       ${aba==='alunos'?`
-      <div style="margin-bottom:14px">
+      <div class="mb-14">
         <button data-h-click="pages-admin-alunos.19" style="width:100%;text-align:left;background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:10px 18px;font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px">
-          <i id="icon-toggle-distrib" class="ti ti-chevron-${distribAberta?'down':'right'}" style="font-size:13px"></i> Distribuição por Plano
+          <i id="icon-toggle-distrib" class="ti ti-chevron-${distribAberta?'down':'right'} fs-13"></i> Distribuição por Plano
         </button>
         <div id="distribuicao-plano-wrap" data-aberto="${distribAberta?'true':'false'}" style="max-height:${distribAberta?'2000px':'0px'};overflow:hidden;transition:max-height .3s ease">
           <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 18px;margin-top:8px">
@@ -293,10 +293,10 @@ export async function renderAlunos(container, page) {
               const n=(todos||[]).filter(a=>a.matriculas?.some(m=>m.ativa&&m.plano_tipo===k)).length
               const pct=todos?.length?Math.round(n/todos.length*100):0
               const recMes=(todos||[]).filter(a=>a.matriculas?.some(m=>m.ativa&&m.plano_tipo===k)).reduce((s,a)=>{const m=(a.matriculas||[]).find(m=>m.ativa);if(!m) return s; const desc=(m.desconto_fixo||0)+(m.desconto_avulso_meses>m.desconto_avulso_usado?(m.desconto_avulso_valor||0):0); return s+Math.max(0,(m.valor_mensal||0)-desc)},0)
-              return `<div style="margin-bottom:10px">
+              return `<div class="mb-10">
                 <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-                  <span style="font-weight:500">${l}</span>
-                  <span style="color:var(--txt2)">${n} aluno${n!==1?'s':''} · R$${recMes}/mês · ${pct}%</span>
+                  <span class="fw-500">${l}</span>
+                  <span class="c-txt2">${n} aluno${n!==1?'s':''} · R$${recMes}/mês · ${pct}%</span>
                 </div>
                 <div style="height:6px;background:var(--neutro-bg);border-radius:4px;overflow:hidden">
                   <div style="height:6px;background:${c};border-radius:4px;width:${pct}%;transition:width .5s"></div>
@@ -325,13 +325,13 @@ export async function renderAlunos(container, page) {
         <div style="background:#c0392b;padding:16px 20px">
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:#fff">Remover Aluno</div>
         </div>
-        <div style="padding:20px">
-          <div id="excluir-aluno-msg" style="font-size:13px;color:var(--txt);margin-bottom:8px"></div>
+        <div class="p-20">
+          <div id="excluir-aluno-msg" class="fs-13 c-txt mb-8"></div>
           <div style="font-size:12px;color:var(--warn-fg);background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.3);border-radius:6px;padding:10px;margin-top:10px">
             ℹ O aluno volta ao status de <strong>visitante</strong>, a matrícula atual é encerrada e o vínculo com o professor (se houver) é fechado. Histórico de presenças, pagamentos e matrículas é preservado.
           </div>
         </div>
-        <div style="padding:0 20px 16px;display:flex;justify-content:flex-end;gap:8px">
+        <div class="modal-foot modal-foot-sm">
           <button data-h-click="pages-admin-alunos.20" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
           <button id="btn-confirmar-exclusao" style="padding:7px 14px;background:#c0392b;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Remover</button>
         </div>
@@ -625,36 +625,36 @@ export async function renderAlunos(container, page) {
       ${fi('','Status',`<select id="ea-ativo" ${inputStyle}><option value="true" ${a.ativo?'selected':''}>Ativo</option><option value="false" ${!a.ativo?'selected':''}>Inativo</option></select>`)}
       <div style="background:rgba(232,188,79,.08);border:1px solid rgba(232,188,79,.25);border-radius:8px;padding:12px;margin-bottom:12px">
         <div style="font-size:12px;font-weight:500;color:var(--titulo);margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px"><i class="ti ti-tag" aria-hidden="true"></i> Descontos</div>
-        <div style="display:flex;flex-direction:column;gap:3px;margin-bottom:10px">
-          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Desconto fixo mensal (R$)</label>
+        <div class="stack-3 mb-10">
+          <label class="t-label">Desconto fixo mensal (R$)</label>
           <input type="number" id="ea-desconto-fixo" min="0" step="0.01" value="${mat?.desconto_fixo||0}" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div style="display:flex;flex-direction:column;gap:3px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Desconto avulso (R$)</label>
+          <div class="stack-3">
+            <label class="t-label">Desconto avulso (R$)</label>
             <input type="number" id="ea-desconto-avulso-valor" min="0" step="0.01" value="${mat?.desconto_avulso_valor||0}" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
-          <div style="display:flex;flex-direction:column;gap:3px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Por quantos meses</label>
+          <div class="stack-3">
+            <label class="t-label">Por quantos meses</label>
             <input type="number" id="ea-desconto-avulso-meses" min="0" max="24" value="${mat?.desconto_avulso_meses||0}" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
         </div>
         ${descAvulsoAtivo?`<div style="margin-top:8px;font-size:12px;color:var(--warn-vivo)"><i class="ti ti-hourglass" aria-hidden="true"></i> ${mat.desconto_avulso_meses - mat.desconto_avulso_usado} mês(es) restante(s)</div>`:''}
       </div>
-      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
-        <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">ID no Asaas (cus_...)</label>
+      <div class="stack-4 mb-12">
+        <label class="t-label">ID no Asaas (cus_...)</label>
         <input id="ea-asaas" placeholder="cus_000..." style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none" value="${esc(a.asaas_customer_id)}">
         <div style="font-size:12px;color:${a.asaas_customer_id?'var(--ok-fg)':'var(--err-vivo)'};margin-top:3px">${a.asaas_customer_id?'<i class="ti ti-check" aria-hidden="true"></i> Vinculado ao Asaas':'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Não vinculado'}</div>
       </div>
       <div style="background:rgba(242,236,206,.4);border:1px solid var(--borda);border-radius:8px;padding:12px;margin-bottom:4px">
-        <div style="font-size:12px;font-weight:500;color:var(--titulo);margin-bottom:6px"><i class="ti ti-plus" aria-hidden="true"></i> Créditos manuais de aulas</div>
+        <div class="mb-6 fs-12 fw-500 c-titulo"><i class="ti ti-plus" aria-hidden="true"></i> Créditos manuais de aulas</div>
         <div style="display:flex;align-items:flex-end;gap:8px">
           <div style="display:flex;flex-direction:column;gap:3px;flex:1">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Qtd</label>
+            <label class="t-label">Qtd</label>
             <input type="number" id="ea-creditos" min="1" max="50" value="1" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
           <div style="display:flex;flex-direction:column;gap:3px;flex:2">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Motivo</label>
+            <label class="t-label">Motivo</label>
             <input type="text" id="ea-credito-motivo" placeholder="Ex: aulas a repor de maio" style="border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
           <button data-h-click="pages-admin-alunos.23" data-a-click="${esc(JSON.stringify([String(a.id)]))}" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Creditar</button>

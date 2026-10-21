@@ -35,9 +35,9 @@ export async function renderProfHome(container, page) {
       <div class="content">
         ${renderPainelNotif(notifs)}
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
-          <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Aulas hoje</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--titulo)">${ocHoje?.length||0}</div></div>
-          <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Confirmados hoje</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--titulo)">${(ocHoje||[]).reduce((s,o)=>s+(o.confirmados||0),0)}</div></div>
-          <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Próxima aula</div><div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--titulo)">${proxima?new Date(proxima.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · '+NOMES[proxima.modalidade]:'—'}</div></div>
+          <div class="card"><div class="t-label mb-5">Aulas hoje</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--titulo)">${ocHoje?.length||0}</div></div>
+          <div class="card"><div class="t-label mb-5">Confirmados hoje</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--titulo)">${(ocHoje||[]).reduce((s,o)=>s+(o.confirmados||0),0)}</div></div>
+          <div class="card"><div class="t-label mb-5">Próxima aula</div><div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--titulo)">${proxima?new Date(proxima.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · '+NOMES[proxima.modalidade]:'—'}</div></div>
         </div>
         ${card('Aulas de hoje', '',
           (ocHoje||[]).length===0?'<div style="padding:18px;font-size:12px;color:var(--txt2)">Nenhuma aula hoje.</div>':
@@ -47,8 +47,8 @@ export async function renderProfHome(container, page) {
             const isProxima = oc.id === proxima?.id
             return `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid rgba(212,200,158,.3);${isProxima?'background:rgba(232,188,79,.04);border-left:3px solid var(--dourado)':''}">
               <div>
-                <div style="display:flex;align-items:center;gap:6px">${dot(oc.modalidade)}<strong style="font-size:13px">${NOMES[oc.modalidade]}</strong>${isProxima?badge('Próxima','rgba(232,188,79,.15)','var(--warn-fg)'):''}</div>
-                <div style="font-size:12px;color:var(--txt2);margin-top:2px">${hora} · ${oc.confirmados||0}/${oc.vagas_total} confirmados</div>
+                <div class="row-6">${dot(oc.modalidade)}<strong class="fs-13">${NOMES[oc.modalidade]}</strong>${isProxima?badge('Próxima','rgba(232,188,79,.15)','var(--warn-fg)'):''}</div>
+                <div class="t-mut mt-2">${hora} · ${oc.confirmados||0}/${oc.vagas_total} confirmados</div>
               </div>
               <button data-h-click="pages-professor-home.1" data-a-click="${esc(JSON.stringify([String(oc.id)]))}" style="padding:5px 12px;background:${isProxima?'var(--dourado)':'var(--verde)'};color:${isProxima?'var(--verde)':'var(--bege)'};border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500">Fazer Chamada</button>
             </div>`
@@ -95,13 +95,13 @@ export async function renderProfHome(container, page) {
             const presente = c.status==='presente'
             const ausente = c.status==='ausente'
             return `<div data-h-click="pages-professor-home.3" data-id="${esc(c.id)}" data-status="${esc(c.status)}" style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid rgba(212,200,158,.3);cursor:pointer;background:${presente?'rgba(232,188,79,.06)':ausente?'rgba(255,0,0,.03)':'var(--superficie)'};transition:background .15s" id="prow-${c.id}">
-              <div style="display:flex;align-items:center;gap:10px">
+              <div class="row-10">
                 <div style="width:32px;height:32px;border-radius:50%;background:${presente?'var(--dourado)':ausente?'var(--err-bg)':'rgba(31,56,31,.1)'};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:${presente?'var(--verde)':ausente?'var(--err-fg)':'var(--titulo)'}">
                   ${esc((c.aluno?.nome||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase())}
                 </div>
-                <span style="font-size:13px;font-weight:500">${esc(c.aluno?.nome||'—')}</span>
+                <span class="fs-13 fw-500">${esc(c.aluno?.nome||'—')}</span>
               </div>
-              <div style="display:flex;align-items:center;gap:8px">
+              <div class="row-8">
                 ${presente?badge('Presente','var(--ok-bg)','var(--ok-fg)'):ausente?badge('Ausente','var(--err-bg)','var(--err-fg)'):badge('Pendente','rgba(232,188,79,.15)','var(--warn-fg)')}
                 <span style="font-size:16px;color:${presente?'#2d7a2d':ausente?'var(--err-vivo)':'var(--txt2)'}">${presente?'<i class="ti ti-check" aria-hidden="true"></i>':ausente?'<i class="ti ti-x" aria-hidden="true"></i>':'○'}</span>
               </div>

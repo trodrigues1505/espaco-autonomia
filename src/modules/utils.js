@@ -61,7 +61,7 @@ export function badge(txt, bg, color) {
 /** Card com cabeçalho e corpo */
 export function card(title, rightHtml, bodyHtml) {
   return `
-    <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);overflow-x:auto;margin-bottom:16px">
+    <div class="card-scroll mb-16">
       <div style="padding:13px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
         <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo)">${title}</span>
         <div>${rightHtml || ''}</div>
@@ -89,8 +89,8 @@ export function modal(id, title, bodyHtml, footHtml) {
 export function fi(idOrLabel, labelOrInput, inputHtmlOrUndef) {
   const label     = inputHtmlOrUndef !== undefined ? labelOrInput    : idOrLabel
   const inputHtml = inputHtmlOrUndef !== undefined ? inputHtmlOrUndef : labelOrInput
-  return `<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
-    <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">${label}</label>
+  return `<div class="stack-4 mb-12">
+    <label class="t-label">${label}</label>
     ${inputHtml}
   </div>`
 }

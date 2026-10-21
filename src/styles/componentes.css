@@ -1,0 +1,118 @@
+/* ═════════════════════════════════════════════════════════════════════════════
+   componentes.css — camada de COMPONENTES (botões, cartões, campos, selos, tipografia).
+   Substitui estilos inline repetidos. GERADO a partir do catálogo de ferramentas/ (mesma fonte da transformação):
+   cada regra é a declaração EXATA que estava inline; só os estados (hover/ativo/foco/desabilitado) são novos.
+   ═════════════════════════════════════════════════════════════════════════════ */
+.btn-pri{padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-sec{padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer}
+.btn-sec.btn-lg{padding:8px 16px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer}
+.btn-danger-sm{padding:3px 8px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer}
+.btn-ok-sm{padding:3px 8px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer}
+.btn-x{background:none;border:none;color:var(--bege);cursor:pointer;line-height:1}
+.btn-pill{display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--borda);border-radius:20px;cursor:pointer;font-size:12px}
+.card{background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px}
+.card.card-lg{background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px}
+.card-scroll{background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);overflow-x:auto}
+.panel{background:var(--fundo);border-radius:6px;padding:12px}
+.input{border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none}
+.input.input-sm{border:1px solid var(--borda);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none}
+.badge{font-size:12px;background:rgba(31,56,31,.07);color:var(--titulo);padding:3px 10px;border-radius:20px}
+.t-label{font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500}
+.t-mut{font-size:12px;color:var(--txt2)}
+.t-serif{font-family:'Cormorant Garamond',serif;font-weight:500;color:var(--titulo)}
+.stack-3{display:flex;flex-direction:column;gap:3px}
+.stack-4{display:flex;flex-direction:column;gap:4px}
+.row-6{display:flex;align-items:center;gap:6px}
+.row-8{display:flex;align-items:center;gap:8px}
+.row-10{display:flex;align-items:center;gap:10px}
+.row-4{display:flex;gap:4px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn-ghost{padding:5px 10px;background:var(--superficie);color:var(--txt);border:1px solid var(--borda);border-radius:5px;font-size:13px;cursor:pointer}
+.modal-foot{padding:0 20px 20px;display:flex;justify-content:flex-end;gap:8px}
+.modal-foot.modal-foot-sm{padding:0 20px 16px;display:flex;justify-content:flex-end;gap:8px}
+.accent{accent-color:var(--verde)}
+
+/* utilitários de espaçamento e tipografia */
+.mt-2{margin-top:2px}
+.mt-3{margin-top:3px}
+.mb-4{margin-bottom:4px}
+.mb-5{margin-bottom:5px}
+.mb-6{margin-bottom:6px}
+.mb-10{margin-bottom:10px}
+.mb-12{margin-bottom:12px}
+.mb-14{margin-bottom:14px}
+.p-20{padding:20px}
+.fs-12{font-size:12px}
+.fs-13{font-size:13px}
+.fs-16{font-size:16px}
+.fs-18{font-size:18px}
+.fs-20{font-size:20px}
+.fs-22{font-size:22px}
+.fs-26{font-size:26px}
+.fs-28{font-size:28px}
+.fw-500{font-weight:500}
+.ff-serif{font-family:'Cormorant Garamond',serif}
+.c-txt{color:var(--txt)}
+.c-txt2{color:var(--txt2)}
+.c-err{color:var(--err-vivo)}
+.c-bege{color:var(--bege)}
+.c-titulo{color:var(--titulo)}
+.w-full{width:100%}
+.cursor-pointer{cursor:pointer}
+.lh-1{line-height:1}
+.mb-8{margin-bottom:8px}
+.mb-16{margin-bottom:16px}
+.mt-1{margin-top:1px}
+.mt-8{margin-top:8px}
+.ta-right{text-align:right}
+.ta-center{text-align:center}
+.d-block{display:block}
+
+/* ═══ ESTADOS (novos): estilos inline não conseguem ter hover, ativo, foco nem desabilitado ═══ */
+.btn-pri, .btn-sec, .btn-danger-sm, .btn-ok-sm, .btn-ghost, .btn-pill, .btn-x {
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast), transform var(--t-fast), opacity var(--t-fast);
+}
+@media (hover: hover) {
+  .btn-sec:hover:not(:disabled), .btn-pill:hover:not(:disabled), .btn-ghost:hover:not(:disabled) { background: var(--superficie-2); border-color: var(--verde-cl); }
+  .btn-pri:hover:not(:disabled)        { background: var(--verde-med); }
+  .btn-danger-sm:hover:not(:disabled)  { background: var(--err-borda); }
+  .btn-ok-sm:hover:not(:disabled)      { background: var(--ok-borda); }
+  .btn-x:hover:not(:disabled)          { opacity: .75; }
+}
+.btn-pri:disabled, .btn-sec:disabled, .btn-danger-sm:disabled, .btn-ok-sm:disabled, .btn-ghost:disabled, .btn-pill:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Campos: foco VISÍVEL (antes: outline:none inline = quem usa teclado não via onde estava) */
+.input:focus { border-color: var(--verde-cl); box-shadow: 0 0 0 3px color-mix(in srgb, var(--verde-cl) 22%, transparent); }
+.input:disabled { background: var(--neutro-bg); color: var(--txt2); cursor: not-allowed; }
+.input::placeholder { color: var(--txt2); opacity: .75; }
+
+/* Foco por teclado em QUALQUER campo, inclusive os que ainda têm outline:none inline (só !important vence o inline) */
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--verde-cl) !important; outline-offset: 1px; }
+
+/* Cartão: mesma elevação ao passar o mouse que os cartões inline já tinham (regras em main.css) */
+.card, .card-scroll { transition: box-shadow var(--t-mid) var(--ease-out), transform var(--t-mid) var(--ease-out); }
+
+/* Grade de 2 colunas colapsa no celular (antes: seletor [style*="grid-template-columns:1fr 1fr"] em main.css) */
+@media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr !important; } }
+
+/* ═══ Listas em "tabela" no celular → cartões (ver src/modules/lista-responsiva.js) ═══ */
+@media (max-width: 768px) {
+  .lista-cab { display: none !important; }
+  .lista-linha {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px 14px !important; align-items: start !important; min-width: 0 !important; padding: 12px 16px !important;
+  }
+  .lista-linha > :first-child { grid-column: 1 / -1; }
+  .lista-linha > [data-label]:not(:first-child)::before {
+    content: attr(data-label); display: block; margin-bottom: 2px;
+    font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; line-height: 1.3; letter-spacing: .7px; text-transform: uppercase; color: var(--txt2);
+  }
+  /* célula de AÇÕES (a última, quando tem botão/link): linha inteira, botões com texto completo, sem rótulo repetido */
+  .lista-linha > :last-child:has(button, a) { grid-column: 1 / -1; display: flex !important; flex-wrap: wrap; gap: 8px; justify-content: flex-start !important; padding-top: 4px; border-top: 1px solid var(--borda); }
+  .lista-linha > :last-child:has(button, a)::before { display: none !important; }
+  .lista-linha > :last-child:has(button, a) > button, .lista-linha > :last-child:has(button, a) > a { flex: 0 1 auto; white-space: nowrap; }
+  /* célula que É o próprio botão/link (ex.: lápis de editar): sem rótulo dentro do botão, alinhada à esquerda */
+  .lista-linha > :is(button, a)[data-label]::before { display: none !important; }
+  .lista-linha > :is(button, a)[data-label] { justify-self: start; }
+  .lista-pai { min-width: 0 !important; }
+}

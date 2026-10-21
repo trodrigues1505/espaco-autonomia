@@ -13,10 +13,10 @@ export async function renderEspaco(container, page) {
     <div class="topbar"><div class="topbar-t">O Espaço</div></div>
     <div class="content">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
-        <span style="font-size:26px"><i class="ti ti-building-bank" aria-hidden="true"></i></span>
+        <span class="fs-26"><i class="ti ti-building-bank" aria-hidden="true"></i></span>
         <div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--titulo)">Espaço Autonomia</div>
-          <div style="font-size:12px;color:var(--txt2)">Sobre nós</div>
+          <div class="t-mut">Sobre nós</div>
         </div>
       </div>
 
@@ -34,8 +34,8 @@ export async function renderEspaco(container, page) {
         <p style="font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;color:var(--bege);line-height:1.7;margin:0">O yoga que ensinamos aqui é o yoga como ele foi concebido — um sistema filosófico completo, com método, literatura e tradição. Se isso é o que você está procurando, você está no lugar certo.</p>
       </div>
 
-      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--txt2)">
-        <i class="ti ti-map-pin" style="color:var(--titulo)"></i>
+      <div class="row-8 fs-13 c-txt2">
+        <i class="ti ti-map-pin c-titulo"></i>
         Av. Liberdade, 179 — Centro, Franco da Rocha, SP
       </div>
     </div>
@@ -103,7 +103,7 @@ function _renderSubpagina(idx) {
   ).join('')
 
   const secoesHtml = s.secoes.map(sec => `
-    <div style="margin-bottom:16px">
+    <div class="mb-16">
       <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--titulo);margin-bottom:6px">${esc(sec.titulo)}</div>
       <p style="font-size:14px;color:var(--txt);line-height:1.85;margin:0">${esc(sec.texto)}</p>
     </div>

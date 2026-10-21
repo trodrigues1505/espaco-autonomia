@@ -9,6 +9,7 @@ import { initPWA }     from './modules/pwa.js'
 import './modules/privacidade.js'      // registra window.abrirPolitica
 import { initSession } from './modules/auth.js'
 import './pages/index.js'              // registra window.navigate
+import './modules/lista-responsiva.js' // listas em tabela viram cartões no celular
 
 initLGPD()
 initPWA()

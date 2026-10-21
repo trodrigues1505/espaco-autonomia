@@ -17,7 +17,7 @@ export async function renderVocabularioAluno(container, page) {
 
   if (error) {
     container.innerHTML = `<div class="topbar"><div class="topbar-t">Śabda Kośa</div></div>
-      <div class="content"><p style="color:var(--err-vivo);font-size:13px">Erro: ${esc(error.message)}</p></div>`
+      <div class="content"><p class="fs-13 c-err">Erro: ${esc(error.message)}</p></div>`
     return
   }
 
@@ -25,11 +25,11 @@ export async function renderVocabularioAluno(container, page) {
     if (!lista.length) {
       return `<div style="text-align:center;padding:40px 20px;color:var(--txt2)">
         <div style="font-size:32px;margin-bottom:10px"><i class="ti ti-book" aria-hidden="true"></i></div>
-        <div style="font-size:13px">Nenhum termo encontrado.</div>
+        <div class="fs-13">Nenhum termo encontrado.</div>
       </div>`
     }
     return lista.map(t => `
-      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-bottom:10px">
+      <div class="card mb-10">
         <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--titulo);margin-bottom:4px">${_esc(t.termo)}</div>
         <div style="font-size:13px;color:var(--txt);line-height:1.6;white-space:pre-line">${_esc(t.definicao)}</div>
       </div>`).join('')

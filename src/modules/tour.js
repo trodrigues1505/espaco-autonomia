@@ -157,10 +157,10 @@ async function _mostrarPasso(el, texto, idx, total, onProximo, onVoltar, onPular
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
       <button id="_tour-pular" style="background:none;border:none;font-size:12px;color:var(--txt2);
         cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:underline;padding:0">Pular tutorial</button>
-      <div style="display:flex;align-items:center;gap:8px">
+      <div class="row-8">
         ${!isFirst ? `<button id="_tour-voltar" style="padding:7px 12px;background:none;color:var(--titulo);
           border:1px solid var(--borda);border-radius:7px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="ti ti-arrow-left" aria-hidden="true"></i> Voltar</button>` : ''}
-        <span style="font-size:12px;color:var(--txt2)">${idx + 1}/${total}</span>
+        <span class="t-mut">${idx + 1}/${total}</span>
         <button id="_tour-prox" style="padding:7px 16px;background:var(--verde);color:var(--bege);
           border:none;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif">
           ${isLast ? 'Concluir' : 'Próximo <i class="ti ti-arrow-right" aria-hidden="true"></i>'}

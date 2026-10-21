@@ -72,11 +72,11 @@ export async function renderVinculos(container, page) {
   )
 
   const modalEditar = modal('modal-editar-vinculo', 'Editar Vínculo',
-    `<div id="ev-aluno-professor" style="font-size:13px;font-weight:500;color:var(--titulo);margin-bottom:12px"></div>
+    `<div id="ev-aluno-professor" class="mb-12 fs-13 fw-500 c-titulo"></div>
     <input type="hidden" id="ev-id">
     ${fi('', 'Data de início', `<input type="date" id="ev-data-inicio" ${inputStyle}>`)}
     <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--txt2);margin:8px 0;cursor:pointer">
-      <input type="checkbox" id="ev-em-aberto" style="accent-color:var(--verde)"> Vínculo ainda em aberto (sem data de fim)
+      <input type="checkbox" id="ev-em-aberto" class="accent"> Vínculo ainda em aberto (sem data de fim)
     </label>
     <div id="ev-data-fim-wrap">
       ${fi('', 'Data de fim', `<input type="date" id="ev-data-fim" ${inputStyle}>`)}
@@ -97,19 +97,19 @@ export async function renderVinculos(container, page) {
         O repasse de cada mês usa o vínculo que estava em vigor <strong>naquele mês</strong>, não o vínculo atual — trocar de professor hoje não altera meses já fechados.
       </div>
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:flex-end">
-        <div style="display:flex;flex-direction:column;gap:3px">
-          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Professor</label>
+        <div class="stack-3">
+          <label class="t-label">Professor</label>
           <select data-h-change="pages-admin-vinculos.9" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie)">
             <option value="" ${!filtroProf?'selected':''}>Todos</option>
             ${professores.map(p=>`<option value="${p.id}" ${filtroProf===p.id?'selected':''}>${esc(p.nome)}</option>`).join('')}
           </select>
         </div>
-        <div style="display:flex;flex-direction:column;gap:3px">
-          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Buscar aluno</label>
+        <div class="stack-3">
+          <label class="t-label">Buscar aluno</label>
           <input id="input-busca-vinc" value="${esc(buscaAluno)}" placeholder="Nome do aluno..." data-h-input="pages-admin-vinculos.10" style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;width:180px">
         </div>
         <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--txt2);cursor:pointer;align-self:flex-end;padding:6px 0">
-          <input type="checkbox" ${somenteAtuais?'checked':''} data-h-change="pages-admin-vinculos.11" style="accent-color:var(--verde)">
+          <input type="checkbox" ${somenteAtuais?'checked':''} data-h-change="pages-admin-vinculos.11" class="accent">
           Mostrar só vínculos em aberto
         </label>
       </div>
@@ -121,12 +121,12 @@ export async function renderVinculos(container, page) {
           listaFiltrada.map(v => {
             const emAberto = !v.data_fim
             return `<div style="display:grid;grid-template-columns:1fr 1fr 100px 100px 1fr 130px;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
-              <span style="font-weight:500">${esc(v.aluno?.nome||'—')}</span>
+              <span class="fw-500">${esc(v.aluno?.nome||'—')}</span>
               <span>${esc(v.professor?.nome||'—')}</span>
-              <span style="font-size:12px;color:var(--txt2)">${fmtData(v.data_inicio)}</span>
-              <span>${emAberto?badge('Atual','var(--ok-bg)','var(--ok-fg)'):`<span style="font-size:12px;color:var(--txt2)">${fmtData(v.data_fim)}</span>`}</span>
+              <span class="t-mut">${fmtData(v.data_inicio)}</span>
+              <span>${emAberto?badge('Atual','var(--ok-bg)','var(--ok-fg)'):`<span class="t-mut">${fmtData(v.data_fim)}</span>`}</span>
               <span style="font-size:12px;color:var(--txt2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc((v.observacao||'').replace(/"/g,'&quot;'))}">${esc(v.observacao||'—')}</span>
-              <div style="display:flex;gap:4px">
+              <div class="row-4">
                 <button data-h-click="pages-admin-vinculos.6" data-a-click="${esc(JSON.stringify([String(v.id)]))}" style="padding:3px 8px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Editar datas"><i class="ti ti-pencil" aria-hidden="true"></i></button>
                 ${emAberto?`<button data-h-click="pages-admin-vinculos.5" data-a-click="${esc(JSON.stringify([String(v.id)]))}" style="padding:3px 8px;background:rgba(232,188,79,.15);color:var(--warn-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Desvincular (encerrar hoje)">Desvincular</button>`:''}
                 <button data-h-click="pages-admin-vinculos.7" data-a-click="${esc(JSON.stringify([String(v.id)]))}" style="padding:3px 8px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Excluir registro"><i class="ti ti-x" aria-hidden="true"></i></button>
@@ -140,13 +140,13 @@ export async function renderVinculos(container, page) {
     ${modalEditar}
     <div id="modal-confirmar-vinc" style="display:none;position:fixed;inset:0;background:rgba(31,56,31,.6);z-index:200;align-items:center;justify-content:center;padding:16px">
       <div style="background:var(--superficie);border-radius:12px;width:400px;max-width:100%;overflow:hidden">
-        <div style="padding:20px">
-          <div id="conf-vinc-msg" style="font-size:13px;color:var(--txt);margin-bottom:14px"></div>
+        <div class="p-20">
+          <div id="conf-vinc-msg" class="mb-14 fs-13 c-txt"></div>
           <div id="conf-vinc-data-wrap" style="display:none;margin-bottom:14px">
             ${fi('', 'Data de fim', `<input type="date" id="conf-vinc-data" ${inputStyle} value="${new Date().toISOString().slice(0,10)}">`)}
           </div>
         </div>
-        <div style="padding:0 20px 16px;display:flex;justify-content:flex-end;gap:8px">
+        <div class="modal-foot modal-foot-sm">
           <button data-h-click="pages-admin-vinculos.12" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
           <button id="btn-confirmar-vinc" style="padding:7px 14px;background:#c0392b;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Confirmar</button>
         </div>

@@ -114,12 +114,12 @@ export function mostrarToastConquista(conquista) {
     'max-width:280px;animation:slideIn .3s ease',
   ].join(';')
   t.innerHTML = `
-    <div style="display:flex;align-items:center;gap:10px">
-      <div style="font-size:28px">${conquista.icone}</div>
+    <div class="row-10">
+      <div class="fs-28">${conquista.icone}</div>
       <div>
         <div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--dourado-texto);font-weight:500">Conquista desbloqueada!</div>
-        <div style="font-weight:500;font-size:13px;color:var(--titulo);margin-top:2px">${esc(conquista.nome)}</div>
-        <div style="font-size:12px;color:var(--txt2)">${esc(conquista.descricao)} · +${conquista.pontos} pts</div>
+        <div class="mt-2 fs-13 fw-500 c-titulo">${esc(conquista.nome)}</div>
+        <div class="t-mut">${esc(conquista.descricao)} · +${conquista.pontos} pts</div>
       </div>
     </div>`
   document.body.appendChild(t)

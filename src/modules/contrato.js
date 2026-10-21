@@ -22,7 +22,7 @@ const CONTRATO_TEXTO = `
     <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--txt2)">Contrato de Prestação de Serviços de Yoga</div>
   </div>
 
-  <p style="margin-bottom:14px">
+  <p class="mb-14">
     Eu, <strong>[NOME]</strong>, declaro que li e concordo com os termos abaixo para utilização dos serviços do
     <strong>Espaço Autonomia</strong>, CNPJ 60.456.737/0001-45, situado na Av. Liberdade, 179, 1º andar,
     salas 3 e 4, Centro, Franco da Rocha – SP, representado pelo instrutor
@@ -30,23 +30,23 @@ const CONTRATO_TEXTO = `
     e pela diretora <strong>Regiane da Silva Rocha</strong> (CRT 47582).
   </p>
 
-  <div style="margin-bottom:10px"><strong>1. OBJETO:</strong> Contratação de serviços de Yoga nas modalidades disponíveis no Espaço Autonomia (Hatha Yoga, Acro Yoga e/ou Raja Yoga), conforme plano escolhido.</div>
+  <div class="mb-10"><strong>1. OBJETO:</strong> Contratação de serviços de Yoga nas modalidades disponíveis no Espaço Autonomia (Hatha Yoga, Acro Yoga e/ou Raja Yoga), conforme plano escolhido.</div>
 
-  <div style="margin-bottom:10px"><strong>2. APTIDÃO FÍSICA:</strong> Declaro estar apto(a) a praticar Yoga e assumo total responsabilidade pela realização de avaliações médicas que julgar necessárias. Em caso de condição de saúde relevante, comunicarei previamente ao instrutor.</div>
+  <div class="mb-10"><strong>2. APTIDÃO FÍSICA:</strong> Declaro estar apto(a) a praticar Yoga e assumo total responsabilidade pela realização de avaliações médicas que julgar necessárias. Em caso de condição de saúde relevante, comunicarei previamente ao instrutor.</div>
 
-  <div style="margin-bottom:10px"><strong>3. MAIORIDADE:</strong> Os serviços do Espaço Autonomia são destinados exclusivamente a maiores de 18 anos. Ao aceitar este contrato, declaro ter 18 anos ou mais.</div>
+  <div class="mb-10"><strong>3. MAIORIDADE:</strong> Os serviços do Espaço Autonomia são destinados exclusivamente a maiores de 18 anos. Ao aceitar este contrato, declaro ter 18 anos ou mais.</div>
 
-  <div style="margin-bottom:10px"><strong>4. PRAZO DE VIGÊNCIA:</strong> Este contrato tem vigência por tempo <strong>indeterminado</strong>, a partir do aceite, permanecendo ativo até a <strong>desistência formal comunicada pelo WhatsApp</strong> ao Espaço Autonomia. Enquanto não houver comunicação formal de desistência, as mensalidades continuam sendo cobradas integralmente, independentemente da frequência de comparecimento.</div>
+  <div class="mb-10"><strong>4. PRAZO DE VIGÊNCIA:</strong> Este contrato tem vigência por tempo <strong>indeterminado</strong>, a partir do aceite, permanecendo ativo até a <strong>desistência formal comunicada pelo WhatsApp</strong> ao Espaço Autonomia. Enquanto não houver comunicação formal de desistência, as mensalidades continuam sendo cobradas integralmente, independentemente da frequência de comparecimento.</div>
 
-  <div style="margin-bottom:10px"><strong>5. HORÁRIOS E FALTAS:</strong> A presença nos dias e horários agendados é responsabilidade do aluno. O Espaço Autonomia poderá oferecer reposição conforme disponibilidade da grade, sem obrigatoriedade. Atraso do instrutor garante compensação equivalente ao tempo perdido; atraso do aluno não obriga compensação por parte do instrutor.</div>
+  <div class="mb-10"><strong>5. HORÁRIOS E FALTAS:</strong> A presença nos dias e horários agendados é responsabilidade do aluno. O Espaço Autonomia poderá oferecer reposição conforme disponibilidade da grade, sem obrigatoriedade. Atraso do instrutor garante compensação equivalente ao tempo perdido; atraso do aluno não obriga compensação por parte do instrutor.</div>
 
-  <div style="margin-bottom:10px"><strong>6. PLANOS E PAGAMENTOS:</strong> Os planos vigentes são: <strong>Brahma</strong> (1× por semana), <strong>Shiva 1×</strong> (1× por semana), <strong>Shiva 2×</strong> (2× por semana), <strong>Vishnu 2×</strong> (2× por semana) e <strong>Vishnu Livre</strong> (frequência livre). Os valores são os vigentes no momento da adesão, podendo ser reajustados com aviso prévio de 30 dias. Em caso de cancelamento com plano de vigência determinada, o reembolso será proporcional ao saldo restante, descontada a diferença entre o valor do plano escolhido e o valor mensalista até a data do cancelamento.</div>
+  <div class="mb-10"><strong>6. PLANOS E PAGAMENTOS:</strong> Os planos vigentes são: <strong>Brahma</strong> (1× por semana), <strong>Shiva 1×</strong> (1× por semana), <strong>Shiva 2×</strong> (2× por semana), <strong>Vishnu 2×</strong> (2× por semana) e <strong>Vishnu Livre</strong> (frequência livre). Os valores são os vigentes no momento da adesão, podendo ser reajustados com aviso prévio de 30 dias. Em caso de cancelamento com plano de vigência determinada, o reembolso será proporcional ao saldo restante, descontada a diferença entre o valor do plano escolhido e o valor mensalista até a data do cancelamento.</div>
 
-  <div style="margin-bottom:10px"><strong>7. SALDO DE AULAS:</strong> Cada plano concede um número mensal de aulas conforme contratado. Aulas não utilizadas acumulam enquanto o plano estiver ativo e em dia. <strong>Aulas confirmadas e não canceladas dentro do prazo são descontadas do saldo mesmo em caso de ausência, sem reposição.</strong></div>
+  <div class="mb-10"><strong>7. SALDO DE AULAS:</strong> Cada plano concede um número mensal de aulas conforme contratado. Aulas não utilizadas acumulam enquanto o plano estiver ativo e em dia. <strong>Aulas confirmadas e não canceladas dentro do prazo são descontadas do saldo mesmo em caso de ausência, sem reposição.</strong></div>
 
-  <div style="margin-bottom:10px"><strong>8. CANCELAMENTO DE PRESENÇA:</strong> O cancelamento de uma aula confirmada deve ser feito com a antecedência mínima definida pelo Espaço Autonomia via app. Após esse prazo, a aula é descontada do saldo independentemente da presença.</div>
+  <div class="mb-10"><strong>8. CANCELAMENTO DE PRESENÇA:</strong> O cancelamento de uma aula confirmada deve ser feito com a antecedência mínima definida pelo Espaço Autonomia via app. Após esse prazo, a aula é descontada do saldo independentemente da presença.</div>
 
-  <div style="margin-bottom:14px"><strong>9. FORO:</strong> As partes elegem o foro da Comarca de Franco da Rocha – SP para dirimir quaisquer dúvidas decorrentes deste instrumento.</div>
+  <div class="mb-14"><strong>9. FORO:</strong> As partes elegem o foro da Comarca de Franco da Rocha – SP para dirimir quaisquer dúvidas decorrentes deste instrumento.</div>
 
   <div style="background:rgba(232,188,79,.12);border:1px solid rgba(232,188,79,.45);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--warn-fg);line-height:1.6">
     <i class="ti ti-alert-triangle" aria-hidden="true"></i> <strong>Atenção:</strong> Ao confirmar uma aula e não comparecer sem cancelar com antecedência, a aula será descontada do seu saldo sem direito a reposição ou reembolso. O plano só é encerrado mediante <strong>desistência formal pelo WhatsApp</strong> — a simples ausência não cancela as cobranças.
@@ -131,7 +131,7 @@ export async function verificarContrato(userId, nomeAluno) {
             style="width:100%;padding:13px;background:#ccc;color:#fff;border:none;border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;cursor:not-allowed;font-weight:500;transition:background .2s,cursor .2s">
             Concordar e Acessar o App
           </button>
-          <div style="text-align:center;margin-top:8px;font-size:12px;color:var(--txt2)">
+          <div class="t-mut mt-8 ta-center">
             Ao aceitar, seu consentimento é registrado com data, hora e dispositivo (LGPD Art. 8° §6).
           </div>
         </div>
@@ -229,7 +229,7 @@ export async function verContratoAceito(userId, nomeAluno) {
       </div>
 
       <div style="background:var(--superficie-2);border-bottom:1px solid var(--ok-borda);padding:10px 22px;display:flex;align-items:center;gap:10px;flex-shrink:0">
-        <span style="font-size:20px"><i class="ti ti-circle-check" aria-hidden="true"></i></span>
+        <span class="fs-20"><i class="ti ti-circle-check" aria-hidden="true"></i></span>
         <div>
           <div style="font-size:12px;font-weight:600;color:var(--ok-fg)">Contrato aceito</div>
           <div style="font-size:12px;color:var(--verde-texto)">Assinado em ${dtFormatada} · Registro LGPD Art. 8° §6</div>
@@ -241,7 +241,7 @@ export async function verContratoAceito(userId, nomeAluno) {
       </div>
 
       <div style="padding:14px 22px;border-top:1px solid var(--borda);background:var(--superficie-2);flex-shrink:0;text-align:center">
-        <div style="font-size:12px;color:var(--txt2)">
+        <div class="t-mut">
           Este é o contrato que você assinou em ${dtFormatada}.
           Para encerrar seu plano, envie uma mensagem formal pelo WhatsApp.
         </div>

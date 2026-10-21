@@ -86,10 +86,10 @@ export async function renderTimeline(container, page) {
           <button data-h-click="pages-timeline.2" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
         </div>
         <div style="overflow-y:auto;flex:1;padding:18px 20px">
-          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Pergunta</label>
+          <label class="t-label">Pergunta</label>
           <textarea id="enq-pergunta" rows="2" placeholder="Ex: Qual horário vocês preferem para a aula extra de sábado?"
             style="width:100%;margin-top:5px;margin-bottom:14px;border:1px solid var(--borda);border-radius:6px;padding:9px 11px;font-size:13px;font-family:'DM Sans',sans-serif;resize:none"></textarea>
-          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Opções</label>
+          <label class="t-label">Opções</label>
           <div id="enq-opcoes-lista" style="display:flex;flex-direction:column;gap:6px;margin-top:5px"></div>
           <button id="btn-enq-add-opcao" style="margin-top:8px;padding:7px 12px;background:rgba(31,56,31,.06);color:var(--titulo);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">+ Adicionar opção</button>
         </div>
@@ -165,13 +165,13 @@ export async function renderTimeline(container, page) {
       .eq('post_id', postId)
       .order(config.campoData, { ascending: true })
 
-    if (error) { body.innerHTML = `<p style="font-size:12px;color:var(--err-vivo)">Erro: ${escapeHtml(error.message)}</p>`; return }
+    if (error) { body.innerHTML = `<p class="fs-12 c-err">Erro: ${escapeHtml(error.message)}</p>`; return }
     if (!data?.length) { body.innerHTML = '<p style="font-size:12px;color:var(--txt2)">Ninguém ainda.</p>'; return }
 
     body.innerHTML = data.map(r => `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(212,200,158,.3)">
-        <span style="font-size:13px;font-weight:500;color:var(--txt)">${escapeHtml(r.perfil?.nome || '—')}</span>
-        <span style="font-size:12px;color:var(--txt2)">${new Date(r[config.campoData]).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })}</span>
+        <span class="fs-13 fw-500 c-txt">${escapeHtml(r.perfil?.nome || '—')}</span>
+        <span class="t-mut">${new Date(r[config.campoData]).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })}</span>
       </div>`).join('')
   }
 
@@ -308,10 +308,10 @@ export async function renderTimeline(container, page) {
       const marcada = enq.minhasOpcoesIds.includes(o.id)
       if (mostrarResultado) {
         return `
-          <div style="margin-bottom:8px">
+          <div class="mb-8">
             <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
               <span style="color:${marcada ? 'var(--titulo)' : 'var(--txt)'};font-weight:${marcada ? '600' : '400'}">${marcada ? '<i class="ti ti-check" aria-hidden="true"></i> ' : ''}${escapeHtml(o.texto)}</span>
-              <span style="color:var(--txt2)">${pct}% · ${o.votos}</span>
+              <span class="c-txt2">${pct}% · ${o.votos}</span>
             </div>
             <div style="height:8px;background:rgba(31,56,31,.07);border-radius:99px;overflow:hidden">
               <div style="height:100%;width:${pct}%;background:${marcada ? 'var(--dourado)' : 'var(--verde-cl, #4a8a4a)'};border-radius:99px"></div>
@@ -320,8 +320,8 @@ export async function renderTimeline(container, page) {
       }
       return `
         <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--borda);border-radius:6px;margin-bottom:6px;cursor:pointer">
-          <input type="checkbox" class="enq-voto-check-${enq.id}" value="${o.id}" style="accent-color:var(--verde)">
-          <span style="font-size:13px">${escapeHtml(o.texto)}</span>
+          <input type="checkbox" class="enq-voto-check-${enq.id} accent" value="${o.id}">
+          <span class="fs-13">${escapeHtml(o.texto)}</span>
         </label>`
     }).join('')
 
@@ -339,7 +339,7 @@ export async function renderTimeline(container, page) {
       </div>` : ''
 
     return `
-      <div class="tl-enquete-card" style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+      <div class="tl-enquete-card card card-lg mb-14">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">
           <div>
             <div style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);margin-bottom:3px"><i class="ti ti-chart-bar" aria-hidden="true"></i> Enquete · ${escapeHtml(enq.criadoPorNome)}${enq.encerrada ? ' · encerrada' : ''}</div>
@@ -348,7 +348,7 @@ export async function renderTimeline(container, page) {
         </div>
         ${opcoesHtml}
         ${acaoVotar}
-        <div style="font-size:12px;color:var(--txt2);margin-top:8px">${enq.totalParticipantes} pessoa(s) votaram · pode marcar mais de uma opção</div>
+        <div class="t-mut mt-8">${enq.totalParticipantes} pessoa(s) votaram · pode marcar mais de uma opção</div>
         ${rodapeGestao}
       </div>`
   }
@@ -390,8 +390,8 @@ export async function renderTimeline(container, page) {
       .eq('enquete_id', enqId)
       .order('votado_em', { ascending: true })
 
-    if (error) { body.innerHTML = `<p style="color:var(--err-vivo);font-size:12px">Erro: ${esc(error.message)}</p>`; return }
-    if (!data?.length) { body.innerHTML = `<p style="font-size:12px;color:var(--txt2)">Ninguém votou ainda.</p>`; return }
+    if (error) { body.innerHTML = `<p class="fs-12 c-err">Erro: ${esc(error.message)}</p>`; return }
+    if (!data?.length) { body.innerHTML = `<p class="t-mut">Ninguém votou ainda.</p>`; return }
 
     // Agrupa por aluno (múltipla escolha = várias linhas por pessoa)
     const porAluno = new Map()
@@ -402,11 +402,11 @@ export async function renderTimeline(container, page) {
     }
 
     body.innerHTML = `
-      <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">${escapeHtml(pergunta)}</div>
+      <div class="t-mut mb-12">${escapeHtml(pergunta)}</div>
       ${[...porAluno.entries()].map(([nome, opcoes]) => `
         <div style="padding:9px 12px;background:rgba(31,56,31,.03);border-radius:6px;margin-bottom:6px">
           <div style="font-size:12px;font-weight:600;color:var(--titulo)">${escapeHtml(nome)}</div>
-          <div style="font-size:12px;color:var(--txt2);margin-top:2px">${opcoes.map(escapeHtml).join(' · ')}</div>
+          <div class="t-mut mt-2">${opcoes.map(escapeHtml).join(' · ')}</div>
         </div>`).join('')}
     `
   }
@@ -436,7 +436,7 @@ export async function renderTimeline(container, page) {
     if (!data?.length && !append) {
       feedEl.innerHTML = `<div style="padding:40px 20px;text-align:center;color:var(--txt2)">
         <div style="font-size:32px;margin-bottom:10px">🌱</div>
-        <div style="font-size:13px">Nenhuma publicação ainda.</div>
+        <div class="fs-13">Nenhuma publicação ainda.</div>
       </div>`
       document.getElementById('tl-load-more').style.display = 'none'
       return
@@ -569,9 +569,9 @@ export async function renderTimeline(container, page) {
     // Não aparece pra professor nem aluno — só admin enxerga essas listas.
     const adminStatsRow = (isAdmin && post.status !== 'pendente') ? `
       <div style="display:flex;gap:14px;padding:7px 18px;border-top:1px solid rgba(212,200,158,.2);font-size:12px;color:var(--txt2)">
-        <span style="cursor:pointer" data-h-click="pages-timeline.5" data-a-click="${esc(JSON.stringify([String(post.id)]))}"><i class="ti ti-heart" aria-hidden="true"></i> ver quem curtiu</span>
-        <span style="cursor:pointer" data-h-click="pages-timeline.6" data-a-click="${esc(JSON.stringify([String(post.id)]))}"><i class="ti ti-bookmark" aria-hidden="true"></i> ver quem salvou</span>
-        <span style="cursor:pointer" data-h-click="pages-timeline.7" data-a-click="${esc(JSON.stringify([String(post.id)]))}"><i class="ti ti-eye" aria-hidden="true"></i> ver quem visualizou</span>
+        <span class="cursor-pointer" data-h-click="pages-timeline.5" data-a-click="${esc(JSON.stringify([String(post.id)]))}"><i class="ti ti-heart" aria-hidden="true"></i> ver quem curtiu</span>
+        <span class="cursor-pointer" data-h-click="pages-timeline.6" data-a-click="${esc(JSON.stringify([String(post.id)]))}"><i class="ti ti-bookmark" aria-hidden="true"></i> ver quem salvou</span>
+        <span class="cursor-pointer" data-h-click="pages-timeline.7" data-a-click="${esc(JSON.stringify([String(post.id)]))}"><i class="ti ti-eye" aria-hidden="true"></i> ver quem visualizou</span>
       </div>` : ''
 
     const modBar = emModeracao ? `
@@ -603,7 +603,7 @@ export async function renderTimeline(container, page) {
           ${fotoHtml}
           <div style="flex:1">
             <div><span style="font-size:13px;font-weight:600;color:var(--txt)">${escapeHtml(post.autor_nome || 'Usuário')}</span>${roleBadge}</div>
-            <div style="font-size:12px;color:var(--txt2);margin-top:1px">${formatarData(post.criado_em)}</div>
+            <div class="t-mut mt-1">${formatarData(post.criado_em)}</div>
           </div>
           ${btnExcluir}
         </div>
@@ -634,7 +634,7 @@ export async function renderTimeline(container, page) {
       return `<div style="margin-top:12px;cursor:zoom-in;position:relative" data-h-click="pages-timeline.8" data-a-click="${esc(JSON.stringify([String(urlSegura(url))]))}" title="Clique para ampliar">
         <img src="${imagemSegura(url)}" referrerpolicy="no-referrer" style="width:100%;max-height:420px;object-fit:cover;display:block" loading="lazy" data-h-error="pages-timeline.9">
         <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);border-radius:20px;padding:3px 8px;font-size:12px;color:#fff;display:flex;align-items:center;gap:4px;pointer-events:none">
-          <i class="ti ti-zoom-in" style="font-size:12px"></i> ampliar
+          <i class="ti ti-zoom-in fs-12"></i> ampliar
         </div>
       </div>`
     }
@@ -808,7 +808,7 @@ export async function renderTimeline(container, page) {
   async function carregarComentarios(postId) {
     const list = document.getElementById(`tl-comments-list-${postId}`)
     if (!list) return
-    list.innerHTML = `<div style="font-size:12px;color:var(--txt2)">Carregando...</div>`
+    list.innerHTML = `<div class="t-mut">Carregando...</div>`
 
     const { data, error } = await sb.rpc('get_comentarios_post', { p_post_id: postId })
 
@@ -838,7 +838,7 @@ export async function renderTimeline(container, page) {
               ${btnExcluirComentario}
             </div>
             <div style="font-size:12px;color:var(--txt);margin-top:2px;line-height:1.5;white-space:pre-wrap;word-break:break-word">${escapeHtml(c.comentario_text)}</div>
-            <div style="font-size:12px;color:var(--txt2);margin-top:3px">${formatarData(c.comentario_em)}</div>
+            <div class="t-mut mt-3">${formatarData(c.comentario_em)}</div>
           </div>
         </div>`
     }).join('')

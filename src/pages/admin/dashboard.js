@@ -84,7 +84,7 @@ function abrirTurma(aula, turma) {
     : '<div class="ui-empty"><i class="ti ti-users-minus" aria-hidden="true"></i><span>Ninguém inscrito nesta aula.</span></div>'
   const d = abrirDialogo({
     titulo: `${nome} · ${horaSP(aula.data_hora)}`,
-    corpoHTML: `<p class="ui-help" style="margin-bottom:10px">${turma.length} inscrito(s) · ${Number(aula.vagas_total || 0)} vagas</p>${lista}`,
+    corpoHTML: `<p class="ui-help mb-10">${turma.length} inscrito(s) · ${Number(aula.vagas_total || 0)} vagas</p>${lista}`,
     rodapeHTML: `<button type="button" class="ui-btn ui-btn--ghost" data-fechar-turma>Fechar</button>
                  <button type="button" class="ui-btn ui-btn--primary" data-ir-chamada><i class="ti ti-clipboard-check" aria-hidden="true"></i><span>Fazer chamada</span></button>`,
   })
@@ -146,21 +146,21 @@ export async function renderDashboard(container, page) {
   container.innerHTML = `
     <div class="topbar">
       <div class="topbar-t">Dashboard</div>
-      <div style="font-size:12px;color:var(--txt2)">${hoje.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})}</div>
+      <div class="t-mut">${hoje.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})}</div>
     </div>
     <div class="content">
       ${renderPainelNotif(notifs, { titulo: 'Avisos do sistema' })}
       ${feriados.length ? `<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:9px 13px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--warn-fg);margin-bottom:14px"><i class="ti ti-alert-triangle" style="color:var(--dourado-texto)"></i><span><strong>Atenção:</strong> Há feriados nos próximos 30 dias: ${feriados.slice(0,3).map(f=>`${esc(f.nome)} (${new Date(f.data+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})})`).join(' · ')}</span></div>` : ''}
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px">
-        <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Aulas hoje</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--titulo)">${aulasHoje.length}</div></div>
-        <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Alunos ativos</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--titulo)">${alunos.length}</div></div>
-        <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Confirmações</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--titulo)">${totalConf}</div></div>
-        <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px"><div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:5px">Vagas livres</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--titulo)">${totalLivres}</div></div>
+        <div class="card"><div class="t-label mb-5">Aulas hoje</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--titulo)">${aulasHoje.length}</div></div>
+        <div class="card"><div class="t-label mb-5">Alunos ativos</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--titulo)">${alunos.length}</div></div>
+        <div class="card"><div class="t-label mb-5">Confirmações</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--titulo)">${totalConf}</div></div>
+        <div class="card"><div class="t-label mb-5">Vagas livres</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--titulo)">${totalLivres}</div></div>
       </div>
       <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px">
         ${htmlAulasHoje(aulasHoje, porAula)}
         <div>
-          <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-bottom:14px">
+          <div class="card mb-14">
             <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500;color:var(--titulo);margin-bottom:12px">Alunos por plano</div>
             ${[
               {k:'brahma',      l:'Brahma',       c:'var(--bege2)'},
@@ -171,10 +171,10 @@ export async function renderDashboard(container, page) {
             ].map(({k,l,c})=>{
               const n   = por[k]||0
               const pct = alunos.length ? Math.round(n/alunos.length*100) : 0
-              return `<div style="margin-bottom:8px">
+              return `<div class="mb-8">
                 <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
-                  <span style="font-weight:500">${l}</span>
-                  <span style="color:var(--txt2)">${n} alunos</span>
+                  <span class="fw-500">${l}</span>
+                  <span class="c-txt2">${n} alunos</span>
                 </div>
                 <div style="height:6px;background:var(--neutro-bg);border-radius:4px">
                   <div style="height:6px;background:${c};border-radius:4px;width:${pct}%"></div>
@@ -182,10 +182,10 @@ export async function renderDashboard(container, page) {
               </div>`
             }).join('')}
           </div>
-          <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
+          <div class="card">
             <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500;color:var(--titulo);margin-bottom:10px">Próximos feriados</div>
             ${feriados.length===0 ? '<div style="font-size:12px;color:var(--txt2)">Nenhum nos próximos 30 dias</div>' :
-              feriados.slice(0,4).map(f=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(212,200,158,.25);font-size:12px"><span>${esc(f.nome)}</span><span style="font-size:12px;color:var(--txt2)">${new Date(f.data+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</span></div>`).join('')}
+              feriados.slice(0,4).map(f=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(212,200,158,.25);font-size:12px"><span>${esc(f.nome)}</span><span class="t-mut">${new Date(f.data+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</span></div>`).join('')}
           </div>
         </div>
       </div>

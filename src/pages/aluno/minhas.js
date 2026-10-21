@@ -42,11 +42,11 @@ export async function renderAlunoMinhas(container, page) {
       return `<div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px">
         <div>
           <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
-            ${dot(oc.aula?.modalidade)}<strong style="font-size:13px">${esc(nome)}</strong>
+            ${dot(oc.aula?.modalidade)}<strong class="fs-13">${esc(nome)}</strong>
             <span style="background:${statusBg[c.status]||'var(--neutro-bg)'};color:${statusColor[c.status]||'var(--txt2)'};padding:2px 8px;border-radius:20px;font-size:12px;font-weight:500">${c.status==='confirmado'?'Confirmado':c.status==='presente'?'Presente':'Ausente'}</span>
           </div>
-          <div style="font-size:12px;color:var(--txt2)">${dt.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'})} · ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
-          <div style="font-size:12px;color:var(--txt2);margin-top:2px">${esc(oc.aula?.professor?.nome||'')}</div>
+          <div class="t-mut">${dt.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'})} · ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+          <div class="t-mut mt-2">${esc(oc.aula?.professor?.nome||'')}</div>
           ${podeCancelar?`<div style="font-size:12px;color:var(--verde-cl);margin-top:3px">Cancelamento disponível até ${limiteCancel.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>`:''}
         </div>
         ${podeCancelar?`<button data-h-click="pages-aluno-minhas.1" data-a-click="${esc(JSON.stringify([String(c.id), String(oc.id)]))}" style="padding:5px 11px;background:var(--err-bg);color:var(--err-fg);border:1px solid var(--err-borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Cancelar</button>`:''}
@@ -56,7 +56,7 @@ export async function renderAlunoMinhas(container, page) {
     container.innerHTML = `
       <div class="topbar"><div class="topbar-t">Minhas Aulas</div><span style="background:var(--ok-bg);color:var(--ok-fg);padding:2px 9px;border-radius:20px;font-size:12px;font-weight:500">${futuras.length} confirmadas</span></div>
       <div class="content">
-        ${futuras.length===0&&passadas.length===0?`<div style="text-align:center;padding:40px;font-size:13px;color:var(--txt2)">Nenhuma aula confirmada ainda. <a href="#" data-h-click="pages-aluno-minhas.2" style="color:var(--titulo)">Ver grade <i class="ti ti-arrow-right" aria-hidden="true"></i></a></div>`:''}
+        ${futuras.length===0&&passadas.length===0?`<div style="text-align:center;padding:40px;font-size:13px;color:var(--txt2)">Nenhuma aula confirmada ainda. <a href="#" data-h-click="pages-aluno-minhas.2" class="c-titulo">Ver grade <i class="ti ti-arrow-right" aria-hidden="true"></i></a></div>`:''}
         ${futuras.length>0?`
           <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--titulo);margin-bottom:10px">Próximas aulas</div>
           ${futuras.map(c=>aulaCard(c,false)).join('')}

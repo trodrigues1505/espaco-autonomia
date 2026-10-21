@@ -36,7 +36,7 @@ export async function renderProfAulas(container, page) {
   container.innerHTML = `
     <div class="topbar">
       <div class="topbar-t">Minhas Aulas</div>
-      <span style="font-size:12px;color:var(--txt2)">Próximos 14 dias</span>
+      <span class="t-mut">Próximos 14 dias</span>
     </div>
     <div class="content">
       <div id="barra-selecao-massa" style="display:none;align-items:center;gap:10px;background:var(--err-bg);border:1px solid var(--err-borda);border-radius:6px;padding:8px 14px;margin-bottom:12px">
@@ -51,16 +51,16 @@ export async function renderProfAulas(container, page) {
             const cancelada = oc.cancelada
             return `<div style="background:var(--superficie);border:1px solid ${cancelada?'var(--err-borda)':'var(--borda)'};border-radius:var(--r);padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;${cancelada?'opacity:.7':''}">
               <div style="display:flex;align-items:flex-start;gap:10px">
-                ${!cancelada?`<input type="checkbox" class="chk-cancel-massa" ${window._ocsSelecionadas.has(oc.id)?'checked':''} data-h-click="pages-professor-aulas.1" data-a-click="${esc(JSON.stringify([String(oc.id)]))}" style="margin-top:3px;cursor:pointer" title="Selecionar para cancelamento em massa">`:''}
+                ${!cancelada?`<input type="checkbox" class="chk-cancel-massa mt-3 cursor-pointer" ${window._ocsSelecionadas.has(oc.id)?'checked':''} data-h-click="pages-professor-aulas.1" data-a-click="${esc(JSON.stringify([String(oc.id)]))}" title="Selecionar para cancelamento em massa">`:''}
                 <div>
                   <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
                     ${dot(oc.modalidade)}
-                    <strong style="font-size:13px">${NOMES[oc.modalidade]}</strong>
+                    <strong class="fs-13">${NOMES[oc.modalidade]}</strong>
                     ${cancelada?`<span style="background:var(--err-bg);color:var(--err-fg);font-size:12px;padding:2px 8px;border-radius:10px">⊘ Cancelada</span>`:''}
                     ${oc.eh_feriado&&!cancelada?`<span style="background:rgba(232,188,79,.15);color:var(--warn-fg);font-size:12px;padding:2px 7px;border-radius:10px"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Feriado</span>`:''}
                   </div>
-                  <div style="font-size:12px;color:var(--txt2)">${dt.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'})} · ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
-                  <div style="font-size:12px;color:var(--txt2);margin-top:2px">${oc.confirmados||0}/${oc.vagas_total} confirmados · ${oc.vagas_livres||0} vagas livres</div>
+                  <div class="t-mut">${dt.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'})} · ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+                  <div class="t-mut mt-2">${oc.confirmados||0}/${oc.vagas_total} confirmados · ${oc.vagas_livres||0} vagas livres</div>
                   ${cancelada&&oc.motivo_cancel?`<div style="font-size:12px;color:var(--err-fg);margin-top:4px;font-style:italic">Motivo: ${esc(oc.motivo_cancel)}</div>`:''}
                 </div>
               </div>

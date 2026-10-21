@@ -68,7 +68,7 @@ export async function renderProfRepasse(container, page) {
   container.innerHTML = `
     <div class="topbar">
       <div class="topbar-t">Meu Repasse</div>
-      <div style="font-size:12px;color:var(--txt2)">${esc(profNome)}</div>
+      <div class="t-mut">${esc(profNome)}</div>
     </div>
     <div class="content">
 
@@ -78,7 +78,7 @@ export async function renderProfRepasse(container, page) {
       </div>
 
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-        <span style="font-size:12px;color:var(--txt2);font-weight:500">Mês:</span>
+        <span class="t-mut fw-500">Mês:</span>
         ${mesesDisponiveis.map(m => `
           <button data-h-click="pages-professor-repasse.1" data-a-click="${esc(JSON.stringify([String(m)]))}"
             style="padding:4px 12px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${mesSel===m?'var(--verde)':'var(--borda)'};background:${mesSel===m?'var(--verde)':'var(--superficie)'};color:${mesSel===m?'var(--bege)':'var(--txt2)'}">
@@ -97,15 +97,15 @@ export async function renderProfRepasse(container, page) {
             <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--bege)">${fmtR(totalRepasse)}</div>
             <div style="font-size:12px;color:rgba(242,236,206,.6);margin-top:3px">${nomeMes(mesSel)}</div>
           </div>
-          <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px">
-            <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:6px">Alunos com presença</div>
+          <div class="card card-lg">
+            <div class="t-label mb-6">Alunos com presença</div>
             <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--titulo)">${new Set(linhas.filter(l=>l.aulas_confirmadas>0).map(l=>l.aluno_id)).size}</div>
-            <div style="font-size:12px;color:var(--txt2);margin-top:3px">de ${new Set(linhas.map(l=>l.aluno_id)).size} alunos</div>
+            <div class="t-mut mt-3">de ${new Set(linhas.map(l=>l.aluno_id)).size} alunos</div>
           </div>
-          <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px">
-            <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:6px">Total de aulas</div>
+          <div class="card card-lg">
+            <div class="t-label mb-6">Total de aulas</div>
             <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--titulo)">${totalAulas}</div>
-            <div style="font-size:12px;color:var(--txt2);margin-top:3px">confirmadas com presença</div>
+            <div class="t-mut mt-3">confirmadas com presença</div>
           </div>
         </div>
 
@@ -117,17 +117,17 @@ export async function renderProfRepasse(container, page) {
           ${Object.values(porProfAula).map(grupo => {
             const ehProprio = grupo.professor_id === profId
             return `
-            <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);overflow-x:auto;margin-bottom:14px">
+            <div class="card-scroll mb-14">
               <div style="padding:12px 18px;background:${ehProprio?'rgba(31,56,31,.06)':'rgba(232,188,79,.08)'};border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
                 <div>
-                  <div style="font-size:13px;font-weight:500;color:var(--txt)">
+                  <div class="fs-13 fw-500 c-txt">
                     ${ehProprio ? `Minhas aulas` : `Aulas de <strong>${esc(grupo.professor_nome)}</strong> que ministrei`}
                   </div>
-                  <div style="font-size:12px;color:var(--txt2);margin-top:2px">${grupo.aulas} aula(s) · ${grupo.alunos.length} aluno(s)</div>
+                  <div class="t-mut mt-2">${grupo.aulas} aula(s) · ${grupo.alunos.length} aluno(s)</div>
                 </div>
-                <div style="text-align:right">
+                <div class="ta-right">
                   <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--titulo)">${fmtR(grupo.repasse)}</div>
-                  <div style="font-size:12px;color:var(--txt2)">repasse estimado</div>
+                  <div class="t-mut">repasse estimado</div>
                 </div>
               </div>
               <div style="padding:0 18px">
@@ -137,17 +137,17 @@ export async function renderProfRepasse(container, page) {
                 ${grupo.alunos.map(l => {
                   const totalDesc = (l.desconto_fixo||0) + (l.desconto_avulso||0)
                   return `<div style="display:grid;grid-template-columns:1fr 80px 80px 80px 90px 80px;align-items:center;padding:9px 0;border-bottom:1px solid rgba(212,200,158,.2);font-size:12px;gap:8px">
-                    <span style="font-weight:500">${esc(l.aluno_nome)}</span>
-                    <span style="color:var(--txt2)">${fmtR(l.valor_mensal)}</span>
+                    <span class="fw-500">${esc(l.aluno_nome)}</span>
+                    <span class="c-txt2">${fmtR(l.valor_mensal)}</span>
                     <span style="color:${totalDesc>0?'var(--warn-vivo)':'var(--txt2)'}">${totalDesc>0?'-'+fmtR(totalDesc):'—'}</span>
-                    <span style="font-weight:500;color:var(--titulo)">${fmtR(l.valor_liquido)}</span>
-                    <span style="color:var(--txt2)">${l.aulas_confirmadas} aula(s)</span>
-                    <span style="font-weight:500;color:var(--titulo)">${fmtR(l.repasse)}</span>
+                    <span class="fw-500 c-titulo">${fmtR(l.valor_liquido)}</span>
+                    <span class="c-txt2">${l.aulas_confirmadas} aula(s)</span>
+                    <span class="fw-500 c-titulo">${fmtR(l.repasse)}</span>
                   </div>`
                 }).join('')}
               </div>
               <div style="padding:10px 18px;background:rgba(242,236,206,.3);display:flex;justify-content:flex-end;align-items:center;gap:6px">
-                <span style="font-size:12px;color:var(--txt2)">Subtotal</span>
+                <span class="t-mut">Subtotal</span>
                 <span style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--titulo)">${fmtR(grupo.repasse)}</span>
               </div>
             </div>`

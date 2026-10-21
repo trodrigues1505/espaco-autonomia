@@ -220,19 +220,19 @@ async function _abrirModalCriarTermo(textoSelecionado) {
         <button id="_voc-fechar-criar" style="background:none;border:none;color:var(--bege);font-size:20px;cursor:pointer;line-height:1">×</button>
       </div>
       <div style="padding:20px;display:flex;flex-direction:column;gap:10px">
-        <div style="display:flex;flex-direction:column;gap:4px">
-          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Termo</label>
+        <div class="stack-4">
+          <label class="t-label">Termo</label>
           <input id="_voc-input-termo" value="${_esc(existente?.termo || textoSelecionado)}"
             style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
         </div>
-        <div style="display:flex;flex-direction:column;gap:4px">
-          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Definição</label>
+        <div class="stack-4">
+          <label class="t-label">Definição</label>
           <textarea id="_voc-input-def" rows="4" placeholder="O que significa este termo..."
             style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;resize:vertical">${_esc(existente?.definicao || '')}</textarea>
         </div>
         ${existente ? '<div style="font-size:12px;color:var(--warn-fg)">Este termo já existe — salvar aqui atualiza a definição.</div>' : ''}
       </div>
-      <div style="padding:0 20px 20px;display:flex;justify-content:flex-end;gap:8px">
+      <div class="modal-foot">
         <button id="_voc-cancelar-criar" style="padding:8px 16px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
         <button id="_voc-salvar-criar" style="padding:8px 16px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500">
           <i class="ti ti-check" aria-hidden="true"></i> Salvar

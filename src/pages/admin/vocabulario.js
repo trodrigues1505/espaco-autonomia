@@ -28,7 +28,7 @@ export async function renderVocabularioAdmin(container, page) {
 
   if (error) {
     container.innerHTML = `<div class="topbar"><div class="topbar-t">Śabda Kośa</div></div>
-      <div class="content"><p style="color:var(--err-vivo)">Erro: ${esc(error.message)}</p></div>`
+      <div class="content"><p class="c-err">Erro: ${esc(error.message)}</p></div>`
     return
   }
 
@@ -48,7 +48,7 @@ export async function renderVocabularioAdmin(container, page) {
         <span>Termos ficam clicáveis automaticamente em qualquer texto do app. Reconhecimento ignora maiúscula/minúscula e diacríticos — "Sankalpa", "sankalpa" e "saṅkalpa" contam como o mesmo termo.</span>
       </div>
 
-      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-bottom:16px">
+      <div class="card mb-16">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px">
           <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo)">Termos não catalogados</div>
           <button data-h-click="pages-admin-vocabulario.4" data-acao="escanear-termos"
@@ -56,15 +56,15 @@ export async function renderVocabularioAdmin(container, page) {
             <i class="ti ti-search"></i> Escanear agora
           </button>
         </div>
-        <div style="font-size:12px;color:var(--txt2);margin-bottom:10px">
+        <div class="t-mut mb-10">
           Varre Jñāna Mārga, Yoga Adhyayana e Āsana Mārga procurando palavras com diacríticos exclusivos de transliteração sânscrita (ā, ī, ū, ṛ, ṃ, ḥ, ṣ, ṭ, ḍ, ṇ, ś, ñ, ṅ) que ainda não estão cadastradas aqui.
         </div>
         <div id="termos-nao-catalogados-container"></div>
       </div>
 
-      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-bottom:16px">
+      <div class="card mb-16">
         <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo);margin-bottom:4px">Importar JSON em lote</div>
-        <div style="font-size:12px;color:var(--txt2);margin-bottom:10px">
+        <div class="t-mut mb-10">
           Cole um array JSON no formato <code>[{"termo": "...", "definicao": "..."}]</code>. Termos novos são inseridos direto; termos que já existem com definição diferente abrem uma comparação pra você escolher.
         </div>
         <textarea id="import-json-textarea" rows="6" placeholder='[{"termo": "Sankalpa", "definicao": "..."}]'
@@ -73,10 +73,10 @@ export async function renderVocabularioAdmin(container, page) {
           style="padding:6px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px">
           <i class="ti ti-upload"></i> Processar importação
         </button>
-        <div id="import-json-status" style="font-size:12px;color:var(--txt2);margin-top:8px"></div>
+        <div id="import-json-status" class="t-mut mt-8"></div>
       </div>
 
-      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);overflow-x:auto">
+      <div class="card-scroll">
         <div style="display:grid;grid-template-columns:1fr 2fr 90px;padding:8px 18px;
                     background:rgba(242,236,206,.45);font-size:12px;text-transform:uppercase;
                     letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
@@ -87,9 +87,9 @@ export async function renderVocabularioAdmin(container, page) {
           : termos.map(t => `
             <div style="display:grid;grid-template-columns:1fr 2fr 90px;align-items:center;gap:10px;
                         padding:11px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
-              <span style="font-weight:500;color:var(--txt)">${esc(t.termo)}</span>
+              <span class="fw-500 c-txt">${esc(t.termo)}</span>
               <span style="color:var(--txt2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.definicao)}</span>
-              <div style="display:flex;gap:4px">
+              <div class="row-4">
                 <button data-h-click="pages-admin-vocabulario.1" data-a-click="${esc(JSON.stringify([String(t.id)]))}"
                   style="padding:3px 8px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"><i class="ti ti-pencil" aria-hidden="true"></i></button>
                 <button data-h-click="pages-admin-vocabulario.2" data-id="${esc(t.id)}" data-termo="${esc(t.termo||'')}"
@@ -110,18 +110,18 @@ export async function renderVocabularioAdmin(container, page) {
         </div>
         <div style="padding:20px;display:flex;flex-direction:column;gap:12px">
           <input type="hidden" id="voc-id">
-          <div style="display:flex;flex-direction:column;gap:4px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Termo (forma de exibição)</label>
+          <div class="stack-4">
+            <label class="t-label">Termo (forma de exibição)</label>
             <input id="voc-termo" placeholder="ex: Sankalpa"
               style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
-          <div style="display:flex;flex-direction:column;gap:4px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Definição</label>
+          <div class="stack-4">
+            <label class="t-label">Definição</label>
             <textarea id="voc-definicao" rows="5" placeholder="O que significa este termo..."
               style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;resize:vertical"></textarea>
           </div>
         </div>
-        <div style="padding:0 20px 20px;display:flex;justify-content:flex-end;gap:8px">
+        <div class="modal-foot">
           <button data-h-click="pages-admin-vocabulario.6"
             style="padding:8px 16px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
           <button data-h-click="pages-admin-vocabulario.7"
@@ -197,14 +197,14 @@ export async function renderVocabularioAdmin(container, page) {
       itens = JSON.parse(raw)
       if (!Array.isArray(itens)) throw new Error('não é um array')
     } catch (e) {
-      status.innerHTML = `<span style="color:var(--err-vivo)">JSON inválido: ${esc(e.message)}</span>`
+      status.innerHTML = `<span class="c-err">JSON inválido: ${esc(e.message)}</span>`
       return
     }
 
     status.textContent = 'Verificando termos existentes...'
 
     const { data: existentes, error: errBusca } = await sb.from('vocabulario').select('termo,termo_normalizado,definicao')
-    if (errBusca) { status.innerHTML = `<span style="color:var(--err-vivo)">Erro: ${esc(errBusca.message)}</span>`; return }
+    if (errBusca) { status.innerHTML = `<span class="c-err">Erro: ${esc(errBusca.message)}</span>`; return }
     const porNormalizado = Object.fromEntries((existentes || []).map(v => [v.termo_normalizado, v]))
 
     const novos = []
@@ -256,15 +256,15 @@ export async function renderVocabularioAdmin(container, page) {
         </div>
         <div style="padding:18px 20px;display:flex;flex-direction:column;gap:12px">
           <div>
-            <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:5px">Texto atual (no banco)</div>
+            <div class="t-label mb-5">Texto atual (no banco)</div>
             <div style="font-size:12px;color:var(--txt);background:var(--fundo,var(--superficie-2));border-radius:6px;padding:10px;line-height:1.6">${_esc(item.definicaoAntiga)}</div>
           </div>
           <div>
-            <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:5px">Texto novo (do JSON)</div>
+            <div class="t-label mb-5">Texto novo (do JSON)</div>
             <div style="font-size:12px;color:var(--txt);background:rgba(232,188,79,.08);border-radius:6px;padding:10px;line-height:1.6">${_esc(item.definicaoNova)}</div>
           </div>
           <div id="conflito-mesclar-wrap" style="display:none">
-            <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:5px">Texto mesclado (edite como quiser)</div>
+            <div class="t-label mb-5">Texto mesclado (edite como quiser)</div>
             <textarea id="conflito-mesclar-texto" rows="4"
               style="width:100%;border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;resize:vertical;box-sizing:border-box">${_esc(item.definicaoAntiga)}\n\n${_esc(item.definicaoNova)}</textarea>
           </div>
@@ -308,11 +308,11 @@ export async function renderVocabularioAdmin(container, page) {
 
     if (novos.length) {
       const { error } = await sb.from('vocabulario').insert(novos)
-      if (error) { status.innerHTML = `<span style="color:var(--err-vivo)">Erro ao inserir novos: ${esc(error.message)}</span>`; return }
+      if (error) { status.innerHTML = `<span class="c-err">Erro ao inserir novos: ${esc(error.message)}</span>`; return }
     }
     if (resolvidos.length) {
       const { error } = await sb.from('vocabulario').upsert(resolvidos, { onConflict: 'termo_normalizado' })
-      if (error) { status.innerHTML = `<span style="color:var(--err-vivo)">Erro ao atualizar: ${esc(error.message)}</span>`; return }
+      if (error) { status.innerHTML = `<span class="c-err">Erro ao atualizar: ${esc(error.message)}</span>`; return }
     }
 
     invalidarCacheVocabulario()
@@ -402,7 +402,7 @@ export async function renderVocabularioAdmin(container, page) {
       window._tncLista = novos
       _renderTermosNaoCatalogados(novos)
     } catch (e) {
-      container.innerHTML = `<p style="color:var(--err-vivo);font-size:12px">Erro ao escanear: ${esc(e.message)}</p>`
+      container.innerHTML = `<p class="fs-12 c-err">Erro ao escanear: ${esc(e.message)}</p>`
     } finally {
       if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-search"></i> Escanear agora' }
     }

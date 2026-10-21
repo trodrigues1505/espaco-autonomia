@@ -201,13 +201,13 @@ export async function renderAlunoGrade(container, page) {
             actionHtml = `<div style="font-size:12px;color:var(--err-fg);font-weight:600;margin-top:3px"><i class="ti ti-ban" aria-hidden="true"></i> Cancelada${oc.eh_feriado?' — feriado':''}</div>`
           } else if (isAluno && !passada) {
             if (!permitida) {
-              actionHtml = `<div style="font-size:12px;color:var(--txt2);margin-top:3px"><i class="ti ti-lock" aria-hidden="true"></i> ${esc(planoAluno)}</div>`
+              actionHtml = `<div class="t-mut mt-3"><i class="ti ti-lock" aria-hidden="true"></i> ${esc(planoAluno)}</div>`
             } else if (confirmado) {
               actionHtml = `<div style="font-size:12px;color:var(--dourado-texto);font-weight:500;margin-top:3px"><i class="ti ti-check" aria-hidden="true"></i> Confirmado</div>`
             } else if (foraPrazo) {
-              actionHtml = `<div style="font-size:12px;color:var(--err-vivo);margin-top:3px">Prazo enc.</div>`
+              actionHtml = `<div class="mt-3 fs-12 c-err">Prazo enc.</div>`
             } else if (lotada) {
-              actionHtml = `<div style="font-size:12px;color:var(--err-vivo);margin-top:3px">Lotada</div>`
+              actionHtml = `<div class="mt-3 fs-12 c-err">Lotada</div>`
             } else {
               actionHtml = `<button data-h-click="pages-admin-grade.2" data-a-click="${esc(JSON.stringify([String(oc.id)]))}" style="margin-top:3px;padding:2px 7px;background:var(--dourado);color:var(--verde);border:none;border-radius:4px;font-size:12px;cursor:pointer;font-weight:500;font-family:'DM Sans',sans-serif">Confirmar</button>`
             }
@@ -224,7 +224,7 @@ export async function renderAlunoGrade(container, page) {
           </div>` : ''
           gradeHTML += `<td style="border:1px solid rgba(212,200,158,.3);background:${bgCell};padding:5px 7px;vertical-align:top;cursor:${isAluno?'default':'pointer'}${cancelada?';opacity:.75':''}" ${!isAluno?`data-h-click="pages-admin-grade.7" data-a-click="${esc(JSON.stringify([String(oc.id)]))}"`:''}">
             <div style="font-size:12px;font-weight:500;${borderCell};padding-left:4px;line-height:1.3;color:${cancelada?'var(--txt2)':!permitida?'var(--txt2)':'var(--txt)'}${cancelada?';text-decoration:line-through':''}">${NOMES[oc.modalidade]}</div>
-            <div style="font-size:12px;color:var(--txt2);margin-top:1px">${oc.confirmados||0}/${oc.vagas_total}</div>
+            <div class="t-mut mt-1">${oc.confirmados||0}/${oc.vagas_total}</div>
             ${oc.professor_nome?`<div style="font-size:12px;color:var(--txt2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px" title="${esc(oc.professor_nome)}"><i class="ti ti-user" aria-hidden="true"></i> ${esc(oc.professor_nome.split(' ')[0])}</div>`:''}
             ${isFeriado&&!isAluno&&!cancelada?`<div style="font-size:12px;color:var(--warn-fg);margin-top:1px"><i class="ti ti-alert-triangle" aria-hidden="true"></i> feriado</div>`:''}
             ${actionHtml}
@@ -240,7 +240,7 @@ export async function renderAlunoGrade(container, page) {
     const legendaHtml = `<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px">
       ${['hatha','acro','raja'].map(m=>`<span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--txt2)">${dot(m)}${NOMES[m]}</span>`).join('')}
       ${temCanceladaNaSemana?`<span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--err-fg)"><i class="ti ti-ban" aria-hidden="true"></i> Cancelada</span>`:''}
-      ${isAluno?`<span style="font-size:12px;color:var(--txt2)">· Prazo: <strong>${prazoMin>=60?prazoMin/60+'h':prazoMin+'min'}</strong> antes</span>`:''}
+      ${isAluno?`<span class="t-mut">· Prazo: <strong>${prazoMin>=60?prazoMin/60+'h':prazoMin+'min'}</strong> antes</span>`:''}
     </div>`
 
     // Barra de seleção para cancelamento em massa (admin)
@@ -262,12 +262,12 @@ export async function renderAlunoGrade(container, page) {
         <button data-h-click="pages-admin-grade.11" data-a-click="${esc(JSON.stringify([String(page)]))}" style="padding:5px 10px;background:var(--superficie);color:var(--txt);border:1px solid var(--borda);border-radius:5px;font-size:13px;cursor:pointer"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
         <button data-h-click="pages-admin-grade.12" data-a-click="${esc(JSON.stringify([String(page)]))}" style="padding:5px 12px;background:${(window._gradeOffset||0)===0?'var(--verde)':'var(--superficie)'};color:${(window._gradeOffset||0)===0?'var(--bege)':'var(--txt)'};border:1px solid ${(window._gradeOffset||0)===0?'var(--verde)':'var(--borda)'};border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Hoje</button>
         <button data-h-click="pages-admin-grade.13" data-a-click="${esc(JSON.stringify([String(page)]))}" style="padding:5px 10px;background:var(--superficie);color:var(--txt);border:1px solid var(--borda);border-radius:5px;font-size:13px;cursor:pointer"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
-        <span style="font-size:12px;color:var(--txt2);font-weight:500">${seg.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})} – ${dom.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})}</span>
+        <span class="t-mut fw-500">${seg.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})} – ${dom.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})}</span>
         ${fAtivo?`<button data-h-click="pages-admin-grade.10" data-a-click="${esc(JSON.stringify([String(page)]))}" style="padding:4px 10px;background:var(--err-bg);color:var(--err-fg);border:1px solid var(--err-borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="ti ti-x" aria-hidden="true"></i> Limpar filtros</button>`:''}
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;padding:10px 12px;background:rgba(242,236,206,.4);border:1px solid var(--borda);border-radius:7px;align-items:flex-end">
-        <div style="display:flex;flex-direction:column;gap:3px">
-          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Modalidade</label>
+        <div class="stack-3">
+          <label class="t-label">Modalidade</label>
           <select data-h-change="pages-admin-grade.14" data-a-change="${esc(JSON.stringify([String(page)]))}"
             style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie);color:var(--txt);cursor:pointer;min-width:130px">
             <option value="" ${!(window._gradeFiltrosAluno?.modalidade)?'selected':''}>Todas</option>
@@ -276,8 +276,8 @@ export async function renderAlunoGrade(container, page) {
             <option value="raja"  ${window._gradeFiltrosAluno?.modalidade==='raja' ?'selected':''}>Raja Yoga</option>
           </select>
         </div>
-        <div style="display:flex;flex-direction:column;gap:3px">
-          <label style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--txt2);font-weight:500">Horário</label>
+        <div class="stack-3">
+          <label class="t-label">Horário</label>
           <select data-h-change="pages-admin-grade.15" data-a-change="${esc(JSON.stringify([String(page)]))}"
             style="border:1px solid var(--borda);border-radius:5px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--superficie);color:var(--txt);cursor:pointer;min-width:100px">
             <option value="" ${!(window._gradeFiltrosAluno?.horario)?'selected':''}>Todos</option>
@@ -393,18 +393,18 @@ export async function renderAlunoGrade(container, page) {
 
       body.innerHTML = `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-          <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Aula</div><div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--titulo)">${NOMES[oc.modalidade]}</div></div>
-          <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Data/Hora</div><div style="font-size:13px;font-weight:500;color:var(--titulo);margin-top:3px">${dt.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'})} ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div></div>
+          <div style="background:var(--fundo);border-radius:6px;padding:12px"><div class="t-label">Aula</div><div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--titulo)">${NOMES[oc.modalidade]}</div></div>
+          <div style="background:var(--fundo);border-radius:6px;padding:12px"><div class="t-label">Data/Hora</div><div class="mt-3 fs-13 fw-500 c-titulo">${dt.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'})} ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-          <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Confirmados</div><div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--titulo)">${oc.confirmados||0}/${oc.vagas_total}</div></div>
-          <div style="background:var(--fundo);border-radius:6px;padding:12px"><div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Professor</div><div style="font-size:13px;font-weight:500;color:var(--titulo);margin-top:3px">${esc(oc.professor_nome||'—')}</div></div>
+          <div style="background:var(--fundo);border-radius:6px;padding:12px"><div class="t-label">Confirmados</div><div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--titulo)">${oc.confirmados||0}/${oc.vagas_total}</div></div>
+          <div style="background:var(--fundo);border-radius:6px;padding:12px"><div class="t-label">Professor</div><div class="mt-3 fs-13 fw-500 c-titulo">${esc(oc.professor_nome||'—')}</div></div>
         </div>
         ${oc.cancelada?`<div style="background:var(--err-bg);border:1px solid var(--err-borda);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--err-fg);margin-bottom:12px"><i class="ti ti-ban" aria-hidden="true"></i> Esta aula está cancelada${oc.eh_feriado?` (feriado: ${esc(oc.nome_feriado)})`:''}${oc.motivo_cancel?` — Motivo: ${esc(oc.motivo_cancel)}`:''}</div>`:
           oc.eh_feriado?`<div style="background:rgba(232,188,79,.1);border:1px solid rgba(232,188,79,.35);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--warn-fg);margin-bottom:12px"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Esta aula cai em feriado: ${esc(oc.nome_feriado)}</div>`:''}
-        ${aulaPassada?`<div style="margin-bottom:10px"><span style="font-size:12px;color:var(--warn-vivo);background:rgba(230,126,34,.1);padding:2px 8px;border-radius:10px">Aula já realizada</span></div>`:''}
+        ${aulaPassada?`<div class="mb-10"><span style="font-size:12px;color:var(--warn-vivo);background:rgba(230,126,34,.1);padding:2px 8px;border-radius:10px">Aula já realizada</span></div>`:''}
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2)">Presenças (${confs.length})</div>
+          <div class="t-label">Presenças (${confs.length})</div>
           <button data-h-click="pages-admin-grade.20" data-a-click="${esc(JSON.stringify([String(ocId)]))}" style="padding:3px 10px;background:var(--verde);color:var(--bege);border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="ti ti-check" aria-hidden="true"></i> Todos presentes</button>
         </div>
         <div style="background:rgba(242,236,206,.25);border:1px solid var(--borda);border-radius:6px;padding:10px;margin-bottom:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -417,12 +417,12 @@ export async function renderAlunoGrade(container, page) {
         </div>
         ${confs.length===0?'<div style="font-size:12px;color:var(--txt2);padding:10px 0">Nenhuma confirmação ainda.</div>':
           confs.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--fundo);border-radius:6px;margin-bottom:5px" id="conf-row-modal-${c.id}">
-            <div style="display:flex;align-items:center;gap:8px">
+            <div class="row-8">
               <div style="width:24px;height:24px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--titulo)">${esc((c.aluno?.nome||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase())}</div>
-              <span style="font-size:12px;font-weight:500">${esc(c.aluno?.nome||'—')}</span>
+              <span class="fs-12 fw-500">${esc(c.aluno?.nome||'—')}</span>
               ${badge(statusMap[c.status]||c.status, statusBg[c.status]||'var(--neutro-bg)', statusColor[c.status]||'var(--txt2)')}
             </div>
-            <div style="display:flex;gap:4px">
+            <div class="row-4">
               <button data-h-click="pages-admin-grade.17" data-a-click="${esc(JSON.stringify([String(ocId), String(c.id)]))}" style="padding:3px 7px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Presente"><i class="ti ti-check" aria-hidden="true"></i></button>
               <button data-h-click="pages-admin-grade.18" data-a-click="${esc(JSON.stringify([String(ocId), String(c.id)]))}" style="padding:3px 7px;background:var(--err-bg);color:var(--err-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Ausente"><i class="ti ti-x" aria-hidden="true"></i></button>
               <button data-h-click="pages-admin-grade.19" data-oc="${esc(ocId)}" data-id="${esc(c.id)}" data-nome="${esc(c.aluno?.nome||'')}" style="padding:3px 7px;background:var(--neutro-bg);color:var(--txt2);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Remover"><i class="ti ti-trash" aria-hidden="true"></i></button>

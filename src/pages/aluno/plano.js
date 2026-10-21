@@ -98,7 +98,7 @@ export async function renderAlunoPlano(container, page) {
     <div class="content">
 
       <!-- Perfil -->
-      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+      <div class="card card-lg mb-14">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
           <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo)">Meus Dados</div>
           <button data-h-click="pages-aluno-plano.2" style="padding:5px 12px;background:transparent;border:1px solid var(--borda);border-radius:5px;font-size:12px;cursor:pointer;color:var(--txt2);font-family:'DM Sans',sans-serif"><i class="ti ti-pencil" aria-hidden="true"></i> Editar</button>
@@ -106,11 +106,11 @@ export async function renderAlunoPlano(container, page) {
         <div style="display:flex;flex-direction:column;gap:6px">
           <div style="display:flex;gap:8px;font-size:13px">
             <span style="color:var(--txt2);min-width:70px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;padding-top:1px">Nome</span>
-            <span id="perfil-nome-display" style="font-weight:500">${esc(perfil.nome)}</span>
+            <span id="perfil-nome-display" class="fw-500">${esc(perfil.nome)}</span>
           </div>
           <div style="display:flex;gap:8px;font-size:13px">
             <span style="color:var(--txt2);min-width:70px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;padding-top:1px">E-mail</span>
-            <span style="color:var(--txt2)">${esc(perfil.email)}</span>
+            <span class="c-txt2">${esc(perfil.email)}</span>
           </div>
           ${perfil.telefone
             ? `<div style="display:flex;gap:8px;font-size:13px">
@@ -119,7 +119,7 @@ export async function renderAlunoPlano(container, page) {
                </div>`
             : `<div style="display:flex;gap:8px;font-size:13px">
                 <span style="color:var(--txt2);min-width:70px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;padding-top:1px">Telefone</span>
-                <span id="perfil-tel-display" style="color:var(--err-vivo);font-size:12px">Não cadastrado</span>
+                <span id="perfil-tel-display" class="fs-12 c-err">Não cadastrado</span>
                </div>`
           }
         </div>
@@ -129,10 +129,10 @@ export async function renderAlunoPlano(container, page) {
         ? `<div style="text-align:center;padding:40px;font-size:13px;color:var(--txt2)">Nenhuma matrícula ativa. Entre em contato com o Espaço Autonomia.</div>`
         : `
         <!-- Card do plano -->
-        <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);overflow-x:auto;margin-bottom:16px">
+        <div class="card-scroll mb-16">
           <div style="padding:18px;background:var(--verde)">
             <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--bege)">Plano ${esc(plano?.nome||mat.plano_tipo)}</div>
-            <div style="margin-top:8px">
+            <div class="mt-8">
               ${totalDesconto > 0
                 ? `<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
                     <span style="font-size:16px;font-family:'Cormorant Garamond',serif;color:rgba(242,236,206,.5);text-decoration:line-through">R$${mat.valor_mensal}</span>
@@ -153,17 +153,17 @@ export async function renderAlunoPlano(container, page) {
 
           <!-- Benefícios -->
           <div style="padding:16px 18px">
-            <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);margin-bottom:10px">Seus Benefícios</div>
+            <div class="t-label mb-10">Seus Benefícios</div>
             ${beneficiosAtivos.length === 0
-              ? `<div style="font-size:12px;color:var(--txt2)">Nenhum benefício especial neste plano.</div>`
+              ? `<div class="t-mut">Nenhum benefício especial neste plano.</div>`
               : beneficiosAtivos.map(f => {
                   const b = FEAT_DESCRICOES[f]
                   const linkSangha = f === 'sangha' && plano?.whatsapp_sangha
                   return `<div style="border:1px solid var(--borda);border-radius:8px;margin-bottom:8px;overflow:hidden">
                     <button data-h-click="pages-aluno-plano.1" data-a-click="${esc(JSON.stringify([String(f)]))}" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:none;border:none;cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif">
-                      <div style="display:flex;align-items:center;gap:8px">
-                        <span style="color:var(--titulo);font-weight:500;font-size:12px"><i class="ti ti-check" aria-hidden="true"></i></span>
-                        <span style="font-size:12px;font-weight:500;color:var(--txt)">${esc(b.titulo)}</span>
+                      <div class="row-8">
+                        <span class="fs-12 fw-500 c-titulo"><i class="ti ti-check" aria-hidden="true"></i></span>
+                        <span class="fs-12 fw-500 c-txt">${esc(b.titulo)}</span>
                       </div>
                       <span id="chevron-${f}" style="font-size:12px;color:var(--txt2);transition:transform .2s"><i class="ti ti-chevron-down" aria-hidden="true"></i></span>
                     </button>
@@ -182,7 +182,7 @@ export async function renderAlunoPlano(container, page) {
 
             <!-- Benefícios não incluídos -->
             ${Object.keys(FEAT_DESCRICOES).filter(f => !plano?.[f]).length > 0
-              ? `<details style="margin-top:8px">
+              ? `<details class="mt-8">
                   <summary style="font-size:12px;color:var(--txt2);cursor:pointer;list-style:none;display:flex;align-items:center;gap:4px">
                     <span><i class="ti ti-player-play" aria-hidden="true"></i></span> Ver benefícios não incluídos no seu plano
                   </summary>
@@ -202,7 +202,7 @@ export async function renderAlunoPlano(container, page) {
         ${mat.plano_tipo !== 'vishnu_livre'
           ? `<div style="background:rgba(232,188,79,.08);border:1px solid rgba(232,188,79,.3);border-radius:var(--r);padding:16px 18px;margin-bottom:16px">
               <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo);margin-bottom:6px">Quer mais?</div>
-              <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">Faça upgrade e acesse mais modalidades e benefícios.</div>
+              <div class="t-mut mb-12">Faça upgrade e acesse mais modalidades e benefícios.</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
                 ${todos.filter(p=>p.tipo!==mat.plano_tipo&&(p.preco_1x||0)>(plano?.preco_1x||0)).map(p=>`
                   <button style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">
@@ -217,18 +217,18 @@ export async function renderAlunoPlano(container, page) {
 
       <!-- Histórico de pagamentos -->
       ${(pgAluno||[]).length
-        ? `<div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);overflow-x:auto;margin-bottom:14px">
+        ? `<div class="card-scroll mb-14">
             <div style="padding:13px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
               <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo)">Histórico de Pagamentos</span>
               ${pgAtual?`<span style="background:${pgStatusOk?'var(--ok-bg)':'var(--err-bg)'};color:${pgStatusOk?'var(--ok-fg)':'var(--err-fg)'};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:500">${pgStatusLabel[pgAtual?.status]||esc(pgAtual?.status)||'—'}</span>`:''}
             </div>
             ${(pgAluno||[]).map(p=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
               <div>
-                <div style="font-weight:500">${p.mes_ref?new Date(p.mes_ref+'T12:00').toLocaleDateString('pt-BR',{month:'long',year:'numeric'}):'—'}</div>
-                <div style="font-size:12px;color:var(--txt2);margin-top:1px">Venc: ${p.vencimento?new Date(p.vencimento+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):'-'}</div>
+                <div class="fw-500">${p.mes_ref?new Date(p.mes_ref+'T12:00').toLocaleDateString('pt-BR',{month:'long',year:'numeric'}):'—'}</div>
+                <div class="t-mut mt-1">Venc: ${p.vencimento?new Date(p.vencimento+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):'-'}</div>
               </div>
-              <div style="text-align:right">
-                <div style="font-weight:500">R$${(p.valor||0).toFixed(2).replace('.',',')}</div>
+              <div class="ta-right">
+                <div class="fw-500">R$${(p.valor||0).toFixed(2).replace('.',',')}</div>
                 <div style="font-size:12px;color:${pgStatusColor[p.status]||'var(--txt2)'};margin-top:1px">${pgStatusLabel[p.status]||esc(p.status)}</div>
               </div>
             </div>`).join('')}
@@ -245,19 +245,19 @@ export async function renderAlunoPlano(container, page) {
           <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--bege)">Editar Meus Dados</div>
         </div>
         <div style="padding:20px;display:flex;flex-direction:column;gap:12px">
-          <div style="display:flex;flex-direction:column;gap:4px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Nome completo</label>
+          <div class="stack-4">
+            <label class="t-label">Nome completo</label>
             <input id="edit-perfil-nome" type="text" value="${esc(perfil.nome.replace(/"/g,'&quot;'))}" style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
-          <div style="display:flex;flex-direction:column;gap:4px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Telefone / WhatsApp</label>
+          <div class="stack-4">
+            <label class="t-label">Telefone / WhatsApp</label>
             <input id="edit-perfil-tel" type="tel" value="${esc(perfil.telefone||'')}" placeholder="(11) 99999-9999" style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
           <div style="font-size:12px;color:var(--txt2);background:rgba(242,236,206,.4);border-radius:6px;padding:8px 12px">
             O e-mail não pode ser alterado pois é usado para o login com Google.
           </div>
         </div>
-        <div style="padding:0 20px 16px;display:flex;justify-content:flex-end;gap:8px">
+        <div class="modal-foot modal-foot-sm">
           <button data-h-click="pages-aluno-plano.3" style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
           <button data-h-click="pages-aluno-plano.4" style="padding:7px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Salvar</button>
         </div>

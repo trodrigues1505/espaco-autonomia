@@ -44,7 +44,7 @@ async function _renderLista(container, sb) {
   const { data: granthas, error } = await sb.from('grantha_mandir').select('*').order('titulo')
   if (error) {
     container.innerHTML = `<div class="topbar"><div class="topbar-t">Grantha Mandir</div></div>
-      <div class="content"><p style="color:var(--err-vivo);font-size:13px">Erro: ${esc(error.message)}</p></div>`
+      <div class="content"><p class="fs-13 c-err">Erro: ${esc(error.message)}</p></div>`
     return
   }
 
@@ -60,7 +60,7 @@ async function _renderLista(container, sb) {
         ? `<div style="text-align:center;padding:48px 24px">
              <div style="font-size:40px;margin-bottom:12px"><i class="ti ti-books" aria-hidden="true"></i></div>
              <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--titulo);margin-bottom:8px">Em breve</div>
-             <div style="font-size:13px;color:var(--txt2)">A biblioteca chegará em breve.</div>
+             <div class="fs-13 c-txt2">A biblioteca chegará em breve.</div>
            </div>`
         : `<div style="display:flex;flex-direction:column;gap:10px">
             ${granthas.map(g => `
@@ -69,7 +69,7 @@ async function _renderLista(container, sb) {
                 ${g.capa_url ? `<img src="${imagemSegura(g.capa_url)}" referrerpolicy="no-referrer" style="width:56px;height:72px;object-fit:cover;border-radius:4px;flex-shrink:0">` : `<div style="width:56px;height:72px;background:var(--verde);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px"><i class="ti ti-book" aria-hidden="true"></i></div>`}
                 <div style="flex:1;min-width:0">
                   <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--titulo)">${esc(g.titulo)}</div>
-                  <div style="font-size:12px;color:var(--txt2);margin-top:2px">${esc(g.autor ? g.autor+' · ' : '')}${CATEGORIAS_LABEL[g.categoria] || esc(g.categoria) || ''}${esc(g.periodo ? ' · '+g.periodo : '')}</div>
+                  <div class="t-mut mt-2">${esc(g.autor ? g.autor+' · ' : '')}${CATEGORIAS_LABEL[g.categoria] || esc(g.categoria) || ''}${esc(g.periodo ? ' · '+g.periodo : '')}</div>
                   ${g.descricao ? `<div style="font-size:12px;color:var(--txt);margin-top:6px;line-height:1.5">${esc(g.descricao)}</div>` : ''}
                   <div style="font-size:12px;color:var(--txt2);margin-top:6px;background:rgba(31,56,31,.06);display:inline-block;padding:2px 8px;border-radius:20px">${g.tipo === 'obra_classica' ? 'Obra clássica' : 'Artigo'}</div>
                 </div>
@@ -86,7 +86,7 @@ async function _renderLeitura(container, sb, granthaId) {
   const { data: g, error } = await sb.from('grantha_mandir').select('*').eq('id', granthaId).single()
   if (error || !g) {
     container.innerHTML = `<div class="topbar"><div class="topbar-t">Grantha Mandir</div></div>
-      <div class="content"><p style="color:var(--err-vivo);font-size:13px">Obra não encontrada.</p></div>`
+      <div class="content"><p class="fs-13 c-err">Obra não encontrada.</p></div>`
     return
   }
 
@@ -103,7 +103,7 @@ async function _renderLeitura(container, sb, granthaId) {
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">
           <div>
             <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--titulo)">${esc(g.titulo)}</div>
-            <div style="font-size:12px;color:var(--txt2);margin-top:3px">${esc(g.autor ? g.autor+' · ' : '')}${CATEGORIAS_LABEL[g.categoria] || ''}</div>
+            <div class="t-mut mt-3">${esc(g.autor ? g.autor+' · ' : '')}${CATEGORIAS_LABEL[g.categoria] || ''}</div>
           </div>
           <button id="btn-ouvir-artigo" style="padding:8px 16px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px;white-space:nowrap">
             <i class="ti ti-volume" aria-hidden="true"></i> Ouvir
@@ -144,9 +144,9 @@ async function _renderLeitura(container, sb, granthaId) {
       </button>
     </div>
     <div class="content">
-      <div style="margin-bottom:14px">
+      <div class="mb-14">
         <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--titulo)">${esc(g.titulo)}</div>
-        <div style="font-size:12px;color:var(--txt2);margin-top:3px">${esc(g.autor ? g.autor+' · ' : '')}${esc(g.periodo || '')}</div>
+        <div class="t-mut mt-3">${esc(g.autor ? g.autor+' · ' : '')}${esc(g.periodo || '')}</div>
       </div>
 
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -164,8 +164,8 @@ async function _renderLeitura(container, sb, granthaId) {
 
       <div id="versos-leitura-container">
         ${versosCapitulo.map(v => `
-          <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:10px">
-            <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);margin-bottom:8px">${esc(v.capitulo)} · ${v.numero}${v.numero_fim?'–'+v.numero_fim:''}</div>
+          <div class="card card-lg mb-10">
+            <div class="t-label mb-8">${esc(v.capitulo)} · ${v.numero}${v.numero_fim?'–'+v.numero_fim:''}</div>
             <div style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--titulo);line-height:1.5">${esc(v.texto_devanagari)}</div>
             <div style="font-family:'Cormorant Garamond',serif;font-size:14px;font-style:italic;color:var(--txt2);margin-top:4px">${esc(v.transliteracao)}</div>
             <div style="font-size:13px;color:var(--txt);margin-top:8px;line-height:1.6">${esc(v.traducao)}</div>

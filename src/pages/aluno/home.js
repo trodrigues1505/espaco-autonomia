@@ -85,9 +85,9 @@ export async function renderAlunoHome(container, page) {
   container.innerHTML = `
     <div class="topbar">
       <div class="topbar-t" id="tour-saudacao">Olá, ${esc(perfil.nome.split(' ')[0])}!</div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:18px">${nivelLabel?.split(' ')[0]||'🌱'}</span>
-        <span style="font-size:12px;color:var(--txt2)">${gam?.prana_points||0} pts</span>
+      <div class="row-8">
+        <span class="fs-18">${nivelLabel?.split(' ')[0]||'🌱'}</span>
+        <span class="t-mut">${gam?.prana_points||0} pts</span>
       </div>
     </div>
     <div class="content">
@@ -101,38 +101,38 @@ export async function renderAlunoHome(container, page) {
       </button>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
         <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:12px 14px">
-          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Saldo total</div>
+          <div class="t-label mb-4">Saldo total</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--titulo)">${saldoTotal}</div>
-          <div style="font-size:12px;color:var(--txt2)">aulas acumuladas</div>
+          <div class="t-mut">aulas acumuladas</div>
         </div>
         <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:12px 14px;border-left:3px solid ${saldoDisponivel>0||ehLivre?'var(--verde)':'var(--err-vivo)'}">
-          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Disponíveis</div>
+          <div class="t-label mb-4">Disponíveis</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:${saldoDisponivel>0||ehLivre?'var(--titulo)':'var(--err-vivo)'}">${ehLivre?'∞':saldoDisponivel}</div>
-          <div style="font-size:12px;color:var(--txt2)">para agendar agora</div>
+          <div class="t-mut">para agendar agora</div>
         </div>
         <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:12px 14px">
-          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Sequência</div>
+          <div class="t-label mb-4">Sequência</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:${(gam?.streak_atual||0)>0?'var(--warn-vivo)':'var(--txt2)'}">${gam?.streak_atual||0}<i class="ti ti-flame" aria-hidden="true"></i></div>
-          <div style="font-size:12px;color:var(--txt2)">semanas seguidas</div>
+          <div class="t-mut">semanas seguidas</div>
         </div>
         <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:12px 14px">
-          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Nível</div>
+          <div class="t-label mb-4">Nível</div>
           <div style="font-size:20px;margin-bottom:2px">${nivelLabel}</div>
-          <div style="font-size:12px;color:var(--txt2)">${gam?.prana_points||0} pts</div>
+          <div class="t-mut">${gam?.prana_points||0} pts</div>
         </div>
       </div>
-      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-bottom:14px">
-        <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:8px">Últimos 30 dias</div>
+      <div class="card mb-14">
+        <div class="t-label mb-8">Últimos 30 dias</div>
         <div style="display:flex;gap:3px;flex-wrap:wrap">
           ${diasCalor.map(d=>`<div title="${d.data}" style="width:18px;height:18px;border-radius:3px;background:${d.presente?'var(--verde)':'var(--neutro-bg)'}"></div>`).join('')}
         </div>
       </div>
-      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);overflow-x:auto;margin-bottom:12px">
+      <div class="card-scroll mb-12">
         <div style="padding:12px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between">
           <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo)">Próximas aulas</span>
           <button data-h-click="pages-aluno-home.10" style="font-size:12px;color:var(--titulo);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif">Ver grade <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
         </div>
-        ${confs.length===0?`<div style="padding:16px 18px;font-size:12px;color:var(--txt2)">Nenhuma aula confirmada. <a href="#" data-h-click="pages-aluno-home.4" style="color:var(--titulo)">Ver grade <i class="ti ti-arrow-right" aria-hidden="true"></i></a></div>`:
+        ${confs.length===0?`<div style="padding:16px 18px;font-size:12px;color:var(--txt2)">Nenhuma aula confirmada. <a href="#" data-h-click="pages-aluno-home.4" class="c-titulo">Ver grade <i class="ti ti-arrow-right" aria-hidden="true"></i></a></div>`:
           confs.map(c=>{
             const dt = new Date(c.ocorrencia.data_hora)
             const prazo = Number(cfg.prazo_cancelamento_min||180)
@@ -140,8 +140,8 @@ export async function renderAlunoHome(container, page) {
             const podeCancelar = new Date()<limiteCancel
             return `<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid rgba(212,200,158,.3);gap:12px">
               <div>
-                <div style="display:flex;align-items:center;gap:6px">${dot(c.ocorrencia.aula?.modalidade)}<strong style="font-size:13px">${NOMES[c.ocorrencia.aula?.modalidade]||'Aula'}</strong></div>
-                <div style="font-size:12px;color:var(--txt2);margin-top:2px">${dt.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'})} · ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+                <div class="row-6">${dot(c.ocorrencia.aula?.modalidade)}<strong class="fs-13">${NOMES[c.ocorrencia.aula?.modalidade]||'Aula'}</strong></div>
+                <div class="t-mut mt-2">${dt.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'})} · ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
                 <div style="font-size:12px;color:${podeCancelar?'var(--verde-cl)':'var(--err-vivo)'};margin-top:2px">${podeCancelar?'<i class="ti ti-check" aria-hidden="true"></i> Cancelamento disponível':'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Prazo encerrado — falta perde aula do saldo'}</div>
               </div>
               ${podeCancelar?`<button data-h-click="pages-aluno-home.5" data-a-click="${esc(JSON.stringify([String(c.id), String(c.ocorrencia_id)]))}" style="padding:4px 10px;background:var(--err-bg);color:var(--err-fg);border:1px solid var(--err-borda);border-radius:5px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Cancelar</button>`:''}
@@ -151,26 +151,26 @@ export async function renderAlunoHome(container, page) {
       </div>
       <button data-h-click="pages-aluno-home.11" style="width:100%;padding:12px 16px;background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--titulo);cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <span><i class="ti ti-trophy" aria-hidden="true"></i> Minhas Conquistas · ${gam?.prana_points||0} pts</span>
-        <span style="font-size:12px;color:var(--txt2)">Ver todas <i class="ti ti-arrow-right" aria-hidden="true"></i></span>
+        <span class="t-mut">Ver todas <i class="ti ti-arrow-right" aria-hidden="true"></i></span>
       </button>
 
       <!-- Botão Meu Contrato -->
       <button id="btn-meu-contrato" style="width:100%;padding:12px 16px;background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--titulo);cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <span style="display:flex;align-items:center;gap:8px">
+        <span class="row-8">
           <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:var(--superficie-2);border-radius:50%;font-size:13px"><i class="ti ti-circle-check" aria-hidden="true"></i></span>
           Meu Contrato
         </span>
-        <span style="font-size:12px;color:var(--txt2)">Ver <i class="ti ti-arrow-right" aria-hidden="true"></i></span>
+        <span class="t-mut">Ver <i class="ti ti-arrow-right" aria-hidden="true"></i></span>
       </button>
 
       ${!window.matchMedia('(display-mode: standalone)').matches && !localStorage.getItem('pwa-instalado') ? `
       <div data-pwa style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px;margin-top:4px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:20px"><i class="ti ti-download" aria-hidden="true"></i></span>
+          <div class="row-8">
+            <span class="fs-20"><i class="ti ti-download" aria-hidden="true"></i></span>
             <div>
-              <div style="font-size:13px;font-weight:500;color:var(--titulo)">Instalar o app</div>
-              <div style="font-size:12px;color:var(--txt2)">Acesse mais rápido direto da tela inicial</div>
+              <div class="fs-13 fw-500 c-titulo">Instalar o app</div>
+              <div class="t-mut">Acesse mais rápido direto da tela inicial</div>
             </div>
           </div>
           <button data-h-click="pages-aluno-home.6"

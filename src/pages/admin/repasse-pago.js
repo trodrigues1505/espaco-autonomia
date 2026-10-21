@@ -70,7 +70,7 @@ export async function renderHistoricoRepasse(container, professorId, isAdmin) {
   sec.style.cssText = 'margin-top:20px'
 
   sec.innerHTML = `
-    <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);overflow-x:auto">
+    <div class="card-scroll">
       <div style="padding:13px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
         <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo)">
           Histórico de Repasses
@@ -122,16 +122,16 @@ export async function renderHistoricoRepasse(container, professorId, isAdmin) {
                              align-items:center;gap:10px;padding:10px 18px;
                              border-bottom:1px solid rgba(212,200,158,.3);font-size:12px;min-width:480px"
                       id="repasse-row-${r.id}">
-                   ${isAdmin ? `<span style="font-weight:500">${esc(r.professor?.nome || '—')}</span>` : ''}
-                   <span style="font-size:12px;color:var(--txt2)">${nomeMes(r.mes_ref)}</span>
-                   <span style="font-size:12px;color:var(--txt2)">${r.valor_previsto ? fmtR(r.valor_previsto) : '—'}</span>
+                   ${isAdmin ? `<span class="fw-500">${esc(r.professor?.nome || '—')}</span>` : ''}
+                   <span class="t-mut">${nomeMes(r.mes_ref)}</span>
+                   <span class="t-mut">${r.valor_previsto ? fmtR(r.valor_previsto) : '—'}</span>
                    <div>
                      <span style="font-weight:500;color:var(--ok-fg)">${fmtR(r.valor_pago)}</span>
                      ${diffStr}
                    </div>
-                   <span style="font-size:12px;color:var(--txt2)">${esc(r.observacao || '—')}</span>
+                   <span class="t-mut">${esc(r.observacao || '—')}</span>
                    ${isAdmin
-                     ? `<div style="display:flex;gap:4px">
+                     ? `<div class="row-4">
                           <button
                             data-h-click="pages-admin-repasse-pago.1" data-a-click="${esc(JSON.stringify([(Number(r.valor_pago) || 0), (Number(r.valor_previsto) || 0)]))}" data-id="${esc(r.id)}" data-prof="${esc(r.professor_id)}" data-nome="${esc(r.professor?.nome || '')}" data-mes="${esc(r.mes_ref)}" data-obs="${esc(r.observacao || '')}"
                             style="padding:3px 7px;background:var(--ok-bg);color:var(--ok-fg);border:none;border-radius:4px;font-size:12px;cursor:pointer"
@@ -162,13 +162,13 @@ export async function renderHistoricoRepasse(container, professorId, isAdmin) {
           <input type="hidden" id="rp-id">
           <input type="hidden" id="rp-professor-id">
 
-          <div style="display:flex;flex-direction:column;gap:3px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Professor</label>
+          <div class="stack-3">
+            <label class="t-label">Professor</label>
             <div id="rp-professor-nome" style="font-size:13px;font-weight:500;color:var(--titulo);padding:4px 0"></div>
           </div>
 
-          <div style="display:flex;flex-direction:column;gap:3px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Mês de referência</label>
+          <div class="stack-3">
+            <label class="t-label">Mês de referência</label>
             <select id="rp-mes"
               style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
               ${mesesDisponiveis.map(m =>
@@ -177,17 +177,17 @@ export async function renderHistoricoRepasse(container, professorId, isAdmin) {
             </select>
           </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div style="display:flex;flex-direction:column;gap:3px">
-              <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Valor previsto (R$)</label>
+          <div class="grid-2">
+            <div class="stack-3">
+              <label class="t-label">Valor previsto (R$)</label>
               <input type="number" id="rp-valor-previsto" step="0.01" min="0" readonly
                 style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
                        font-family:'DM Sans',sans-serif;outline:none;background:var(--superficie-2);color:var(--txt2)"
                 placeholder="0,00">
-              <div style="font-size:12px;color:var(--txt2)">Calculado pela previsão</div>
+              <div class="t-mut">Calculado pela previsão</div>
             </div>
-            <div style="display:flex;flex-direction:column;gap:3px">
-              <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Valor pago (R$) *</label>
+            <div class="stack-3">
+              <label class="t-label">Valor pago (R$) *</label>
               <input type="number" id="rp-valor-pago" step="0.01" min="0"
                 style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
                        font-family:'DM Sans',sans-serif;outline:none"
@@ -196,15 +196,15 @@ export async function renderHistoricoRepasse(container, professorId, isAdmin) {
             </div>
           </div>
 
-          <div style="display:flex;flex-direction:column;gap:3px">
-            <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500">Observação (opcional)</label>
+          <div class="stack-3">
+            <label class="t-label">Observação (opcional)</label>
             <textarea id="rp-obs" rows="2"
               style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
                      font-family:'DM Sans',sans-serif;outline:none;resize:vertical"
               placeholder="Ex: inclui bônus de indicação, desconto acordado..."></textarea>
           </div>
         </div>
-        <div style="padding:0 20px 16px;display:flex;justify-content:flex-end;gap:8px">
+        <div class="modal-foot modal-foot-sm">
           <button data-h-click="pages-admin-repasse-pago.3"
             style="padding:7px 14px;background:transparent;border:1px solid var(--borda);border-radius:6px;font-size:12px;cursor:pointer">
             Cancelar

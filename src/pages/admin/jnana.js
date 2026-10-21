@@ -34,7 +34,7 @@ export async function renderJnanaAdmin(container, page) {
 
   if (error) {
     container.innerHTML = `<div class="topbar"><div class="topbar-t">Jñāna Mārga</div></div>
-      <div class="content"><p style="color:var(--err-vivo)">Erro: ${esc(error.message)}</p></div>`
+      <div class="content"><p class="c-err">Erro: ${esc(error.message)}</p></div>`
     return
   }
 
@@ -106,30 +106,30 @@ export async function renderJnanaAdmin(container, page) {
         : `<div style="background:var(--ok-bg);border:1px solid var(--ok-borda);border-radius:8px;
                       padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--ok-fg);
                       display:flex;align-items:center;gap:10px">
-             <i class="ti ti-check" style="font-size:18px"></i>
+             <i class="ti ti-check fs-18"></i>
              <span>Sutra de hoje: <strong>${esc(hojePublicado.capitulo)} ${_labelNumero(hojePublicado)} — ${esc(hojePublicado.transliteracao)}</strong></span>
            </div>`
       }
 
       <!-- Stats -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">
-        <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
-          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Total publicados</div>
+        <div class="card">
+          <div class="t-label mb-4">Total publicados</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--titulo)">${publicados.length}</div>
         </div>
-        <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
-          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Agendados (futuros)</div>
+        <div class="card">
+          <div class="t-label mb-4">Agendados (futuros)</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:${futuros.length > 0 ? 'var(--warn-fg)' : 'var(--txt2)'}">
             ${futuros.length}
           </div>
           ${futuros.length > 0
             ? `<div style="font-size:12px;color:var(--warn-fg);margin-top:2px">próximo: ${fmtDia(futuros[0].publicada_em)}</div>`
-            : `<div style="font-size:12px;color:var(--txt2);margin-top:2px">nenhum na fila</div>`}
+            : `<div class="t-mut mt-2">nenhum na fila</div>`}
         </div>
-        <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:14px 16px">
-          <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin-bottom:4px">Próx. dia útil livre</div>
+        <div class="card">
+          <div class="t-label mb-4">Próx. dia útil livre</div>
           <div style="font-size:13px;font-weight:500;color:var(--titulo);margin-top:4px">${fmtDia(proximoLivre)}</div>
-          <div style="font-size:12px;color:var(--txt2);margin-top:2px">${proximoLivre}</div>
+          <div class="t-mut mt-2">${proximoLivre}</div>
         </div>
       </div>
 
@@ -149,11 +149,11 @@ export async function renderJnanaAdmin(container, page) {
                         align-items:center;gap:10px;padding:11px 18px;
                         border-bottom:1px solid rgba(212,200,158,.3);font-size:12px">
               <div>
-                <div style="font-weight:500;color:var(--txt)">${esc(s.capitulo)} ${_labelNumero(s)}</div>
+                <div class="fw-500 c-txt">${esc(s.capitulo)} ${_labelNumero(s)}</div>
                 <div style="font-size:12px;color:var(--txt2);margin-top:1px;font-style:italic">${esc(s.transliteracao)}</div>
               </div>
-              <span style="color:var(--txt2);font-size:12px">${esc(s.capitulo)}</span>
-              <div style="display:flex;flex-direction:column;gap:3px">
+              <span class="t-mut">${esc(s.capitulo)}</span>
+              <div class="stack-3">
                 <input type="date" value="${s.publicada_em}" id="data-${s.id}"
                   style="border:1px solid var(--borda);border-radius:5px;padding:4px 8px;
                          font-size:12px;font-family:'DM Sans',sans-serif;color:var(--txt);
@@ -163,7 +163,7 @@ export async function renderJnanaAdmin(container, page) {
                          border:1px solid rgba(232,188,79,.4);border-radius:4px;font-size:12px;
                          cursor:pointer;font-family:'DM Sans',sans-serif">Reagendar</button>
               </div>
-              <div style="display:flex;gap:4px">
+              <div class="row-4">
                 <button data-h-click="pages-admin-jnana.2" data-a-click="${esc(JSON.stringify([String(s.id)]))}"
                   style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--titulo);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Prévia"><i class="ti ti-eye" aria-hidden="true"></i></button>
                 <button data-h-click="pages-admin-jnana.3" data-a-click="${esc(JSON.stringify([String(s.id)]))}"
@@ -174,10 +174,10 @@ export async function renderJnanaAdmin(container, page) {
             </div>`).join('')}
         </div>` : ''}
 
-      <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);font-weight:500;margin-bottom:8px">
+      <div class="t-label mb-8">
         Publicados (${publicados.length})
       </div>
-      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);overflow-x:auto">
+      <div class="card-scroll">
         <div style="display:grid;grid-template-columns:1fr 150px 130px 80px;padding:8px 18px;
                     background:rgba(242,236,206,.45);font-size:12px;text-transform:uppercase;
                     letter-spacing:.7px;color:var(--txt2);font-weight:500;gap:10px">
@@ -192,12 +192,12 @@ export async function renderJnanaAdmin(container, page) {
                         border-bottom:1px solid rgba(212,200,158,.3);font-size:12px;
                         background:${isHoje ? 'rgba(232,188,79,.05)' : 'transparent'}">
                 <div>
-                  <div style="font-weight:500;color:var(--txt)">${esc(s.capitulo)} ${_labelNumero(s)}</div>
+                  <div class="fw-500 c-txt">${esc(s.capitulo)} ${_labelNumero(s)}</div>
                   <div style="font-size:12px;color:var(--txt2);margin-top:1px;font-style:italic">${esc(s.transliteracao)}</div>
                 </div>
-                <span style="color:var(--txt2);font-size:12px">${esc(s.capitulo)}</span>
-                <div>${badgeStatus(s.publicada_em)}<div style="font-size:12px;color:var(--txt2);margin-top:2px">${fmtDia(s.publicada_em)}</div></div>
-                <div style="display:flex;gap:4px">
+                <span class="t-mut">${esc(s.capitulo)}</span>
+                <div>${badgeStatus(s.publicada_em)}<div class="t-mut mt-2">${fmtDia(s.publicada_em)}</div></div>
+                <div class="row-4">
                   <button data-h-click="pages-admin-jnana.2" data-a-click="${esc(JSON.stringify([String(s.id)]))}"
                     style="padding:3px 8px;background:rgba(31,56,31,.08);color:var(--titulo);border:none;border-radius:4px;font-size:12px;cursor:pointer" title="Prévia"><i class="ti ti-eye" aria-hidden="true"></i></button>
                   <button data-h-click="pages-admin-jnana.3" data-a-click="${esc(JSON.stringify([String(s.id)]))}"
@@ -231,37 +231,33 @@ export async function renderJnanaAdmin(container, page) {
             style="background:none;border:none;color:var(--bege);font-size:22px;cursor:pointer;line-height:1">×</button>
         </div>
 
-        <div style="padding:20px" id="jnana-modal-body">
+        <div class="p-20" id="jnana-modal-body">
           <div id="jn-etapa-1">
             <div style="display:grid;grid-template-columns:1fr 100px;gap:12px;margin-bottom:12px">
-              <div style="display:flex;flex-direction:column;gap:4px">
-                <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;
-                               color:var(--txt2);font-weight:500">Capítulo</label>
+              <div class="stack-4">
+                <label class="t-label">Capítulo</label>
                 ${selectCapitulo('jn-capitulo', capituloSugerido)}
               </div>
-              <div style="display:flex;flex-direction:column;gap:4px">
-                <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;
-                               color:var(--txt2);font-weight:500">Nº sutra</label>
+              <div class="stack-4">
+                <label class="t-label">Nº sutra</label>
                 <input type="number" id="jn-numero" min="1" value="${numeroSugerido}"
                   style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
                          font-family:'DM Sans',sans-serif;outline:none;width:100%">
               </div>
             </div>
-            <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
-              <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;
-                             color:var(--txt2);font-weight:500">Cole o texto completo do sutra</label>
+            <div class="stack-4 mb-12">
+              <label class="t-label">Cole o texto completo do sutra</label>
               <textarea id="jn-texto-bruto" rows="14" placeholder="Cole aqui: ONDE ESTAMOS / sânscrito+transliteração+tradução / COMENTÁRIO / NA PRÁTICA..."
                 style="border:1px solid var(--borda);border-radius:6px;padding:10px 12px;font-size:13px;
                        font-family:'DM Sans',sans-serif;outline:none;width:100%;resize:vertical;
                        line-height:1.6"></textarea>
             </div>
-            <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:16px">
-              <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;
-                             color:var(--txt2);font-weight:500">Data de publicação</label>
+            <div class="stack-4 mb-16">
+              <label class="t-label">Data de publicação</label>
               <input type="date" id="jn-data-pub" value="${proximoLivre}"
                 style="border:1px solid var(--borda);border-radius:6px;padding:8px 12px;font-size:13px;
                        font-family:'DM Sans',sans-serif;outline:none;width:200px">
-              <div style="font-size:12px;color:var(--txt2)">
+              <div class="t-mut">
                 Próximo dia útil livre: <strong>${fmtDia(proximoLivre)}</strong>.
                 Sutras com data futura ficam invisíveis para alunos até lá.
               </div>
@@ -278,7 +274,7 @@ export async function renderJnanaAdmin(container, page) {
           <div id="jn-etapa-2" style="display:none"></div>
         </div>
 
-        <div id="jnana-modal-footer" style="padding:0 20px 20px;display:flex;justify-content:flex-end;gap:8px">
+        <div id="jnana-modal-footer" class="modal-foot">
           <button data-h-click="pages-admin-jnana.6"
             style="padding:8px 16px;background:transparent;border:1px solid var(--borda);
                    border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
@@ -341,12 +337,12 @@ export async function renderJnanaAdmin(container, page) {
           </div>
           ${s.comentario ? `
             <div style="margin-bottom:12px;background:var(--superficie-2);border-radius:8px;padding:12px 14px">
-              <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Comentário</div>
+              <div class="t-label mb-6">Comentário</div>
               <div style="font-size:13px;color:var(--txt);line-height:1.7">${esc(comentarioHtml)}</div>
             </div>` : ''}
           ${s.pratica ? `
             <div style="background:var(--superficie-2);border-radius:8px;padding:12px 14px">
-              <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);font-weight:500;margin-bottom:6px">Na prática</div>
+              <div class="t-label mb-6">Na prática</div>
               <p style="font-size:13px;color:var(--txt);line-height:1.7;margin:0">${esc(s.pratica)}</p>
             </div>` : ''}
         </div>
@@ -451,11 +447,10 @@ try {
 
   function _montarCamposRevisao(s) {
     const f = (label, el, dica = '') => `
-      <div style="display:flex;flex-direction:column;gap:4px">
-        <label style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;
-                       color:var(--txt2);font-weight:500">${label}</label>
+      <div class="stack-4">
+        <label class="t-label">${label}</label>
         ${el}
-        ${dica ? `<div style="font-size:12px;color:var(--txt2)">${dica}</div>` : ''}
+        ${dica ? `<div class="t-mut">${dica}</div>` : ''}
       </div>`
     const inp = (id, val = '', ph = '') =>
       `<input id="${id}" value="${esc(val)}" placeholder="${esc(ph)}"

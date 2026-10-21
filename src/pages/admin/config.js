@@ -22,10 +22,10 @@ export async function renderConfig(container, page) {
   container.innerHTML = `
     <div class="topbar"><div class="topbar-t">Configurações</div></div>
     <div class="content">
-      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+      <div class="card card-lg mb-14">
         <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--borda)">Confirmação de Presença</div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(212,200,158,.25)">
-          <div><div style="font-size:12px;font-weight:500">Prazo mínimo de confirmação</div><div style="font-size:12px;color:var(--txt2)">Minutos antes da aula para confirmar</div></div>
+          <div><div class="fs-12 fw-500">Prazo mínimo de confirmação</div><div class="t-mut">Minutos antes da aula para confirmar</div></div>
           <select id="cfg-prazo" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--txt)">
             <option value="30"   ${cfg.prazo_confirmacao_min=='30'  ?'selected':''}>30 minutos</option>
             <option value="60"   ${cfg.prazo_confirmacao_min=='60'  ?'selected':''}>1 hora</option>
@@ -37,7 +37,7 @@ export async function renderConfig(container, page) {
           </select>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(212,200,158,.25)">
-          <div><div style="font-size:12px;font-weight:500">Prazo para cancelar confirmação</div></div>
+          <div><div class="fs-12 fw-500">Prazo para cancelar confirmação</div></div>
           <select id="cfg-cancel" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--txt)">
             <option value="120" ${cfg.prazo_cancelamento_min=='120'?'selected':''}>2 horas</option>
             <option value="180" ${cfg.prazo_cancelamento_min=='180'?'selected':''}>3 horas</option>
@@ -45,30 +45,30 @@ export async function renderConfig(container, page) {
           </select>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0">
-          <div><div style="font-size:12px;font-weight:500">Vagas padrão por aula</div></div>
+          <div><div class="fs-12 fw-500">Vagas padrão por aula</div></div>
           <input type="number" id="cfg-vagas" value="${cfg.vagas_padrao||15}" min="1" max="100" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;width:80px;font-family:'DM Sans',sans-serif;color:var(--txt)">
         </div>
       </div>
-      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+      <div class="card card-lg mb-14">
         <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--borda)">Alertas de Feriado</div>
         <div style="background:rgba(31,56,31,.04);border:1px solid rgba(31,56,31,.12);border-radius:6px;padding:9px 13px;font-size:12px;color:var(--titulo);margin-bottom:12px">
           <i class="ti ti-info-circle"></i>
           Ao sincronizar, aulas futuras já geradas que caem em feriado são canceladas automaticamente, e o crédito de quem já tinha confirmado presença nelas é estornado.
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(212,200,158,.25)">
-          <div style="font-size:12px;font-weight:500">Feriados nacionais</div>
+          <div class="fs-12 fw-500">Feriados nacionais</div>
           <input type="checkbox" id="cfg-fnac" ${cfg.feriados_nacionais==='true'?'checked':''} style="width:15px;height:15px;accent-color:var(--verde)">
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(212,200,158,.25)">
-          <div style="font-size:12px;font-weight:500">Feriados estaduais (SP)</div>
+          <div class="fs-12 fw-500">Feriados estaduais (SP)</div>
           <input type="checkbox" id="cfg-fesp" ${cfg.feriados_estaduais_sp==='true'?'checked':''} style="width:15px;height:15px;accent-color:var(--verde)">
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(212,200,158,.25)">
-          <div style="font-size:12px;font-weight:500">Feriados municipais</div>
+          <div class="fs-12 fw-500">Feriados municipais</div>
           <input type="checkbox" id="cfg-fmun" ${cfg.feriados_municipais==='true'?'checked':''} style="width:15px;height:15px;accent-color:var(--verde)">
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0">
-          <div style="font-size:12px;font-weight:500">Antecedência do alerta</div>
+          <div class="fs-12 fw-500">Antecedência do alerta</div>
           <select id="cfg-alertdias" style="border:1px solid var(--borda);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--txt)">
             <option value="3"  ${cfg.alerta_feriado_dias=='3' ?'selected':''}>3 dias</option>
             <option value="7"  ${cfg.alerta_feriado_dias=='7' ?'selected':''}>7 dias</option>
@@ -81,7 +81,7 @@ export async function renderConfig(container, page) {
         <button data-h-click="pages-admin-config.2" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--superficie);color:var(--titulo);border:1px solid var(--borda);border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500"><i class="ti ti-calendar-event"></i>Sincronizar Feriados <span id="sync-feriado-status"></span></button>
       </div>
 
-      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+      <div class="card card-lg mb-14">
         <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo);margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid var(--borda)">Importar Alunos do Asaas</div>
         <div style="font-size:12px;color:var(--txt2);margin-bottom:12px;line-height:1.5">
           Busca todos os clientes cadastrados no Asaas e cria perfis de aluno no app.<br>
@@ -93,42 +93,42 @@ export async function renderConfig(container, page) {
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <button data-h-click="pages-admin-config.3" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--superficie);color:var(--titulo);border:1px solid var(--borda);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500"><i class="ti ti-eye" aria-hidden="true"></i> Pré-visualizar</button>
           <button data-h-click="pages-admin-config.4" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--verde);color:var(--bege);border:none;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500"><i class="ti ti-arrow-down" aria-hidden="true"></i> Importar alunos</button>
-          <span id="asaas-status" style="font-size:12px;color:var(--txt2)"></span>
+          <span id="asaas-status" class="t-mut"></span>
         </div>
         <div id="asaas-preview" style="margin-top:12px"></div>
       </div>
 
       <!-- Solicitações de titulares (LGPD Art. 18) -->
-      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+      <div class="card card-lg mb-14">
         <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo);margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid var(--borda)">
           Solicitações de titulares (LGPD)
         </div>
-        <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">
+        <div class="t-mut mb-12">
           Pedidos de exclusão, correção e informação feitos pelos próprios usuários. Prazo legal de resposta: 15 dias.
         </div>
-        <div id="titulares-lista" class="priv-admin" style="font-size:13px;color:var(--txt2)">Carregando...</div>
+        <div id="titulares-lista" class="priv-admin fs-13 c-txt2">Carregando...</div>
       </div>
 
       <!-- Retenção de dados (2 anos) -->
-      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+      <div class="card card-lg mb-14">
         <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo);margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid var(--borda)">
           Retenção de dados (2 anos)
         </div>
-        <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">
+        <div class="t-mut mb-12">
           Ex-alunos sem matrícula ativa, sem cobrança em aberto e sem atividade há mais de 2 anos são anonimizados automaticamente no dia 1º de cada mês. Pré-cadastros vindos do Asaas (quem nunca acessou o app) sem atualização há mais de 2 anos são removidos na mesma data.
         </div>
-        <div id="retencao-info" style="font-size:13px;color:var(--txt2)">Carregando...</div>
+        <div id="retencao-info" class="fs-13 c-txt2">Carregando...</div>
       </div>
 
       <!-- Aceites de Contrato -->
-      <div style="background:var(--superficie);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+      <div class="card card-lg mb-14">
         <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--titulo);margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid var(--borda)">
           Aceites de Contrato
         </div>
-        <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">
+        <div class="t-mut mb-12">
           Alunos que aceitaram o Contrato de Adesão — prova de consentimento LGPD Art. 8° §6.
         </div>
-        <div id="contratos-lista" style="font-size:12px;color:var(--txt2)">Carregando...</div>
+        <div id="contratos-lista" class="t-mut">Carregando...</div>
       </div>
     </div>
   `
@@ -171,11 +171,11 @@ export async function renderConfig(container, page) {
               <div style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px">${esc(c.perfis?.nome || '—')}</div>
               <div style="color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px;font-size:12px">${esc(c.perfis?.email || '—')}</div>
               <div><span style="background:rgba(31,56,31,.1);color:var(--titulo);border-radius:4px;padding:2px 7px;font-size:12px;font-weight:600">${c.versao}</span></div>
-              <div style="color:var(--txt2);font-size:12px">${dt}</div>
+              <div class="t-mut">${dt}</div>
             </div>`
         }).join('')}
       </div>
-      <div style="margin-top:8px;font-size:12px;color:var(--txt2)">${contratos.length} aceite(s) registrado(s)</div>
+      <div class="t-mut mt-8">${contratos.length} aceite(s) registrado(s)</div>
     `
   })()
 
@@ -278,8 +278,8 @@ export async function renderConfig(container, page) {
     const lista = (previa?.candidatos || []).slice(0, 10)
     el.innerHTML = `
       <div class="priv-item__t">${previa?.total || 0} perfil(is) e ${previa?.pendentes_total || 0} pré-cadastro(s) elegível(is) para a próxima execução</div>
-      <div class="ui-help" style="margin-top:2px">Última execução: ${esc(ultima)}</div>
-      ${lista.length ? `<ul class="priv-list" style="margin-top:8px">${lista.map(c => `
+      <div class="ui-help mt-2">Última execução: ${esc(ultima)}</div>
+      ${lista.length ? `<ul class="priv-list mt-8">${lista.map(c => `
         <li class="priv-item">
           <div>
             <div class="priv-item__t">${esc(c.nome || '—')}</div>
@@ -344,13 +344,13 @@ export async function renderConfig(container, page) {
       const clientes = await buscarClientesAsaas()
       status.textContent = `${clientes.length} clientes encontrados`
       preview.innerHTML = `
-        <div style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--txt2);margin-bottom:6px;font-weight:500">Prévia (${clientes.length} clientes)</div>
+        <div class="t-label mb-6">Prévia (${clientes.length} clientes)</div>
         <div style="max-height:220px;overflow-y:auto;border:1px solid var(--borda);border-radius:6px">
           ${clientes.map(c=>`<div style="display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid rgba(212,200,158,.25);font-size:12px">
             <div style="width:28px;height:28px;border-radius:50%;background:rgba(31,56,31,.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--titulo);flex-shrink:0">${esc((c.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase())}</div>
             <div style="flex:1;min-width:0">
               <div style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.name||'—')}</div>
-              <div style="font-size:12px;color:var(--txt2)">${esc(c.email||'sem e-mail')} · ${esc(c.mobilePhone||c.phone||'sem tel')}</div>
+              <div class="t-mut">${esc(c.email||'sem e-mail')} · ${esc(c.mobilePhone||c.phone||'sem tel')}</div>
             </div>
             <div style="font-size:12px;color:var(--txt2);flex-shrink:0">${esc(c.id)}</div>
           </div>`).join('')}

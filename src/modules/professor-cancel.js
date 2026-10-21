@@ -60,15 +60,15 @@ export function abrirModalCancelarEmMassa(infosArray) {
   const infoEl = document.getElementById('modal-cancel-info')
   if (infoEl) {
     infoEl.innerHTML = `
-      <div style="font-weight:500;margin-bottom:6px">${infosArray.length} aula(s) selecionada(s):</div>
+      <div class="mb-6 fw-500">${infosArray.length} aula(s) selecionada(s):</div>
       <div style="max-height:140px;overflow-y:auto;display:flex;flex-direction:column;gap:4px">
         ${infosArray.map(i => {
           const dt = new Date(i.data_hora)
-          return `<div style="font-size:12px">
+          return `<div class="fs-12">
             ${nomes[i.modalidade] || esc(i.modalidade)} —
             ${dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}
             ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
-            <span style="color:var(--txt2)">(${i.confirmados||0} confirmado(s))</span>
+            <span class="c-txt2">(${i.confirmados||0} confirmado(s))</span>
           </div>`
         }).join('')}
       </div>`
