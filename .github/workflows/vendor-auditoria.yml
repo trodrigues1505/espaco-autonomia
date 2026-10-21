@@ -1,0 +1,34 @@
+# Toda segunda-feira: (1) procura vulnerabilidades conhecidas nas bibliotecas hospedadas em vendor/;
+# (2) reconstrói vendor/ a partir das versões fixadas e confere que o que está no repositório é IDÊNTICO
+# (integridade: ninguém alterou um arquivo de vendor/ à mão); (3) lista versões novas (informativo).
+# Se algo falhar, o GitHub avisa você por e-mail. Também pode ser rodado à mão (Actions → Run workflow).
+name: Auditoria das bibliotecas (vendor)
+
+on:
+  schedule:
+    - cron: '0 11 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  auditar:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ferramentas/vendor
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: Vulnerabilidades conhecidas (npm audit)
+        run: npm run audit
+      - name: vendor/ do repositório == vendor/ reconstruído
+        run: |
+          node build.mjs --saida "$RUNNER_TEMP/vendor_ci" > /dev/null
+          diff -r -x VERSOES.md ../../vendor "$RUNNER_TEMP/vendor_ci" && echo "✓ vendor/ idêntico ao reconstruído"
+      - name: Versões novas disponíveis (informativo)
+        run: npm run checar || true
