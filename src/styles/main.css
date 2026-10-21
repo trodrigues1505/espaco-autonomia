@@ -468,11 +468,11 @@ a[style*="background"]:hover { filter: brightness(1.06); transform: translateY(-
 .reveal-4 { transition-delay: .2s;  }
 .reveal-5 { transition-delay: .25s; }
 
-[style*="background:#fff;border:1px solid var(--borda)"] {
+:is([style*="background:var(--superficie);border:1px solid var(--borda)"],[style*="background: var(--superficie); border: 1px solid var(--borda)"]) {
   transition: box-shadow var(--t-mid) var(--ease-out), transform var(--t-mid) var(--ease-out);
 }
 @media (hover: hover) {
-  [style*="background:#fff;border:1px solid var(--borda)"]:hover {
+  :is([style*="background:var(--superficie);border:1px solid var(--borda)"],[style*="background: var(--superficie); border: 1px solid var(--borda)"]):hover {
     box-shadow: var(--sombra-suave);
     transform: translateY(-1px);
   }
@@ -530,7 +530,7 @@ a[style*="background"]:hover { filter: brightness(1.06); transform: translateY(-
   .login-logo img { width: 130px !important; }
 
   .card-hover:hover { box-shadow: none; transform: none; }
-  [style*="background:#fff;border:1px solid var(--borda)"]:hover { box-shadow: none; transform: none; }
+  :is([style*="background:var(--superficie);border:1px solid var(--borda)"],[style*="background: var(--superficie); border: 1px solid var(--borda)"]):hover { box-shadow: none; transform: none; }
 
   .loading-page .spin-big { width: 34px; height: 34px; }
 }
@@ -611,7 +611,7 @@ a[style*="background"]:hover { filter: brightness(1.06); transform: translateY(-
 
   /* Sombras de hover-lift (ver ui.js) ficam invisíveis contra fundo escuro
      — atenuamos o efeito de elevação aqui em vez de depender só do JS. */
-  [style*="background:#fff;border:1px solid var(--borda)"]:hover,
+  :is([style*="background:var(--superficie);border:1px solid var(--borda)"],[style*="background: var(--superficie); border: 1px solid var(--borda)"]):hover,
   .card-hover:hover {
     box-shadow: 0 4px 20px rgba(0,0,0,.45) !important;
   }

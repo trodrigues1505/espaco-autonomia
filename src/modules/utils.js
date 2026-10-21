@@ -161,3 +161,25 @@ export function urlSegura(u) {
   return esc(bruta.replace(/'/g, '%27').replace(/`/g, '%60'))
 }
 window.urlSegura = urlSegura
+
+/**
+ * Imprime uma janela criada com window.open('') + document.write(...), depois que as imagens dela carregarem.
+ * Existe porque um <script> escrito DENTRO dessa janela é bloqueado pela CSP (script-src 'self'): ela herda a política
+ * de quem a abriu. Aqui o disparo parte do código do app. Chame DEPOIS de win.document.close() (document.open() apaga
+ * os ouvintes registrados antes).
+ */
+export function imprimirQuandoPronto(win) {
+  const disparar = () => {
+    const pendentes = [...win.document.images].filter(img => !img.complete)
+    const imprimir = () => { try { win.focus(); win.print() } catch { /* janela fechada pelo usuário */ } }
+    if (!pendentes.length) return imprimir()
+    let faltam = pendentes.length
+    const concluida = () => { if (--faltam === 0) imprimir() }
+    pendentes.forEach(img => {
+      img.addEventListener('load', concluida)
+      img.addEventListener('error', () => { img.style.display = 'none'; concluida() })
+    })
+  }
+  if (win.document.readyState === 'complete') disparar()
+  else win.addEventListener('load', disparar)
+}

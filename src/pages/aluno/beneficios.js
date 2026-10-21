@@ -4,7 +4,7 @@
  */
 
 import '../../acoes/pages-aluno-beneficios.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
-import { esc, urlSegura } from '../../modules/utils.js'
+import { esc, urlSegura, imprimirQuandoPronto } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 import { BENEFICIO_INTRO } from '../../modules/navigation.js'
 import { aplicarVocabulario } from '../../modules/vocabulario.js'
@@ -203,22 +203,9 @@ function _imprimirHTML(titulo, html) {
     </style>
   </head><body>${html}
     <div class="rodape">Espaço Autonomia · Dharma Phala · gerado em ${new Date().toLocaleDateString('pt-BR')}</div>
-    <script>
-      window.onload = function() {
-        const imgs = document.querySelectorAll('img')
-        if (!imgs.length) { window.print(); return }
-        let loaded = 0
-        imgs.forEach(img => {
-          if (img.complete) { loaded++; if (loaded === imgs.length) window.print() }
-          else {
-            img.onload  = () => { loaded++; if (loaded === imgs.length) window.print() }
-            img.onerror = () => { img.style.display='none'; loaded++; if (loaded === imgs.length) window.print() }
-          }
-        })
-      }
-    <\/script>
   </body></html>`)
   win.document.close()
+  imprimirQuandoPronto(win)
 }
 
 // ── Banner de introdução (primeira visita) ────────────────────

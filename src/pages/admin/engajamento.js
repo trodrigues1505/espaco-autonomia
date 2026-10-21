@@ -10,7 +10,7 @@
  */
 
 import '../../acoes/pages-admin-engajamento.js'   // handlers (antes: eventos inline; ver ferramentas/verifica-handlers.mjs)
-import { toast, esc } from '../../modules/utils.js'
+import { toast, esc, imprimirQuandoPronto } from '../../modules/utils.js'
 import { uiAnimar } from '../../modules/ui.js'
 
 const JANELA_DIAS = 30
@@ -310,8 +310,8 @@ export async function renderEngajamento(container, page) {
           </tr>`).join('')}
       </table>
       <div class="rodape">Espaço Autonomia · Dharma Phala · Score calculado a partir de presença real, atividade na timeline, uso do saldo de aulas, acesso aos benefícios e recência de login.</div>
-      <script>window.onload = () => window.print()<\/script>
     </body></html>`)
     win.document.close()
+    imprimirQuandoPronto(win)
   }
 }
