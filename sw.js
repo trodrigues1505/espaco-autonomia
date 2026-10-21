@@ -1,10 +1,11 @@
-// ── Espaço Autonomia — Service Worker v7 ─────────────────────
-const CACHE = 'ea-v7'
+// ── Espaço Autonomia — Service Worker v8 ─────────────────────
+const CACHE = 'ea-v8'
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './src/styles/main.css',
+  './src/styles/componentes.css',
   './src/acoes/index-html.js',
   './src/acoes/modules-auth.js',
   './src/acoes/modules-contrato.js',
@@ -53,6 +54,7 @@ const ASSETS = [
   './src/modules/dialogs.js',
   './src/modules/gamificacao.js',
   './src/modules/lgpd.js',
+  './src/modules/lista-responsiva.js',
   './src/modules/navigation.js',
   './src/modules/notificacoes.js',
   './src/modules/privacidade.js',
