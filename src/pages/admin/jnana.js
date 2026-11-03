@@ -291,7 +291,7 @@ export async function renderJnanaAdmin(container, page) {
     if (!novaData) { toast('Selecione uma data'); return }
     const { error: err } = await sb.from('jnana_sutras').update({ publicada_em: novaData }).eq('id', id)
     if (err) { toast('Erro: ' + err.message); return }
-    toast('Data atualizada para' + fmtDia(novaData))
+    toast('Data atualizada para ' + fmtDia(novaData))
     navigate('jnana-admin')
   }
 
@@ -312,6 +312,7 @@ export async function renderJnanaAdmin(container, page) {
     document.getElementById('modal-jnana').style.display = 'flex'
   }
 
+  // ── Prévia "visão do aluno" (botão do olho na lista) ──────
   window.previaSutra = async function(id) {
     const { data: s } = await sb.from('jnana_sutras').select('*').eq('id', id).single()
     if (!s) { toast('Sutra não encontrado'); return }
@@ -319,7 +320,9 @@ export async function renderJnanaAdmin(container, page) {
     const div = document.createElement('div')
     div.id = 'modal-previa-jnana'
     div.style.cssText = 'position:fixed;inset:0;background:rgba(31,56,31,.7);z-index:300;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto'
-    const comentarioHtml = (s.comentario||'').split(/\n\s*\n/).map(p => `<p style="margin:0 0 10px">${p}</p>`).join('')
+    // Cada parágrafo é escapado individualmente e só depois envolvido em <p>.
+    // O HTML resultante NÃO deve passar por esc() de novo ao ser inserido.
+    const comentarioHtml = (s.comentario||'').split(/\n\s*\n/).map(p => `<p style="margin:0 0 10px">${esc(p)}</p>`).join('')
     div.innerHTML = `
       <div style="background:var(--superficie);border-radius:12px;width:560px;max-width:100%;margin:auto;overflow:hidden">
         <div style="background:var(--verde);padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
@@ -338,7 +341,7 @@ export async function renderJnanaAdmin(container, page) {
           ${s.comentario ? `
             <div style="margin-bottom:12px;background:var(--superficie-2);border-radius:8px;padding:12px 14px">
               <div class="t-label mb-6">Comentário</div>
-              <div style="font-size:13px;color:var(--txt);line-height:1.7">${esc(comentarioHtml)}</div>
+              <div style="font-size:13px;color:var(--txt);line-height:1.7">${comentarioHtml}</div>
             </div>` : ''}
           ${s.pratica ? `
             <div style="background:var(--superficie-2);border-radius:8px;padding:12px 14px">
@@ -420,14 +423,14 @@ Regras:
       const data = await response.json()
       const raw  = data.content?.[0]?.text || ''
       let parsed
-try {
-  const match = raw.match(/\{[\s\S]*\}/)
-  if (!match) throw new Error('sem JSON no texto')
-  parsed = JSON.parse(match[0])
-} catch {
-  console.error('RAW da IA (falhou parse):', raw)
-  throw new Error('IA retornou formato inesperado. Tente novamente.')
-}
+      try {
+        const match = raw.match(/\{[\s\S]*\}/)
+        if (!match) throw new Error('sem JSON no texto')
+        parsed = JSON.parse(match[0])
+      } catch {
+        console.error('RAW da IA (falhou parse):', raw)
+        throw new Error('IA retornou formato inesperado. Tente novamente.')
+      }
       parsed.capitulo_ordem = capituloOrdem
       parsed.capitulo       = (CAPITULOS.find(c => c.ordem === capituloOrdem) || CAPITULOS[0]).nome
       parsed.numero_sutra   = numeroSutra
@@ -571,4 +574,4 @@ try {
     toast('Sutra excluído.')
     navigate('jnana-admin')
   }
-}   
+}
